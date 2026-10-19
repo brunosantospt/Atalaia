@@ -1,0 +1,22 @@
+# deps / build
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# env
+.env
+.env.*
+!.env.example
+
+# data (GBs, not versioned)
+data/*
+!data/README.md
+*.zip
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
