@@ -5,6 +5,7 @@ import {
   Cartesian3,
   Color,
   createWorldTerrainAsync,
+  type Credit,
   DirectionalLight,
   Ion,
   Matrix4,
@@ -19,6 +20,14 @@ const LIGHT_ELEVATION_DEG = 35
 export async function createViewer(container: string, center: LonLat): Promise<Viewer> {
   const token = import.meta.env.VITE_CESIUM_ION_TOKEN
   if (token) Ion.defaultAccessToken = token
+  else {
+    // Without a token of our own Cesium writes a long notice over the globe. It goes into the
+    // credits panel instead, and to the console. (getDefaultTokenCredit is missing from the typings.)
+    const ion = Ion as unknown as { getDefaultTokenCredit(key: string): Credit | undefined }
+    const notice = ion.getDefaultTokenCredit(Ion.defaultAccessToken)
+    if (notice) notice.showOnScreen = false
+    console.warn('Sem VITE_CESIUM_ION_TOKEN em web/.env: a usar o token de avaliação do Cesium ion.')
+  }
 
   const viewer = new Viewer(container, {
     terrainProvider: await createWorldTerrainAsync(),
@@ -35,6 +44,12 @@ export async function createViewer(container: string, center: LonLat): Promise<V
   })
 
   const { scene } = viewer
+  // Only the Cesium ion logo and a link stay on screen; every source is listed in the panel it opens.
+  const link = viewer.bottomContainer.querySelector('.cesium-credit-expand-link')
+  if (link) link.textContent = 'Créditos'
+  const title = viewer.container.querySelector('.cesium-credit-lightbox-title')
+  if (title) title.textContent = 'Fontes'
+
   // Fire perimeters and markers sit on the ground and must hide behind the relief.
   scene.globe.depthTestAgainstTerrain = true
 

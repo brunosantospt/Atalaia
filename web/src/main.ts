@@ -19,7 +19,7 @@ const PICK_EVERY = 4 // frames between screen-centre picks while the mouse has t
 
 interface Replay {
   id: string
-  credit: Credit
+  credits: Credit[]
   fire: FireLayer
   markers: MarkerLayer
   player: Player
@@ -30,7 +30,7 @@ async function main() {
   const viewer = await createViewer('globe', PENHA)
   const { scene } = viewer
   applyPose(scene, START)
-  // The caption card sits just above the credit line, whose height depends on what it lists.
+  // The caption card sits just above the credit line, whose height depends on what it shows.
   const credits = viewer.bottomContainer as HTMLElement
   new ResizeObserver(() =>
     document.documentElement.style.setProperty('--credits-h', `${credits.offsetHeight}px`),
@@ -63,15 +63,15 @@ async function main() {
     const from = replay ? (readPose(scene) ?? START) : START
     replay?.fire.destroy()
     replay?.markers.destroy()
-    if (replay) viewer.creditDisplay.removeStaticCredit(replay.credit)
+    replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     replay = {
       id,
-      credit: sourceCredit(fire),
+      credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
       markers: new MarkerLayer(viewer, document.getElementById('overlay')!, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
     }
-    viewer.creditDisplay.addStaticCredit(replay.credit)
+    replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots)
     document.title = `${fire.name} · Atalaia`
   }
@@ -132,11 +132,12 @@ async function main() {
   await open(fireFromHash(index.map((f) => f.id)))
 }
 
-/** The fire's data and station sources, shown in Cesium's credit line beside the imagery's. */
-function sourceCredit(fire: Fire): Credit {
+/** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
+function sourceCredits(fire: Fire): Credit[] {
   const { data, cite } = fire.source
-  const text = `${data} · ${cite} · Quartéis © contribuidores do OpenStreetMap (ODbL)`
-  return new Credit(text.replaceAll('&', '&amp;').replaceAll('<', '&lt;'), true)
+  return [data, cite, 'Quartéis © contribuidores do OpenStreetMap (ODbL)'].map(
+    (text) => new Credit(text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')),
+  )
 }
 
 function fireFromHash(ids: string[]): string {

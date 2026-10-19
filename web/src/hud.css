@@ -357,7 +357,7 @@
   color: var(--ink-dim);
 }
 
-/* ---------- credit line: imagery, data and stations, centred under the card and quiet ---------- */
+/* ---------- credits: the ion logo and a link under the card; the sources in a panel ---------- */
 
 .cesium-viewer-bottom {
   left: 50% !important;
@@ -366,7 +366,7 @@
   width: min(680px, calc(100vw - 32px));
   padding: 0;
   text-align: center;
-  opacity: 0.7;
+  opacity: 0.6;
   z-index: 4;
 }
 .cesium-viewer .cesium-widget-credits {
@@ -374,6 +374,56 @@
   font-size: 9px;
   letter-spacing: 0.04em;
   color: var(--ink-dim);
+}
+.cesium-viewer .cesium-credit-logoContainer img {
+  height: 14px;
+  vertical-align: middle !important;
+}
+.cesium-viewer .cesium-credit-expand-link {
+  padding-left: 8px;
+  color: var(--ink-dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.cesium-viewer .cesium-credit-expand-link:hover {
+  color: var(--ink);
+}
+
+/* Cesium's credits panel, restyled as one more HUD card and lifted above the HUD. */
+.cesium-viewer .cesium-credit-lightbox-overlay {
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.6);
+}
+.cesium-viewer .cesium-credit-lightbox-overlay .cesium-credit-lightbox {
+  background: rgba(10, 11, 12, 0.92);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid var(--line);
+  border-radius: 0;
+  font-family: var(--mono);
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.cesium-viewer .cesium-credit-lightbox-title {
+  padding: 14px 18px 0;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.cesium-viewer .cesium-credit-lightbox > ul {
+  padding: 10px 18px 12px 32px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.cesium-viewer .cesium-credit-lightbox > ul > li a,
+.cesium-viewer .cesium-credit-lightbox > ul > li a:visited,
+.cesium-viewer .cesium-credit-lightbox-close {
+  color: var(--ink-dim);
+}
+.cesium-viewer .cesium-credit-lightbox > ul > li a:hover,
+.cesium-viewer .cesium-credit-lightbox-close:hover {
+  color: var(--ink);
 }
 
 /* Medium screens: the position readout no longer fits beside the card. */
