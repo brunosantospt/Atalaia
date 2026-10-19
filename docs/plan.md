@@ -15,8 +15,8 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | Dia | Peça | Entrega |
 |---|---|---|
 | Seg 19 | P0 Base web | Globo Cesium com relevo sobre Guimarães |
-| | P1 Dados dos incêndios | Progressões dos 2 incêndios em GeoJSON + métricas L3 |
-| | P2 Replay observado | Os 2 incêndios crescem passo a passo no terreno |
+| | P1 Dados dos incêndios | Progressões dos 2 incêndios em GeoJSON + métricas L3 + quartéis de bombeiros |
+| | P2 Replay observado | Os 2 incêndios contados passo a passo: câmara guiada, HUD "intel" cinza, spotlight e quartéis próximos com km |
 | | P3 Gate do motor | ForeFire roda num teste sintético (senão, SimFire) |
 | Ter 20 | P4 Contexto | Grade, combustível e meteo para os 2 incêndios |
 | | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run` e cache offline |
@@ -58,15 +58,46 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
 - `scripts/build_fires.py <fire_id>` lê o L1 (polígonos) e o L3 (métricas por período) e escreve em `web/public/fires/<id>/`:
   - `progression.geojson`: perímetro **cumulativo** por passo, em WGS84;
   - `fire.json`: nome, concelho, ignição, passos, bbox e as métricas L3 da tabela acima.
+- **Quartéis de bombeiros:**
+  - `scripts/fetch_stations.py` pergunta ao Overpass por `amenity=fire_station` num raio de 100 km da Penha e guarda a resposta crua em `data/osm-fire-stations/raw.json`;
+  - `scripts/build_stations.py` limpa e escreve `web/public/stations.json` (nome, nome curto, tipo, lat/lon, id OSM).
 - `scripts/requirements.txt` com fiona, shapely e pyproj.
-- **Ref:** `scripts/build-real-fires.py`.
-- **Muda:** só estes 2 incêndios; os passos já saem cumulativos; as métricas L3 entram para calibrar.
-- **Pronto quando:** a área final bate com o resumo (Vieira ~1969 ha, Cabeceiras ~1825 ha).
+- **Ref:** `scripts/build-real-fires.py`, `scripts/build-stations.py`.
+- **Muda:** só estes 2 incêndios; os passos já saem cumulativos; as métricas L3 entram para calibrar. Os quartéis chegam já no P1 (no plano anterior só vinham no P8), porque o replay do P2 os mostra.
+- **Pronto quando:**
+  - a área final bate com o resumo (Vieira ~1969 ha, Cabeceiras ~1825 ha);
+  - `stations.json` não tem duplicados nem quartéis da Galiza.
 
-### P2 · Replay observado
-- Seletor de incêndio, perímetros de cada passo desenhados no terreno e timeline do Cesium (`clock`) com play/pause.
-- **Ref:** `src/realFires.ts`, `src/director/outline.ts`.
-- **Pronto quando:** dá para ver os 2 incêndios crescer passo a passo.
+### P2 · Replay observado, passo a passo
+Cada incêndio é contado como uma sequência de planos de câmara. É a base do modo realizador (P10), que depois só acrescenta planos.
+
+- **Câmara passo a passo** (do Director v1):
+  - lista de planos derivada só do `fire.json`: visão geral a pique (com os quartéis), ignição, um plano por passo observado, voo ao longo do eixo de propagação e balanço final;
+  - cada plano enquadra a área em jogo (bbox das cabeças até esse passo, com margem) a partir do eixo de propagação;
+  - a câmara orbita um alvo que se move: alvo, rumo e inclinação seguem uma curva Catmull-Rom entre poses, e a distância interpola em escala log (um zoom de 40 km → 3 km fica uniforme);
+  - o relógio do incêndio avança com a câmara, e cada plano revela o seu marcador numerado (ignição, passos);
+  - controlo: espaço play/pausa, ←/→ plano anterior/seguinte, R recomeça, H esconde o HUD. O rato fica livre entre planos.
+- **Estilo "intel" em cinza** (o visual do God's Eye do Director v1, sem o ciano):
+  - texto mono em maiúsculas, cantos de mira, grelha de terços, vinheta e scanlines discretas;
+  - palavra grande do plano (IGNIÇÃO, PROPAGAÇÃO, BALANÇO), local e coordenadas por baixo;
+  - canto superior direito: `REPLAY` + hora do incêndio, T+ e hectares, `PASSO n/N`;
+  - canto inferior esquerdo: PT-TM06 (EPSG:3763) e graus/minutos/segundos do centro do ecrã; na lateral, rumo, inclinação e distância da câmara;
+  - cartão de legenda (`PLANO 02/07 · …`) e barra de transporte com um traço por plano e o seletor de incêndio;
+  - paleta de cinzas neutros para o HUD; o âmbar fica reservado ao fogo, para que o fogo seja a única cor forte;
+  - imagem de satélite escurecida e dessaturada, espaço preto, sem sol nem lua, e luz fixa de NW a 35° (sombreamento cartográfico).
+- **Spotlight** (do Director): pós-processamento sobre o depth buffer que escurece e dessatura tudo o que fica fora de um raio à volta da área em jogo, céu incluído. Cada plano aponta o foco (centro e raio ~1,25 × meia diagonal do enquadramento), e o foco desliza junto com a câmara.
+- **Quartéis próximos com km** (do Director v1): os 3 quartéis mais próximos da ignição, até 20 km, como marcadores no terreno com etiqueta `BV CABECEIRAS DE BASTO · 6 KM`. Distância em linha reta; no P8 passa a ser por estrada.
+- **Marcadores:** anéis no terreno e etiquetas em HTML sobre o canvas, ligados por linha de chamada. As etiquetas ficam do lado oposto ao centro do ecrã e afastam-se na vertical para nunca se sobreporem.
+- **Ref:**
+  - `src/directorV1/shots.ts` (gramática dos planos), `camera.ts` (órbita), `director.ts` (leitor de planos e teclado);
+  - `src/directorV1/hud.ts`, `director.css`, `markers.ts`, `pttm06.ts`; a função `nearestStations` em `story.ts`;
+  - `src/director/spotlight.ts`; `src/realFires.ts`, `src/director/outline.ts`.
+- **Muda:**
+  - HUD em cinza em vez de ciano;
+  - o spotlight do Director junta-se à câmara do Director v1 (no protótipo estavam em páginas diferentes);
+  - os dados vêm do `fire.json` do P1;
+  - só o modo observado; o simulado entra com o P6 e o A/B com o P9.
+- **Pronto quando:** os 2 incêndios tocam do início ao fim; cada plano enquadra o seu passo com o spotlight, e os quartéis aparecem com a distância em km.
 
 ### P3 · Gate do motor
 - `engines/forefire/`: `setup.sh` (venv Python 3.12, `forefire==2.5.0`) e um `adapter.py` que lê um pedido em JSON do stdin e devolve tempos de chegada.
@@ -110,7 +141,8 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
 ## Fase 2 · Decisões (qua 21)
 
 ### P8 · Meios e despacho
-- `scripts/build_context.py` busca no Overpass os quartéis (`amenity=fire_station`, 100 km), as aldeias e os pontos de água, e no OSRM as rotas dos quartéis mais próximos de cada incêndio. Tudo fica guardado em JSON, para rodar offline.
+- `scripts/build_context.py` busca no Overpass as aldeias e os pontos de água, e no OSRM as rotas dos quartéis mais próximos de cada incêndio (os quartéis já vêm do P1). Tudo fica guardado em JSON, para rodar offline.
+- A distância dos quartéis no HUD passa de linha reta a estrada, com tempo de chegada.
 - Bases aéreas (CMA) com HEBL; frota animada (VCI, VTT, HEBL) com modelos glTF.
 - **Ref:**
   - `scripts/build-stations.py`, `scripts/build-fire-context.mjs`;
@@ -129,8 +161,8 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
 
 ### P10 · Modo realizador
 - História guiada para os 90 s da demo: ignição → replay observado → ponto de decisão → A vs B → resultado.
-- Planos de câmara, HUD e legendas.
-- **Ref:** `src/director/*` (não o `directorV1`).
+- Reaproveita o leitor de planos, o HUD e o spotlight do P2; acrescenta os planos de decisão, despacho e confronto A/B.
+- **Ref:** `src/director/*` (planos de decisão e frota).
 
 ### P11 · Resumo ao comandante
 - Resumo em linguagem natural da comparação A/B, gerado pela API do Claude a partir das métricas.
@@ -141,7 +173,8 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
 
 ## Fica de fora
 
-- `directorV1`, `demo-fire.czml`, os cenários sintéticos C1/C2 e o fogo aleatório da sandbox.
+- O `directorV1` como página à parte e o seu fumo de partículas: do v1 só entram o estilo (em cinza), a câmara passo a passo e os quartéis com km, todos no P2.
+- `demo-fire.czml`, os cenários sintéticos C1/C2 e o fogo aleatório da sandbox.
 - Cell2Fire (mapa de probabilidade de queima): só se sobrar tempo depois do freeze.
 - SimFire: só como plano B do P3.
 
@@ -157,5 +190,10 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
   - as constantes da grade e os raios das unidades estavam em TS e em Python;
   - a lista de quartéis era carregada duas vezes.
   - → um só lugar para cada uma.
+- **Quartéis no OSM:**
+  - a mesma corporação aparece como nó e como área, e há secções: deduplicar por nome normalizado e proximidade;
+  - o raio de 100 km apanha quartéis da Galiza e entradas que não são quartéis (CMA, Cruz Vermelha, Proteção Civil): filtrar;
+  - os nomes oficiais são longos ("Associação Humanitária dos Bombeiros Voluntários de …"): abreviar para `BV …` nas etiquetas.
+- **Spotlight:** o depth buffer do Cesium é logarítmico; a posição de cada pixel recupera-se com `czm_windowToEyeCoordinates`.
 - **Dados sintéticos no protótipo:** aldeias, casas e frota por quartel; meteo e combustível só para Vieira.
 - **Serviços externos:** Overpass, OSRM e Open-Meteo só em scripts, com o resultado guardado. O app em demo não depende de rede, exceto o terreno do Cesium.
