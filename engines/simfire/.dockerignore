@@ -1,0 +1,3 @@
+# The image only needs the pinned dependencies; adapter.py is mounted at run time.
+*
+!requirements.txt
