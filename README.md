@@ -18,5 +18,5 @@ O twin simula o mesmo cenário de incêndio sob duas decisões, A e B, com os me
 ## Convenções
 
 - CRS: ETRS89 / PT-TM06 (EPSG:3763) internamente; WGS84 só no Cesium.
-- Rasters em COG, vetores em GeoJSON, saídas para o mapa em CZML.
+- Camadas de cada incêndio numa grade comum (`web/public/fires/<id>/grid.json`), uma célula por byte ou número; vetores em GeoJSON, saídas para o mapa em CZML.
 - As simulações partem de um perímetro observado. Um ponto de ignição só serve para incêndios hipotéticos.

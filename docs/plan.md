@@ -119,11 +119,30 @@ O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de
 ## Fase 1 · Modelo com dados reais (ter 20)
 
 ### P4 · Contexto por incêndio
-- **Grade única:** `web/public/fires/<id>/grid.json` (origem e `cellM` em EPSG:3763, `nx` e `ny`), lido tanto pelo Python como pelo TypeScript.
-- **Combustível:** a COS2015 é rasterizada na grade e mapeada para 5 classes e para Anderson 13 / Scott-Burgan (o ELMFIRE usa os modelos de Scott & Burgan).
-- **Meteo:** ERA5 horária via Open-Meteo. Vieira já está em `data/`; para Cabeceiras é preciso buscar 5–8 set 2016.
+Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
+
+- **Grade única** (`grid.json`, `scripts/build_grid.py`):
+  - células de 30 m em PT-TM06 (EPSG:3763), sobre toda a área ardida mais 3 km de margem, para uma decisão poder deixar o fogo ir mais longe;
+  - Vieira tem 499 × 334 células (15 × 10 km), Cabeceiras 450 × 434 (13,5 × 13 km);
+  - as seis primeiras chaves são o `grid` do contrato dos motores e entram num pedido tal como estão;
+  - `wgs84` traz os quatro cantos para o browser, que interpola entre eles com menos de 4 m de erro.
+- **Combustível** (`fuel.u8` e `fuel.json`, `scripts/build_fuel.py`):
+  - a COS2015 é rasterizada na grade pelo centro de cada célula: um byte por célula, índice na legenda;
+  - cada classe COS tem três leituras do mesmo combustível, com a razão de cada escolha: 5 classes (modelo rápido e mapa), Anderson 13 (SimFire) e Scott & Burgan (ELMFIRE);
+  - dentro da área ardida, cerca de metade é mato.
+- **Meteo** (`weather.json`, `scripts/fetch_weather.py` e `scripts/build_weather.py`):
+  - ERA5 horária via Open-Meteo, de 3 dias antes a 1 dia depois de cada incêndio, no ponto da ignição;
+  - o vento do ERA5 bate com a direção de propagação observada em Vieira (13° e 3° de desvio) e nos períodos 2 e 3 de Cabeceiras;
+  - no período 1 de Cabeceiras, com vento fraco, o fogo andou 70° ao lado do vento: aí deve mandar o relevo.
 - **Ref:** `scripts/build-real-fuels.py`, `scripts/build-era5-weather.py`, `engines/fuel_map.json`.
-- **Muda:** Cabeceiras passa a ter dados reais (no protótipo usava combustível aleatório). As constantes da grade ficam num só lugar.
+- **Muda:**
+  - Cabeceiras passa a ter dados reais (no protótipo usava combustível aleatório);
+  - a grade é métrica, em PT-TM06, e as suas constantes ficam num só lugar.
+- **Pronto quando:** os 2 incêndios têm grade, combustível e meteo. ✅
+- **A seguir:**
+  - relevo na grade (elevação, declive, exposição) a partir de um MDT de 30 m, para os motores e para o modelo rápido;
+  - humidades dos combustíveis, estimadas a partir da temperatura e da humidade relativa;
+  - a meteo horária entra no contrato dos motores com o cenário (P5).
 
 ### P5 · Contrato + API
 - `docs/contracts.md` define o **cenário** (base: perímetro, meteo, combustível; decisões A e B) e o **resultado** (passos, métricas).
