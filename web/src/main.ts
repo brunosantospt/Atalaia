@@ -113,13 +113,17 @@ async function main() {
   scene.postRender.addEventListener(() => replay?.markers.update(revealed))
 
   document.addEventListener('keydown', (e) => {
-    if (!replay || e.metaKey || e.ctrlKey || e.altKey || e.target instanceof HTMLSelectElement) return
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (e.key === 'Escape' && hud.settings.open) return hud.settings.toggle(false)
+    // Arrows and space belong to a focused radio in the settings.
+    if (!replay || e.target instanceof HTMLInputElement) return
     const { player } = replay
     const actions: Record<string, () => void> = {
       ' ': () => player.toggle(),
       ArrowLeft: () => player.prev(),
       ArrowRight: () => player.next(),
       r: () => player.restart(),
+      s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
     }
     const action = actions[e.key.length === 1 ? e.key.toLowerCase() : e.key]

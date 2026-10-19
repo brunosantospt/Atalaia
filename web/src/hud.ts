@@ -1,12 +1,13 @@
 // The gray "intel" HUD: shot word and place, fire clock, camera readout, screen-centre
-// position in PT-TM06, caption card and the transport bar with the fire picker. Data credits
-// are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
+// position in PT-TM06, caption card, transport bar and the settings drawer (fire and engine).
+// Data credits are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
 
 import type { Fire, FireIndexEntry } from './data'
 import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, toPTTM06, type LonLat } from './geo'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
+import { SettingsPanel } from './settings'
 import type { Shot } from './shots'
 import './hud.css'
 
@@ -64,20 +65,21 @@ const TEMPLATE = `
       <button type="button" data-ref="play" title="Play / pausa (espaço)"></button>
       <button type="button" data-ref="next" title="Plano seguinte (→)">▸</button>
       <div class="ticks" data-ref="ticks"></div>
-      <select data-ref="fire" title="Incêndio"></select>
+      <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · S settings · H esconde o HUD</div>
   </section>
 `
 
 type Refs = Record<
   | 'word' | 'place' | 'coords' | 'mode' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
   | 'hdg' | 'pitch' | 'rng' | 'tm' | 'dms' | 'cardHead' | 'cardTitle' | 'cardBody'
-  | 'prev' | 'play' | 'next' | 'ticks',
+  | 'prev' | 'play' | 'next' | 'ticks' | 'gear',
   HTMLElement
-> & { fire: HTMLSelectElement }
+>
 
 export class Hud {
+  readonly settings: SettingsPanel
   private readonly refs: Refs
   private fire: Fire | undefined
   private shots: Shot[] = []
@@ -95,8 +97,8 @@ export class Hud {
       [...root.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     ) as unknown as Refs
 
-    for (const f of fires) this.refs.fire.add(new Option(`${f.name} · ${f.start.slice(0, 4)}`, f.id))
-    this.refs.fire.addEventListener('change', () => actions.pickFire(this.refs.fire.value))
+    this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire })
+    this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
     this.refs.next.addEventListener('click', () => actions.next())
     this.refs.play.addEventListener('click', () => actions.toggle())
@@ -105,7 +107,7 @@ export class Hud {
   setFire(fire: Fire, shots: Shot[]) {
     this.fire = fire
     this.shots = shots
-    this.refs.fire.value = fire.id
+    this.settings.setFire(fire.id)
     this.refs.ticks.replaceChildren()
     this.ticks = shots.map((s, i) => {
       const tick = document.createElement('button')
@@ -123,19 +125,21 @@ export class Hud {
     this.root.classList.toggle('hidden')
   }
 
-  /** Screen left free by the title, clock, rail and caption card; all of it when the HUD is hidden. */
+  /** Screen left free by the title, clock, rail, caption card and open settings; all of it when the HUD is hidden. */
   safeArea(): SafeArea {
     const { width, height } = this.root.getBoundingClientRect()
     const pad = 12
     if (this.root.classList.contains('hidden')) return { top: pad, bottom: height - pad, left: pad, right: width - pad }
     const rect = (sel: string) => this.root.querySelector(sel)!.getBoundingClientRect()
     const rail = rect('.rail')
+    // The rail is hidden on narrow screens and then has no size.
+    let right = rail.width ? rail.left - pad : width - pad
+    if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
     return {
       top: Math.max(rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: rect('.bottom').top - pad,
       left: pad + 8,
-      // The rail is hidden on narrow screens and then has no size.
-      right: rail.width ? rail.left - pad : width - pad,
+      right,
     }
   }
 

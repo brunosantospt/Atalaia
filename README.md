@@ -10,7 +10,7 @@ O twin simula o mesmo cenário de incêndio sob duas decisões, A e B, com os me
 |---|---|
 | `web/` | Front-end CesiumJS (Vite + TypeScript) |
 | `api/` | FastAPI: fetchers com cache (a demo corre offline) e `run(scenario)` |
-| `engines/` | Adaptadores dos motores, escolhidos na aba de settings: ELMFIRE (principal), ForeFire (alternativa), SimFire (último recurso), Cell2Fire (probabilidade de queima) |
+| `engines/` | Adaptadores dos motores, atrás de um só contrato ([engines/CONTRACT.md](engines/CONTRACT.md)) e escolhidos nas settings do HUD: ELMFIRE (principal) e SimFire (alternativa). ForeFire só se o ELMFIRE falhar; Cell2Fire para a probabilidade de queima |
 | `scenarios/` | Cenários em JSON: perímetro, janela meteorológica, ações |
 | `scripts/` | Preparação de dados |
 | `data/` | Dados brutos e cache, fora do git (ver [data/README.md](data/README.md)) |

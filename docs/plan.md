@@ -19,7 +19,7 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | | P2 Replay observado | Os 2 incêndios contados passo a passo: câmara guiada, HUD "intel" cinza, spotlight e quartéis próximos com km |
 | | P3 Gate do motor | ELMFIRE roda num teste sintético (senão, ForeFire) |
 | Ter 20 | P4 Contexto | Grade, combustível e meteo para os 2 incêndios |
-| | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run`, cache offline e aba de settings para escolher o motor |
+| | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run` e cache offline; as settings leem os motores da API |
 | | P6 Modelo rápido | Propagação no browser, desenhada no terreno |
 | | P7 Validação | Sørensen simulado vs observado, por passo e por motor |
 | Qua 21 | P8 Meios e despacho | Quartéis reais, rotas, frota animada |
@@ -100,7 +100,7 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 - **Pronto quando:** os 2 incêndios tocam do início ao fim; cada plano enquadra o seu passo com o spotlight, e os quartéis aparecem com a distância em km.
 
 ### P3 · Gate do motor
-O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de copas e projeções). Os outros motores ficam atrás do mesmo contrato e escolhem-se na aba de settings (P5).
+O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de copas e projeções). O SimFire é a alternativa, atrás do mesmo contrato; os dois escolhem-se nas settings do HUD.
 
 - `engines/CONTRACT.md`: pedido e resultado em JSON, comuns a todos os motores.
 - `engines/elmfire/`:
@@ -111,6 +111,7 @@ O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de
 - **Docker em vez de compilar no macOS:** o ELMFIRE só suporta Linux e chama o GDAL em runtime; no Mac não havia gfortran, Open MPI nem GDAL utilizáveis.
 - **Patch** (`patches/level-set-null-pointer.patch`): na 2025.0717 um ponteiro é libertado sem nunca ter sido associado, e em arm64 o ELMFIRE aborta no primeiro passo. O `main` do ELMFIRE já o inicializa da mesma forma.
 - **Unidades confirmadas** no tutorial de vento constante do ELMFIRE: 1563 ha pelo adapter contra 1559 ha no tutorial. Para lá chegar, o adapter fixa `WSMFEFF_LOW_MULT = 60/5280`: a razão comprimento/largura de Anderson espera o vento em mph, como no FARSITE e nos tutoriais, e o valor por omissão dá uma área ardida 2,5× maior.
+- `engines/simfire/`: SimFire 2.0.1 atrás do mesmo contrato, com o mesmo teste sintético. Até passar, aparece nas settings como "em preparação".
 - Se o ELMFIRE deixar de rodar, passar para o ForeFire (`engines/forefire/`, venv Python 3.12 com `forefire==2.5.0`).
 - **Ref:** `engines/forefire/*` no protótipo para a forma do adapter. O ELMFIRE é novo: não existe no protótipo.
 - **Pronto quando:** `engines/elmfire/test.sh` passa. ✅
@@ -129,7 +130,7 @@ O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de
 - `api/` em FastAPI:
   - `GET /fires`, `GET /engines`;
   - `POST /run`, que lança o adapter do motor no seu próprio venv.
-- **Aba de settings** no HUD: lista os motores de `GET /engines` (modelo rápido no browser, ELMFIRE e, se passar o gate, ForeFire), com o estado de cada um (pronto, não instalado). O motor escolhido fica guardado e é o que corre na validação (P7) e nas decisões (P9).
+- **Settings:** o painel já existe no HUD (botão Settings ou tecla S), com o incêndio e o motor (ELMFIRE ou SimFire). A escolha do motor fica guardada no browser e é a que corre na validação (P7) e nas decisões (P9). No P5, a lista de motores passa a vir de `GET /engines`, com o estado de cada um (pronto, não instalado), em vez de `web/src/engines.ts`. Junta-se o modelo rápido no browser (P6).
 - Cache por hash do cenário em `data/cache/`, para a demo rodar offline.
 - **Ref:** o plugin `fireEngines()` em `vite.config.ts`, `engines/CONTRACT.md`.
 - **Muda:** FastAPI em vez de plugin do Vite (decisão do Assessment), e a cache é nova.
@@ -186,7 +187,6 @@ O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de
 - O `directorV1` como página à parte e o seu fumo de partículas: do v1 só entram o estilo (em cinza), a câmara passo a passo e os quartéis com km, todos no P2.
 - `demo-fire.czml`, os cenários sintéticos C1/C2 e o fogo aleatório da sandbox.
 - Cell2Fire (mapa de probabilidade de queima): só se sobrar tempo depois do freeze.
-- SimFire: só como último recurso do P3, se nem o ELMFIRE nem o ForeFire rodarem.
 
 ## Lições do protótipo
 
