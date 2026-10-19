@@ -17,9 +17,9 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | Seg 19 | P0 Base web | Globo Cesium com relevo sobre Guimarães |
 | | P1 Dados dos incêndios | Progressões dos 2 incêndios em GeoJSON + métricas L3 + quartéis de bombeiros |
 | | P2 Replay observado | Os 2 incêndios contados passo a passo: câmara guiada, HUD "intel" cinza, spotlight e quartéis próximos com km |
-| | P3 Gate do motor | ForeFire roda num teste sintético (senão, SimFire) |
+| | P3 Gate do motor | ELMFIRE roda num teste sintético (senão, ForeFire) |
 | Ter 20 | P4 Contexto | Grade, combustível e meteo para os 2 incêndios |
-| | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run` e cache offline |
+| | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run`, cache offline e aba de settings para escolher o motor |
 | | P6 Modelo rápido | Propagação no browser, desenhada no terreno |
 | | P7 Validação | Sørensen simulado vs observado, por passo e por motor |
 | Qua 21 | P8 Meios e despacho | Quartéis reais, rotas, frota animada |
@@ -100,17 +100,22 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 - **Pronto quando:** os 2 incêndios tocam do início ao fim; cada plano enquadra o seu passo com o spotlight, e os quartéis aparecem com a distância em km.
 
 ### P3 · Gate do motor
-- `engines/forefire/`: `setup.sh` (venv Python 3.12, `forefire==2.5.0`) e um `adapter.py` que lê um pedido em JSON do stdin e devolve tempos de chegada.
-- Teste sintético: grade plana com vento → o fogo alonga a favor do vento.
-- Se o ForeFire não rodar até ao fim do dia, passar para o SimFire (`engines/simfire/`).
-- **Ref:** `engines/CONTRACT.md`, `engines/forefire/*`, `engines/simfire/*`.
-- **Pronto quando:** `engines/forefire/test.sh` passa.
+O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de copas e projeções). Os outros motores ficam atrás do mesmo contrato e escolhem-se na aba de settings (P5).
+
+- `engines/elmfire/`:
+  - `setup.sh`: descarrega o ELMFIRE numa versão fixa para `engines/elmfire/vendor/` (fora do git) e compila-o com gfortran e Open MPI (Homebrew), mais um venv para o adapter;
+  - `adapter.py`: lê um pedido em JSON do stdin, escreve os rasters de entrada (combustível, declive, exposição, copas, vento, humidades) e o `elmfire.data`, corre o ELMFIRE e devolve os tempos de chegada lidos do raster de saída.
+- Teste sintético: grade plana, combustível uniforme e vento constante → o fogo alonga a favor do vento.
+- Primeiro risco a fechar: a compilação no macOS (arm64), porque o ELMFIRE é desenvolvido em Linux. Se não compilar, tentar num contentor Linux; as unidades das entradas confirmam-se no tutorial de vento constante do próprio ELMFIRE.
+- Se o ELMFIRE não rodar até ao fim do dia, passar para o ForeFire (`engines/forefire/`, venv Python 3.12 com `forefire==2.5.0`).
+- **Ref:** `engines/CONTRACT.md` e `engines/forefire/*` para a forma do adapter. O ELMFIRE é novo: não existe no protótipo.
+- **Pronto quando:** `engines/elmfire/test.sh` passa.
 
 ## Fase 1 · Modelo com dados reais (ter 20)
 
 ### P4 · Contexto por incêndio
 - **Grade única:** `web/public/fires/<id>/grid.json` (origem e `cellM` em EPSG:3763, `nx` e `ny`), lido tanto pelo Python como pelo TypeScript.
-- **Combustível:** a COS2015 é rasterizada na grade e mapeada para 5 classes e para Anderson 13 / Scott-Burgan.
+- **Combustível:** a COS2015 é rasterizada na grade e mapeada para 5 classes e para Anderson 13 / Scott-Burgan (o ELMFIRE usa os modelos de Scott & Burgan).
 - **Meteo:** ERA5 horária via Open-Meteo. Vieira já está em `data/`; para Cabeceiras é preciso buscar 5–8 set 2016.
 - **Ref:** `scripts/build-real-fuels.py`, `scripts/build-era5-weather.py`, `engines/fuel_map.json`.
 - **Muda:** Cabeceiras passa a ter dados reais (no protótipo usava combustível aleatório). As constantes da grade ficam num só lugar.
@@ -120,6 +125,7 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 - `api/` em FastAPI:
   - `GET /fires`, `GET /engines`;
   - `POST /run`, que lança o adapter do motor no seu próprio venv.
+- **Aba de settings** no HUD: lista os motores de `GET /engines` (modelo rápido no browser, ELMFIRE e, se passar o gate, ForeFire), com o estado de cada um (pronto, não instalado). O motor escolhido fica guardado e é o que corre na validação (P7) e nas decisões (P9).
 - Cache por hash do cenário em `data/cache/`, para a demo rodar offline.
 - **Ref:** o plugin `fireEngines()` em `vite.config.ts`, `engines/CONTRACT.md`.
 - **Muda:** FastAPI em vez de plugin do Vite (decisão do Assessment), e a cache é nova.
@@ -127,12 +133,12 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 ### P6 · Modelo rápido no browser
 - Tempo mínimo de chegada (Dijkstra, 16 vizinhos) com Rothermel simplificado: vento, declive e humidade. Comprimento de chama pela fórmula de Byram.
 - Camada de fogo no terreno: textura de tempos de chegada e shader que avança com o relógio.
-- Serve para explorar decisões em tempo real. O ForeFire confirma.
+- Serve para explorar decisões em tempo real. O motor escolhido nas settings (ELMFIRE por omissão) confirma.
 - **Ref:** `src/model.ts`, `src/grid.ts`, `src/fireLayer.ts`.
 - **Muda:** calibrado com os ROS observados (tabela acima). No protótipo não estava calibrado.
 
 ### P7 · Validação
-- A partir do perímetro observado num passo, simular até ao passo seguinte (modelo rápido e ForeFire) e calcular o índice de Sørensen contra o observado, para os 2 incêndios.
+- A partir do perímetro observado num passo, simular até ao passo seguinte (modelo rápido e ELMFIRE) e calcular o índice de Sørensen contra o observado, para os 2 incêndios.
 - Mostrar num painel lado a lado: observado vs simulado.
 - **Ref:** `src/replay.ts`.
 - **Muda:** os 2 incêndios e resultados calculados na hora (no protótipo eram tabelas congeladas).
@@ -153,7 +159,7 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 - Num passo observado, correr três futuros com o mesmo cenário base: sem intervenção, **A** ataque à cabeça e **B** proteção das aldeias.
 - Os meios arrastam-se para o mapa: é o editor de cenários.
 - **Métricas:** área ardida, aldeias e casas atingidas (edifícios reais do OSM, `building=*`), estradas cortadas e tempo de chegada a cada aldeia.
-- Recomendação: a decisão que atinge menos aldeias e, em empate, a que deixa arder menos área. O ForeFire confirma a decisão escolhida.
+- Recomendação: a decisão que atinge menos aldeias e, em empate, a que deixa arder menos área. O motor físico escolhido nas settings confirma a decisão escolhida.
 - **Ref:** `src/director/decisions.ts`, `src/scenarios.ts`, `src/director/context.ts`, `src/units.ts`.
 - **Muda:** casas reais em vez de sintéticas, e confirmação pelo motor físico.
 
@@ -176,7 +182,7 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 - O `directorV1` como página à parte e o seu fumo de partículas: do v1 só entram o estilo (em cinza), a câmara passo a passo e os quartéis com km, todos no P2.
 - `demo-fire.czml`, os cenários sintéticos C1/C2 e o fogo aleatório da sandbox.
 - Cell2Fire (mapa de probabilidade de queima): só se sobrar tempo depois do freeze.
-- SimFire: só como plano B do P3.
+- SimFire: só como último recurso do P3, se nem o ELMFIRE nem o ForeFire rodarem.
 
 ## Lições do protótipo
 
