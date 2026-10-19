@@ -1,0 +1,405 @@
+/* Gray "intel" HUD. Neutral grays only; amber is kept for the fire. */
+
+:root {
+  --ink: #d9dcdf;
+  --ink-dim: #8b9096;
+  --ink-faint: rgba(220, 224, 228, 0.16);
+  --line: rgba(220, 224, 228, 0.35);
+  --panel: rgba(10, 11, 12, 0.62);
+  --amber: #f0a33a;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.hud,
+.markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  color: var(--ink);
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  line-height: 1.45;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.hud {
+  z-index: 3;
+  transition: opacity 0.3s;
+}
+.hud.hidden {
+  opacity: 0;
+}
+.hud.hidden * {
+  pointer-events: none !important;
+}
+
+/* ---------- frame: vignette, scanlines, thirds, corners, reticle ---------- */
+
+.hud .frame {
+  position: absolute;
+  inset: 0;
+}
+.hud .frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+.hud .frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px);
+}
+.hud .corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 0 solid var(--line);
+}
+.hud .corner.tl { top: 14px; left: 14px; border-top-width: 1px; border-left-width: 1px; }
+.hud .corner.tr { top: 14px; right: 14px; border-top-width: 1px; border-right-width: 1px; }
+.hud .corner.bl { bottom: 14px; left: 14px; border-bottom-width: 1px; border-left-width: 1px; }
+.hud .corner.br { bottom: 14px; right: 14px; border-bottom-width: 1px; border-right-width: 1px; }
+.hud .third {
+  position: absolute;
+  background: rgba(220, 224, 228, 0.06);
+}
+.hud .third.v1, .hud .third.v2 { top: 0; bottom: 0; width: 1px; }
+.hud .third.h1, .hud .third.h2 { left: 0; right: 0; height: 1px; }
+.hud .third.v1 { left: 33.333%; }
+.hud .third.v2 { left: 66.666%; }
+.hud .third.h1 { top: 33.333%; }
+.hud .third.h2 { top: 66.666%; }
+.hud .reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat;
+  mask: radial-gradient(circle, transparent 4px, #000 4.5px);
+}
+
+/* ---------- panels ---------- */
+
+.hud .panel {
+  position: absolute;
+}
+.hud .dim {
+  color: var(--ink-dim);
+}
+.hud label {
+  color: var(--ink-dim);
+  margin-right: 0.8em;
+}
+
+.hud .title {
+  top: 30px;
+  left: 34px;
+  max-width: min(46vw, 560px);
+}
+.hud .eyebrow {
+  color: var(--ink-dim);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+}
+.hud .word {
+  font-size: clamp(30px, 4.4vw, 54px);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 4px 0 6px;
+}
+.hud .title .line {
+  font-size: 12px;
+}
+
+.hud .clock {
+  top: 30px;
+  right: 34px;
+  text-align: right;
+  min-width: 200px;
+}
+.hud .live {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--ink-dim);
+}
+.hud .live i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  vertical-align: 0;
+  animation: blink 1.6s steps(2, start) infinite;
+}
+.hud.paused .live i {
+  animation: none;
+  background: var(--ink-dim);
+}
+@keyframes blink {
+  to { visibility: hidden; }
+}
+.hud .time {
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+.hud .pair {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.4em;
+  margin-top: 6px;
+}
+.hud .pair span:last-child {
+  color: var(--amber);
+}
+
+.hud .rail {
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 10px;
+  border-right: 1px solid var(--line);
+  text-align: right;
+}
+.hud .rail div {
+  display: flex;
+  flex-direction: column;
+}
+.hud .rail label {
+  font-size: 9px;
+  margin: 0;
+}
+
+.hud .position {
+  left: 34px;
+  bottom: 32px;
+}
+
+/* ---------- caption card and transport ---------- */
+
+.hud .bottom {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--credits-h, 20px) + 14px);
+  transform: translateX(-50%);
+  width: min(680px, calc(100vw - 32px));
+}
+.hud .card {
+  background: var(--panel);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid var(--line);
+  padding: 10px 14px 11px;
+  backdrop-filter: blur(3px);
+}
+.hud .card-head {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-dim);
+}
+.hud .card-title {
+  font-size: 14px;
+  margin-top: 3px;
+}
+.hud .card-body {
+  color: var(--ink-dim);
+  margin-top: 3px;
+  min-height: 1.45em;
+}
+
+.hud .transport {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  pointer-events: auto;
+}
+.hud button,
+.hud select {
+  font: inherit;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--panel);
+  border: 1px solid var(--ink-faint);
+  height: 26px;
+  cursor: pointer;
+}
+.hud .transport > button {
+  width: 30px;
+  padding: 0;
+}
+.hud button:hover,
+.hud select:hover {
+  border-color: var(--line);
+}
+.hud .ticks {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  height: 26px;
+}
+.hud .tick {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.hud .tick i {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: var(--ink-faint);
+}
+.hud .tick.past i {
+  background: var(--ink-dim);
+}
+.hud .tick.now i {
+  height: 5px;
+  background: var(--ink);
+}
+.hud .transport select {
+  padding: 0 6px;
+  max-width: 44%;
+}
+.hud .keys {
+  margin-top: 6px;
+  font-size: 9px;
+  color: var(--ink-dim);
+  text-align: center;
+  letter-spacing: 0.14em;
+}
+
+/* ---------- markers ---------- */
+
+.markers {
+  z-index: 2;
+}
+.markers svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.markers .lead {
+  opacity: 0;
+  transition: opacity 0.4s;
+  stroke: var(--ink);
+  stroke-width: 1;
+  fill: none;
+}
+.markers circle.lead {
+  fill: var(--ink);
+  stroke: none;
+}
+.markers .lead-ignition,
+.markers .lead-step {
+  stroke: var(--amber);
+}
+.markers circle.lead-ignition,
+.markers circle.lead-step {
+  fill: var(--amber);
+}
+.markers .lead.on {
+  opacity: 0.85;
+}
+.markers .tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 7px;
+  align-items: center;
+  white-space: nowrap;
+  padding: 4px 8px 4px 4px;
+  background: var(--panel);
+  border: 1px solid var(--ink-faint);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.markers .tag.on {
+  opacity: 1;
+}
+.markers .tag b {
+  grid-row: span 2;
+  min-width: 18px;
+  padding: 2px 4px;
+  text-align: center;
+  font-weight: 600;
+  color: #0b0c0d;
+  background: var(--ink);
+  text-shadow: none;
+}
+.markers .tag-ignition b,
+.markers .tag-step b {
+  background: var(--amber);
+}
+.markers .tag small {
+  font-size: 9px;
+  color: var(--ink-dim);
+}
+
+/* ---------- credit line: imagery, data and stations, centred under the card and quiet ---------- */
+
+.cesium-viewer-bottom {
+  left: 50% !important;
+  bottom: 8px !important;
+  transform: translateX(-50%);
+  width: min(680px, calc(100vw - 32px));
+  padding: 0;
+  text-align: center;
+  opacity: 0.7;
+  z-index: 4;
+}
+.cesium-viewer .cesium-widget-credits {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+}
+
+/* Medium screens: the position readout no longer fits beside the card. */
+@media (max-width: 1180px) {
+  .hud .position {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .hud .rail,
+  .hud .keys {
+    display: none;
+  }
+  .hud .title,
+  .hud .clock {
+    top: 22px;
+  }
+  .hud .title {
+    left: 22px;
+  }
+  .hud .clock {
+    right: 22px;
+    min-width: 0;
+  }
+  .hud .time {
+    font-size: 24px;
+  }
+}
