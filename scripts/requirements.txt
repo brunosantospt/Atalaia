@@ -1,0 +1,7 @@
+# Data scripts (python3 -m venv scripts/.venv && scripts/.venv/bin/pip install -r scripts/requirements.txt)
+# pyshp reads shapefiles without GDAL, so this installs from wheels on any recent Python.
+pyshp>=2.3
+shapely>=2.1
+numpy>=2.0
+pyproj>=3.7
+xlrd>=2.0

@@ -1,0 +1,152 @@
+{
+  "id": "VieiradoMinho_10082016",
+  "name": "Vieira do Minho",
+  "parish": "Rossas",
+  "incidentId": "2016030060428",
+  "timeZone": "Europe/Lisbon",
+  "start": "2016-08-10T10:00",
+  "end": "2016-08-11T08:30",
+  "ignition": {
+    "lon": -8.115289,
+    "lat": 41.557209
+  },
+  "ignitions": [
+    {
+      "time": "2016-08-10T10:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 6.4,
+      "lon": -8.115289,
+      "lat": 41.557209
+    }
+  ],
+  "bbox": [
+    -8.206525,
+    41.530473,
+    -8.099319,
+    41.566575
+  ],
+  "areaHa": {
+    "timed": 1621.5,
+    "untimed": 349.1,
+    "total": 1970.5
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2016-08-10T10:00",
+      "hours": 0.0,
+      "areaHa": 6.4,
+      "addedHa": 6.4,
+      "period": null,
+      "center": {
+        "lon": -8.115289,
+        "lat": 41.557209
+      },
+      "bbox": [
+        -8.117282,
+        41.555925,
+        -8.113209,
+        41.558402
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2016-08-10T15:00",
+      "hours": 5.0,
+      "areaHa": 705.6,
+      "addedHa": 699.2,
+      "period": 1,
+      "center": {
+        "lon": -8.133333,
+        "lat": 41.550276
+      },
+      "bbox": [
+        -8.165338,
+        41.53828,
+        -8.104734,
+        41.565626
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2016-08-11T03:30",
+      "hours": 17.5,
+      "areaHa": 1573.2,
+      "addedHa": 867.7,
+      "period": 2,
+      "center": {
+        "lon": -8.163968,
+        "lat": 41.547386
+      },
+      "bbox": [
+        -8.202484,
+        41.530473,
+        -8.104734,
+        41.566575
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2016-08-11T08:30",
+      "hours": 22.5,
+      "areaHa": 1621.5,
+      "addedHa": 48.2,
+      "period": 3,
+      "center": {
+        "lon": -8.200937,
+        "lat": 41.535526
+      },
+      "bbox": [
+        -8.206525,
+        41.530473,
+        -8.104734,
+        41.566575
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2016-08-10T10:00",
+      "end": "2016-08-10T15:00",
+      "durationH": 5.0,
+      "areaHa": 705.0,
+      "growthHaPerH": 141.0,
+      "rosMPerH": 875.0,
+      "maxRosMPerH": 875.0,
+      "spreadTowardDeg": 248.0,
+      "intensityKWPerM": 7165.0
+    },
+    {
+      "period": 2,
+      "start": "2016-08-10T15:00",
+      "end": "2016-08-11T03:30",
+      "durationH": 12.5,
+      "areaHa": 865.8,
+      "growthHaPerH": 69.3,
+      "rosMPerH": 254.0,
+      "maxRosMPerH": 253.0,
+      "spreadTowardDeg": 263.0,
+      "intensityKWPerM": 2532.0
+    },
+    {
+      "period": 3,
+      "start": null,
+      "end": "2016-08-11T08:30",
+      "durationH": null,
+      "areaHa": 49.2,
+      "growthHaPerH": null,
+      "rosMPerH": null,
+      "maxRosMPerH": null,
+      "spreadTowardDeg": null,
+      "intensityKWPerM": null
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

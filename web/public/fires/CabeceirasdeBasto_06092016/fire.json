@@ -1,0 +1,168 @@
+{
+  "id": "CabeceirasdeBasto_06092016",
+  "name": "Cabeceiras de Basto",
+  "parish": "Rio Douro",
+  "incidentId": "2016030067614",
+  "timeZone": "Europe/Lisbon",
+  "start": "2016-09-06T04:00",
+  "end": "2016-09-07T12:30",
+  "ignition": {
+    "lon": -7.936506,
+    "lat": 41.552461
+  },
+  "ignitions": [
+    {
+      "time": "2016-09-06T04:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 12.4,
+      "lon": -7.936506,
+      "lat": 41.552461
+    },
+    {
+      "time": "2016-09-06T13:30",
+      "hours": 9.5,
+      "chain": 2,
+      "areaHa": 14.8,
+      "lon": -7.94432,
+      "lat": 41.574365
+    },
+    {
+      "time": "2016-09-06T13:30",
+      "hours": 9.5,
+      "chain": 2,
+      "areaHa": 1.7,
+      "lon": -7.934321,
+      "lat": 41.565559
+    }
+  ],
+  "bbox": [
+    -7.99331,
+    41.543411,
+    -7.903982,
+    41.606252
+  ],
+  "areaHa": {
+    "timed": 1332.2,
+    "untimed": 493.6,
+    "total": 1825.8
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2016-09-06T04:00",
+      "hours": 0.0,
+      "areaHa": 12.4,
+      "addedHa": 12.4,
+      "period": null,
+      "center": {
+        "lon": -7.936506,
+        "lat": 41.552461
+      },
+      "bbox": [
+        -7.939135,
+        41.550496,
+        -7.934181,
+        41.554351
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2016-09-06T13:30",
+      "hours": 9.5,
+      "areaHa": 592.6,
+      "addedHa": 580.2,
+      "period": 1,
+      "center": {
+        "lon": -7.946262,
+        "lat": 41.560458
+      },
+      "bbox": [
+        -7.961608,
+        41.543411,
+        -7.931236,
+        41.575893
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2016-09-07T00:30",
+      "hours": 20.5,
+      "areaHa": 1242.0,
+      "addedHa": 649.3,
+      "period": 2,
+      "center": {
+        "lon": -7.934433,
+        "lat": 41.584361
+      },
+      "bbox": [
+        -7.961608,
+        41.543411,
+        -7.914647,
+        41.600165
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2016-09-07T12:30",
+      "hours": 32.5,
+      "areaHa": 1332.2,
+      "addedHa": 90.3,
+      "period": 3,
+      "center": {
+        "lon": -7.922309,
+        "lat": 41.568521
+      },
+      "bbox": [
+        -7.961608,
+        41.543411,
+        -7.914647,
+        41.600165
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2016-09-06T04:00",
+      "end": "2016-09-06T13:30",
+      "durationH": 9.5,
+      "areaHa": 576.0,
+      "growthHaPerH": 60.6,
+      "rosMPerH": 292.0,
+      "maxRosMPerH": 292.0,
+      "spreadTowardDeg": 331.0,
+      "intensityKWPerM": 2934.0
+    },
+    {
+      "period": 2,
+      "start": "2016-09-06T13:30",
+      "end": "2016-09-07T00:30",
+      "durationH": 11.0,
+      "areaHa": 664.5,
+      "growthHaPerH": 60.4,
+      "rosMPerH": 311.0,
+      "maxRosMPerH": 311.0,
+      "spreadTowardDeg": 35.0,
+      "intensityKWPerM": 2972.0
+    },
+    {
+      "period": 3,
+      "start": "2016-09-07T00:30",
+      "end": "2016-09-07T12:30",
+      "durationH": 12.0,
+      "areaHa": 91.0,
+      "growthHaPerH": 7.6,
+      "rosMPerH": 53.0,
+      "maxRosMPerH": 55.0,
+      "spreadTowardDeg": 114.0,
+      "intensityKWPerM": 769.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}
