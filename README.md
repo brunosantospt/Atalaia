@@ -4,7 +4,7 @@ Gêmeo digital de decisão para incêndios rurais. Hack4Guimarães 2035, desafio
 
 O twin simula o mesmo cenário de incêndio sob duas decisões, A e B, com os mesmos dados, o mesmo perímetro inicial e o mesmo motor de propagação. Depois compara área ardida, casas e pessoas ameaçadas, tempos de chegada e estradas cortadas. O mapa CesiumJS é partilhado, com vistas por papel (Câmara, GNR, INEM) e um resumo para o comandante.
 
-## Estrutura (planejada)
+## Estrutura (planeada)
 
 | Pasta | O quê |
 |---|---|
