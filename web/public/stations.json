@@ -1,0 +1,1720 @@
+{
+ "source": {
+  "data": "© contribuidores do OpenStreetMap",
+  "licence": "ODbL 1.0",
+  "query": "amenity=fire_station in Portugal within 100 km of Monte da Penha",
+  "osmDate": "2026-10-19T21:10:01Z"
+ },
+ "stations": [
+  {
+   "id": "way/1198488178",
+   "name": "Bombeiros Municipais de Viana do Castelo",
+   "short": "BM Viana do Castelo",
+   "kind": "municipal",
+   "place": "Viana do Castelo",
+   "section": null,
+   "lat": 41.70516,
+   "lon": -8.81607
+  },
+  {
+   "id": "way/524619738",
+   "name": "Bombeiros Privativos da Portucel - Cacia",
+   "short": "BP Portucel - Cacia",
+   "kind": "private",
+   "place": "Portucel - Cacia",
+   "section": null,
+   "lat": 40.68514,
+   "lon": -8.59605
+  },
+  {
+   "id": "way/151842033",
+   "name": "Bombeiros Privativos Salvador Caetano",
+   "short": "BP Salvador Caetano",
+   "kind": "private",
+   "place": "Salvador Caetano",
+   "section": null,
+   "lat": 40.90596,
+   "lon": -8.61483
+  },
+  {
+   "id": "way/524507683",
+   "name": "Bombeiros Privativos da Vista Alegre",
+   "short": "BP Vista Alegre",
+   "kind": "private",
+   "place": "Vista Alegre",
+   "section": null,
+   "lat": 40.59086,
+   "lon": -8.6831
+  },
+  {
+   "id": "way/526849681",
+   "name": "Bombeiros Sapadores de Braga",
+   "short": "BS Braga",
+   "kind": "professional",
+   "place": "Braga",
+   "section": null,
+   "lat": 41.56875,
+   "lon": -8.42702
+  },
+  {
+   "id": "way/259475550",
+   "name": "Batalhão de Sapadores Bombeiros de Gaia",
+   "short": "BS Gaia",
+   "kind": "professional",
+   "place": "Gaia",
+   "section": null,
+   "lat": 41.11795,
+   "lon": -8.59533
+  },
+  {
+   "id": "way/306717178",
+   "name": "Regimento de Sapadores Bombeiros",
+   "short": "BS Porto",
+   "kind": "professional",
+   "place": "Porto",
+   "section": null,
+   "lat": 41.16427,
+   "lon": -8.61452
+  },
+  {
+   "id": "way/826105771",
+   "name": "Corpo de Bombeiros Sapadores de Viseu",
+   "short": "BS Viseu",
+   "kind": "professional",
+   "place": "Viseu",
+   "section": null,
+   "lat": 40.72719,
+   "lon": -7.89084
+  },
+  {
+   "id": "way/706143767",
+   "name": "Bombeiros Voluntários",
+   "short": "BV",
+   "kind": "volunteer",
+   "place": null,
+   "section": null,
+   "lat": 41.38026,
+   "lon": -8.76187
+  },
+  {
+   "id": "way/108565618",
+   "name": "Bombeiros Voluntários da Aguda",
+   "short": "BV Aguda",
+   "kind": "volunteer",
+   "place": "Aguda",
+   "section": null,
+   "lat": 41.04917,
+   "lon": -8.65335
+  },
+  {
+   "id": "way/86579505",
+   "name": "Bombeiros Voluntários de Águeda",
+   "short": "BV Águeda",
+   "kind": "volunteer",
+   "place": "Águeda",
+   "section": null,
+   "lat": 40.57224,
+   "lon": -8.44354
+  },
+  {
+   "id": "way/419515644",
+   "name": "Bombeiros Voluntários de Águeda - Secção de Agadão",
+   "short": "BV Águeda (Agadão)",
+   "kind": "volunteer",
+   "place": "Águeda",
+   "section": "Agadão",
+   "lat": 40.54091,
+   "lon": -8.3151
+  },
+  {
+   "id": "way/401997628",
+   "name": "Bombeiros Voluntários de Aguiar da Beira",
+   "short": "BV Aguiar da Beira",
+   "kind": "volunteer",
+   "place": "Aguiar da Beira",
+   "section": null,
+   "lat": 40.8176,
+   "lon": -7.53703
+  },
+  {
+   "id": "way/1376585970",
+   "name": "Quartel dos Bombeiros Voluntários de Albergaria-a-Velha",
+   "short": "BV Albergaria-a-Velha",
+   "kind": "volunteer",
+   "place": "Albergaria-a-Velha",
+   "section": null,
+   "lat": 40.70526,
+   "lon": -8.49195
+  },
+  {
+   "id": "way/441777810",
+   "name": "Bombeiros Voluntários de Alijó",
+   "short": "BV Alijó",
+   "kind": "volunteer",
+   "place": "Alijó",
+   "section": null,
+   "lat": 41.27539,
+   "lon": -7.47607
+  },
+  {
+   "id": "way/1463409867",
+   "name": "Bombeiros Voluntários de Amarante",
+   "short": "BV Amarante",
+   "kind": "volunteer",
+   "place": "Amarante",
+   "section": null,
+   "lat": 41.27281,
+   "lon": -8.08057
+  },
+  {
+   "id": "way/166715546",
+   "name": "Bombeiros Voluntários de Amares",
+   "short": "BV Amares",
+   "kind": "volunteer",
+   "place": "Amares",
+   "section": null,
+   "lat": 41.62663,
+   "lon": -8.37001
+  },
+  {
+   "id": "way/211013770",
+   "name": "Bombeiros Voluntários de Arcos de Valdevez",
+   "short": "BV Arcos de Valdevez",
+   "kind": "volunteer",
+   "place": "Arcos de Valdevez",
+   "section": null,
+   "lat": 41.84777,
+   "lon": -8.41975
+  },
+  {
+   "id": "way/342364381",
+   "name": "Associação Humanitária de Bombeiros Voluntários da Areosa - Rio Tinto",
+   "short": "BV Areosa - Rio Tinto",
+   "kind": "volunteer",
+   "place": "Areosa - Rio Tinto",
+   "section": null,
+   "lat": 41.18058,
+   "lon": -8.56269
+  },
+  {
+   "id": "way/105142994",
+   "name": "Bombeiros Voluntários de Armamar",
+   "short": "BV Armamar",
+   "kind": "volunteer",
+   "place": "Armamar",
+   "section": null,
+   "lat": 41.10604,
+   "lon": -7.69207
+  },
+  {
+   "id": "way/889373621",
+   "name": "Bombeiros Voluntários de Arouca",
+   "short": "BV Arouca",
+   "kind": "volunteer",
+   "place": "Arouca",
+   "section": null,
+   "lat": 40.9284,
+   "lon": -8.24255
+  },
+  {
+   "id": "way/871895184",
+   "name": "Bombeiros de Arrifana",
+   "short": "BV Arrifana",
+   "kind": "volunteer",
+   "place": "Arrifana",
+   "section": null,
+   "lat": 40.91126,
+   "lon": -8.49599
+  },
+  {
+   "id": "way/353879643",
+   "name": "Bombeiros Voluntários de Aveiro Novos",
+   "short": "BV Aveiro Novos",
+   "kind": "volunteer",
+   "place": "Aveiro Novos",
+   "section": null,
+   "lat": 40.6439,
+   "lon": -8.65184
+  },
+  {
+   "id": "way/181068968",
+   "name": "Bombeiros Voluntários de Aveiro Novos - Secção de S. Jacinto",
+   "short": "BV Aveiro Novos (S. Jacinto)",
+   "kind": "volunteer",
+   "place": "Aveiro Novos",
+   "section": "S. Jacinto",
+   "lat": 40.66794,
+   "lon": -8.73445
+  },
+  {
+   "id": "way/138323750",
+   "name": "Bombeiros Voluntários de Aveiro Velhos",
+   "short": "BV Aveiro Velhos",
+   "kind": "volunteer",
+   "place": "Aveiro Velhos",
+   "section": null,
+   "lat": 40.63201,
+   "lon": -8.64895
+  },
+  {
+   "id": "way/128432681",
+   "name": "Bombeiros Voluntários de Avintes",
+   "short": "BV Avintes",
+   "kind": "volunteer",
+   "place": "Avintes",
+   "section": null,
+   "lat": 41.11352,
+   "lon": -8.56107
+  },
+  {
+   "id": "way/451797871",
+   "name": "Bombeiros Voluntários de Baião",
+   "short": "BV Baião",
+   "kind": "volunteer",
+   "place": "Baião",
+   "section": null,
+   "lat": 41.15952,
+   "lon": -8.03804
+  },
+  {
+   "id": "way/157243380",
+   "name": "Bombeiros Voluntários de Baltar",
+   "short": "BV Baltar",
+   "kind": "volunteer",
+   "place": "Baltar",
+   "section": null,
+   "lat": 41.19071,
+   "lon": -8.38618
+  },
+  {
+   "id": "way/986725891",
+   "name": "Bombeiros Voluntários de Barcelinhos",
+   "short": "BV Barcelinhos",
+   "kind": "volunteer",
+   "place": "Barcelinhos",
+   "section": null,
+   "lat": 41.52087,
+   "lon": -8.62397
+  },
+  {
+   "id": "way/104660725",
+   "name": "Bombeiros Voluntários de Barcelos",
+   "short": "BV Barcelos",
+   "kind": "volunteer",
+   "place": "Barcelos",
+   "section": null,
+   "lat": 41.53204,
+   "lon": -8.61176
+  },
+  {
+   "id": "way/1493510906",
+   "name": "Bombeiros Voluntários de Boticas",
+   "short": "BV Boticas",
+   "kind": "volunteer",
+   "place": "Boticas",
+   "section": null,
+   "lat": 41.68905,
+   "lon": -7.665
+  },
+  {
+   "id": "way/1361135886",
+   "name": "Bombeiros Voluntários de Braga",
+   "short": "BV Braga",
+   "kind": "volunteer",
+   "place": "Braga",
+   "section": null,
+   "lat": 41.51928,
+   "lon": -8.4219
+  },
+  {
+   "id": "way/878008770",
+   "name": "Bombeiros Cabeceirenses",
+   "short": "BV Cabeceirenses",
+   "kind": "volunteer",
+   "place": "Cabeceirenses",
+   "section": null,
+   "lat": 41.5139,
+   "lon": -7.9896
+  },
+  {
+   "id": "way/162471041",
+   "name": "Bombeiros Voluntários de Caminha",
+   "short": "BV Caminha",
+   "kind": "volunteer",
+   "place": "Caminha",
+   "section": null,
+   "lat": 41.87528,
+   "lon": -8.83987
+  },
+  {
+   "id": "way/1132615398",
+   "name": "Bombeiros Voluntários de Carrazeda de Ansiães",
+   "short": "BV Carrazeda de Ansiães",
+   "kind": "volunteer",
+   "place": "Carrazeda de Ansiães",
+   "section": null,
+   "lat": 41.24154,
+   "lon": -7.30746
+  },
+  {
+   "id": "way/1213128840",
+   "name": "Bombeiros Voluntários de Carrazedo de Montenegro",
+   "short": "BV Carrazedo de Montenegro",
+   "kind": "volunteer",
+   "place": "Carrazedo de Montenegro",
+   "section": null,
+   "lat": 41.56825,
+   "lon": -7.42547
+  },
+  {
+   "id": "way/1228323477",
+   "name": "Bombeiros Voluntários dos Carvalhos",
+   "short": "BV Carvalhos",
+   "kind": "volunteer",
+   "place": "Carvalhos",
+   "section": null,
+   "lat": 41.06376,
+   "lon": -8.56976
+  },
+  {
+   "id": "way/1536617627",
+   "name": "Bombeiros Voluntários de Castelo de Paiva",
+   "short": "BV Castelo de Paiva",
+   "kind": "volunteer",
+   "place": "Castelo de Paiva",
+   "section": null,
+   "lat": 41.04173,
+   "lon": -8.27356
+  },
+  {
+   "id": "way/891966332",
+   "name": "Bombeiros Voluntários de Castro Daire",
+   "short": "BV Castro Daire",
+   "kind": "volunteer",
+   "place": "Castro Daire",
+   "section": null,
+   "lat": 40.89918,
+   "lon": -7.9348
+  },
+  {
+   "id": "way/1546848032",
+   "name": "Bombeiros Voluntários Celoricenses",
+   "short": "BV Celoricenses",
+   "kind": "volunteer",
+   "place": "Celoricenses",
+   "section": null,
+   "lat": 41.38641,
+   "lon": -8.00066
+  },
+  {
+   "id": "way/885235103",
+   "name": "Bombeiros Voluntários de Cerva",
+   "short": "BV Cerva",
+   "kind": "volunteer",
+   "place": "Cerva",
+   "section": null,
+   "lat": 41.47088,
+   "lon": -7.84881
+  },
+  {
+   "id": "way/329127763",
+   "name": "Bombeiros Voluntários de Cete",
+   "short": "BV Cete",
+   "kind": "volunteer",
+   "place": "Cete",
+   "section": null,
+   "lat": 41.17203,
+   "lon": -8.35836
+  },
+  {
+   "id": "way/724146490",
+   "name": "Bombeiros Voluntários de Cinfães",
+   "short": "BV Cinfães",
+   "kind": "volunteer",
+   "place": "Cinfães",
+   "section": null,
+   "lat": 41.07342,
+   "lon": -8.09748
+  },
+  {
+   "id": "way/544348440",
+   "name": "Bombeiros Voluntários de Coimbrões",
+   "short": "BV Coimbrões",
+   "kind": "volunteer",
+   "place": "Coimbrões",
+   "section": null,
+   "lat": 41.12681,
+   "lon": -8.6289
+  },
+  {
+   "id": "way/1225637981",
+   "name": "Bombeiros Voluntários do Concelho de Espinho",
+   "short": "BV Concelho de Espinho",
+   "kind": "volunteer",
+   "place": "Concelho de Espinho",
+   "section": null,
+   "lat": 41.00146,
+   "lon": -8.62623
+  },
+  {
+   "id": "way/440392345",
+   "name": "Bombeiros Voluntários de Crestuma",
+   "short": "BV Crestuma",
+   "kind": "volunteer",
+   "place": "Crestuma",
+   "section": null,
+   "lat": 41.055,
+   "lon": -8.51578
+  },
+  {
+   "id": "way/805997389",
+   "name": "Bombeiros Voluntários da Cruz Branca",
+   "short": "BV Cruz Branca",
+   "kind": "volunteer",
+   "place": "Cruz Branca",
+   "section": null,
+   "lat": 41.31476,
+   "lon": -7.73048
+  },
+  {
+   "id": "way/802489809",
+   "name": "Bombeiros Voluntários da Cruz Verde",
+   "short": "BV Cruz Verde",
+   "kind": "volunteer",
+   "place": "Cruz Verde",
+   "section": null,
+   "lat": 41.29927,
+   "lon": -7.74274
+  },
+  {
+   "id": "way/1124313635",
+   "name": "Bombeiros da Cruz Verde - Secção de Justes",
+   "short": "BV Cruz Verde (Justes)",
+   "kind": "volunteer",
+   "place": "Cruz Verde",
+   "section": "Justes",
+   "lat": 41.34779,
+   "lon": -7.61907
+  },
+  {
+   "id": "way/391810110",
+   "name": "Bombeiros Voluntários de Entre-os-Rios",
+   "short": "BV Entre-os-Rios",
+   "kind": "volunteer",
+   "place": "Entre-os-Rios",
+   "section": null,
+   "lat": 41.08962,
+   "lon": -8.29037
+  },
+  {
+   "id": "node/1183701876",
+   "name": "Bombeiros Voluntários de Ermesinde",
+   "short": "BV Ermesinde",
+   "kind": "volunteer",
+   "place": "Ermesinde",
+   "section": null,
+   "lat": 41.21734,
+   "lon": -8.55015
+  },
+  {
+   "id": "way/1495723498",
+   "name": "Bombeiros Voluntários de Ervedosa do Douro",
+   "short": "BV Ervedosa do Douro",
+   "kind": "volunteer",
+   "place": "Ervedosa do Douro",
+   "section": null,
+   "lat": 41.16721,
+   "lon": -7.47867
+  },
+  {
+   "id": "way/400391529",
+   "name": "Bombeiros Voluntários de Esmoriz",
+   "short": "BV Esmoriz",
+   "kind": "volunteer",
+   "place": "Esmoriz",
+   "section": null,
+   "lat": 40.95825,
+   "lon": -8.63272
+  },
+  {
+   "id": "way/509506939",
+   "name": "Bombeiros Voluntários Espinhenses",
+   "short": "BV Espinhenses",
+   "kind": "volunteer",
+   "place": "Espinhenses",
+   "section": null,
+   "lat": 41.00906,
+   "lon": -8.64108
+  },
+  {
+   "id": "way/1263725929",
+   "name": "Bombeiros Voluntários de Espinho",
+   "short": "BV Espinho",
+   "kind": "volunteer",
+   "place": "Espinho",
+   "section": null,
+   "lat": 41.00574,
+   "lon": -8.64166
+  },
+  {
+   "id": "way/108167762",
+   "name": "Bombeiros Voluntários de Esposende",
+   "short": "BV Esposende",
+   "kind": "volunteer",
+   "place": "Esposende",
+   "section": null,
+   "lat": 41.53391,
+   "lon": -8.77868
+  },
+  {
+   "id": "way/134486162",
+   "name": "Associação Humanitária dos Bombeiros Voluntários de Estarreja",
+   "short": "BV Estarreja",
+   "kind": "volunteer",
+   "place": "Estarreja",
+   "section": null,
+   "lat": 40.7608,
+   "lon": -8.57273
+  },
+  {
+   "id": "way/90646600",
+   "name": "Bombeiros Voluntários de Fafe",
+   "short": "BV Fafe",
+   "kind": "volunteer",
+   "place": "Fafe",
+   "section": null,
+   "lat": 41.44676,
+   "lon": -8.17603
+  },
+  {
+   "id": "way/569455874",
+   "name": "Bombeiros Voluntários de Fajões",
+   "short": "BV Fajões",
+   "kind": "volunteer",
+   "place": "Fajões",
+   "section": null,
+   "lat": 40.91846,
+   "lon": -8.42534
+  },
+  {
+   "id": "way/538953580",
+   "name": "Bombeiros Voluntários Famalicenses",
+   "short": "BV Famalicenses",
+   "kind": "volunteer",
+   "place": "Famalicenses",
+   "section": null,
+   "lat": 41.41121,
+   "lon": -8.51757
+  },
+  {
+   "id": "node/1251618757",
+   "name": "Bombeiros Voluntários de Fão",
+   "short": "BV Fão",
+   "kind": "volunteer",
+   "place": "Fão",
+   "section": null,
+   "lat": 41.514,
+   "lon": -8.77203
+  },
+  {
+   "id": "way/1420214165",
+   "name": "Bombeiros Voluntários de Farejinhas",
+   "short": "BV Farejinhas",
+   "kind": "volunteer",
+   "place": "Farejinhas",
+   "section": null,
+   "lat": 40.9082,
+   "lon": -7.90012
+  },
+  {
+   "id": "way/682465807",
+   "name": "Bombeiros Voluntários de Favaios",
+   "short": "BV Favaios",
+   "kind": "volunteer",
+   "place": "Favaios",
+   "section": null,
+   "lat": 41.26901,
+   "lon": -7.50188
+  },
+  {
+   "id": "way/1361189503",
+   "name": "Bombeiros Voluntários de Felgueiras",
+   "short": "BV Felgueiras",
+   "kind": "volunteer",
+   "place": "Felgueiras",
+   "section": null,
+   "lat": 41.36863,
+   "lon": -8.19711
+  },
+  {
+   "id": "way/843861861",
+   "name": "Bombeiros Voluntários Flavienses",
+   "short": "BV Flavienses",
+   "kind": "volunteer",
+   "place": "Flavienses",
+   "section": null,
+   "lat": 41.7367,
+   "lon": -7.46246
+  },
+  {
+   "id": "node/2595359959",
+   "name": "Bombeiros Voluntários de Fragoso",
+   "short": "BV Fragoso",
+   "kind": "volunteer",
+   "place": "Fragoso",
+   "section": null,
+   "lat": 41.61287,
+   "lon": -8.69906
+  },
+  {
+   "id": "way/1420210149",
+   "name": "Bombeiros Voluntários de Freamunde",
+   "short": "BV Freamunde",
+   "kind": "volunteer",
+   "place": "Freamunde",
+   "section": null,
+   "lat": 41.28653,
+   "lon": -8.34434
+  },
+  {
+   "id": "way/1062152231",
+   "name": "Bombeiros Voluntarios de Freixo",
+   "short": "BV Freixo",
+   "kind": "volunteer",
+   "place": "Freixo",
+   "section": null,
+   "lat": 41.6567,
+   "lon": -8.58438
+  },
+  {
+   "id": "way/259204988",
+   "name": "Bombeiros Voluntários de Gondomar",
+   "short": "BV Gondomar",
+   "kind": "volunteer",
+   "place": "Gondomar",
+   "section": null,
+   "lat": 41.14263,
+   "lon": -8.53326
+  },
+  {
+   "id": "way/211570064",
+   "name": "Associação Humanitária dos Bombeiros Voluntários de Guimarães",
+   "short": "BV Guimarães",
+   "kind": "volunteer",
+   "place": "Guimarães",
+   "section": null,
+   "lat": 41.44712,
+   "lon": -8.29878
+  },
+  {
+   "id": "way/450768973",
+   "name": "Bombeiros Voluntários de Ílhavo",
+   "short": "BV Ílhavo",
+   "kind": "volunteer",
+   "place": "Ílhavo",
+   "section": null,
+   "lat": 40.60008,
+   "lon": -8.67669
+  },
+  {
+   "id": "way/1071019106",
+   "name": "Bombeiros Voluntários de Lamego",
+   "short": "BV Lamego",
+   "kind": "volunteer",
+   "place": "Lamego",
+   "section": null,
+   "lat": 41.09697,
+   "lon": -7.81246
+  },
+  {
+   "id": "way/658592799",
+   "name": "Bombeiros Voluntários Leça da Palmeira",
+   "short": "BV Leça da Palmeira",
+   "kind": "volunteer",
+   "place": "Leça da Palmeira",
+   "section": null,
+   "lat": 41.1893,
+   "lon": -8.69703
+  },
+  {
+   "id": "way/1228133674",
+   "name": "Bombeiros Voluntários Leça Do Balio",
+   "short": "BV Leça Do Balio",
+   "kind": "volunteer",
+   "place": "Leça Do Balio",
+   "section": null,
+   "lat": 41.21194,
+   "lon": -8.63291
+  },
+  {
+   "id": "way/108363206",
+   "name": "Bombeiros Voluntários de Leixões",
+   "short": "BV Leixões",
+   "kind": "volunteer",
+   "place": "Leixões",
+   "section": null,
+   "lat": 41.18549,
+   "lon": -8.67759
+  },
+  {
+   "id": "way/170364191",
+   "name": "Bombeiros Voluntários da Lixa",
+   "short": "BV Lixa",
+   "kind": "volunteer",
+   "place": "Lixa",
+   "section": null,
+   "lat": 41.32825,
+   "lon": -8.14993
+  },
+  {
+   "id": "way/328631937",
+   "name": "Bombeiros de Lordelo",
+   "short": "BV Lordelo",
+   "kind": "volunteer",
+   "place": "Lordelo",
+   "section": null,
+   "lat": 41.23332,
+   "lon": -8.4148
+  },
+  {
+   "id": "way/1062140398",
+   "name": "Bombeiros Voluntários de Lourosa",
+   "short": "BV Lourosa",
+   "kind": "volunteer",
+   "place": "Lourosa",
+   "section": null,
+   "lat": 40.97832,
+   "lon": -8.53722
+  },
+  {
+   "id": "way/108102246",
+   "name": "Bombeiros Voluntários de Lousada",
+   "short": "BV Lousada",
+   "kind": "volunteer",
+   "place": "Lousada",
+   "section": null,
+   "lat": 41.27586,
+   "lon": -8.28278
+  },
+  {
+   "id": "way/818059741",
+   "name": "Bombeiros Voluntários de Mangualde",
+   "short": "BV Mangualde",
+   "kind": "volunteer",
+   "place": "Mangualde",
+   "section": null,
+   "lat": 40.61091,
+   "lon": -7.76127
+  },
+  {
+   "id": "way/884931018",
+   "name": "Bombeiros Voluntários de Marco de Canaveses",
+   "short": "BV Marco de Canaveses",
+   "kind": "volunteer",
+   "place": "Marco de Canaveses",
+   "section": null,
+   "lat": 41.19002,
+   "lon": -8.14544
+  },
+  {
+   "id": "way/1272107732",
+   "name": "Bombeiros Volutários de Mêda",
+   "short": "BV Mêda",
+   "kind": "volunteer",
+   "place": "Mêda",
+   "section": null,
+   "lat": 40.96773,
+   "lon": -7.26155
+  },
+  {
+   "id": "way/365354527",
+   "name": "Bombeiros Voluntários de Melgaço",
+   "short": "BV Melgaço",
+   "kind": "volunteer",
+   "place": "Melgaço",
+   "section": null,
+   "lat": 42.11253,
+   "lon": -8.25982
+  },
+  {
+   "id": "way/358861708",
+   "name": "Bombeiros Voluntários de Melres",
+   "short": "BV Melres",
+   "kind": "volunteer",
+   "place": "Melres",
+   "section": null,
+   "lat": 41.05844,
+   "lon": -8.39778
+  },
+  {
+   "id": "node/1917203782",
+   "name": "Bombeiros Voluntários de Mesão Frio",
+   "short": "BV Mesão Frio",
+   "kind": "volunteer",
+   "place": "Mesão Frio",
+   "section": null,
+   "lat": 41.15769,
+   "lon": -7.89213
+  },
+  {
+   "id": "way/673316118",
+   "name": "Bombeiros Voluntários de Mirandela",
+   "short": "BV Mirandela",
+   "kind": "volunteer",
+   "place": "Mirandela",
+   "section": null,
+   "lat": 41.48347,
+   "lon": -7.17469
+  },
+  {
+   "id": "node/6385453257",
+   "name": "Bombeiros Voluntários de Moimenta da Beira",
+   "short": "BV Moimenta da Beira",
+   "kind": "volunteer",
+   "place": "Moimenta da Beira",
+   "section": null,
+   "lat": 40.98155,
+   "lon": -7.61555
+  },
+  {
+   "id": "way/135441071",
+   "name": "Bombeiros Voluntários de Monção",
+   "short": "BV Monção",
+   "kind": "volunteer",
+   "place": "Monção",
+   "section": null,
+   "lat": 42.07637,
+   "lon": -8.47529
+  },
+  {
+   "id": "way/871563484",
+   "name": "Bombeiros Voluntários de Mondim de Basto",
+   "short": "BV Mondim de Basto",
+   "kind": "volunteer",
+   "place": "Mondim de Basto",
+   "section": null,
+   "lat": 41.40922,
+   "lon": -7.95416
+  },
+  {
+   "id": "way/133298077",
+   "name": "Bombeiros Voluntários de Montalegre",
+   "short": "BV Montalegre",
+   "kind": "volunteer",
+   "place": "Montalegre",
+   "section": null,
+   "lat": 41.82401,
+   "lon": -7.78699
+  },
+  {
+   "id": "node/1650422094",
+   "name": "Bombeiros Voluntários Moreira - Secção Águas Santas",
+   "short": "BV Moreira (Águas Santas)",
+   "kind": "volunteer",
+   "place": "Moreira",
+   "section": "Águas Santas",
+   "lat": 41.20072,
+   "lon": -8.59265
+  },
+  {
+   "id": "node/1585578265",
+   "name": "Bombeiros Voluntários de Moreira da Maia",
+   "short": "BV Moreira da Maia",
+   "kind": "volunteer",
+   "place": "Moreira da Maia",
+   "section": null,
+   "lat": 41.24748,
+   "lon": -8.66369
+  },
+  {
+   "id": "node/6100551579",
+   "name": "Bombeiros Voluntários Moreira-Maia",
+   "short": "BV Moreira-Maia",
+   "kind": "volunteer",
+   "place": "Moreira-Maia",
+   "section": null,
+   "lat": 41.22761,
+   "lon": -8.58395
+  },
+  {
+   "id": "way/1452938566",
+   "name": "Bombeiros Voluntários de Murça",
+   "short": "BV Murça",
+   "kind": "volunteer",
+   "place": "Murça",
+   "section": null,
+   "lat": 41.40541,
+   "lon": -7.45618
+  },
+  {
+   "id": "way/245003228",
+   "name": "Bombeiros Voluntários de Murtosa",
+   "short": "BV Murtosa",
+   "kind": "volunteer",
+   "place": "Murtosa",
+   "section": null,
+   "lat": 40.74959,
+   "lon": -8.64631
+  },
+  {
+   "id": "way/197351042",
+   "name": "Bombeiros Voluntários de Nespereira",
+   "short": "BV Nespereira",
+   "kind": "volunteer",
+   "place": "Nespereira",
+   "section": null,
+   "lat": 41.00407,
+   "lon": -8.18107
+  },
+  {
+   "id": "way/1080617334",
+   "name": "Bombeiros Voluntários de Oliveira de Azeméis",
+   "short": "BV Oliveira de Azeméis",
+   "kind": "volunteer",
+   "place": "Oliveira de Azeméis",
+   "section": null,
+   "lat": 40.82937,
+   "lon": -8.4833
+  },
+  {
+   "id": "way/910661606",
+   "name": "Bombeiros Voluntários de Oliveira de Frades",
+   "short": "BV Oliveira de Frades",
+   "kind": "volunteer",
+   "place": "Oliveira de Frades",
+   "section": null,
+   "lat": 40.73246,
+   "lon": -8.174
+  },
+  {
+   "id": "relation/16693854",
+   "name": "Bombeiros Voluntários de Ovar",
+   "short": "BV Ovar",
+   "kind": "volunteer",
+   "place": "Ovar",
+   "section": null,
+   "lat": 40.86033,
+   "lon": -8.63282
+  },
+  {
+   "id": "way/125484568",
+   "name": "Bombeiros Voluntários de Paço de Sousa",
+   "short": "BV Paço de Sousa",
+   "kind": "volunteer",
+   "place": "Paço de Sousa",
+   "section": null,
+   "lat": 41.16759,
+   "lon": -8.34663
+  },
+  {
+   "id": "way/210194330",
+   "name": "Bombeiros Voluntários de Paços de Ferreira",
+   "short": "BV Paços de Ferreira",
+   "kind": "volunteer",
+   "place": "Paços de Ferreira",
+   "section": null,
+   "lat": 41.27901,
+   "lon": -8.37837
+  },
+  {
+   "id": "way/1420211633",
+   "name": "Bombeiros Voluntários de Paredes",
+   "short": "BV Paredes",
+   "kind": "volunteer",
+   "place": "Paredes",
+   "section": null,
+   "lat": 41.20616,
+   "lon": -8.33857
+  },
+  {
+   "id": "node/2763969861",
+   "name": "Bombeiros Paredes de Coura",
+   "short": "BV Paredes de Coura",
+   "kind": "volunteer",
+   "place": "Paredes de Coura",
+   "section": null,
+   "lat": 41.91024,
+   "lon": -8.55854
+  },
+  {
+   "id": "way/342381151",
+   "name": "Bombeiros Voluntários de Pedrouços",
+   "short": "BV Pedrouços",
+   "kind": "volunteer",
+   "place": "Pedrouços",
+   "section": null,
+   "lat": 41.1859,
+   "lon": -8.5888
+  },
+  {
+   "id": "way/379655919",
+   "name": "Bombeiros Voluntários de Penafiel",
+   "short": "BV Penafiel",
+   "kind": "volunteer",
+   "place": "Penafiel",
+   "section": null,
+   "lat": 41.20766,
+   "lon": -8.28147
+  },
+  {
+   "id": "way/664860669",
+   "name": "Bombeiros Voluntários De Penedono",
+   "short": "BV Penedono",
+   "kind": "volunteer",
+   "place": "Penedono",
+   "section": null,
+   "lat": 40.9862,
+   "lon": -7.39436
+  },
+  {
+   "id": "way/1499630016",
+   "name": "Bombeiros Voluntários do Peso da Régua",
+   "short": "BV Peso da Régua",
+   "kind": "volunteer",
+   "place": "Peso da Régua",
+   "section": null,
+   "lat": 41.16385,
+   "lon": -7.78912
+  },
+  {
+   "id": "way/380519007",
+   "name": "Bombeiros de Pindelo dos Milagres",
+   "short": "BV Pindelo dos Milagres",
+   "kind": "volunteer",
+   "place": "Pindelo dos Milagres",
+   "section": null,
+   "lat": 40.80808,
+   "lon": -7.96377
+  },
+  {
+   "id": "way/1155832147",
+   "name": "Bombeiros Voluntários do Pinhão",
+   "short": "BV Pinhão",
+   "kind": "volunteer",
+   "place": "Pinhão",
+   "section": null,
+   "lat": 41.19164,
+   "lon": -7.54428
+  },
+  {
+   "id": "way/1420206520",
+   "name": "Bombeiros Voluntários de Ponte da Barca",
+   "short": "BV Ponte da Barca",
+   "kind": "volunteer",
+   "place": "Ponte da Barca",
+   "section": null,
+   "lat": 41.80302,
+   "lon": -8.40905
+  },
+  {
+   "id": "way/390490336",
+   "name": "Bombeiros Voluntários de Ponte de Lima",
+   "short": "BV Ponte de Lima",
+   "kind": "volunteer",
+   "place": "Ponte de Lima",
+   "section": null,
+   "lat": 41.75727,
+   "lon": -8.58283
+  },
+  {
+   "id": "way/365024753",
+   "name": "Bombeiros Voluntários do Porto",
+   "short": "BV Porto",
+   "kind": "volunteer",
+   "place": "Porto",
+   "section": null,
+   "lat": 41.14847,
+   "lon": -8.60996
+  },
+  {
+   "id": "way/474899884",
+   "name": "Bombeiros Voluntários Portuenses",
+   "short": "BV Portuenses",
+   "kind": "volunteer",
+   "place": "Portuenses",
+   "section": null,
+   "lat": 41.17121,
+   "lon": -8.64171
+  },
+  {
+   "id": "node/4536685493",
+   "name": "Bombeiros Voluntários de Póvoa de Lanhoso",
+   "short": "BV Póvoa de Lanhoso",
+   "kind": "volunteer",
+   "place": "Póvoa de Lanhoso",
+   "section": null,
+   "lat": 41.57937,
+   "lon": -8.2737
+  },
+  {
+   "id": "way/1030730789",
+   "name": "Bombeiros Voluntários de Provesende",
+   "short": "BV Provesende",
+   "kind": "volunteer",
+   "place": "Provesende",
+   "section": null,
+   "lat": 41.21819,
+   "lon": -7.5657
+  },
+  {
+   "id": "way/105875011",
+   "name": "Bombeiros Voluntários de Rebordosa",
+   "short": "BV Rebordosa",
+   "kind": "volunteer",
+   "place": "Rebordosa",
+   "section": null,
+   "lat": 41.21746,
+   "lon": -8.41242
+  },
+  {
+   "id": "way/108166253",
+   "name": "Bombeiros Voluntários de Resende",
+   "short": "BV Resende",
+   "kind": "volunteer",
+   "place": "Resende",
+   "section": null,
+   "lat": 41.10491,
+   "lon": -7.9604
+  },
+  {
+   "id": "way/665963909",
+   "name": "Bombeiros Voluntários de Riba D'ave",
+   "short": "BV Riba D'ave",
+   "kind": "volunteer",
+   "place": "Riba D'ave",
+   "section": null,
+   "lat": 41.39759,
+   "lon": -8.38896
+  },
+  {
+   "id": "way/1482946309",
+   "name": "Bombeiros Voluntários de Ribeira de Pena",
+   "short": "BV Ribeira de Pena",
+   "kind": "volunteer",
+   "place": "Ribeira de Pena",
+   "section": null,
+   "lat": 41.52194,
+   "lon": -7.79298
+  },
+  {
+   "id": "way/1371853057",
+   "name": "Bombeiros Voluntários de Sabrosa",
+   "short": "BV Sabrosa",
+   "kind": "volunteer",
+   "place": "Sabrosa",
+   "section": null,
+   "lat": 41.26619,
+   "lon": -7.57664
+  },
+  {
+   "id": "way/156186089",
+   "name": "Bombeiros Voluntários de Salto",
+   "short": "BV Salto",
+   "kind": "volunteer",
+   "place": "Salto",
+   "section": null,
+   "lat": 41.63842,
+   "lon": -7.94608
+  },
+  {
+   "id": "way/1023384114",
+   "name": "Bombeiros Salvação Pública",
+   "short": "BV Salvação Pública",
+   "kind": "volunteer",
+   "place": "Salvação Pública",
+   "section": null,
+   "lat": 40.75968,
+   "lon": -8.06287
+  },
+  {
+   "id": "way/1498945899",
+   "name": "Bombeiros Voluntários de Salvação Publica de Chaves",
+   "short": "BV Salvação Publica de Chaves",
+   "kind": "volunteer",
+   "place": "Salvação Publica de Chaves",
+   "section": null,
+   "lat": 41.77033,
+   "lon": -7.46928
+  },
+  {
+   "id": "node/10006200924",
+   "name": "Bombeiros Voluntários de Santa Cruz da Trapa",
+   "short": "BV Santa Cruz da Trapa",
+   "kind": "volunteer",
+   "place": "Santa Cruz da Trapa",
+   "section": null,
+   "lat": 40.77454,
+   "lon": -8.14146
+  },
+  {
+   "id": "way/331408539",
+   "name": "Bombeiros Voluntários de Santa Maria da Feira",
+   "short": "BV Santa Maria da Feira",
+   "kind": "volunteer",
+   "place": "Santa Maria da Feira",
+   "section": null,
+   "lat": 40.93007,
+   "lon": -8.54208
+  },
+  {
+   "id": "node/13086855038",
+   "name": "Bombeiros Voluntários de Santa Marinha do Zêzere",
+   "short": "BV Santa Marinha do Zêzere",
+   "kind": "volunteer",
+   "place": "Santa Marinha do Zêzere",
+   "section": null,
+   "lat": 41.14537,
+   "lon": -7.94989
+  },
+  {
+   "id": "way/847272114",
+   "name": "Bombeiros Voluntários de Santa Marta de Penaguião",
+   "short": "BV Santa Marta de Penaguião",
+   "kind": "volunteer",
+   "place": "Santa Marta de Penaguião",
+   "section": null,
+   "lat": 41.20981,
+   "lon": -7.78282
+  },
+  {
+   "id": "way/469400491",
+   "name": "Bombeiros Voluntários de Santo Tirso",
+   "short": "BV Santo Tirso",
+   "kind": "volunteer",
+   "place": "Santo Tirso",
+   "section": null,
+   "lat": 41.33939,
+   "lon": -8.48606
+  },
+  {
+   "id": "way/1191676306",
+   "name": "Bombeiros Voluntários de São João da Madeira - Quartel Operacional",
+   "short": "BV São João da Madeira",
+   "kind": "volunteer",
+   "place": "São João da Madeira",
+   "section": null,
+   "lat": 40.90869,
+   "lon": -8.47947
+  },
+  {
+   "id": "way/349671971",
+   "name": "Bombeiros Voluntários de São João da Pesqueira",
+   "short": "BV São João da Pesqueira",
+   "kind": "volunteer",
+   "place": "São João da Pesqueira",
+   "section": null,
+   "lat": 41.14634,
+   "lon": -7.40308
+  },
+  {
+   "id": "way/36989139",
+   "name": "Bombeiros Voluntários de São Mamede de Infesta",
+   "short": "BV São Mamede de Infesta",
+   "kind": "volunteer",
+   "place": "São Mamede de Infesta",
+   "section": null,
+   "lat": 41.19062,
+   "lon": -8.60897
+  },
+  {
+   "id": "way/332353839",
+   "name": "Bombeiros Voluntários de São Pedro da Cova",
+   "short": "BV São Pedro da Cova",
+   "kind": "volunteer",
+   "place": "São Pedro da Cova",
+   "section": null,
+   "lat": 41.15239,
+   "lon": -8.51068
+  },
+  {
+   "id": "node/4519285093",
+   "name": "Bombeiros Voluntários de Sátão",
+   "short": "BV Sátão",
+   "kind": "volunteer",
+   "place": "Sátão",
+   "section": null,
+   "lat": 40.74344,
+   "lon": -7.73388
+  },
+  {
+   "id": "node/8911403617",
+   "name": "Bombeiros da Sereia da Gelfa",
+   "short": "BV Sereia da Gelfa",
+   "kind": "volunteer",
+   "place": "Sereia da Gelfa",
+   "section": null,
+   "lat": 41.79598,
+   "lon": -8.86211
+  },
+  {
+   "id": "way/1051587943",
+   "name": "Bombeiros Voluntários de Sernancelhe",
+   "short": "BV Sernancelhe",
+   "kind": "volunteer",
+   "place": "Sernancelhe",
+   "section": null,
+   "lat": 40.89711,
+   "lon": -7.49021
+  },
+  {
+   "id": "way/1495734936",
+   "name": "Bombeiros Voluntários de Tabuaço",
+   "short": "BV Tabuaço",
+   "kind": "volunteer",
+   "place": "Tabuaço",
+   "section": null,
+   "lat": 41.11626,
+   "lon": -7.56951
+  },
+  {
+   "id": "node/1684667295",
+   "name": "Bombeiros Voluntários das Taipas",
+   "short": "BV Taipas",
+   "kind": "volunteer",
+   "place": "Taipas",
+   "section": null,
+   "lat": 41.48763,
+   "lon": -8.34781
+  },
+  {
+   "id": "way/170229612",
+   "name": "Bombeiros Voluntários de Tarouca",
+   "short": "BV Tarouca",
+   "kind": "volunteer",
+   "place": "Tarouca",
+   "section": null,
+   "lat": 41.01873,
+   "lon": -7.77841
+  },
+  {
+   "id": "way/1420207325",
+   "name": "Bombeiros Voluntários de Terras do Bouro",
+   "short": "BV Terras do Bouro",
+   "kind": "volunteer",
+   "place": "Terras do Bouro",
+   "section": null,
+   "lat": 41.71718,
+   "lon": -8.31003
+  },
+  {
+   "id": "way/1279880769",
+   "name": "Bombeiros Voluntários Tirsenses (Amarelos)",
+   "short": "BV Tirsenses (Amarelos)",
+   "kind": "volunteer",
+   "place": "Tirsenses (Amarelos)",
+   "section": null,
+   "lat": 41.34175,
+   "lon": -8.47733
+  },
+  {
+   "id": "way/770355337",
+   "name": "Bombeiros Voluntários de Torre de Dona Chama",
+   "short": "BV Torre de Dona Chama",
+   "kind": "volunteer",
+   "place": "Torre de Dona Chama",
+   "section": null,
+   "lat": 41.65834,
+   "lon": -7.12062
+  },
+  {
+   "id": "way/205703213",
+   "name": "Bombeiros Voluntários da Trofa",
+   "short": "BV Trofa",
+   "kind": "volunteer",
+   "place": "Trofa",
+   "section": null,
+   "lat": 41.34106,
+   "lon": -8.55715
+  },
+  {
+   "id": "way/106759095",
+   "name": "Bombeiros Voluntários de Valadares",
+   "short": "BV Valadares",
+   "kind": "volunteer",
+   "place": "Valadares",
+   "section": null,
+   "lat": 41.09525,
+   "lon": -8.63712
+  },
+  {
+   "id": "way/1292604717",
+   "name": "Bombeiros Voluntários de Valbom",
+   "short": "BV Valbom",
+   "kind": "volunteer",
+   "place": "Valbom",
+   "section": null,
+   "lat": 41.14038,
+   "lon": -8.56407
+  },
+  {
+   "id": "way/1254608459",
+   "name": "Bombeiros Voluntários Vale Besteiros",
+   "short": "BV Vale Besteiros",
+   "kind": "volunteer",
+   "place": "Vale Besteiros",
+   "section": null,
+   "lat": 40.5568,
+   "lon": -8.13376
+  },
+  {
+   "id": "way/718893546",
+   "name": "Bombeiros Voluntários de Vale de Cambra",
+   "short": "BV Vale de Cambra",
+   "kind": "volunteer",
+   "place": "Vale de Cambra",
+   "section": null,
+   "lat": 40.8529,
+   "lon": -8.41178
+  },
+  {
+   "id": "way/235142640",
+   "name": "Associação Humanitária Bombeiros Voluntários de Valença",
+   "short": "BV Valença",
+   "kind": "volunteer",
+   "place": "Valença",
+   "section": null,
+   "lat": 42.02534,
+   "lon": -8.64668
+  },
+  {
+   "id": "way/156513653",
+   "name": "Bombeiros Voluntários de Valongo",
+   "short": "BV Valongo",
+   "kind": "volunteer",
+   "place": "Valongo",
+   "section": null,
+   "lat": 41.19029,
+   "lon": -8.49839
+  },
+  {
+   "id": "way/268564423",
+   "name": "Bombeiros Voluntários de Valpaços",
+   "short": "BV Valpaços",
+   "kind": "volunteer",
+   "place": "Valpaços",
+   "section": null,
+   "lat": 41.61124,
+   "lon": -7.30593
+  },
+  {
+   "id": "way/1098320326",
+   "name": "Bombeiros Voluntários",
+   "short": "BV Viana do Castelo",
+   "kind": "volunteer",
+   "place": "Viana do Castelo",
+   "section": null,
+   "lat": 41.69526,
+   "lon": -8.82929
+  },
+  {
+   "id": "way/1493506592",
+   "name": "Bombeiros Voluntários de Viatodos",
+   "short": "BV Viatodos",
+   "kind": "volunteer",
+   "place": "Viatodos",
+   "section": null,
+   "lat": 41.44695,
+   "lon": -8.56636
+  },
+  {
+   "id": "way/886323613",
+   "name": "Bombeiros Voluntários de Vidago",
+   "short": "BV Vidago",
+   "kind": "volunteer",
+   "place": "Vidago",
+   "section": null,
+   "lat": 41.63838,
+   "lon": -7.57294
+  },
+  {
+   "id": "way/1420207501",
+   "name": "Bombeiros Voluntários de Vieira do Minho",
+   "short": "BV Vieira do Minho",
+   "kind": "volunteer",
+   "place": "Vieira do Minho",
+   "section": null,
+   "lat": 41.63605,
+   "lon": -8.1546
+  },
+  {
+   "id": "node/2078077893",
+   "name": "Associação Humanitária Bombeiros Voluntários de Vieira do Minho - Secção de Ruivães",
+   "short": "BV Vieira do Minho (Ruivães)",
+   "kind": "volunteer",
+   "place": "Vieira do Minho",
+   "section": "Ruivães",
+   "lat": 41.68443,
+   "lon": -8.04742
+  },
+  {
+   "id": "node/13501064198",
+   "name": "Bombeiros Voluntários de Vila Boa do Bispo",
+   "short": "BV Vila Boa do Bispo",
+   "kind": "volunteer",
+   "place": "Vila Boa do Bispo",
+   "section": null,
+   "lat": 41.12689,
+   "lon": -8.21535
+  },
+  {
+   "id": "way/1106122303",
+   "name": "Bombeiros Voluntários de Vila das Aves",
+   "short": "BV Vila das Aves",
+   "kind": "volunteer",
+   "place": "Vila das Aves",
+   "section": null,
+   "lat": 41.36244,
+   "lon": -8.40743
+  },
+  {
+   "id": "way/154608189",
+   "name": "Bombeiros Voluntários de Vila de Praia de Âncora",
+   "short": "BV Vila de Praia de Âncora",
+   "kind": "volunteer",
+   "place": "Vila de Praia de Âncora",
+   "section": null,
+   "lat": 41.81519,
+   "lon": -8.86507
+  },
+  {
+   "id": "way/109249686",
+   "name": "Bombeiros Voluntários de Vila do Conde",
+   "short": "BV Vila do Conde",
+   "kind": "volunteer",
+   "place": "Vila do Conde",
+   "section": null,
+   "lat": 41.36552,
+   "lon": -8.7398
+  },
+  {
+   "id": "node/1563859642",
+   "name": "Bombeiros Voluntários de Vila do Conde - Secção de Fornelo",
+   "short": "BV Vila do Conde (Fornelo)",
+   "kind": "volunteer",
+   "place": "Vila do Conde",
+   "section": "Fornelo",
+   "lat": 41.33249,
+   "lon": -8.6455
+  },
+  {
+   "id": "node/4337343554",
+   "name": "Bombeiros Voluntários de Vila do Conde - Secção de Vilar do Pinheiro",
+   "short": "BV Vila do Conde (Vilar do Pinheiro)",
+   "kind": "volunteer",
+   "place": "Vila do Conde",
+   "section": "Vilar do Pinheiro",
+   "lat": 41.27336,
+   "lon": -8.66721
+  },
+  {
+   "id": "way/98511405",
+   "name": "Bombeiros Voluntários de Vila Flor",
+   "short": "BV Vila Flor",
+   "kind": "volunteer",
+   "place": "Vila Flor",
+   "section": null,
+   "lat": 41.30834,
+   "lon": -7.15404
+  },
+  {
+   "id": "way/889963479",
+   "name": "Bombeiros Voluntários de Vila Meã",
+   "short": "BV Vila Meã",
+   "kind": "volunteer",
+   "place": "Vila Meã",
+   "section": null,
+   "lat": 41.24727,
+   "lon": -8.19135
+  },
+  {
+   "id": "way/161392295",
+   "name": "Bombeiros Voluntários de Vila Nova de Cerveira",
+   "short": "BV Vila Nova de Cerveira",
+   "kind": "volunteer",
+   "place": "Vila Nova de Cerveira",
+   "section": null,
+   "lat": 41.94739,
+   "lon": -8.74105
+  },
+  {
+   "id": "way/573737010",
+   "name": "Bombeiros Voluntários de Vila Nova de Famalicão",
+   "short": "BV Vila Nova de Famalicão",
+   "kind": "volunteer",
+   "place": "Vila Nova de Famalicão",
+   "section": null,
+   "lat": 41.40127,
+   "lon": -8.51764
+  },
+  {
+   "id": "way/864698420",
+   "name": "Bombeiros Voluntários de Vila Nova de Paiva",
+   "short": "BV Vila Nova de Paiva",
+   "kind": "volunteer",
+   "place": "Vila Nova de Paiva",
+   "section": null,
+   "lat": 40.8528,
+   "lon": -7.72943
+  },
+  {
+   "id": "way/1478430761",
+   "name": "Bombeiros Voluntários de Vila Pouca de Aguiar",
+   "short": "BV Vila Pouca de Aguiar",
+   "kind": "volunteer",
+   "place": "Vila Pouca de Aguiar",
+   "section": null,
+   "lat": 41.49239,
+   "lon": -7.64491
+  },
+  {
+   "id": "way/783268071",
+   "name": "Bombeiros Voluntários de Vila Verde",
+   "short": "BV Vila Verde",
+   "kind": "volunteer",
+   "place": "Vila Verde",
+   "section": null,
+   "lat": 41.65168,
+   "lon": -8.43894
+  },
+  {
+   "id": "way/532165973",
+   "name": "Bombeiros Voluntários de Viseu",
+   "short": "BV Viseu",
+   "kind": "volunteer",
+   "place": "Viseu",
+   "section": null,
+   "lat": 40.67982,
+   "lon": -7.87592
+  },
+  {
+   "id": "way/120953337",
+   "name": "Bombeiros Voluntários de Vizela",
+   "short": "BV Vizela",
+   "kind": "volunteer",
+   "place": "Vizela",
+   "section": null,
+   "lat": 41.37634,
+   "lon": -8.31245
+  },
+  {
+   "id": "way/1420214309",
+   "name": "Bombeiros Voluntários de Vouzela",
+   "short": "BV Vouzela",
+   "kind": "volunteer",
+   "place": "Vouzela",
+   "section": null,
+   "lat": 40.72253,
+   "lon": -8.10879
+  },
+  {
+   "id": "way/1138643116",
+   "name": "Bombeiros Voluntários de Vouzela - Secção de Campia",
+   "short": "BV Vouzela (Campia)",
+   "kind": "volunteer",
+   "place": "Vouzela",
+   "section": "Campia",
+   "lat": 40.67582,
+   "lon": -8.21691
+  }
+ ]
+}

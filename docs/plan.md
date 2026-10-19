@@ -59,9 +59,9 @@ Cabeceiras de Basto tem um segundo foco às 13:30 (`z` com `zp_link` 2) e uma vi
   - `progression.geojson`: perímetro **cumulativo** por passo, em WGS84;
   - `fire.json`: nome, concelho, ignição, passos, bbox e as métricas L3 da tabela acima.
 - **Quartéis de bombeiros:**
-  - `scripts/fetch_stations.py` pergunta ao Overpass por `amenity=fire_station` num raio de 100 km da Penha e guarda a resposta crua em `data/osm-fire-stations/raw.json`;
+  - `scripts/fetch_stations.py` pergunta ao Overpass por `amenity=fire_station` em Portugal (fronteira do OSM, para cortar a Galiza), num raio de 100 km da Penha, e guarda a resposta crua em `data/osm-fire-stations/raw.json`;
   - `scripts/build_stations.py` limpa e escreve `web/public/stations.json` (nome, nome curto, tipo, lat/lon, id OSM).
-- `scripts/requirements.txt` com fiona, shapely e pyproj.
+- `scripts/requirements.txt` com pyshp, shapely, pyproj e xlrd. O pyshp lê shapefiles sem GDAL, por isso instala de wheels no Python 3.14 (o fiona não tem wheel e não compila sem GDAL).
 - **Ref:** `scripts/build-real-fires.py`, `scripts/build-stations.py`.
 - **Muda:** só estes 2 incêndios; os passos já saem cumulativos; as métricas L3 entram para calibrar. Os quartéis chegam já no P1 (no plano anterior só vinham no P8), porque o replay do P2 os mostra.
 - **Pronto quando:**
