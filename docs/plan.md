@@ -18,7 +18,7 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | | P1 Dados dos incêndios | Progressões dos 2 incêndios em GeoJSON + métricas L3 + quartéis de bombeiros |
 | | P2 Replay observado | Os 2 incêndios contados passo a passo: câmara guiada, HUD "intel" cinza, spotlight e quartéis próximos com km |
 | | P3 Gate do motor | ELMFIRE roda num teste sintético (senão, ForeFire) |
-| Ter 20 | P4 Contexto | Grade, combustível e meteo para os 2 incêndios |
+| Ter 20 | P4 Contexto | Grade, combustível, relevo e meteo para os 2 incêndios |
 | | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run` e cache offline; as settings leem os motores da API |
 | | P6 Modelo rápido | Propagação no browser, desenhada no terreno |
 | | P7 Validação | Sørensen simulado vs observado, por passo e por motor |
@@ -131,17 +131,22 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - cada classe COS tem duas leituras do mesmo combustível, com a razão de cada escolha: 5 classes (modelo rápido e mapa) e Scott & Burgan, o código que vai a todos os motores;
   - o SimFire só conhece os 13 modelos de Anderson e converte o código Scott & Burgan no seu adapter, com a tabela de equivalência de Scott & Burgan 2005 (RMRS-GTR-153). Antes, o `fuel.json` também trazia um Anderson 13 escolhido à mão, que o SimFire nunca recebia e que divergia da conversão em 4 classes, incluindo o pinhal-bravo: saiu, para haver uma só fonte;
   - dentro da área ardida, cerca de metade é mato.
+- **Relevo** (`elevation.f32`, `slope.u8`, `aspect.u16` e `terrain.json`, `scripts/fetch_dem.py` e `scripts/build_terrain.py`):
+  - Copernicus DEM GLO-30 (1″, cerca de 23 × 31 m aqui), reamostrado bilinearmente para a grade. Cabeceiras atravessa o meridiano 8° W e junta dois tiles;
+  - declive e exposição pelo método de Horn, como nos rasters do LANDFIRE que o ELMFIRE lê. A exposição é para onde a encosta desce (0 = norte): no ELMFIRE, com 180°, o fogo sobe para norte;
+  - a altitude da ignição bate com a do Open-Meteo a 6 m (Vieira 652 contra 656 m, Cabeceiras 719 contra 725 m);
+  - em Vieira o fogo seguiu o vento, não a subida. No período 3 de Cabeceiras, de noite e sem vento, desceu devagar uma encosta de 30° (90 ha em 12 h);
+  - é um modelo de superfície: em floresta fica em parte sobre as copas.
 - **Meteo** (`weather.json`, `scripts/fetch_weather.py` e `scripts/build_weather.py`):
   - ERA5 horária via Open-Meteo, de 3 dias antes a 1 dia depois de cada incêndio, no ponto da ignição;
   - o vento do ERA5 bate com a direção de propagação observada em Vieira (13° e 3° de desvio) e nos períodos 2 e 3 de Cabeceiras;
-  - no período 1 de Cabeceiras, com vento fraco, o fogo andou 70° ao lado do vento: aí deve mandar o relevo.
+  - no período 1 de Cabeceiras, com vento fraco, o fogo andou 70° ao lado do vento. O relevo também não o explica: ali a encosta sobe em média para ENE e o fogo foi para NO. Fica para os motores (P7) ver se é um vento local de vale, que o ERA5, a 25 km, não vê.
 - **Ref:** `scripts/build-real-fuels.py`, `scripts/build-era5-weather.py`, `engines/fuel_map.json`.
 - **Muda:**
   - Cabeceiras passa a ter dados reais (no protótipo usava combustível aleatório);
   - a grade é métrica, em PT-TM06, e as suas constantes ficam num só lugar.
-- **Pronto quando:** os 2 incêndios têm grade, combustível e meteo. ✅
+- **Pronto quando:** os 2 incêndios têm grade, combustível, relevo e meteo. ✅
 - **A seguir:**
-  - relevo na grade (elevação, declive, exposição) a partir de um MDT de 30 m, para os motores e para o modelo rápido;
   - humidades dos combustíveis, estimadas a partir da temperatura e da humidade relativa;
   - a meteo horária entra no contrato dos motores com o cenário (P5).
 

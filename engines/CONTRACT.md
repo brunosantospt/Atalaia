@@ -27,6 +27,7 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
 - **`layers`:**
   - `fuel` é obrigatório: código Scott & Burgan (102 = GR2, 165 = TU5, 91 = não combustível);
   - os restantes valem 0 se faltarem: `elevation_m`, `slope_deg`, `aspect_deg`, `canopy_cover_pct`, `canopy_height_m`, `canopy_base_m`, `canopy_bulk_kgm3`.
+  - `slope_deg` é o declive em graus a partir da horizontal; `aspect_deg` é para onde a encosta está virada, a descer, em graus a partir do norte (0 = norte, 90 = este), como no LANDFIRE. Cada incêndio traz os três na sua pasta, descritos em `web/public/fires/<id>/terrain.json`.
 
 Cada valor de `weather` e `layers` pode ser um número para a grade toda ou uma matriz `rows` × `cols`, com a linha 0 no bordo norte.
 
