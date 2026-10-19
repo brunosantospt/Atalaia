@@ -52,3 +52,4 @@ Cada valor de `weather` e `layers` pode ser um número para a grade toda ou uma 
 | Motor | Estado | Notas |
 |---|---|---|
 | `elmfire/` | P3 | ELMFIRE 2025.0717 num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar |
+| `simfire/` | P3 | SimFire 2.0.1 (MITRE) num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. Converte os códigos Scott & Burgan para os 13 modelos originais (Anderson), por isso 102 = GR2 corre como o modelo 2. Só usa `dead_1h_pct`, não tem fogo de copas e tira o declive de `elevation_m` (ignora `slope_deg` e `aspect_deg`). Espalha o fogo célula a célula para os 8 vizinhos, por isso os perímetros são octógonos |
