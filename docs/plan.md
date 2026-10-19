@@ -128,7 +128,8 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - `wgs84` traz os quatro cantos para o browser, que interpola entre eles com menos de 4 m de erro.
 - **Combustível** (`fuel.u8` e `fuel.json`, `scripts/build_fuel.py`):
   - a COS2015 é rasterizada na grade pelo centro de cada célula: um byte por célula, índice na legenda;
-  - cada classe COS tem três leituras do mesmo combustível, com a razão de cada escolha: 5 classes (modelo rápido e mapa), Anderson 13 (SimFire) e Scott & Burgan (ELMFIRE);
+  - cada classe COS tem duas leituras do mesmo combustível, com a razão de cada escolha: 5 classes (modelo rápido e mapa) e Scott & Burgan, o código que vai a todos os motores;
+  - o SimFire só conhece os 13 modelos de Anderson e converte o código Scott & Burgan no seu adapter, com a tabela de equivalência de Scott & Burgan 2005 (RMRS-GTR-153). Antes, o `fuel.json` também trazia um Anderson 13 escolhido à mão, que o SimFire nunca recebia e que divergia da conversão em 4 classes, incluindo o pinhal-bravo: saiu, para haver uma só fonte;
   - dentro da área ardida, cerca de metade é mato.
 - **Meteo** (`weather.json`, `scripts/fetch_weather.py` e `scripts/build_weather.py`):
   - ERA5 horária via Open-Meteo, de 3 dias antes a 1 dia depois de cada incêndio, no ponto da ignição;
