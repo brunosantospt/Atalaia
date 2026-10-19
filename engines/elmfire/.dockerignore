@@ -1,0 +1,4 @@
+# The image only needs ELMFIRE's sources and build scripts, and our patches to them.
+*
+!vendor/elmfire/build
+!patches

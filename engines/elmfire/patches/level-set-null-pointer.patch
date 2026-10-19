@@ -1,0 +1,17 @@
+In the 2025.0717 release the node pointer C is deallocated at line 408 without ever being
+associated, so its state is undefined. On arm64 (Apple Silicon under Docker) that aborts with
+"free(): invalid pointer" on the first time step. ELMFIRE's main branch initialises it the same way.
+
+diff --git a/build/source/elmfire_level_set.f90 b/build/source/elmfire_level_set.f90
+index 5faef14..5d76646 100755
+--- a/build/source/elmfire_level_set.f90
++++ b/build/source/elmfire_level_set.f90
+@@ -54,7 +54,7 @@ CHARACTER(7) :: SEVEN_ICASE
+ CHARACTER(16) :: TIMESTAMP
+ CHARACTER(400) :: FN
+ 
+-TYPE(NODE), POINTER :: C, DUMMY_NODE => NULL()
++TYPE(NODE), POINTER :: C => NULL(), DUMMY_NODE => NULL()
+ 
+ TYPE (FUEL_MODEL_TABLE_TYPE) :: FMT
+ 
