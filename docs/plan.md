@@ -102,14 +102,18 @@ Cada incêndio é contado como uma sequência de planos de câmara. É a base do
 ### P3 · Gate do motor
 O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de copas e projeções). Os outros motores ficam atrás do mesmo contrato e escolhem-se na aba de settings (P5).
 
+- `engines/CONTRACT.md`: pedido e resultado em JSON, comuns a todos os motores.
 - `engines/elmfire/`:
-  - `setup.sh`: descarrega o ELMFIRE numa versão fixa para `engines/elmfire/vendor/` (fora do git) e compila-o com gfortran e Open MPI (Homebrew), mais um venv para o adapter;
-  - `adapter.py`: lê um pedido em JSON do stdin, escreve os rasters de entrada (combustível, declive, exposição, copas, vento, humidades) e o `elmfire.data`, corre o ELMFIRE e devolve os tempos de chegada lidos do raster de saída.
-- Teste sintético: grade plana, combustível uniforme e vento constante → o fogo alonga a favor do vento.
-- Primeiro risco a fechar: a compilação no macOS (arm64), porque o ELMFIRE é desenvolvido em Linux. Se não compilar, tentar num contentor Linux; as unidades das entradas confirmam-se no tutorial de vento constante do próprio ELMFIRE.
-- Se o ELMFIRE não rodar até ao fim do dia, passar para o ForeFire (`engines/forefire/`, venv Python 3.12 com `forefire==2.5.0`).
-- **Ref:** `engines/CONTRACT.md` e `engines/forefire/*` para a forma do adapter. O ELMFIRE é novo: não existe no protótipo.
-- **Pronto quando:** `engines/elmfire/test.sh` passa.
+  - `setup.sh`: descarrega o ELMFIRE 2025.0717 (commit fixo) para `vendor/` (fora do git) e constrói a imagem Docker `atalaia/elmfire` (Ubuntu 24.04, gfortran, Open MPI, GDAL);
+  - `run.sh`: corre o `adapter.py` dentro do contentor. O adapter escreve os rasters de entrada e o `elmfire.data`, corre o ELMFIRE e devolve os tempos de chegada;
+  - `test.sh`: o teste sintético.
+- Teste sintético: grade plana, combustível uniforme e vento constante, de oeste e de norte → o fogo alonga a favor do vento.
+- **Docker em vez de compilar no macOS:** o ELMFIRE só suporta Linux e chama o GDAL em runtime; no Mac não havia gfortran, Open MPI nem GDAL utilizáveis.
+- **Patch** (`patches/level-set-null-pointer.patch`): na 2025.0717 um ponteiro é libertado sem nunca ter sido associado, e em arm64 o ELMFIRE aborta no primeiro passo. O `main` do ELMFIRE já o inicializa da mesma forma.
+- **Unidades confirmadas** no tutorial de vento constante do ELMFIRE: 1563 ha pelo adapter contra 1559 ha no tutorial. Para lá chegar, o adapter fixa `WSMFEFF_LOW_MULT = 60/5280`: a razão comprimento/largura de Anderson espera o vento em mph, como no FARSITE e nos tutoriais, e o valor por omissão dá uma área ardida 2,5× maior.
+- Se o ELMFIRE deixar de rodar, passar para o ForeFire (`engines/forefire/`, venv Python 3.12 com `forefire==2.5.0`).
+- **Ref:** `engines/forefire/*` no protótipo para a forma do adapter. O ELMFIRE é novo: não existe no protótipo.
+- **Pronto quando:** `engines/elmfire/test.sh` passa. ✅
 
 ## Fase 1 · Modelo com dados reais (ter 20)
 
