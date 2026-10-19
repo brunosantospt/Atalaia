@@ -111,7 +111,7 @@ O motor principal é o **ELMFIRE** (level set, Rothermel na superfície, fogo de
 - **Docker em vez de compilar no macOS:** o ELMFIRE só suporta Linux e chama o GDAL em runtime; no Mac não havia gfortran, Open MPI nem GDAL utilizáveis.
 - **Patch** (`patches/level-set-null-pointer.patch`): na 2025.0717 um ponteiro é libertado sem nunca ter sido associado, e em arm64 o ELMFIRE aborta no primeiro passo. O `main` do ELMFIRE já o inicializa da mesma forma.
 - **Unidades confirmadas** no tutorial de vento constante do ELMFIRE: 1563 ha pelo adapter contra 1559 ha no tutorial. Para lá chegar, o adapter fixa `WSMFEFF_LOW_MULT = 60/5280`: a razão comprimento/largura de Anderson espera o vento em mph, como no FARSITE e nos tutoriais, e o valor por omissão dá uma área ardida 2,5× maior.
-- `engines/simfire/`: SimFire 2.0.1 atrás do mesmo contrato, com o mesmo teste sintético. Até passar, aparece nas settings como "em preparação".
+- `engines/simfire/`: SimFire 2.0.1 atrás do mesmo contrato, com o mesmo teste sintético, mais um de declive e um que compara o ciclo do adapter com o do SimFire. Passa, e o SimFire está pronto nas settings. No caso sintético arde quase 3× mais do que o ELMFIRE (30 ha contra 11 ha), a rever com os incêndios reais (P7).
 - Se o ELMFIRE deixar de rodar, passar para o ForeFire (`engines/forefire/`, venv Python 3.12 com `forefire==2.5.0`).
 - **Ref:** `engines/forefire/*` no protótipo para a forma do adapter. O ELMFIRE é novo: não existe no protótipo.
 - **Pronto quando:** `engines/elmfire/test.sh` passa. ✅

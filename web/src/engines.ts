@@ -13,7 +13,7 @@ export interface Engine {
 
 export const ENGINES: Engine[] = [
   { id: 'elmfire', name: 'ELMFIRE', version: '2025.0717', method: 'Level set · Rothermel, copas e projeções', ready: true },
-  { id: 'simfire', name: 'SimFire', version: '2.0.1', method: 'Autómato celular · Rothermel, 8 vizinhos', ready: false },
+  { id: 'simfire', name: 'SimFire', version: '2.0.1', method: 'Autómato celular · Rothermel, 8 vizinhos', ready: true },
 ]
 
 export const DEFAULT_ENGINE: EngineId = 'elmfire'

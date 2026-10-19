@@ -20,7 +20,7 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
 
 - **`grid`:** células quadradas de `cellsize` metros. `xmin` e `ymin` são o canto sudoeste, no SRS da grade.
 - **`ignitions`:** pontos no SRS da grade, em metros. `t_min` é opcional (0 por omissão).
-- **`weather`:** constante durante a simulação. O vento horário chega no P4.
+- **`weather`:** constante durante a simulação. A meteo horária (`weather.json` de cada incêndio, P4) entra no contrato com o cenário, no P5.
   - `wind_kmh` é o vento a 10 m, em km/h;
   - `wind_from_deg` é a direção de onde o vento vem (convenção meteorológica: 270 = de oeste, empurra o fogo para leste);
   - as humidades dos combustíveis estão em %.
