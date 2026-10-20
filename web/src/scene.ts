@@ -50,6 +50,11 @@ export async function createViewer(container: string, center: LonLat): Promise<V
   const title = viewer.container.querySelector('.cesium-credit-lightbox-title')
   if (title) title.textContent = 'Fontes'
 
+  // Performance optimizations for low-end / integrated GPUs:
+  viewer.resolutionScale = 0.82
+  scene.globe.maximumScreenSpaceError = 3.5
+  scene.globe.tileCacheSize = 100
+
   // Fire perimeters and markers sit on the ground and must hide behind the relief.
   scene.globe.depthTestAgainstTerrain = true
 

@@ -105,9 +105,10 @@ const TEMPLATE = `
     <p class="note stock" data-ref="stock"></p>
     <p class="note" data-ref="capacity"></p>
     <div class="tools">
-      <button type="button" data-tool="point">Ponto de ataque</button>
-      <button type="button" data-tool="line">Linha de bombeiros</button>
-      <button type="button" data-tool="drops">Linha de água aérea</button>
+      <button type="button" data-ref="quickAdd" class="primary-btn" title="Posiciona este meio automaticamente no acesso seguro mais próximo da frente de fogo">+ Colocar Meio</button>
+      <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
+      <button type="button" data-tool="line" title="Desenha uma linha apeada no mapa">Linha apeada</button>
+      <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
     </div>
     <p class="note hint" data-ref="hint"></p>
   </section>
@@ -202,6 +203,7 @@ export class Editor {
     task.addEventListener('change', () => (this.task = task.value as Task))
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
+    this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.clear.addEventListener('click', () => {
       const d = this.decisions[this.active]
@@ -412,6 +414,50 @@ export class Editor {
       this.dangerTimer = undefined
       this.setTool(this.tool)
     }, 4500)
+  }
+
+  private quickAdd() {
+    if (!this.loaded) return
+    const { context, stations, scenario } = this.loaded
+    const d = this.decisions[this.active]
+    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+
+    let targetPoint: LonLat | undefined
+
+    if (context && context.access.length > 0) {
+      const candidates = context.access.filter((a) => {
+        const cell = cellOf(scenario.grid, a)
+        return cell >= 0 && (!activeRun || activeRun.arrival[cell] > this.minutes)
+      })
+
+      if (candidates.length > 0) {
+        const existing = Object.values(d.points)
+        candidates.sort((a, b) => distanceM(scenario.ignition, a) - distanceM(scenario.ignition, b))
+        targetPoint = candidates.find((c) => !existing.some((p) => distanceM(p, c) < 250)) ?? candidates[0]
+      }
+    }
+
+    if (!targetPoint) {
+      const angle = (Object.keys(d.points).length * 45) * Math.PI / 180
+      targetPoint = {
+        lon: scenario.ignition.lon + Math.cos(angle) * 0.012,
+        lat: scenario.ignition.lat + Math.sin(angle) * 0.012,
+      }
+    }
+
+    const id = nextId(d.points, 'p')
+    d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
+    d.assignments.push({
+      unit: this.unit,
+      count: this.count,
+      from: this.from(stations),
+      target: id,
+      task: isAerial(this.sup.units[this.unit]) ? 'direct' : this.task,
+    })
+
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
+    this.commit()
   }
 
   private click(position: Cartesian2) {

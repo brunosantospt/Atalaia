@@ -326,3 +326,14 @@
   border-radius: 2px;
   margin-left: 6px;
 }
+
+.hud .editor .tools .primary-btn {
+  background: var(--amber);
+  color: #08090a;
+  font-weight: 700;
+  border-color: var(--amber);
+}
+.hud .editor .tools .primary-btn:hover {
+  background: #f7b355;
+  border-color: #f7b355;
+}
