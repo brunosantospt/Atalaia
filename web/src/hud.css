@@ -187,11 +187,6 @@
   margin: 0;
 }
 
-.hud .position {
-  left: 34px;
-  bottom: 32px;
-}
-
 /* ---------- ledger of the instant (ledger.ts) ---------- */
 
 .hud .ledger {
@@ -296,29 +291,29 @@
   font-style: italic;
 }
 
-/* ---------- caption card and transport ---------- */
+/* ---------- caption card and transport: bottom left, at 90 % of the HUD's size ---------- */
 
 .hud .bottom {
   position: absolute;
-  left: 50%;
+  left: 34px;
   bottom: calc(var(--credits-h, 20px) + 14px);
-  transform: translateX(-50%);
-  width: min(680px, calc(100vw - 32px));
+  width: min(612px, calc(100vw - 68px));
+  font-size: 90%;
 }
 .hud .card {
   background: var(--panel);
   border: 1px solid var(--ink-faint);
   border-left: 2px solid var(--line);
-  padding: 10px 14px 11px;
+  padding: 9px 13px 10px;
   backdrop-filter: blur(3px);
 }
 .hud .card-head {
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   color: var(--ink-dim);
 }
 .hud .card-title {
-  font-size: 14px;
+  font-size: 13px;
   margin-top: 3px;
 }
 .hud .card-body {
@@ -330,9 +325,12 @@
 .hud .transport {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 7px;
   pointer-events: auto;
+}
+.hud .transport button {
+  height: 24px;
 }
 .hud button {
   font: inherit;
@@ -345,7 +343,7 @@
   cursor: pointer;
 }
 .hud .transport > button {
-  width: 30px;
+  width: 27px;
   padding: 0;
 }
 .hud button:hover {
@@ -355,7 +353,7 @@
   flex: 1;
   display: flex;
   gap: 3px;
-  height: 26px;
+  height: 24px;
 }
 .hud .tick {
   flex: 1;
@@ -384,10 +382,9 @@
   letter-spacing: 0.14em;
 }
 .hud .keys {
-  margin-top: 6px;
-  font-size: 9px;
+  margin-top: 5px;
+  font-size: 8px;
   color: var(--ink-dim);
-  text-align: center;
   letter-spacing: 0.14em;
 }
 
@@ -686,9 +683,8 @@
   color: var(--ink);
 }
 
-/* Medium screens: the position readout and the ledger no longer fit beside the card. */
+/* Medium screens: the ledger no longer fits above the card. */
 @media (max-width: 1180px) {
-  .hud .position,
   .hud .ledger {
     display: none;
   }

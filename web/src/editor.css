@@ -24,9 +24,13 @@
   transition: transform 0.25s ease;
 }
 .hud.editing .title,
-.hud.editing .ledger,
-.hud.editing .position {
+.hud.editing .ledger {
   display: none;
+}
+/* The caption card and the transport step out from under the drawer. */
+.hud.editing .bottom {
+  left: calc(min(400px, 100vw) + 34px);
+  width: min(612px, calc(100vw - 468px));
 }
 .hud .editor header {
   display: flex;
