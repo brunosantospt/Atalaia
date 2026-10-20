@@ -1,0 +1,173 @@
+{
+  "fire_id": "VieiradoMinho_10082016",
+  "input_weather": "CERRA (5.5 km)",
+  "resolution_m": 30,
+  "grid_shape": [
+    334,
+    499
+  ],
+  "physics": [
+    "Ridge streamline compression speed-up (up to +85%)",
+    "Leeward slope wake sheltering (down to -55%)",
+    "Valley channeling deflection (+/- 25 deg)",
+    "Diurnal thermal slope winds (daytime upslope / nighttime drainage)"
+  ],
+  "overall": {
+    "ambient_max_kmh": 22.7,
+    "terrain_max_kmh": 34.7,
+    "terrain_min_kmh": 4.9,
+    "mean_landscape_speedup": 1.0
+  },
+  "hourly_steps": [
+    {
+      "time": "2016-08-10T10:00",
+      "ambient_kmh": 22.0,
+      "ambient_dir": 102.0,
+      "terrain_min_kmh": 13.5,
+      "terrain_max_kmh": 34.7,
+      "terrain_mean_kmh": 22.0,
+      "max_ridge_speedup_ratio": 1.58,
+      "max_shelter_ratio": 0.61
+    },
+    {
+      "time": "2016-08-10T11:00",
+      "ambient_kmh": 18.0,
+      "ambient_dir": 96.0,
+      "terrain_min_kmh": 10.7,
+      "terrain_max_kmh": 29.0,
+      "terrain_mean_kmh": 18.0,
+      "max_ridge_speedup_ratio": 1.61,
+      "max_shelter_ratio": 0.59
+    },
+    {
+      "time": "2016-08-10T12:00",
+      "ambient_kmh": 17.3,
+      "ambient_dir": 96.0,
+      "terrain_min_kmh": 10.2,
+      "terrain_max_kmh": 27.9,
+      "terrain_mean_kmh": 17.3,
+      "max_ridge_speedup_ratio": 1.61,
+      "max_shelter_ratio": 0.59
+    },
+    {
+      "time": "2016-08-10T13:00",
+      "ambient_kmh": 15.8,
+      "ambient_dir": 96.0,
+      "terrain_min_kmh": 9.2,
+      "terrain_max_kmh": 25.7,
+      "terrain_mean_kmh": 15.8,
+      "max_ridge_speedup_ratio": 1.62,
+      "max_shelter_ratio": 0.58
+    },
+    {
+      "time": "2016-08-10T14:00",
+      "ambient_kmh": 13.0,
+      "ambient_dir": 92.0,
+      "terrain_min_kmh": 7.2,
+      "terrain_max_kmh": 21.5,
+      "terrain_mean_kmh": 13.0,
+      "max_ridge_speedup_ratio": 1.66,
+      "max_shelter_ratio": 0.55
+    },
+    {
+      "time": "2016-08-10T15:00",
+      "ambient_kmh": 12.6,
+      "ambient_dir": 88.0,
+      "terrain_min_kmh": 6.9,
+      "terrain_max_kmh": 21.0,
+      "terrain_mean_kmh": 12.6,
+      "max_ridge_speedup_ratio": 1.67,
+      "max_shelter_ratio": 0.55
+    },
+    {
+      "time": "2016-08-10T16:00",
+      "ambient_kmh": 11.9,
+      "ambient_dir": 88.0,
+      "terrain_min_kmh": 6.4,
+      "terrain_max_kmh": 20.0,
+      "terrain_mean_kmh": 11.9,
+      "max_ridge_speedup_ratio": 1.68,
+      "max_shelter_ratio": 0.54
+    },
+    {
+      "time": "2016-08-10T17:00",
+      "ambient_kmh": 9.7,
+      "ambient_dir": 80.0,
+      "terrain_min_kmh": 4.9,
+      "terrain_max_kmh": 16.8,
+      "terrain_mean_kmh": 9.7,
+      "max_ridge_speedup_ratio": 1.73,
+      "max_shelter_ratio": 0.5
+    },
+    {
+      "time": "2016-08-10T18:00",
+      "ambient_kmh": 10.4,
+      "ambient_dir": 78.0,
+      "terrain_min_kmh": 5.4,
+      "terrain_max_kmh": 17.8,
+      "terrain_mean_kmh": 10.4,
+      "max_ridge_speedup_ratio": 1.71,
+      "max_shelter_ratio": 0.52
+    },
+    {
+      "time": "2016-08-10T19:00",
+      "ambient_kmh": 11.9,
+      "ambient_dir": 84.0,
+      "terrain_min_kmh": 8.3,
+      "terrain_max_kmh": 18.0,
+      "terrain_mean_kmh": 12.0,
+      "max_ridge_speedup_ratio": 1.51,
+      "max_shelter_ratio": 0.7
+    },
+    {
+      "time": "2016-08-10T20:00",
+      "ambient_kmh": 12.6,
+      "ambient_dir": 90.0,
+      "terrain_min_kmh": 8.8,
+      "terrain_max_kmh": 18.9,
+      "terrain_mean_kmh": 12.7,
+      "max_ridge_speedup_ratio": 1.5,
+      "max_shelter_ratio": 0.7
+    },
+    {
+      "time": "2016-08-10T21:00",
+      "ambient_kmh": 12.2,
+      "ambient_dir": 90.0,
+      "terrain_min_kmh": 8.5,
+      "terrain_max_kmh": 18.3,
+      "terrain_mean_kmh": 12.2,
+      "max_ridge_speedup_ratio": 1.5,
+      "max_shelter_ratio": 0.7
+    },
+    {
+      "time": "2016-08-10T22:00",
+      "ambient_kmh": 14.0,
+      "ambient_dir": 92.0,
+      "terrain_min_kmh": 9.8,
+      "terrain_max_kmh": 21.0,
+      "terrain_mean_kmh": 14.1,
+      "max_ridge_speedup_ratio": 1.5,
+      "max_shelter_ratio": 0.7
+    },
+    {
+      "time": "2016-08-10T23:00",
+      "ambient_kmh": 15.8,
+      "ambient_dir": 92.0,
+      "terrain_min_kmh": 11.1,
+      "terrain_max_kmh": 23.7,
+      "terrain_mean_kmh": 15.9,
+      "max_ridge_speedup_ratio": 1.5,
+      "max_shelter_ratio": 0.7
+    },
+    {
+      "time": "2016-08-11T00:00",
+      "ambient_kmh": 20.5,
+      "ambient_dir": 90.0,
+      "terrain_min_kmh": 14.4,
+      "terrain_max_kmh": 30.8,
+      "terrain_mean_kmh": 20.6,
+      "max_ridge_speedup_ratio": 1.5,
+      "max_shelter_ratio": 0.7
+    }
+  ]
+}
