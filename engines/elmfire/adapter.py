@@ -194,8 +194,9 @@ def namelist(grid: Grid, req: dict) -> str:
     return '\n'.join(lines) + '\n'
 
 
-def read_arrival(folder: Path, grid: Grid) -> np.ndarray:
-    """Time of arrival in seconds, NaN where the fire did not reach."""
+def read_arrival(folder: Path, grid: Grid, tstop: float) -> np.ndarray:
+    """Time of arrival in seconds, NaN where the fire did not reach by tstop. ELMFIRE's last time
+    step can end a little after tstop, and the cells it reaches then are left out."""
     found = sorted(folder.glob('time_of_arrival_*.bil'))
     if not found:
         raise RuntimeError('ELMFIRE não escreveu o tempo de chegada')
@@ -203,7 +204,7 @@ def read_arrival(folder: Path, grid: Grid) -> np.ndarray:
     if (ds.RasterYSize, ds.RasterXSize) != (grid.rows, grid.cols):
         raise RuntimeError(f'tempo de chegada com {ds.RasterYSize}x{ds.RasterXSize} células')
     toa = ds.GetRasterBand(1).ReadAsArray().astype(float)
-    toa[toa < 0] = np.nan
+    toa[(toa < 0) | (toa > tstop)] = np.nan
     return toa
 
 
@@ -221,7 +222,7 @@ def main():
         try:
             if run.returncode != 0:
                 raise RuntimeError(f'ELMFIRE saiu com código {run.returncode}')
-            toa = read_arrival(case / 'outputs', grid)
+            toa = read_arrival(case / 'outputs', grid, float(req['duration_min']) * 60)
         except RuntimeError:
             sys.stderr.write('\n'.join((run.stdout + run.stderr).splitlines()[-40:]) + '\n')
             raise

@@ -51,7 +51,7 @@ Cada valor de `burned`, de `layers` e de cada momento de `weather` pode ser um n
 }
 ```
 
-- **`arrival_min`:** minuto em que o fogo chega a cada célula, desde o início da simulação. Usa a mesma grade e a mesma orientação do pedido (linha 0 a norte). `null` onde o fogo não chegou, 0 nas células de `burned`.
+- **`arrival_min`:** minuto em que o fogo chega a cada célula, desde o início da simulação. Usa a mesma grade e a mesma orientação do pedido (linha 0 a norte). `null` onde o fogo não chegou até `duration_min`, 0 nas células de `burned`.
 - **`burned_ha`:** área das células que arderam, incluindo as de `burned`.
 - **`runtime_s`:** tempo de relógio do adapter e do motor, sem o arranque do contentor.
 
