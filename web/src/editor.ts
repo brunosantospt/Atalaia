@@ -27,6 +27,16 @@ import type { Inventory } from './inventory'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
 import {
+  DEFAULT_HOSPITAL,
+  buildMultiAgencyDispatch,
+  detectThreatenedRoads,
+  evaluateMedicalPointSafety,
+  type AgencyRole,
+  type MedicalPointItem,
+  type MultiAgencyDispatch,
+} from './reporting'
+import { DispatchModal } from './dispatchModal'
+import {
   aerialFrontM,
   arrivalMin,
   attackMPerH,
@@ -43,7 +53,7 @@ import {
 } from './suppression'
 import './editor.css'
 
-type Tool = 'point' | 'line' | 'drops'
+type Tool = 'point' | 'line' | 'drops' | 'pma'
 export type Runs = Record<'free' | 'A' | 'B', Run>
 export type Reports = Record<'free' | 'A' | 'B', Report>
 
@@ -117,6 +127,10 @@ const TEMPLATE = `
     <table class="report" data-ref="report"></table>
     <p class="note verdict" data-ref="verdict"></p>
     <p class="note" data-ref="detail"></p>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,224,228,0.15);display:flex;flex-direction:column;gap:6px;">
+      <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">📢 Reportar às Entidades (PSP/INEM)</button>
+      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">➕ Ponto Socorro (PMA)</button>
+    </div>
   </section>
   <footer>
     <button type="button" data-ref="clear">Limpar esta decisão</button>
@@ -152,7 +166,11 @@ export class Editor {
   private readonly access = new CustomDataSource('access')
   private readonly routes = new CustomDataSource('routes')
   private readonly hazards = new CustomDataSource('hazards')
+  private readonly agency = new CustomDataSource('agency')
   private dangerTimer?: number
+  private readonly dispatchModal = new DispatchModal()
+  pmaList: MedicalPointItem[] = []
+  role: AgencyRole = 'cmd'
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
 
@@ -175,6 +193,7 @@ export class Editor {
     void viewer.dataSources.add(this.access)
     void viewer.dataSources.add(this.routes)
     void viewer.dataSources.add(this.hazards)
+    void viewer.dataSources.add(this.agency)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
     this.handler.setInputAction((e: { endPosition: Cartesian2 }) => this.hover(e.endPosition), ScreenSpaceEventType.MOUSE_MOVE)
@@ -205,6 +224,8 @@ export class Editor {
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.close.addEventListener('click', () => this.toggle(false))
+    this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
+    this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
     this.refs.clear.addEventListener('click', () => {
       const d = this.decisions[this.active]
       this.decisions[this.active] = { ...empty(d.id), name: d.name }
@@ -477,6 +498,11 @@ export class Editor {
       return
     }
 
+    if (this.tool === 'pma') {
+      this.setPmaLocation(point)
+      this.setTool(null)
+      return
+    }
     if (this.tool !== 'point') {
       this.drawing.push(point)
       this.draw()
@@ -495,7 +521,7 @@ export class Editor {
   }
 
   private finishLine() {
-    if (!this.loaded || !this.tool || this.tool === 'point') return
+    if (!this.loaded || (this.tool !== 'line' && this.tool !== 'drops')) return
     if (this.drawing.length < 2) return void (this.refs.hint.textContent = 'Uma linha precisa de dois cliques pelo menos.')
     const d = this.decisions[this.active]
     const id = nextId(d.lines, 'l')
@@ -859,6 +885,91 @@ export class Editor {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
       entities.add({ position: Cartesian3.fromDegrees(this.drawing[0].lon, this.drawing[0].lat), point: { pixelSize: 6, color: INK, heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity } })
     }
+
+    // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
+    this.agency.entities.removeAll()
+    if (context && scenario && activeRun) {
+      const threatened = detectThreatenedRoads(scenario.grid, context, activeRun, this.minutes)
+
+      // Draw threatened roads for PSP & Command
+      if (this.role === 'psp' || this.role === 'cmd') {
+        for (const cut of threatened) {
+          if (cut.pts && cut.pts.length >= 2) {
+            const cutColor =
+              cut.urgency === 'cortado'
+                ? Color.fromCssColorString('#e63946')
+                : cut.urgency === 'urgente'
+                  ? Color.fromCssColorString('#ff3b30')
+                  : Color.fromCssColorString('#f0a33a')
+
+            this.agency.entities.add({
+              polyline: {
+                positions: cut.pts.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
+                width: this.role === 'psp' ? 5 : 3,
+                clampToGround: true,
+                material: new PolylineDashMaterialProperty({ color: cutColor, dashLength: 10 }),
+              },
+            })
+
+            if (this.role === 'psp' || cut.urgency === 'urgente') {
+              this.agency.entities.add({
+                position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
+                label: {
+                  text: `⛔ CORTE: ${cut.label}`,
+                  font: '10px ui-monospace, monospace',
+                  fillColor: Color.WHITE,
+                  backgroundColor: Color.fromCssColorString('rgba(180, 20, 20, 0.88)'),
+                  showBackground: true,
+                  style: 2,
+                  pixelOffset: new Cartesian2(0, -18),
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  disableDepthTestDistance: Infinity,
+                },
+              })
+            }
+          }
+        }
+      }
+
+      // Draw PMA and ambulance route for INEM & Command
+      if (this.role === 'inem' || this.role === 'cmd') {
+        for (const pma of this.pmaList) {
+          this.agency.entities.add({
+            position: Cartesian3.fromDegrees(pma.location.lon, pma.location.lat),
+            point: {
+              pixelSize: 13,
+              color: Color.fromCssColorString('#34c759'),
+              outlineColor: Color.WHITE,
+              outlineWidth: 2,
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+            label: {
+              text: `🏥 ${pma.name}`,
+              font: '11px ui-monospace, monospace',
+              fillColor: Color.WHITE,
+              backgroundColor: Color.fromCssColorString('rgba(20, 120, 50, 0.88)'),
+              showBackground: true,
+              style: 2,
+              pixelOffset: new Cartesian2(0, -20),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+          })
+
+          if (pma.ambulanceRoute && pma.ambulanceRoute.length >= 2) {
+            this.agency.entities.add({
+              polyline: {
+                positions: pma.ambulanceRoute.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
+                width: 4,
+                clampToGround: true,
+                material: Color.fromCssColorString('#00e676'),
+              },
+            })
+          }
+        }
+      }
+    }
   }
 
   private polyline(line: LonLat[], color: Color, dashed: boolean) {
@@ -873,7 +984,86 @@ export class Editor {
     })
   }
 
-  /** The road access points near the ignition, while a point of attack is being placed. */
+  setRole(role: AgencyRole) {
+    this.role = role
+    this.draw()
+  }
+
+  togglePmaTool() {
+    if (this.tool === 'pma') {
+      this.setTool(null)
+      this.refs.hint.textContent = ''
+    } else {
+      this.setTool('pma')
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent = 'Clica no mapa onde queres instalar o Posto Médico Avançado (PMA).'
+    }
+  }
+
+  setPmaLocation(point: LonLat) {
+    if (!this.loaded) return
+    const { scenario, context } = this.loaded
+    const d = this.decisions[this.active]
+    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+    const safeBufferMin = activeRun ? evaluateMedicalPointSafety(scenario.grid, activeRun.arrival, point) : 180
+
+    let ambulanceRoute: LonLat[] | undefined
+    let routeKm: number | undefined
+    let etaMin: number | undefined
+
+    if (context) {
+      const route = findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, DEFAULT_HOSPITAL.location, point)
+      if (route) {
+        ambulanceRoute = route.path
+        routeKm = route.distanceKm
+        etaMin = Math.round(route.distanceKm * 1.5)
+      }
+    }
+
+    this.pmaList = [
+      {
+        id: 'pma-1',
+        name: 'PMA 1 (Posto Médico Avançado)',
+        kind: 'pma',
+        location: point,
+        safeBufferMin,
+        hospitalDestination: DEFAULT_HOSPITAL.name,
+        ambulanceRoute,
+        routeKm,
+        etaMin,
+      },
+    ]
+
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
+    this.draw()
+    this.actions.changed()
+  }
+
+  getMultiAgencyDispatch(): MultiAgencyDispatch | undefined {
+    if (!this.loaded) return undefined
+    const d = this.decisions[this.active]
+    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+    if (!activeRun) return undefined
+    return buildMultiAgencyDispatch(
+      this.loaded.fire.name,
+      this.loaded.fire.start,
+      this.minutes,
+      this.loaded.scenario.grid,
+      this.loaded.context,
+      activeRun,
+      this.pmaList,
+    )
+  }
+
+  openDispatchDialog() {
+    const dispatch = this.getMultiAgencyDispatch()
+    if (dispatch) {
+      this.dispatchModal.show(dispatch)
+    }
+  }
+
+    /** The road access points near the ignition, while a point of attack is being placed. */
   private drawAccess() {
     const { entities } = this.access
     entities.removeAll()

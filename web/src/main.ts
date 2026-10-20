@@ -101,6 +101,11 @@ async function main() {
     next: () => replay?.player.next(),
     goTo: (i) => replay?.player.goTo(i),
     pickFire: (id) => (location.hash = id),
+    roleChanged: (role) => {
+      editor.setRole(role)
+      const dispatch = editor.getMultiAgencyDispatch()
+      if (dispatch) hud.updateBriefings(dispatch)
+    },
   })
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
@@ -319,6 +324,10 @@ async function main() {
       if (pose) spotlight.set(pose, frame.spot * (pose.range / Math.max(frame.pose.range, 1)))
     }
     hud.update(frame, readout, splitOn)
+    if (frameNo % 60 === 0) {
+      const dispatch = editor.getMultiAgencyDispatch()
+      if (dispatch) hud.updateBriefings(dispatch)
+    }
   })
   // Tags are placed after the render, when the camera has its final pose for the frame.
   scene.postRender.addEventListener(() => {

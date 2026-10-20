@@ -10,6 +10,7 @@ import type { SafeArea } from './markers'
 import type { Frame } from './player'
 import { SettingsPanel } from './settings'
 import type { Shot } from './shots'
+import type { AgencyRole, MultiAgencyDispatch } from './reporting'
 import './hud.css'
 
 export interface HudActions {
@@ -18,6 +19,7 @@ export interface HudActions {
   next(): void
   goTo(i: number): void
   pickFire(id: string): void
+  roleChanged?(role: AgencyRole): void
 }
 
 /** The free run of the fast model behind the simulated shots, as the HUD reads it. */
@@ -46,6 +48,33 @@ const TEMPLATE = `
     <div class="word" data-ref="word"></div>
     <div class="line" data-ref="place"></div>
     <div class="line dim" data-ref="coords"></div>
+  </section>
+  <nav class="role-selector">
+    <div class="role-pill">
+      <button type="button" class="role-btn active" data-role="cmd" title="Visão de Comando Completo (Proteção Civil & Bombeiros)">
+        <span>🛡️</span> <span>Proteção Civil</span>
+      </button>
+      <button type="button" class="role-btn" data-role="psp" title="Visão Forças de Segurança: Cortes de Via e Trânsito">
+        <span>👮</span> <span>PSP / GNR</span>
+      </button>
+      <button type="button" class="role-btn" data-role="inem" title="Visão Saúde: Posto Médico Avançado e Evacuação Segura">
+        <span>🚑</span> <span>INEM</span>
+      </button>
+    </div>
+  </nav>
+  <section class="panel agency-briefing psp-briefing" data-ref="pspBriefing" hidden>
+    <header>
+      <div class="agency-badge psp">👮 PSP / GNR · CORTES DE TRÂNSITO</div>
+      <button type="button" class="btn-mini-copy" data-ref="copyPspMini" title="Copiar despacho para WhatsApp/Rádio">📋 Copiar</button>
+    </header>
+    <div class="briefing-body" data-ref="pspBriefingBody"></div>
+  </section>
+  <section class="panel agency-briefing inem-briefing" data-ref="inemBriefing" hidden>
+    <header>
+      <div class="agency-badge inem">🚑 INEM · POSTO MÉDICO & EVACUAÇÃO</div>
+      <button type="button" class="btn-mini-copy" data-ref="copyInemMini" title="Copiar despacho para o CODU">📋 Copiar</button>
+    </header>
+    <div class="briefing-body" data-ref="inemBriefingBody"></div>
   </section>
   <section class="panel clock">
     <div class="live"><i></i><span data-ref="mode">Replay</span> · <span data-ref="source">observado</span></div>
@@ -83,7 +112,8 @@ const TEMPLATE = `
 type Refs = Record<
   | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
   | 'hdg' | 'pitch' | 'rng' | 'tm' | 'dms' | 'cardHead' | 'cardTitle' | 'cardBody'
-  | 'prev' | 'play' | 'next' | 'ticks' | 'gear',
+  | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
+  | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody',
   HTMLElement
 >
 
@@ -115,6 +145,84 @@ export class Hud {
     this.refs.prev.addEventListener('click', () => actions.prev())
     this.refs.next.addEventListener('click', () => actions.next())
     this.refs.play.addEventListener('click', () => actions.toggle())
+
+    root.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const role = btn.dataset.role as AgencyRole
+        this.setRole(role)
+        this.actions.roleChanged?.(role)
+      })
+    })
+
+    this.refs.copyPspMini?.addEventListener('click', () => {
+      if (this.lastDispatch) {
+        navigator.clipboard.writeText(this.lastDispatch.psp.message).then(() => this.toast('📋 Despacho PSP copiado!'))
+      }
+    })
+    this.refs.copyInemMini?.addEventListener('click', () => {
+      if (this.lastDispatch) {
+        navigator.clipboard.writeText(this.lastDispatch.inem.message).then(() => this.toast('📋 Despacho INEM copiado!'))
+      }
+    })
+  }
+
+  currentRole: AgencyRole = 'cmd'
+  private lastDispatch?: MultiAgencyDispatch
+
+  setRole(role: AgencyRole) {
+    this.currentRole = role
+    this.root.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.role === role)
+    })
+    this.root.classList.toggle('role-psp', role === 'psp')
+    this.root.classList.toggle('role-inem', role === 'inem')
+    this.root.classList.toggle('role-cmd', role === 'cmd')
+    if (this.refs.pspBriefing) this.refs.pspBriefing.hidden = role !== 'psp'
+    if (this.refs.inemBriefing) this.refs.inemBriefing.hidden = role !== 'inem'
+  }
+
+  updateBriefings(dispatch: MultiAgencyDispatch) {
+    this.lastDispatch = dispatch
+    if (this.refs.pspBriefingBody) {
+      const roads = dispatch.psp.roads
+      this.refs.pspBriefingBody.innerHTML = roads.length
+        ? roads.slice(0, 4).map((r) => `
+          <div class="briefing-item ${r.urgency}">
+            <div style="font-weight:600;color:#fff;">⛔ Cortar: ${r.label}</div>
+            <div style="color:${r.urgency === 'cortado' ? '#ff6b6b' : '#f0a33a'};font-size:9px;">
+              ${r.minutesToImpact <= 0 ? 'Fogo ativo na via' : `Impacto previsto em ~${r.minutesToImpact} min`}
+            </div>
+          </div>
+        `).join('')
+        : '<div class="briefing-item">Nenhuma via ameaçada neste momento.</div>'
+    }
+    if (this.refs.inemBriefingBody) {
+      const pma = dispatch.inem.pmaList[0]
+      this.refs.inemBriefingBody.innerHTML = pma
+        ? `
+          <div class="briefing-item">
+            <div style="font-weight:600;color:#4ade80;">🏥 ${pma.name}</div>
+            <div style="font-size:9px;color:#8b9096;">Margem: ${pma.safeBufferMin > 180 ? '> 3 horas' : `${pma.safeBufferMin} min`}</div>
+            ${pma.routeKm ? `<div style="font-size:9px;color:#60a5fa;">Corredor: ${pma.hospitalDestination} (${pma.routeKm.toFixed(1)} km)</div>` : ''}
+          </div>
+          <div class="briefing-item" style="color:#ff6b6b;font-size:9px;">
+            ⚠️ ${dispatch.inem.blockedRoads.length} vias interditas a ambulâncias
+          </div>
+        `
+        : '<div class="briefing-item">PMA não ativado. Clica em "+ Ponto Socorro" na Proteção Civil.</div>'
+    }
+  }
+
+  private toast(msg: string) {
+    const toast = document.createElement('div')
+    toast.className = 'dispatch-toast'
+    toast.textContent = msg
+    document.body.appendChild(toast)
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      toast.style.transition = 'opacity 0.3s'
+      setTimeout(() => toast.remove(), 300)
+    }, 2000)
   }
 
   setFire(fire: Fire, shots: Shot[], sim: Simulated | undefined) {
