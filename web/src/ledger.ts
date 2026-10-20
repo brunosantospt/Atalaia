@@ -4,6 +4,7 @@
 
 import type { Fire, NearStation, Weather } from './data'
 import type { Detection } from './detection'
+import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
 import { fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { compass } from './geo'
 import type { Inventory } from './inventory'
@@ -16,6 +17,7 @@ export interface Known {
   inventory: Inventory | null
   detection: Detection
   satHa: number // burned when the satellite would detect the fire
+  fwiSeries?: FWIHourly[]
 }
 
 type State = 'on' | 'off' | 'wait' | 'retro'
@@ -39,6 +41,7 @@ export class Ledger {
 
   set(known: Known) {
     const { fire, weather, startIndex, stations, inventory, detection, satHa } = known
+    const fwiList = known.fwiSeries ?? computeFWISeries(weather)
     const clock = (minutes: number) => fmtTime(wallClock(fire.start, minutes / 60))
     const nearest = stations[0]
     const stock = nearest ? inventory?.[nearest.id] : undefined
@@ -54,6 +57,15 @@ export class Ledger {
         at: (h) => {
           const i = Math.min(Math.max(startIndex + Math.floor(h), 0), weather.time.length - 1)
           const text = `${clock(Math.floor(h) * 60)} · ${fmtNumber(weather.windKmh[i])} km/h de ${compass(weather.windFromDeg[i])} · ${fmtNumber(weather.tempC[i])} °C · ${fmtNumber(weather.rhPct[i])} %`
+          return ['on', text]
+        },
+      },
+      {
+        layer: 'Perigo FWI',
+        source: 'IPMA',
+        at: (h) => {
+          const f = fwiAt(fwiList, startIndex, h * 60)
+          const text = `${f.dangerClass.toUpperCase()} (FWI ${fmtNumber(f.fwi, 1)}) · ISI ${fmtNumber(f.isi, 1)} · FFMC ${fmtNumber(f.ffmc, 0)} (humidade ${fmtNumber(f.fuelMoisturePct, 1)} %)`
           return ['on', text]
         },
       },

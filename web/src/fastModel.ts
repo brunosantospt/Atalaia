@@ -5,6 +5,7 @@
 // (suppression.ts). The engines (engines/CONTRACT.md) remain the reference.
 
 import type { Station, Weather } from './data'
+import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
 import { distanceM, toPTTM06, type LonLat } from './geo'
 import { cellHa, cellOf, cellOfXY, centerXY, type Grid } from './grid'
 import {
@@ -54,6 +55,11 @@ export const params = {
   // of Vieira do Minho 2016 (the calibration above); 2.5 halves the ROS from 30 % to 58 % RH.
   rhGain: 2.5,
   rhRef: 30,
+  // Official Canadian Fire Weather Index (FWI / ISI) coupling (IPMA / ANEPC standard in Portugal).
+  // ISI integrates Van Wagner fine fuel moisture desorption/adsorption and wind into head ROS.
+  useFWI: true,
+  isiRef: 11.2,
+  fwiHeadBase: 4.6,
 }
 
 // 16 neighbours: the 8 around plus the knight moves, so the ellipse is sampled every ~22°.
@@ -104,6 +110,7 @@ export interface Scenario {
   stations: Station[]
   suppression: Suppression
   durationMin: number
+  fwiSeries?: FWIHourly[]
 }
 
 export function simulate(scenario: Scenario, decision: Decision | null): Run {
@@ -122,11 +129,20 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
 
   // Weather factor per minute and step: the head factor of the wind spread over an ellipse (Canadian
   // FBP length-to-breadth), times the drying of the fuel with the humidity of the hour.
+  // Weather factor per minute and step: the head factor of the wind spread over an ellipse (Canadian
+  // FBP length-to-breadth), times fuel drying via Canadian FWI Initial Spread Index (Van Wagner 1987).
+  const fwiSeries = scenario.fwiSeries ?? computeFWISeries(scenario.weather)
   const minutes = durationMin + 1
   const windFactor = new Float32Array(minutes * K)
   for (let m = 0; m < minutes; m++) {
     const { kmh, fromDeg, rh } = weatherAt(scenario, m)
-    const head = (1 + windGain * kmh) * Math.exp((-params.rhGain * (rh - params.rhRef)) / 100)
+    let head: number
+    if (params.useFWI) {
+      const fwi = fwiAt(fwiSeries, scenario.startIndex, m)
+      head = (fwi.isi / params.isiRef) * params.fwiHeadBase
+    } else {
+      head = (1 + windGain * kmh) * Math.exp((-params.rhGain * (rh - params.rhRef)) / 100)
+    }
     const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-0.03 * kmh), 2.155)
     const e = Math.sqrt(1 - 1 / (lb * lb))
     const to = fromDeg + 180
@@ -450,3 +466,5 @@ class Heap {
     return top
   }
 }
+
+export { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
