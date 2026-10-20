@@ -19,7 +19,7 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | | P2 Replay observado | Os 2 incêndios contados passo a passo: câmara guiada, HUD "intel" cinza, spotlight e quartéis próximos com km |
 | | P3 Gate do motor | ELMFIRE roda num teste sintético (senão, ForeFire) |
 | Ter 20 | P4 Contexto | Grade, combustível, relevo e meteo para os 2 incêndios |
-| | P5 Contrato + API | FastAPI com `/fires`, `/engines`, `/run` e cache offline; as settings leem os motores da API |
+| | P5 Contrato + API | FastAPI com `/api/fires`, `/api/engines`, `/api/run` e cache offline; as settings leem os motores da API |
 | | P6 Modelo rápido | Propagação no browser, desenhada no terreno |
 | | P7 Validação | Sørensen simulado vs observado, por passo e por motor |
 | Qua 21 | P8 Meios e despacho | Quartéis reais, rotas, frota animada |
@@ -151,14 +151,42 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - a meteo horária entra no contrato dos motores com o cenário (P5).
 
 ### P5 · Contrato + API
-- `docs/contracts.md` define o **cenário** (base: perímetro, meteo, combustível; decisões A e B) e o **resultado** (passos, métricas).
-- `api/` em FastAPI:
-  - `GET /fires`, `GET /engines`;
-  - `POST /run`, que lança o adapter do motor no seu próprio venv.
-- **Settings:** o painel já existe no HUD (botão Settings ou tecla S), com o incêndio e o motor (ELMFIRE ou SimFire). A escolha do motor fica guardada no browser e é a que corre na validação (P7) e nas decisões (P9). No P5, a lista de motores passa a vir de `GET /engines`, com o estado de cada um (pronto, não instalado), em vez de `web/src/engines.ts`. Junta-se o modelo rápido no browser (P6).
-- Cache por hash do cenário em `data/cache/`, para a demo rodar offline.
+- `docs/contracts.md` define o **cenário** e o **resultado**:
+  - o cenário é um incêndio, o passo observado de onde partir, quanto tempo correr, as humidades e uma decisão (faixas onde nada arde a partir de um minuto);
+  - o resultado traz os tempos de chegada na grade do incêndio, a área ardida a cada hora e a chave da cache.
+- `api/` em FastAPI, em `http://127.0.0.1:5181`:
+  - `GET /api/fires`, `GET /api/engines` e `POST /api/run`;
+  - `setup.sh` cria o venv uma vez, `serve.sh` corre a API e `test.sh` é o teste do P5;
+  - o Vite passa `/api` para a API, por isso a web pede sempre ao mesmo sítio;
+  - os motores correm no Docker pelo `run.sh` de cada um, e não num venv: é assim desde o P3;
+  - a API arranca-se à mão com `api/serve.sh`, porque o launcher do preview não pode correr nada em `~/Documents` (permissões do macOS).
+- **O que a API junta ao cenário:**
+  - a grade, o combustível, o relevo e a meteo do P4. O vento entra de 30 em 30 minutos e roda pelo lado mais curto;
+  - os focos que aparecem depois do início, como ignições no minuto deles;
+  - as faixas, como combustível 91. Uma faixa com `from_min` parte a corrida nesse minuto, e o troço seguinte parte do que já ardeu.
+- **Humidades:** por agora entram no cenário, iguais em toda a grade e durante toda a corrida: 6/8/10 nas mortas e 60/90 nas vivas, um verão seco. Mais tarde passam a vir da meteo de cada hora.
+- **Settings:** o painel do HUD (botão Settings ou tecla S) tem o incêndio e o motor.
+  - A lista de motores vem de `GET /api/engines` sempre que o painel abre, com o estado de cada um: Pronto, Não instalado (falta `setup.sh`) ou Docker desligado.
+  - Com a API desligada não há motores, e uma nota diz para correr `api/serve.sh`.
+  - A escolha fica guardada no browser e é a que corre na validação (P7) e nas decisões (P9). Junta-se o modelo rápido no browser (P6).
+- **Cache** em `data/cache/` (fora do git). A chave cobre o cenário, os ficheiros do incêndio e o código do motor e da API. É lida antes de se ver o motor, por isso uma corrida feita uma vez volta sem o Docker, e a demo roda offline.
+- **Primeiras corridas**, do perímetro observado no passo 0 até ao passo 1:
+
+  | Incêndio | Observado | ELMFIRE | SimFire |
+  |---|---|---|---|
+  | Vieira do Minho, 10:00 → 15:00 | 705,6 ha | 154,8 ha (1,7 s) | 3343,0 ha (26,4 s) |
+  | Cabeceiras de Basto, 04:00 → 13:30 | 592,6 ha | 298,3 ha (2,2 s) | 2968,0 ha (41,2 s) |
+
+  - O ELMFIRE fica entre um quinto e metade do observado, e o SimFire chega a quase 5 vezes. Calibrar fica para o P7.
+  - Uma faixa de 60 m num anel a 500 m do perímetro de Vieira segura nos dois motores, em 2 h: no ELMFIRE, 65,4 ha passam a 41,1 ha; no SimFire, 1426,0 ha passam a 84,2 ha. A mesma faixa só a partir das 11:00 já chega tarde: 61,6 ha no ELMFIRE e 1436,8 ha no SimFire. É este o tipo de comparação das decisões A e B (P9).
+  - O SimFire escolhe o passo de tempo pelo fogo mais rápido em toda a corrida. Por isso o mesmo minuto muda uns % com a duração: em Vieira, o minuto 60 tem 669,1 ha numa corrida de 300 min e 687,9 ha numa de 120 min. No P7, cada corrida vai até ao passo seguinte.
 - **Ref:** o plugin `fireEngines()` em `vite.config.ts`, `engines/CONTRACT.md`.
-- **Muda:** FastAPI em vez de plugin do Vite (decisão do Assessment), e a cache é nova.
+- **Muda:**
+  - FastAPI em vez de plugin do Vite (decisão do Assessment);
+  - os motores correm em contentores, não em venvs;
+  - a cache e as faixas com hora são novas.
+- **Pronto quando:** `api/test.sh` passa. ✅
+- **A seguir:** humidades dos combustíveis por hora, estimadas a partir da temperatura e da humidade relativa (`scripts/build_moisture.py`).
 
 ### P6 · Modelo rápido no browser
 - Tempo mínimo de chegada (Dijkstra, 16 vizinhos) com Rothermel simplificado: vento, declive e humidade. Comprimento de chama pela fórmula de Byram.
