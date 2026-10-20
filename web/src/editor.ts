@@ -24,7 +24,7 @@ import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './forma
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import type { Inventory } from './inventory'
-import { makeReport, recommend, type Report, type Verdict } from './report'
+import { describeVerdict, makeReport, recommend, type Report } from './report'
 import {
   aerialFrontM,
   arrivalMin,
@@ -224,6 +224,14 @@ export class Editor {
 
   get open(): boolean {
     return this.el.classList.contains('open')
+  }
+
+  /** The director shows decision `i` on the ground: it becomes the drawer's tab too. */
+  showDecision(i: number) {
+    if (i === this.active) return
+    this.active = i
+    this.cancel()
+    this.render()
   }
 
   /** Hours after the ignition the drawer stands at. */
@@ -568,7 +576,7 @@ export class Editor {
       tr.querySelectorAll('td').forEach((td, i) => (td.textContent = text(at[cols[i]])))
       table.append(tr)
     }
-    this.refs.verdict.textContent = verdictText(recommend(r.A, r.B), r)
+    this.refs.verdict.textContent = describeVerdict(recommend(r.A, r.B), r.A, r.B)
     const mine = at[this.decisions[this.active].id as 'A' | 'B']
     const places = mine.places.slice(0, 4).map((p) => `${p.name} T+${Math.round(p.minute)} min`)
     const roads = mine.roadsCut.slice(0, 4).map((c) => `${c.label} ${fmtKm(c.km)}`)
@@ -670,18 +678,6 @@ export class Editor {
   }
 }
 
-/** "Recomendação: A · atinge 2 lugares em vez de 4" */
-function verdictText(v: Verdict, r: Reports): string {
-  if (!v.pick) return `Recomendação: empate · ${r.A.places.length} lugares e ${fmtHa(r.A.burnedHa)} em ambas`
-  const [mine, other] = v.pick === 'A' ? [r.A, r.B] : [r.B, r.A]
-  const why =
-    v.by === 'places'
-      ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
-      : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
-  return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
-}
-
-const placesText = (n: number) => (n === 0 ? 'não atinge nenhum lugar' : `atinge ${n} ${n === 1 ? 'lugar' : 'lugares'}`)
 const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' : 'Decisão B', points: {}, lines: {}, assignments: [] })
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
 

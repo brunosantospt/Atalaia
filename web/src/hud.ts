@@ -76,7 +76,7 @@ const TEMPLATE = `
       <div class="ticks" data-ref="ticks"></div>
       <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · A decisões A/B · E editor · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · S settings · H esconde o HUD</div>
   </section>
 `
 
@@ -96,6 +96,7 @@ export class Hud {
   private shots: Shot[] = []
   private ticks: HTMLElement[] = []
   private shown = new Map<string, string>()
+  private director = false
 
   constructor(
     readonly root: HTMLElement,
@@ -118,11 +119,22 @@ export class Hud {
 
   setFire(fire: Fire, shots: Shot[], sim: Simulated | undefined) {
     this.fire = fire
-    this.shots = shots
     this.sim = sim
     this.ledger.el.hidden = !sim
     if (sim) this.ledger.set(sim.known)
     this.settings.setFire(fire.id)
+    this.setShots(shots)
+  }
+
+  /** The director's cut is on: the HUD says so instead of "Replay". */
+  setDirector(on: boolean) {
+    this.director = on
+    this.root.classList.toggle('director', on)
+  }
+
+  /** The shots changed (the director's were built, or the cut toggled): the transport's ticks follow. */
+  setShots(shots: Shot[]) {
+    this.shots = shots
     this.refs.ticks.replaceChildren()
     this.ticks = shots.map((s, i) => {
       const tick = document.createElement('button')
@@ -166,7 +178,8 @@ export class Hud {
     }
   }
 
-  update(frame: Frame, camera: CameraReadout) {
+  /** `split` says the decisions A and B are on the screen, in their own shots or through every shot (key A). */
+  update(frame: Frame, camera: CameraReadout, split = false) {
     const fire = this.fire
     if (!fire) return
     const { shot } = frame
@@ -174,24 +187,26 @@ export class Hud {
     const lastStep = fire.steps.at(-1)!.step
     const clock = wallClock(fire.start, frame.hours)
     // Simulated shots read the free run at the clock, so the area grows with the fire and not linearly.
-    const sim = shot.simulated ? this.sim : undefined
+    const sim = shot.simulated || split ? this.sim : undefined
     const areaHa = sim ? sim.areaHa(frame.hours) : frame.areaHa
 
     this.set('word', shot.word)
     this.set('place', [fire.parish, fire.name].filter(Boolean).join(' · '))
     this.set('coords', formatDMS(shot.place))
-    this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? 'Replay' : 'Pausa')
-    this.set('source', sim ? 'simulado' : 'observado')
+    this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? (this.director ? 'Realizador' : 'Replay') : 'Pausa')
+    this.set('source', sim ? (split ? 'decisões' : 'simulado') : 'observado')
     this.root.classList.toggle('paused', !frame.playing)
     this.root.classList.toggle('simulated', !!sim)
     this.set('time', fmtTime(clock))
     this.set('date', `${fmtDate(clock)} · hora local`)
     this.set('elapsed', fmtElapsed(frame.hours))
-    this.set('area', fmtHa(areaHa))
+    this.set('area', shot.area ? shot.area(frame.hours) : fmtHa(areaHa))
     this.set(
       'step',
       sim
-        ? `POC ${fmtPct(sim.poc(areaHa))} · I ${fmtNumber(sim.intensityKWPerM)} kW/m`
+        ? split
+          ? `Livre ${fmtHa(sim.areaHa(frame.hours))}`
+          : `POC ${fmtPct(sim.poc(areaHa))} · I ${fmtNumber(sim.intensityKWPerM)} kW/m`
         : `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`,
     )
     this.ledger.update(frame.hours)

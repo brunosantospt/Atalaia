@@ -77,16 +77,16 @@ export class SplitLayer {
       handle.setPointerCapture(e.pointerId)
     })
     handle.addEventListener('pointermove', (e) => {
-      if (dragging) this.setPosition(e.clientX / window.innerWidth)
+      if (dragging) this.setPosition(Math.min(Math.max(e.clientX / window.innerWidth, 0.05), 0.95))
     })
     handle.addEventListener('pointerup', () => (dragging = false))
     this.setPosition(this.position)
   }
 
-  /** Where the split stands, 0 (all B) to 1 (all A). */
+  /** Where the split stands, 0 (all B) to 1 (all A); the drag keeps a sliver of each side. */
   setPosition(position: number) {
     if (!this.root) return
-    this.position = Math.min(Math.max(position, 0.05), 0.95)
+    this.position = Math.min(Math.max(position, 0), 1)
     this.root.style.setProperty('--split', `${(this.position * 100).toFixed(2)}%`)
     this.viewer.scene.splitPosition = this.position
   }

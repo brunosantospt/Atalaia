@@ -3,6 +3,7 @@
 // with the minute the fire got there, and the roads it crossed.
 
 import type { Run } from './fastModel'
+import { fmtHa, fmtNumber } from './format'
 import { cellHa, type Grid } from './grid'
 import { roadLabel, type Context, type RoadClass } from './osm'
 
@@ -96,6 +97,19 @@ export interface Verdict {
   pick: 'A' | 'B' | null // null: nothing tells them apart
   by: 'places' | 'area' | 'tie'
 }
+
+/** "Recomendação: A · não atinge nenhum lugar em vez de 4 às 6,0 h" */
+export function describeVerdict(v: Verdict, a: Report, b: Report): string {
+  if (!v.pick) return `Recomendação: empate · ${a.places.length} lugares e ${fmtHa(a.burnedHa)} em ambas`
+  const [mine, other] = v.pick === 'A' ? [a, b] : [b, a]
+  const why =
+    v.by === 'places'
+      ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
+      : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
+  return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
+}
+
+const placesText = (n: number) => (n === 0 ? 'não atinge nenhum lugar' : `atinge ${n} ${n === 1 ? 'lugar' : 'lugares'}`)
 
 export function recommend(a: Report, b: Report): Verdict {
   if (a.places.length !== b.places.length) return { pick: a.places.length < b.places.length ? 'A' : 'B', by: 'places' }

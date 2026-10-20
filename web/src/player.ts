@@ -46,7 +46,7 @@ export class Player {
 
   constructor(
     private readonly scene: Scene,
-    readonly shots: Shot[],
+    public shots: Shot[], // the whole story, or the director's cut (main swaps it)
     start: Pose,
   ) {
     this.from = this.pose = start
@@ -112,6 +112,7 @@ export class Player {
       const k = Math.min(this.t / shot.holdS, 1)
       this.pose = applyPose(this.scene, holdPose(shot, k))
       driving = true
+      if (shot.hoursTo !== undefined) this.hours = lerp(shot.hours, shot.hoursTo, ease(k))
       if (k >= 1) {
         if (this.index < this.shots.length - 1) this.goTo(this.index + 1)
         else [this.phase, this.playing] = ['done', false]

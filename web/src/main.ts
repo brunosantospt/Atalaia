@@ -14,6 +14,7 @@ import {
 } from './data'
 import { demoDecisions } from './decisions'
 import { loadDetection } from './detection'
+import { CUT, decisionShots } from './director'
 import { Editor, type Reports, type Runs } from './editor'
 import { burnedHa, params, simulate, type Scenario } from './fastModel'
 import { FireLayer } from './fireLayer'
@@ -27,7 +28,7 @@ import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
 import { makeReport, recommend } from './report'
 import { createViewer } from './scene'
-import { addHeights, buildStory } from './shots'
+import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
 import { containmentProbability, loadSuppression, type Decision } from './suppression'
@@ -38,6 +39,7 @@ const PENHA = { lon: -8.2683, lat: 41.4256 }
 const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
 const PICK_EVERY = 4 // frames between screen-centre picks while the mouse has the camera
 const DECISION_MIN = 360 // how far the free run and the decisions A and B are simulated: the 6 h of the report
+const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
 interface Replay {
   id: string
@@ -51,7 +53,11 @@ interface Replay {
   free: SplitLayer // the free run, shown during the simulated shots
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
-  split?: SplitLayer // the decisions A and B side by side, while they are shown
+  story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
+  split?: SplitLayer // the decisions A and B side by side (always simulated, shown in their shots or on key A)
+  showSplit: boolean // key A: the split stays on through every shot
+  director: boolean // key D: the director's cut plays instead of the whole story
+  shotShown: Shot | undefined // the shot the split and the editor were last set for
 }
 
 async function main() {
@@ -107,7 +113,7 @@ async function main() {
         // The drawer's hour starts where the replay stands; before the replay starts, at the end of the run.
         const hours = replay.player.update(0).hours
         editor.setHours(hours > 0 ? hours : DECISION_MIN / 60)
-        if (!replay.split) rerun()
+        replay.showSplit = true
       }
     },
   })
@@ -161,9 +167,13 @@ async function main() {
       free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], DECISION_MIN),
       reach: new ReachLayer(viewer, fire.ignition, reach),
       context,
+      story,
+      showSplit: false,
+      director: replay?.director ?? false,
+      shotShown: undefined,
     }
+    hud.setDirector(replay.director)
     editor.setFire(id, fire, near, context, scenario, demoDecisions(fire, near))
-    editor.setRuns(undefined, undefined)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
@@ -173,6 +183,33 @@ async function main() {
       intensityKWPerM: reach.intensityKWPerM,
     })
     document.title = `${fire.name} · Atalaia`
+    rerun() // the decisions A and B are simulated at once: the director's shots need them
+  }
+
+  /** The player's shots: the whole story, or the director's cut of it. The HUD's ticks follow. */
+  function setShots() {
+    if (!replay) return
+    const { story, player, director } = replay
+    const shots = director ? story.shots.filter((s) => CUT.includes(s.kind)) : story.shots
+    const current = player.shots[player.index]
+    player.shots = shots
+    hud.setShots(shots)
+    const index = shots.indexOf(current)
+    if (index < 0) player.goTo(Math.min(player.index, shots.length - 1))
+    else player.index = index
+  }
+
+  /** The director's shots follow the decisions: built again after every run, on the terrain. */
+  async function refreshDirector(runs: Runs, reports: Reports | undefined) {
+    if (!replay) return
+    const { story, data, scenario, stations } = replay
+    const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
+    const fresh = decisionShots(data, scenario.grid, stations, suppression, editor.decisions, runs, reports, fovy)
+    await addHeights({ shots: fresh, markers: [] }, viewer.terrainProvider)
+    if (replay?.story !== story) return // another fire meanwhile
+    const kept = story.shots.filter((s) => !DIRECTOR_KINDS.has(s.kind))
+    story.shots = [...kept, ...fresh]
+    setShots()
   }
 
   /** Simulate Livre, A and B as the editor holds them, show A and B split, and report them at 6 h. */
@@ -207,17 +244,25 @@ async function main() {
     )
     if (position !== undefined) replay.split.setPosition(position)
     replay.split.set(replay.player.update(0).hours)
+    replay.split.show(false) // the loop shows it in the director's shots, or on key A
     editor.setRuns(runs, reports)
+    void refreshDirector(runs, reports)
   }
 
-  /** The decisions A and B on and off the screen (key A). */
+  /** The decisions A and B on and off the screen through every shot (key A). */
   function toggleDecisions() {
     if (!replay) return
-    if (!replay.split) return rerun()
-    replay.split.destroy()
-    replay.split = undefined
-    editor.setRuns(undefined, undefined)
-    editor.toggle(false)
+    replay.showSplit = !replay.showSplit
+    if (!replay.showSplit) editor.toggle(false)
+  }
+
+  /** The director's cut (key D): the 90 s of the demo, from the start. */
+  function toggleDirector() {
+    if (!replay) return
+    replay.director = !replay.director
+    hud.setDirector(replay.director)
+    setShots()
+    if (replay.director) replay.player.restart()
   }
 
   // The mouse takes the camera only while the player is not driving it.
@@ -238,14 +283,27 @@ async function main() {
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving
     const played = player.update(dt)
+    // The split shows in the director's shots, or through every shot on key A.
+    const splitOn = !!split && (replay.showSplit || !!played.shot.split)
     // While the editor is open its hour slider holds the clock of the split, and the HUD reads that hour.
-    const frame = editor.open && split ? { ...played, hours: editor.hours } : played
+    const frame = editor.open && splitOn ? { ...played, hours: editor.hours } : played
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
-    const simulated = frame.shot.simulated || !!split
+    const simulated = frame.shot.simulated || splitOn
     fire.set(simulated ? { step: -1, fade: 1, untimed: false } : frame.fire)
-    free.show(frame.shot.simulated && !split)
+    free.show(frame.shot.simulated && !splitOn)
     free.set(frame.hours)
+    split?.show(splitOn)
     split?.set(frame.hours)
+    // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
+    // the comparison starts with the split in the middle.
+    if (frame.shot !== replay.shotShown) {
+      replay.shotShown = frame.shot
+      const { decision, kind } = frame.shot
+      if (decision !== undefined) {
+        editor.showDecision(decision)
+        split?.setPosition(decision === 0 ? 1 : 0)
+      } else if (kind === 'versus') split?.setPosition(0.5)
+    }
     revealed = frame.revealed
 
     if (frame.driving) {
@@ -258,7 +316,7 @@ async function main() {
       // Free camera: the light follows the screen centre and widens as the mouse zooms out.
       if (pose) spotlight.set(pose, frame.spot * (pose.range / Math.max(frame.pose.range, 1)))
     }
-    hud.update(frame, readout)
+    hud.update(frame, readout, splitOn)
   })
   // Tags are placed after the render, when the camera has its final pose for the frame.
   scene.postRender.addEventListener(() => {
@@ -281,6 +339,7 @@ async function main() {
       s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
       a: () => toggleDecisions(),
+      d: () => toggleDirector(),
       e: () => editor.toggle(),
     }
     const action = actions[e.key.length === 1 ? e.key.toLowerCase() : e.key]

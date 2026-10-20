@@ -11,7 +11,7 @@ import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock 
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLonLat, type BBox, type LonLat } from './geo'
 import type { Reach } from './reach'
 
-export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance'
+export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome'
 
 export interface Shot {
   kind: ShotKind
@@ -31,6 +31,11 @@ export interface Shot {
   holdS: number
   reveal: string[] // marker ids that appear with this shot
   conceal: string[] // marker ids that go away from this shot on
+  // The director's shots (director.ts):
+  split?: boolean // the decisions A and B are shown side by side
+  decision?: number // which decision's means are on the ground, 0 or 1
+  hoursTo?: number // the clock runs from `hours` to this while holding
+  area?: (hours: number) => string // the HUD's area line, when it is not the free run's
 }
 
 export type MarkerKind = 'ignition' | 'step' | 'station' | 'eta' | 'tsat'
