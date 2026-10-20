@@ -340,6 +340,7 @@ async function main() {
       r: () => player.restart(),
       s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
+      l: () => hud.toggleLedger(),
       a: () => toggleDecisions(),
       d: () => toggleDirector(),
       e: () => editor.toggle(),

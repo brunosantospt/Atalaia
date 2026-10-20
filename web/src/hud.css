@@ -206,7 +206,40 @@
   backdrop-filter: blur(4px);
 }
 .hud .ledger .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
   color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.hud .ledger .eyebrow:hover {
+  color: var(--amber);
+}
+/* The fold mark: a chevron that points down when open and right when folded. */
+.hud .ledger .eyebrow i {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s;
+}
+.hud .ledger.folded .eyebrow i {
+  transform: translateX(-1px) rotate(-45deg);
+}
+.hud .ledger.folded {
+  padding-bottom: 8px;
+}
+.hud .ledger.folded table {
+  display: none;
 }
 .hud .ledger table {
   margin-top: 7px;

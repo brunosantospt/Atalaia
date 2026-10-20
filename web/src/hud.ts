@@ -76,7 +76,7 @@ const TEMPLATE = `
       <div class="ticks" data-ref="ticks"></div>
       <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · S settings · H esconde o HUD</div>
   </section>
 `
 
@@ -150,6 +150,11 @@ export class Hud {
 
   toggleHidden() {
     this.root.classList.toggle('hidden')
+  }
+
+  /** Folds or opens the ledger of the instant (key L). */
+  toggleLedger() {
+    this.ledger.toggle()
   }
 
   /** The decision editor is open on the left: the title, ledger and position give it the room. */
