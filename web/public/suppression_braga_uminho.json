@@ -1,0 +1,747 @@
+{
+  "title": "Inventário Operacional de Meios de Combate a Incêndios Florestais do Distrito de Braga",
+  "source": {
+    "author": "Marina Araújo de Matos",
+    "thesis": "Minimizing the Impact of Forest Fires",
+    "institution": "Universidade do Minho, Escola de Engenharia",
+    "date": "2025-09",
+    "advisors": [
+      "Ana Maria Alves Coutinho da Rocha",
+      "Filipe Pereira Pinto Cunha Alvelos"
+    ],
+    "project": "FCT PCIF/GRF/0141/2019 (O3F - An Optimization Framework to Reduce Forest Fire)",
+    "table_reference": "Table 41: Firefighting resources available at each fire station (p. 75)"
+  },
+  "district": "Braga",
+  "totals": {
+    "fire_stations": 21,
+    "vehicles": 113,
+    "total_water_liters": 240700,
+    "operational_water_points": 139
+  },
+  "operational_rules": {
+    "initial_attack_threshold_min": 90,
+    "fire_station_turnout_time_min": 10,
+    "water_tank_refill_duration_min": 10,
+    "liters_water_per_meter_fireline": 10.0,
+    "byram_flame_holding_limits_m": {
+      "crew_handline": 1.2,
+      "vfci_fire_engine": 2.4,
+      "aerial_drop_threshold": 2.4
+    }
+  },
+  "stations": [
+    {
+      "id": "guimaraes",
+      "name": "Associação Humanitária dos Bombeiros Voluntários de Guimarães",
+      "municipality": "Guimarães",
+      "vehicles": [
+        {
+          "id": "A",
+          "capacity_l": 400,
+          "category": "VFCI-L (Veículo Ligeiro de Combate a Incêndios)"
+        },
+        {
+          "id": "B",
+          "capacity_l": 400,
+          "category": "VFCI-L (Veículo Ligeiro de Combate a Incêndios)"
+        },
+        {
+          "id": "C",
+          "capacity_l": 2000,
+          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+        },
+        {
+          "id": "D",
+          "capacity_l": 3200,
+          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+        },
+        {
+          "id": "E",
+          "capacity_l": 3500,
+          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+        }
+      ]
+    },
+    {
+      "id": "caldas_das_taipas",
+      "name": "Associação Humanitária dos Bombeiros Voluntários das Caldas das Taipas",
+      "municipality": "Guimarães",
+      "vehicles": [
+        {
+          "id": "K",
+          "capacity_l": 500,
+          "category": "VFCI-L (Veículo Ligeiro)"
+        },
+        {
+          "id": "L",
+          "capacity_l": 500,
+          "category": "VFCI-L (Veículo Ligeiro)"
+        },
+        {
+          "id": "M",
+          "capacity_l": 600,
+          "category": "VFCI-L (Veículo Ligeiro)"
+        },
+        {
+          "id": "F",
+          "capacity_l": 3500,
+          "category": "VFCI (Veículo Florestal de Combate)"
+        },
+        {
+          "id": "G",
+          "capacity_l": 4000,
+          "category": "VFCI (Veículo Florestal de Combate)"
+        },
+        {
+          "id": "H",
+          "capacity_l": 4500,
+          "category": "VFCI (Veículo Florestal de Combate)"
+        },
+        {
+          "id": "I",
+          "capacity_l": 4500,
+          "category": "VFCI (Veículo Florestal de Combate)"
+        },
+        {
+          "id": "J",
+          "capacity_l": 400,
+          "category": "VCOT (Comando / Reconhecimento)"
+        }
+      ]
+    },
+    {
+      "id": "riba_de_ave",
+      "name": "Associação Humanitária Bombeiros Voluntários de Riba de Ave",
+      "municipality": "Vila Nova de Famalicão",
+      "vehicles": [
+        {
+          "id": "R",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "S",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "T",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "U",
+          "capacity_l": 2000,
+          "category": "VFCI"
+        },
+        {
+          "id": "N",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "O",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "P",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "Q",
+          "capacity_l": 4500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "cabeceiras_de_basto",
+      "name": "Associação Humanitária de Bombeiros Voluntários Cabeceirenses",
+      "municipality": "Cabeceiras de Basto",
+      "vehicles": [
+        {
+          "id": "V",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "X",
+          "capacity_l": 2500,
+          "category": "VFCI"
+        },
+        {
+          "id": "W",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "amares",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Amares",
+      "municipality": "Amares",
+      "vehicles": [
+        {
+          "id": "Y",
+          "capacity_l": 400,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "Z",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AA",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AB",
+          "capacity_l": 2000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AC",
+          "capacity_l": 4500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "barcelos",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Barcelos",
+      "municipality": "Barcelos",
+      "vehicles": [
+        {
+          "id": "AD",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AE",
+          "capacity_l": 2200,
+          "category": "VFCI"
+        },
+        {
+          "id": "AG",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AH",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AF",
+          "capacity_l": 4500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "esposende",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Esposende",
+      "municipality": "Esposende",
+      "vehicles": [
+        {
+          "id": "AK",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AI",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AJ",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "fafe",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Fafe",
+      "municipality": "Fafe",
+      "vehicles": [
+        {
+          "id": "AL",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AM",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AN",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AQ",
+          "capacity_l": 2500,
+          "category": "VFCI"
+        },
+        {
+          "id": "AR",
+          "capacity_l": 2500,
+          "category": "VFCI"
+        },
+        {
+          "id": "AO",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AP",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "povoa_de_lanhoso",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Póvoa de Lanhoso",
+      "municipality": "Póvoa de Lanhoso",
+      "vehicles": [
+        {
+          "id": "AV",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AW",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AS",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "AT",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "AU",
+          "capacity_l": 4000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "viatodos",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Viatodos",
+      "municipality": "Barcelos",
+      "vehicles": [
+        {
+          "id": "AY",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AX",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "vieira_do_minho",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Vieira do Minho",
+      "municipality": "Vieira do Minho",
+      "vehicles": [
+        {
+          "id": "BC",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BD",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BE",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BF",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "AZ",
+          "capacity_l": 2500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BA",
+          "capacity_l": 4000,
+          "category": "VFCI"
+        },
+        {
+          "id": "BB",
+          "capacity_l": 9000,
+          "category": "VTTU (Veículo Tanque Tático Urbano/Florestal)"
+        }
+      ]
+    },
+    {
+      "id": "vila_nova_de_famalicao",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Vila Nova de Famalicão",
+      "municipality": "Vila Nova de Famalicão",
+      "vehicles": [
+        {
+          "id": "BN",
+          "capacity_l": 400,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BJ",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BK",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BL",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BM",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BG",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BH",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BI",
+          "capacity_l": 4000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "vila_verde",
+      "name": "Associação Humanitária de Bombeiros Voluntários de Vila Verde",
+      "municipality": "Vila Verde",
+      "vehicles": [
+        {
+          "id": "BO",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BQ",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BP",
+          "capacity_l": 4000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "famalicenses",
+      "name": "Associação Humanitária de Bombeiros Voluntários Famalicenses",
+      "municipality": "Vila Nova de Famalicão",
+      "vehicles": [
+        {
+          "id": "BV",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BW",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BX",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BT",
+          "capacity_l": 1500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BR",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "BS",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "BU",
+          "capacity_l": 9000,
+          "category": "VTTU (Veículo Tanque Tático Urbano/Florestal)"
+        }
+      ]
+    },
+    {
+      "id": "celoricenses",
+      "name": "Associação Humanitária dos Bombeiros Voluntários Celoricenses",
+      "municipality": "Celorico de Basto",
+      "vehicles": [
+        {
+          "id": "CD",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CE",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "BY",
+          "capacity_l": 1000,
+          "category": "VFCI"
+        },
+        {
+          "id": "BZ",
+          "capacity_l": 1000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CA",
+          "capacity_l": 1000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CB",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "CC",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "terras_de_bouro",
+      "name": "Associação Humanitária dos Bombeiros Voluntários de Terras de Bouro",
+      "municipality": "Terras de Bouro",
+      "vehicles": [
+        {
+          "id": "CF",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CG",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CH",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CI",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "CJ",
+          "capacity_l": 4500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "braga_voluntarios",
+      "name": "Associação Humanitária e Beneficente de Bombeiros Voluntários de Braga",
+      "municipality": "Braga",
+      "vehicles": [
+        {
+          "id": "CM",
+          "capacity_l": 400,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CK",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CL",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "fao",
+      "name": "Benemérita Associação Humanitária de Bombeiros Voluntários de Fão",
+      "municipality": "Esposende",
+      "vehicles": [
+        {
+          "id": "CP",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CO",
+          "capacity_l": 1500,
+          "category": "VFCI"
+        },
+        {
+          "id": "CN",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "braga_sapadores",
+      "name": "Companhia de Bombeiros Sapadores de Braga",
+      "municipality": "Braga",
+      "vehicles": [
+        {
+          "id": "CU",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CQ",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CS",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CR",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        },
+        {
+          "id": "CT",
+          "capacity_l": 4500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "barcelinhos",
+      "name": "Corpo Voluntário de Salvação Pública Barcelinense - Bombeiros de Barcelinhos",
+      "municipality": "Barcelos",
+      "vehicles": [
+        {
+          "id": "CX",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CY",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CZ",
+          "capacity_l": 600,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "CW",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "CV",
+          "capacity_l": 3500,
+          "category": "VFCI"
+        }
+      ]
+    },
+    {
+      "id": "vizela",
+      "name": "Real Associação Humanitária de Bombeiros Voluntários de Vizela",
+      "municipality": "Vizela",
+      "vehicles": [
+        {
+          "id": "DF",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "DG",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "DH",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "DI",
+          "capacity_l": 500,
+          "category": "VFCI-L"
+        },
+        {
+          "id": "DB",
+          "capacity_l": 1500,
+          "category": "VFCI"
+        },
+        {
+          "id": "DC",
+          "capacity_l": 1800,
+          "category": "VFCI"
+        },
+        {
+          "id": "DD",
+          "capacity_l": 2000,
+          "category": "VFCI"
+        },
+        {
+          "id": "DA",
+          "capacity_l": 3000,
+          "category": "VFCI"
+        },
+        {
+          "id": "DE",
+          "capacity_l": 7000,
+          "category": "VTTU (Veículo Tanque Tático)"
+        }
+      ]
+    }
+  ]
+}
