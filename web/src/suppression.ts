@@ -14,8 +14,10 @@ export interface UnitSpec {
   people: number
   holdFlameM: number // the unit holds the fire up to this flame length (Byram)
   holdIntensityKWPerM: number
-  rosFactor: number // ROS the fire keeps inside the unit's radius while it holds
-  radiusM: number // front covered from the access point, per unit
+  rosFactor: number // ROS the fire keeps on the front the unit holds (the edge it has put out)
+  radiusM: number // front held from the access point on arrival, per unit
+  attackMPerH?: number // ground, with water: front put out per hour of work, per unit (a crew uses lineMPerH)
+  reachM?: number // ground: how far from the access point the unit can work (track and hose)
   speedKmh: number // by road, or in the air
   waterL?: number
   flowLPerMin?: number
@@ -90,6 +92,23 @@ export function refillMin(unit: UnitSpec, waterKm: number): number {
 /** Aerial: minutes between two drops of one aircraft, the fixed part plus the round trip to the water. */
 export function dropCycleMin(unit: UnitSpec, waterKm: number): number {
   return (unit.cycleMin ?? 0) + (2 * waterKm * 60) / unit.speedKmh
+}
+
+/** Fraction of the time a unit with water is on the fire, the rest being the trip to refill (1 for a crew). */
+export function dutyCycle(unit: UnitSpec, waterKm: number): number {
+  const work = workMin(unit)
+  return work === Infinity ? 1 : work / (work + refillMin(unit, waterKm))
+}
+
+/** Ground: metres of front one unit puts out per hour, in a fuel class of fuel.json. */
+export function attackMPerH(unit: UnitSpec, fuelClass: number): number {
+  return unit.attackMPerH ?? unit.lineMPerH?.[fuelClass] ?? 0
+}
+
+/** Aerial: metres of front the drops of `count` aircraft keep slowed at any time, cycling to the water. */
+export function aerialFrontM(unit: UnitSpec, count: number, waterKm: number): number {
+  if (!unit.holdMin || !unit.dropM) return 0
+  return (unit.dropM[0] * unit.holdMin * count) / dropCycleMin(unit, waterKm)
 }
 
 /** Whether a unit flies: its turnout is its own, not the station's. */

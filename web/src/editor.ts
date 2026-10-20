@@ -19,13 +19,17 @@ import {
 } from 'cesium'
 import type { Fire, NearStation } from './data'
 import { lineSchedule, type Run, type Scenario } from './fastModel'
+import { cellOf } from './grid'
 import { fmtHa, fmtKm, fmtNumber } from './format'
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import type { Report } from './report'
 import {
+  aerialFrontM,
   arrivalMin,
+  attackMPerH,
   dropCycleMin,
+  dutyCycle,
   isAerial,
   refillMin,
   workMin,
@@ -376,10 +380,11 @@ export class Editor {
     return arrivalMin(this.sup, unit, km, false)
   }
 
-  /** What the assignment can do, in one line: metres of line built in time, drops, water. */
+  /** What the assignment can do, in one line: the front it holds and how it grows, line built, drops, water. */
   private whatText(a: Assignment): string {
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
+    const { waterPointKm } = this.sup.dispatch
     if (a.task === 'line' && this.loaded) {
       const schedule = lineSchedule(this.loaded.scenario, d, a)
       const run = this.runs?.[d.id as 'A' | 'B']
@@ -390,29 +395,54 @@ export class Editor {
       }
       return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m de linha`
     }
-    if (a.task === 'drops') {
-      const every = dropCycleMin(unit, this.sup.dispatch.waterPointKm) / a.count
-      return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m · descarga a cada ~${fmtNumber(every)} min · segura ${unit.holdMin} min`
+    if (a.task === 'drops' && unit.holdMin && unit.dropM) {
+      const every = dropCycleMin(unit, waterPointKm) / a.count
+      const stretches = Math.max(1, Math.floor(unit.holdMin / every))
+      return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m · descarga a cada ~${fmtNumber(every)} min onde o fogo toca · ${stretches} troços de ${unit.dropM[0]} m seguros ${unit.holdMin} min`
     }
-    if (isAerial(unit)) return `${unit.waterL} L por descarga · a cada ~${fmtNumber(dropCycleMin(unit, this.sup.dispatch.waterPointKm) / a.count)} min`
-    if (unit.waterL) return `${unit.waterL * a.count} L · ${fmtNumber(workMin(unit))} min de água · recarga ~${fmtNumber(refillMin(unit, this.sup.dispatch.waterPointKm))} min`
-    return `${unit.people * a.count} pessoas · chama até ${unit.holdFlameM} m`
+    if (a.task === 'shuttle') return `abastece os meios neste ponto: recarga de ${fmtNumber(refillMin(this.sup.units.vfci, 0))} min sem ir ao ponto de água a ${waterPointKm} km`
+    if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · segura ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
+    // Ground units at a point: the front they hold from the access point and how fast it grows.
+    const shuttled = d.assignments.some((s) => s.task === 'shuttle' && s.target === a.target)
+    const waterKm = shuttled ? 0 : waterPointKm
+    const fuelClass = this.fuelClassAt(d.points[a.target])
+    const refill = refillMin(unit, waterKm)
+    const relay = a.count > 1 || refill === 0
+    const grow = attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)
+    const front = `frente de ${fmtNumber(unit.radiusM * Math.sqrt(a.count))} m à chegada, +${fmtNumber(grow)} m/h até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`
+    const water = !unit.waterL ? '' : relay ? ` · ${a.count} em revezamento na recarga` : ` · ${fmtNumber(workMin(unit))} min de água, ~${fmtNumber(refill)} min a recarregar`
+    return `${front}${water} · chama até ${unit.holdFlameM} m`
+  }
+
+  /** Fuel class under a point of the decision (shrubland when the grid is not loaded). */
+  private fuelClassAt(p: LonLat | undefined): number {
+    const grid = this.loaded?.scenario.grid
+    if (!grid || !p) return 2
+    const i = cellOf(grid, p)
+    return i >= 0 && i < grid.fuelClass.length ? grid.fuelClass[i] : 2
   }
 
   private renderPalette() {
     const unit = this.sup.units[this.unit]
     const { waterPointKm } = this.sup.dispatch
     const parts: string[] = []
-    if (isAerial(unit))
+    if (isAerial(unit) && unit.holdMin && unit.dropM) {
+      const every = dropCycleMin(unit, waterPointKm) / this.count
       parts.push(
-        `${unit.waterL} L por descarga`,
-        `descarga a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / this.count)} min com ${this.count}`,
-        `cada uma segura ${unit.holdMin} min`,
+        `${unit.waterL} L por descarga, a cada ~${fmtNumber(every)} min com ${this.count}`,
+        `num ponto segura ${fmtNumber(aerialFrontM(unit, this.count, waterPointKm))} m de frente`,
+        `numa linha, ${Math.max(1, Math.floor(unit.holdMin / every))} troços de ${unit.dropM[0]} m seguros ${unit.holdMin} min onde o fogo toca`,
         `descola em ${unit.turnoutMin} min`,
       )
-    else {
+    } else {
+      const relay = this.count > 1
+      const grow = attackMPerH(unit, 2) * this.count * (relay ? dutyCycle(unit, waterPointKm) : 1)
       parts.push(`${unit.people * this.count} pessoas`)
-      if (unit.waterL) parts.push(`${unit.waterL} L · ${fmtNumber(workMin(unit))} min de água, depois ~${fmtNumber(refillMin(unit, waterPointKm))} min a reabastecer a ${waterPointKm} km`)
+      parts.push(`frente de ${fmtNumber(unit.radiusM * Math.sqrt(this.count))} m à chegada, +${fmtNumber(grow)} m/h em mato até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`)
+      if (unit.waterL)
+        parts.push(
+          `${unit.waterL} L · ${fmtNumber(workMin(unit))} min de água, depois ~${fmtNumber(refillMin(unit, waterPointKm))} min a reabastecer a ${waterPointKm} km${relay ? ' (revezam-se)' : ''}`,
+        )
       if (unit.lineMPerH) parts.push(`linha: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
       parts.push(`segura chama até ${unit.holdFlameM} m`)
     }

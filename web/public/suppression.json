@@ -1,5 +1,5 @@
 {
-  "notes": "Meios de supressão para o modelo rápido (P6) e as decisões A e B (P9). Doutrina e literatura, não medições nos incêndios usados; cada chave de `sources` justifica o valor com o mesmo nome. Fuel classes são as de fuel.json: 0 não combustível, 1 herbáceo, 2 mato, 3 eucalipto e acácia, 4 pinhal e folhosas. O fogo dentro do raio de ação de um meio avança a ROS × rosFactor enquanto o meio tem água e a chama fica abaixo de holdFlameM; acima, o meio não segura (overrun) e o fator é 1. Uma linha construída antes de o fogo lá chegar não arde.",
+  "notes": "Meios de supressão para o modelo rápido (P6) e as decisões A e B (P9). Doutrina e literatura, não medições nos incêndios usados; cada chave de `sources` justifica o valor com o mesmo nome. Fuel classes são as de fuel.json: 0 não combustível, 1 herbáceo, 2 mato, 3 eucalipto e acácia, 4 pinhal e folhosas. Um meio num ponto de acesso segura uma frente que começa em radiusM (× √n meios) e cresce attackMPerH por hora de trabalho e por meio (a equipa a pé usa lineMPerH do combustível), até reachM do ponto; a frente segura enquanto a chama fica abaixo de holdFlameM, e aí o fogo avança a ROS × rosFactor; acima, o meio não segura (overrun) e o fator é 1. Com 2 ou mais meios revezam-se no reabastecimento e a frente fica sempre guarnecida; sozinho, o meio deixa a frente durante a recarga. Um meio aéreo num ponto segura a frente que as suas descargas cobrem em cada momento (dropM × holdMin / ciclo); numa linha, as descargas seguem a linha. Um VTTU em abastecimento poupa aos meios do mesmo ponto a viagem ao ponto de água. Uma linha construída antes de o fogo lá chegar não arde.",
   "flame": {
     "byramA": 0.0775,
     "byramB": 0.46,
@@ -9,7 +9,7 @@
     "a": 4.6835,
     "b": -0.7043,
     "c": -0.00041,
-    "d": -0.000052
+    "d": -5.2e-05
   },
   "dispatch": {
     "ecinTurnoutMin": 2,
@@ -25,10 +25,17 @@
       "people": 5,
       "holdFlameM": 1.2,
       "holdIntensityKWPerM": 350,
-      "rosFactor": 0.6,
+      "rosFactor": 0.25,
       "radiusM": 80,
+      "reachM": 500,
       "speedKmh": 60,
-      "lineMPerH": [0, 160, 30, 45, 40]
+      "lineMPerH": [
+        0,
+        160,
+        30,
+        45,
+        40
+      ]
     },
     "vfci": {
       "name": "Veículo florestal de combate a incêndios",
@@ -38,8 +45,10 @@
       "flowLPerMin": 200,
       "holdFlameM": 2.4,
       "holdIntensityKWPerM": 1700,
-      "rosFactor": 0.35,
+      "rosFactor": 0.15,
       "radiusM": 120,
+      "attackMPerH": 240,
+      "reachM": 1200,
       "speedKmh": 60,
       "refillMin": 8,
       "refillKmh": 30
@@ -52,8 +61,10 @@
       "flowLPerMin": 400,
       "holdFlameM": 2.4,
       "holdIntensityKWPerM": 1700,
-      "rosFactor": 0.5,
+      "rosFactor": 0.25,
       "radiusM": 60,
+      "attackMPerH": 100,
+      "reachM": 300,
       "speedKmh": 50,
       "refillMin": 15,
       "refillKmh": 40
@@ -70,7 +81,10 @@
       "radiusM": 100,
       "speedKmh": 150,
       "cycleMin": 1,
-      "dropM": [25, 8],
+      "dropM": [
+        25,
+        8
+      ],
       "turnoutMin": 10
     },
     "avbp": {
@@ -85,7 +99,10 @@
       "radiusM": 150,
       "speedKmh": 300,
       "cycleMin": 12,
-      "dropM": [60, 20],
+      "dropM": [
+        60,
+        20
+      ],
       "turnoutMin": 15,
       "maxRunwayMin": 30
     }
@@ -100,10 +117,11 @@
     "units.vttu.waterL": "Despacho n.º 3974/2013, ficha VTTU (10 000 a 15 000 L)",
     "units.hebl": "DECIR 2025 (ANEPC): HEBL com balde de 800–1000 L; ciclo de 1 min mais ida e volta ao ponto de água a 150 km/h; mancha de descarga ~25×8 m; efeito ~20–30 min",
     "units.avbp": "DECIR 2025 (ANEPC): AVBP (Fire Boss, 3000 L); retardante reduz o avanço ~90% durante ~1 h; só com pista ou plano de água a menos de 30 min",
-    "units.*.rosFactor, units.*.radiusM": "Estimativa Atalaia: fração do ROS que o fogo mantém no raio de ação do meio enquanto este tem água e a chama está abaixo do limiar, e frente que o meio cobre a partir do ponto de acesso",
+    "units.*.rosFactor, units.*.radiusM": "Estimativa Atalaia: fração do ROS que o fogo mantém na frente que o meio segura (a orla apagada ainda deixa passar reacendimentos e saltos) e frente que o meio segura à chegada a partir do ponto de acesso",
     "units.*.refillMin, units.*.refillKmh": "Estimativa Atalaia: 8 a 15 min de enchimento mais ida e volta ao ponto de água por caminho florestal",
     "dispatch.ecinTurnoutMin, dispatch.volunteerTurnoutMin": "DON n.º 2 / DECIR 2025: ECIN de prevenção pronta em ≤ 2 min; voluntários a chegar ao quartel 15–30 min",
     "dispatch.roadFactor": "Estimativa Atalaia: estrada ≈ 1,3 × linha reta em relevo do Minho",
-    "dispatch.waterPointKm, dispatch.airBaseKm": "Estimativa Atalaia, por omissão quando não há rede de pontos de água nem base aérea no cenário"
+    "dispatch.waterPointKm, dispatch.airBaseKm": "Estimativa Atalaia, por omissão quando não há rede de pontos de água nem base aérea no cenário",
+    "units.vfci.attackMPerH, units.vttu.attackMPerH, units.*.reachM": "Estimativa Atalaia a partir do NWCG Fireline Handbook 3 (ataque móvel com linha de 25 mm em mato: 200–300 m/h por viatura) e do alcance de uma mangueira estendida a partir de um caminho florestal; o VTTU é urbano e trabalha junto ao acesso"
   }
 }
