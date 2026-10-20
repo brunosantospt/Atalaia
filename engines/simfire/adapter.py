@@ -12,6 +12,8 @@ this adapter:
   (fire_inputs);
 - picks a time step short enough that the fastest fire takes several steps to cross a cell, since
   SimFire moves the fire at most one cell per step (time_steps);
+- changes the weather from step to step, between the request's weather times (Weather), where
+  SimFire takes one weather for the whole run;
 - runs SimFire's spread loop on whole arrays (Spread), because SimFire's own loop is plain Python,
   one burning cell at a time. SIMFIRE_STOCK=1 runs SimFire's own loop instead (StockSpread), and
   test.sh checks that both give the same arrival times.
@@ -21,6 +23,8 @@ and the canopy layers are ignored. It takes the slope from elevation_m, so slope
 are ignored too. Its slope factor turns negative downhill and the spread rate stops at 0, so on a
 steep slope with little wind the fire does not back down at all.
 """
+
+from __future__ import annotations  # the image has Python 3.9
 
 import json
 import math
@@ -112,8 +116,10 @@ NONBURNABLE = 'NBNoData'  # the other codes from 91 to 99
 
 # The 8 neighbours of a cell as (dx, dy), x east and y south, in the order SimFire visits them.
 NEIGHBOURS = ((1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1))
-# Inputs to compute_rate_of_spread that vary from cell to cell, all taken at the cell being reached.
+# Inputs to compute_rate_of_spread that vary from cell to cell, all taken at the cell being reached:
+# those of the fuel and the ground, then those of the weather, which can also change with time.
 CELL_INPUTS = ('w_0', 'delta', 'M_x', 'sigma', 'M_f', 'U', 'U_dir', 'slope_mag', 'slope_dir')
+WEATHER_INPUTS = ('M_f', 'U', 'U_dir')
 
 
 class Grid:
@@ -167,16 +173,57 @@ def midflame_ft_min(wind_kmh: np.ndarray, depth_ft: np.ndarray) -> np.ndarray:
     return wind_kmh * KMH_TO_FT_MIN * WIND_20FT_PER_10M * waf
 
 
+def weather_times(req: dict) -> tuple[list[dict], float | None]:
+    """The request's weather as a list of times, and the minutes between them (None for one)."""
+    weather = req['weather']
+    if isinstance(weather, dict):
+        return [weather], None
+    if not weather:
+        raise ValueError('weather: a lista está vazia')
+    times = [float(w['t_min']) for w in weather]
+    every = times[1] - times[0] if len(times) > 1 else None
+    if times[0] != 0 or (every is not None and not (every > 0 and np.allclose(times, np.arange(len(times)) * every))):
+        raise ValueError(f'weather: os t_min têm de começar em 0 e ir de igual em igual: {times}')
+    return weather, every
+
+
+class Weather:
+    """SimFire's weather inputs for any cell at any time: linear between the request's weather
+    times, the wind turning the short way round, and the last time holding after the end."""
+
+    def __init__(self, grid: Grid, req: dict, depth_ft: np.ndarray):
+        weather, self.every = weather_times(req)
+        self.times = []
+        for w in weather:
+            self.times.append({
+                'M_f': grid.array('dead_1h_pct', w['dead_1h_pct']) / 100,
+                'U': midflame_ft_min(grid.array('wind_kmh', w['wind_kmh']), depth_ft),
+                # SimFire's wind direction is where the wind blows to, clockwise from north.
+                'U_dir': (grid.array('wind_from_deg', w['wind_from_deg']) + 180) % 360,
+            })
+
+    def at(self, t: float, cells) -> dict:
+        """The inputs of the cells `cells` (flat indices) at minute t."""
+        k = min(int(t // self.every), len(self.times) - 1) if self.every else 0
+        lo = {name: a.flat[cells] for name, a in self.times[k].items()}
+        f = t / self.every - k if self.every else 0.0
+        if k + 1 == len(self.times) or f == 0:
+            return lo
+        hi = {name: a.flat[cells] for name, a in self.times[k + 1].items()}
+        turn = (hi['U_dir'] - lo['U_dir'] + 180) % 360 - 180
+        return {
+            'M_f': lo['M_f'] + f * (hi['M_f'] - lo['M_f']),
+            'U': lo['U'] + f * (hi['U'] - lo['U']),
+            'U_dir': (lo['U_dir'] + f * turn) % 360,
+        }
+
+
 def fire_inputs(grid: Grid, req: dict, pixel_ft: float) -> dict:
-    """SimFire's inputs for every cell, as grids, in its units."""
-    layers, weather = req['layers'], req['weather']
+    """SimFire's inputs for every cell, as grids, in its units, and its weather over time."""
+    layers = req['layers']
     fuels = fuel_models(grid.array('fuel', layers['fuel']))
     cells = {name: np.array([getattr(f, name) for f in fuels.flat]).reshape(fuels.shape)
              for name in ('w_0', 'delta', 'M_x', 'sigma')}
-    cells['M_f'] = grid.array('dead_1h_pct', weather['dead_1h_pct']) / 100
-    cells['U'] = midflame_ft_min(grid.array('wind_kmh', weather['wind_kmh']), cells['delta'])
-    # SimFire's wind direction is where the wind blows to, clockwise from north.
-    cells['U_dir'] = (grid.array('wind_from_deg', weather['wind_from_deg']) + 180) % 360
     # SimFire 2.0.1 slows the fire uphill and speeds it downhill, on both axes. The ground upside
     # down puts that right. Its slope is the gradient of the elevation over the cell size, so in feet.
     ground = -grid.array('elevation_m', layers.get('elevation_m', 0)) / FT
@@ -184,16 +231,17 @@ def fire_inputs(grid: Grid, req: dict, pixel_ft: float) -> dict:
     grad_y, grad_x = np.gradient(ground, pixel_ft)
     cells['slope_mag'] = np.sqrt(grad_x**2 + grad_y**2)
     cells['slope_dir'] = np.arctan2(grad_y, grad_x + 0.000001)
-    return {'fuels': fuels, 'ground': ground, 'cells': cells}
+    return {'fuels': fuels, 'ground': ground, 'cells': cells, 'weather': Weather(grid, req, cells['delta'])}
 
 
-def rate_of_spread(x, y, new_x, new_y, cells: dict, at) -> np.ndarray:
+def rate_of_spread(x, y, new_x, new_y, inputs: dict, at, t: float) -> np.ndarray:
     """SimFire's rate of spread in ft/min from (x, y) to (new_x, new_y), with the inputs of the
-    cells `at`, all cast to float32 as SimFire does before it computes it."""
+    cells `at` at minute t, all cast to float32 as SimFire does before it computes it."""
     particle = FuelParticle()
     n = len(at)
     f32 = lambda a: np.asarray(a, dtype=np.float32)  # noqa: E731
-    p = {name: f32(cells[name].flat[at]) for name in CELL_INPUTS}
+    p = {name: inputs['cells'][name].flat[at] for name in CELL_INPUTS if name not in WEATHER_INPUTS}
+    p = {name: f32(v) for name, v in {**p, **inputs['weather'].at(t, at)}.items()}
     return compute_rate_of_spread(
         f32(x), f32(y), f32(new_x), f32(new_y),
         p['w_0'], p['delta'], p['M_x'], p['sigma'],
@@ -202,13 +250,17 @@ def rate_of_spread(x, y, new_x, new_y, cells: dict, at) -> np.ndarray:
     )
 
 
-def time_steps(cells: dict, pixel_ft: float, duration: float):
+def time_steps(inputs: dict, pixel_ft: float, duration: float):
     """How many SimFire steps, and their length in minutes: at most 1, and short enough that the
-    fastest spread anywhere, in any of the 8 directions, takes STEPS_PER_CELL steps to cross a cell."""
-    at = np.flatnonzero(cells['w_0'] > 0)
+    fastest spread anywhere, in any of the 8 directions and at any of the weather times, takes
+    STEPS_PER_CELL steps to cross a cell. Between two weather times the wind is no stronger than at
+    both ends, but turning, it can blow at full strength in a direction neither of them has; that
+    stays well within the margin STEPS_PER_CELL leaves."""
+    at = np.flatnonzero(inputs['cells']['w_0'] > 0)
     origin = np.zeros(len(at))
-    fastest = max(rate_of_spread(origin, origin, origin + dx, origin + dy, cells, at).max(initial=0)
-                  for dx, dy in NEIGHBOURS)
+    weather = inputs['weather']
+    fastest = max(rate_of_spread(origin, origin, origin + dx, origin + dy, inputs, at, k * (weather.every or 0))
+                  .max(initial=0) for dx, dy in NEIGHBOURS for k in range(len(weather.times)))
     dt = min(1.0, pixel_ft / (STEPS_PER_CELL * fastest)) if fastest > 0 else 1.0
     steps = math.ceil(duration / dt)
     return steps, duration / steps
@@ -223,11 +275,11 @@ class Spread:
     """
 
     def __init__(self, inputs: dict, pixel_ft: float, dt: float):
-        self.cells = inputs['cells']
-        self.rows, self.cols = self.cells['w_0'].shape
+        self.inputs = inputs
+        self.rows, self.cols = inputs['cells']['w_0'].shape
         self.pixel_ft, self.dt = pixel_ft, dt
         # Cells that can still catch fire. Fuel that cannot burn never does in SimFire either.
-        self.open = (self.cells['w_0'] > 0).ravel()
+        self.open = (inputs['cells']['w_0'] > 0).ravel()
         self.crossed = np.zeros(self.rows * self.cols)  # SimFire's burn_amounts, in feet
         # Burning cells that still have neighbours to spread to, in SimFire's order of its sprites.
         self.front = np.empty(0, dtype=np.int64)
@@ -236,8 +288,9 @@ class Spread:
         self.open[cell] = False
         self.front = np.append(self.front, cell)
 
-    def step(self) -> np.ndarray:
-        """One SimFire update. Returns the cells that caught fire, in the order SimFire adds them."""
+    def step(self, t: float) -> np.ndarray:
+        """One SimFire update, from minute t. Returns the cells that caught fire, in the order SimFire
+        adds them."""
         x, y = self.front % self.cols, self.front // self.cols
         dx, dy = np.array(NEIGHBOURS).T
         new_x, new_y = x[:, None] + dx, y[:, None] + dy
@@ -250,7 +303,7 @@ class Spread:
         # One row per burning cell and neighbour, burning cell by burning cell (row-major order).
         src = np.broadcast_to(np.arange(len(x))[:, None], reach.shape)[reach]
         to = to[reach]
-        rate = rate_of_spread(x[src], y[src], new_x[reach], new_y[reach], self.cells, to)
+        rate = rate_of_spread(x[src], y[src], new_x[reach], new_y[reach], self.inputs, to, t)
         rate *= self.dt
         # Where several burning cells reach the same cell in one step, SimFire keeps the last one.
         cells, last = np.unique(to[::-1], return_index=True)
@@ -266,7 +319,9 @@ class StockSpread:
     runs it on a small grid to check Spread against it."""
 
     def __init__(self, inputs: dict, pixel_ft: float, dt: float, steps: int):
-        cells = inputs['cells']
+        if len(inputs['weather'].times) > 1:
+            raise ValueError('SIMFIRE_STOCK: o SimFire só aceita uma meteo para a simulação toda')
+        cells = {**inputs['cells'], **inputs['weather'].times[0]}
         if np.ptp(cells['M_f']) > 0:
             raise ValueError('SIMFIRE_STOCK: o SimFire só aceita uma humidade dead_1h_pct para a grade toda')
         shape = cells['w_0'].shape
@@ -295,7 +350,7 @@ class StockSpread:
         self.manager.durations.append(0)
         self.fire_map[y, x] = BurnStatus.BURNING
 
-    def step(self) -> np.ndarray:
+    def step(self, t: float) -> np.ndarray:
         before = self.fire_map == BurnStatus.BURNING
         self.fire_map, _ = self.manager.update(self.fire_map)
         return np.flatnonzero((self.fire_map == BurnStatus.BURNING) & ~before)
@@ -309,16 +364,18 @@ def simulate(grid: Grid, req: dict) -> np.ndarray:
     duration = float(req['duration_min'])
     if not duration > 0:
         raise ValueError(f'duration_min tem de ser positivo: {duration:g}')
-    steps, dt = time_steps(inputs['cells'], pixel_ft, duration)
+    steps, dt = time_steps(inputs, pixel_ft, duration)
     if os.environ.get('SIMFIRE_STOCK'):
         fire = StockSpread(inputs, pixel_ft, dt, steps)
     else:
         fire = Spread(inputs, pixel_ft, dt)
 
-    # Each ignition starts burning at the step nearest its time, if its fuel can burn.
+    # The cells already burned burn from the start, whatever their fuel, as in ELMFIRE. Each
+    # ignition starts burning at the step nearest its time, if its fuel can burn.
     burnable = (inputs['cells']['w_0'] > 0).ravel()
-    starts = {}
-    for p in req['ignitions']:
+    burned = grid.array('burned', req.get('burned', 0)).ravel() > 0
+    starts = {0: [(cell, 0.0) for cell in np.flatnonzero(burned)]}
+    for p in req.get('ignitions', []):
         t = float(p.get('t_min', 0))
         cell = grid.cell(float(p['x']), float(p['y']))
         if 0 <= t <= duration and burnable[cell]:
@@ -333,7 +390,7 @@ def simulate(grid: Grid, req: dict) -> np.ndarray:
         if i == steps:
             break
         # A cell catches fire at the end of the step in which the fire gets through it.
-        arrival[fire.step()] = (i + 1) * dt
+        arrival[fire.step(i * dt)] = (i + 1) * dt
     return arrival.reshape(grid.rows, grid.cols)
 
 

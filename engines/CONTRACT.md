@@ -1,6 +1,6 @@
 # Contrato dos motores
 
-Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedido entra em JSON pelo stdin e o resultado sai em JSON pelo stdout. Erros saem pelo stderr, com código de saída diferente de 0. Este é o nível do P3. O cenário completo (perímetro inicial, decisões A e B) chega no P5, em `docs/contracts.md`.
+Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedido entra em JSON pelo stdin e o resultado sai em JSON pelo stdout. Erros saem pelo stderr, com código de saída diferente de 0. Este é o nível do motor: uma grade, a meteo ao longo do tempo, o que já ardeu e as ignições. O cenário (incêndio, passo de partida, decisões A e B) está em `docs/contracts.md`, e a API traduz cada cenário num pedido destes.
 
 ## Pedido
 
@@ -9,18 +9,25 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
   "grid": {"cols": 201, "rows": 201, "cellsize": 30, "xmin": -3015, "ymin": -3015, "srs": "EPSG:3763"},
   "duration_min": 60,
   "ignitions": [{"x": 0, "y": 0, "t_min": 0}],
-  "weather": {
-    "wind_kmh": 20, "wind_from_deg": 270,
-    "dead_1h_pct": 6, "dead_10h_pct": 8, "dead_100h_pct": 10,
-    "live_herb_pct": 60, "live_woody_pct": 90
-  },
+  "burned": 0,
+  "weather": [
+    {"t_min": 0, "wind_kmh": 20, "wind_from_deg": 270,
+     "dead_1h_pct": 6, "dead_10h_pct": 8, "dead_100h_pct": 10,
+     "live_herb_pct": 60, "live_woody_pct": 90},
+    {"t_min": 30, "wind_kmh": 25, "wind_from_deg": 290,
+     "dead_1h_pct": 5, "dead_10h_pct": 7, "dead_100h_pct": 10,
+     "live_herb_pct": 60, "live_woody_pct": 90}
+  ],
   "layers": {"fuel": 102}
 }
 ```
 
 - **`grid`:** células quadradas de `cellsize` metros. `xmin` e `ymin` são o canto sudoeste, no SRS da grade.
-- **`ignitions`:** pontos no SRS da grade, em metros. `t_min` é opcional (0 por omissão).
-- **`weather`:** constante durante a simulação. A meteo horária (`weather.json` de cada incêndio, P4) entra no contrato com o cenário, no P5.
+- **`ignitions`:** pontos no SRS da grade, em metros. `t_min` é opcional (0 por omissão). A lista pode estar vazia, ou faltar, se o fogo partir de `burned`.
+- **`burned`:** opcional. Células que já arderam no início (1) ou não (0), por exemplo o perímetro observado de onde a simulação parte. Saem no resultado com chegada 0, seja qual for o combustível, e o fogo espalha-se a partir delas.
+- **`weather`:** um objeto, constante durante a simulação, ou uma lista de momentos com `t_min`.
+  - Os `t_min` começam em 0 e vão de igual em igual (por exemplo de 30 em 30 minutos).
+  - Entre dois momentos, cada valor muda em linha reta. O vento roda pelo lado mais curto: de 170° a 190° passa por sul, não por norte. Depois do último momento, a meteo fica como está.
   - `wind_kmh` é o vento a 10 m, em km/h;
   - `wind_from_deg` é a direção de onde o vento vem (convenção meteorológica: 270 = de oeste, empurra o fogo para leste);
   - as humidades dos combustíveis estão em %.
@@ -29,7 +36,7 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
   - os restantes valem 0 se faltarem: `elevation_m`, `slope_deg`, `aspect_deg`, `canopy_cover_pct`, `canopy_height_m`, `canopy_base_m`, `canopy_bulk_kgm3`.
   - `slope_deg` é o declive em graus a partir da horizontal; `aspect_deg` é para onde a encosta está virada, a descer, em graus a partir do norte (0 = norte, 90 = este), como no LANDFIRE. Cada incêndio traz os três na sua pasta, descritos em `web/public/fires/<id>/terrain.json`.
 
-Cada valor de `weather` e `layers` pode ser um número para a grade toda ou uma matriz `rows` × `cols`, com a linha 0 no bordo norte.
+Cada valor de `burned`, de `layers` e de cada momento de `weather` pode ser um número para a grade toda ou uma matriz `rows` × `cols`, com a linha 0 no bordo norte.
 
 ## Resultado
 
@@ -44,13 +51,13 @@ Cada valor de `weather` e `layers` pode ser um número para a grade toda ou uma 
 }
 ```
 
-- **`arrival_min`:** minuto em que o fogo chega a cada célula, desde o início da simulação. Usa a mesma grade e a mesma orientação do pedido (linha 0 a norte). `null` onde o fogo não chegou.
-- **`burned_ha`:** área das células que arderam.
+- **`arrival_min`:** minuto em que o fogo chega a cada célula, desde o início da simulação. Usa a mesma grade e a mesma orientação do pedido (linha 0 a norte). `null` onde o fogo não chegou, 0 nas células de `burned`.
+- **`burned_ha`:** área das células que arderam, incluindo as de `burned`.
 - **`runtime_s`:** tempo de relógio do adapter e do motor, sem o arranque do contentor.
 
 ## Motores
 
 | Motor | Estado | Notas |
 |---|---|---|
-| `elmfire/` | P3 | ELMFIRE 2025.0717 num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar |
-| `simfire/` | P3 | SimFire 2.0.1 (MITRE) num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. Converte os códigos Scott & Burgan para os 13 modelos originais (Anderson), por isso 102 = GR2 corre como o modelo 2. Só usa `dead_1h_pct`, não tem fogo de copas e tira o declive de `elevation_m` (ignora `slope_deg` e `aspect_deg`). Espalha o fogo célula a célula para os 8 vizinhos, por isso os perímetros são octógonos |
+| `elmfire/` | P5 | ELMFIRE 2025.0717 num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. A meteo entra como rasters com uma banda por momento, e as humidades vivas também, por isso podem variar por célula e no tempo |
+| `simfire/` | P5 | SimFire 2.0.1 (MITRE) num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. Converte os códigos Scott & Burgan para os 13 modelos originais (Anderson), por isso 102 = GR2 corre como o modelo 2. Só usa `dead_1h_pct`, não tem fogo de copas e tira o declive de `elevation_m` (ignora `slope_deg` e `aspect_deg`). Espalha o fogo célula a célula para os 8 vizinhos, por isso os perímetros são octógonos. O SimFire só aceita uma meteo para a simulação toda; o adapter muda-a a cada passo. `SIMFIRE_STOCK=1` corre o ciclo do próprio SimFire, só com meteo constante |

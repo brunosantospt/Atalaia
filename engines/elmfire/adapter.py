@@ -35,13 +35,16 @@ LAYERS = {
     'canopy_base_m': ('cbh', 10),  # tenths of a metre
     'canopy_bulk_kgm3': ('cbd', 100),  # hundredths of kg/m3
 }
-# Request weather field -> ELMFIRE raster and the factor to its units. All are 32-bit floats.
+# Request weather field -> ELMFIRE raster and the factor to its units. All are 32-bit floats, with
+# one band per weather time.
 WEATHER = {
     'wind_kmh': ('ws', 1 / KMH_10M_PER_MPH_20FT),
     'wind_from_deg': ('wd', 1),
     'dead_1h_pct': ('m1', 1),
     'dead_10h_pct': ('m10', 1),
     'dead_100h_pct': ('m100', 1),
+    'live_herb_pct': ('mlh', 1),
+    'live_woody_pct': ('mlw', 1),
 }
 # Bare ground and no canopy unless the request says otherwise; fuel and weather have no default.
 LAYER_DEFAULTS = {name: 0 for name in LAYERS if name != 'fuel'}
@@ -71,44 +74,87 @@ class Grid:
         return a
 
     def write(self, path: Path, array: np.ndarray, dtype: int):
-        ds = gdal.GetDriverByName('GTiff').Create(str(path), self.cols, self.rows, 1, dtype)
+        """One band per grid in `array`, which is a grid or a stack of them."""
+        bands = array if array.ndim == 3 else array[None]
+        ds = gdal.GetDriverByName('GTiff').Create(str(path), self.cols, self.rows, len(bands), dtype)
         ds.SetGeoTransform(self.transform)
         ds.SetProjection(self.wkt)
-        band = ds.GetRasterBand(1)
-        band.SetNoDataValue(NODATA)
-        band.WriteArray(array)
+        for i, values in enumerate(bands, 1):
+            band = ds.GetRasterBand(i)
+            band.SetNoDataValue(NODATA)
+            band.WriteArray(values)
         ds = None  # closing the dataset writes it
+
+
+def weather_times(req: dict) -> tuple[list[dict], float | None]:
+    """The request's weather as a list of times, and the minutes between them (None for one)."""
+    weather = req['weather']
+    if isinstance(weather, dict):
+        return [weather], None
+    if not weather:
+        raise ValueError('weather: a lista está vazia')
+    times = [float(w['t_min']) for w in weather]
+    every = times[1] - times[0] if len(times) > 1 else None
+    if times[0] != 0 or (every is not None and not (every > 0 and np.allclose(times, np.arange(len(times)) * every))):
+        raise ValueError(f'weather: os t_min têm de começar em 0 e ir de igual em igual: {times}')
+    return weather, every
+
+
+def wind_from_bands(wind_from: np.ndarray) -> np.ndarray:
+    """The wind directions to write, one band per weather time, so that ELMFIRE turns the wind the
+    short way round between two times.
+
+    ELMFIRE interpolates the direction the wind blows to (wind_from + 180) linearly, and only brings
+    it back into 0..360 when it is above 360 (INTERP_WD_RASTER in elmfire_subs.f90). From a wind from
+    170° to one from 190°, it would turn the wind through north. Here each cell's directions are
+    unwound, so that two times never differ by more than 180°, and shifted by whole turns until none
+    blows to more than 360°: ELMFIRE then folds none of them, and only takes sines and cosines of
+    what it interpolates.
+    """
+    to = np.unwrap((wind_from + 180) % 360, period=360, axis=0)
+    to -= 360 * np.maximum(np.ceil((to.max(axis=0) - 360) / 360), 0)
+    return to - 180
+
+
+def burned_at_start(grid: Grid, req: dict) -> np.ndarray:
+    return grid.array('burned', req.get('burned', 0)) > 0
 
 
 def write_inputs(folder: Path, grid: Grid, req: dict):
     layers = {**LAYER_DEFAULTS, **req['layers']}
     for name, (raster, scale) in LAYERS.items():
         grid.write(folder / f'{raster}.tif', np.rint(grid.array(name, layers[name]) * scale), gdal.GDT_Int16)
-    weather = req['weather']
+    weather, _ = weather_times(req)
     for name, (raster, scale) in WEATHER.items():
-        grid.write(folder / f'{raster}.tif', grid.array(name, weather[name]) * scale, gdal.GDT_Float32)
-    # No spread rate adjustment, and phi > 0 (unburned) everywhere at the start.
-    for raster in ('adj', 'phi'):
-        grid.write(folder / f'{raster}.tif', grid.array(raster, 1.0), gdal.GDT_Float32)
+        bands = np.stack([grid.array(name, w[name]) for w in weather]) * scale
+        if name == 'wind_from_deg':
+            bands = wind_from_bands(bands)
+        grid.write(folder / f'{raster}.tif', bands, gdal.GDT_Float32)
+    # No spread rate adjustment.
+    grid.write(folder / 'adj.tif', grid.array('adj', 1.0), gdal.GDT_Float32)
+    # phi <= 0 is burned at the start, with a time of arrival of 0; phi > 0 is not burned.
+    grid.write(folder / 'phi.tif', np.where(burned_at_start(grid, req), -1.0, 1.0), gdal.GDT_Float32)
 
 
 def namelist(grid: Grid, req: dict) -> str:
     tstop = float(req['duration_min']) * 60
-    weather = req['weather']
-    ignitions = req['ignitions']
+    weather, every = weather_times(req)
+    ignitions = req.get('ignitions', [])
     files = {raster: raster for raster, _ in [*LAYERS.values(), *WEATHER.values()]}
     files.update(adj='adj', phi='phi')
     names = {'fbfm40': 'FBFM', 'dem': 'DEM', 'slp': 'SLP', 'asp': 'ASP', 'cc': 'CC', 'ch': 'CH', 'cbh': 'CBH',
-             'cbd': 'CBD', 'ws': 'WS', 'wd': 'WD', 'm1': 'M1', 'm10': 'M10', 'm100': 'M100', 'adj': 'ADJ', 'phi': 'PHI'}
+             'cbd': 'CBD', 'ws': 'WS', 'wd': 'WD', 'm1': 'M1', 'm10': 'M10', 'm100': 'M100', 'mlh': 'MLH',
+             'mlw': 'MLW', 'adj': 'ADJ', 'phi': 'PHI'}
     lines = [
         '&INPUTS',
         "FUELS_AND_TOPOGRAPHY_DIRECTORY = './inputs'",
         "WEATHER_DIRECTORY = './inputs'",
         *[f"{names[r]}_FILENAME = '{f}'" for r, f in files.items()],
-        # Constant weather: one band that holds for the whole run.
-        f'DT_METEOROLOGY = {tstop}',
-        f"LH_MOISTURE_CONTENT = {float(weather['live_herb_pct'])}",
-        f"LW_MOISTURE_CONTENT = {float(weather['live_woody_pct'])}",
+        # One band per weather time; ELMFIRE interpolates between them and holds the last one.
+        f'DT_METEOROLOGY = {every * 60 if every else tstop}',
+        # Live moistures from their rasters (in %), like the dead ones, rather than one constant.
+        'USE_CONSTANT_LH = .FALSE.',
+        'USE_CONSTANT_LW = .FALSE.',
         '/',
         '&OUTPUTS',
         "OUTPUTS_DIRECTORY = './outputs'",
@@ -136,6 +182,9 @@ def namelist(grid: Grid, req: dict) -> str:
             f"X_IGN({i}) = {float(p['x'])}\nY_IGN({i}) = {float(p['y'])}\nT_IGN({i}) = {float(p.get('t_min', 0)) * 60}"
             for i, p in enumerate(ignitions, 1)
         ],
+        '/',
+        '&MONTE_CARLO',
+        f'NUM_METEOROLOGY_TIMES = {len(weather)}',
         '/',
         '&MISCELLANEOUS',
         "PATH_TO_GDAL = '/usr/bin'",
