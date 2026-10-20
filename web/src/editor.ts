@@ -188,6 +188,7 @@ export class Editor {
     unit.value = this.unit
     unit.addEventListener('change', () => {
       this.unit = unit.value as UnitId
+      this.updateStationDropdown()
       this.setCount(this.count)
     })
     const from = this.refs.from as HTMLSelectElement
@@ -280,17 +281,8 @@ export class Editor {
     this.decisions = load(fireId) ?? (snapped.map(clone) as [Decision, Decision])
     this.runs = this.reports = undefined
     this.active = 0
-    const from = this.refs.from as HTMLSelectElement
-    from.replaceChildren(
-      ...stations.map((s) => {
-        const option = document.createElement('option')
-        option.value = s.id
-        option.textContent = `${s.short} · ${fmtKm(s.km)}`
-        return option
-      }),
-    )
     this.fromId = stations[0]?.id ?? 'none'
-    from.value = this.fromId
+    this.updateStationDropdown()
     ;(this.refs.hour as HTMLInputElement).max = String(scenario.durationMin)
     this.setMinutes(scenario.durationMin)
     this.cancel()
@@ -314,7 +306,8 @@ export class Editor {
   }
 
   private setCount(count: number) {
-    this.count = Math.min(Math.max(count, 1), Math.max(1, this.available(this.unit, this.from(this.loaded?.stations ?? []))))
+    const maxAvailable = this.available(this.unit, this.from(this.loaded?.stations ?? []))
+    this.count = Math.min(Math.max(count, 1), Math.max(1, maxAvailable))
     this.refs.count.textContent = String(this.count)
     this.renderPalette()
   }
@@ -496,7 +489,35 @@ export class Editor {
     this.actions.changed()
   }
 
+  private updateStationDropdown() {
+    const from = this.refs.from as HTMLSelectElement
+    if (!this.loaded) return
+    const stations = this.loaded.stations
+    const current = from.value || this.fromId
+
+    from.replaceChildren(
+      ...stations.map((s) => {
+        const option = document.createElement('option')
+        option.value = s.id
+        const stock = this.stock(this.unit, s.id)
+        const left = this.available(this.unit, s.id)
+        const badge = stock !== undefined ? ` (${left}/${stock} disp.)` : ''
+        option.textContent = `${s.short} · ${fmtKm(s.km)}${badge}`
+        return option
+      }),
+    )
+
+    if (stations.some((s) => s.id === current)) {
+      from.value = current
+      this.fromId = current
+    } else {
+      this.fromId = stations[0]?.id ?? 'none'
+      from.value = this.fromId
+    }
+  }
+
   private render() {
+    this.updateStationDropdown()
     const d = this.decisions[this.active]
     this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]').forEach((tab, i) => {
       tab.classList.toggle('on', i === this.active)
@@ -629,19 +650,26 @@ export class Editor {
     this.refs.capacity.textContent = parts.join(' · ')
     ;(this.refs.task as HTMLSelectElement).hidden = isAerial(unit)
     ;(this.refs.from as HTMLSelectElement).hidden = isAerial(unit)
-    // What the station still has of this unit for the active decision (inventory.json: an estimate by tier).
+    // What the station still has of this unit for the active decision (inventory.json)
     const from = this.from(this.loaded?.stations ?? [])
     const stock = this.stock(this.unit, from)
     const left = this.available(this.unit, from)
     const station = this.loaded?.stations.find((s) => s.id === from)
-    this.refs.stock.textContent = isAerial(unit)
-      ? `da base aérea a ${this.sup.dispatch.airBaseKm} km · sem limite de meios nesta estimativa`
-      : stock === undefined
-        ? station
-          ? `${station.short}: sem estimativa de meios`
-          : 'sem quartel a menos de 20 km'
-        : `${station?.short ?? from}: ${left} de ${stock} ${unit.short} ${left === 1 ? 'disponível' : 'disponíveis'} para ${this.decisions[this.active].id}${left ? '' : ' · esgotado'}`
-    this.refs.stock.classList.toggle('out', left === 0)
+    if (isAerial(unit)) {
+      this.refs.stock.textContent = `da base aérea a ${this.sup.dispatch.airBaseKm} km · sem limite de meios nesta estimativa`
+      this.refs.stock.classList.remove('out')
+    } else if (stock === undefined) {
+      this.refs.stock.textContent = station ? `${station.short}: sem estimativa de meios` : 'sem quartel selecionado'
+      this.refs.stock.classList.remove('out')
+    } else {
+      const inReserve = left
+      const deployed = stock - left
+      const statusText = deployed > 0
+        ? `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis (${inReserve} em reserva, ${deployed} empenhados nesta decisão)`
+        : `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis (${inReserve} em reserva)`
+      this.refs.stock.textContent = left === 0 ? `${statusText} · ESGOTADO` : statusText
+      this.refs.stock.classList.toggle('out', left === 0)
+    }
     for (const button of this.el.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
       const tool = button.dataset.tool as Tool
       button.disabled = left === 0 || (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))

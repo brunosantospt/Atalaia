@@ -130,9 +130,10 @@ async function main() {
     ])
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
     const near = nearestStations(stations, fire.ignition)
+    const regional = nearestStations(stations, fire.ignition, 30, 65)
     // The free run: the fire as the fast model lets it go with nobody on it, from the ignition.
     const startIndex = Math.max(0, weather.time.indexOf(fire.start.slice(0, 16)))
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire.ignition, stations: near, suppression, durationMin: DECISION_MIN }
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire.ignition, stations: regional, suppression, durationMin: DECISION_MIN }
     const free = simulate(scenario, null)
     const reach = computeReach(grid, free, fire, near, suppression, detection)
     console.info(
@@ -158,7 +159,7 @@ async function main() {
     replay = {
       id,
       data: fire,
-      stations: near,
+      stations: regional,
       credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
@@ -173,7 +174,7 @@ async function main() {
       shotShown: undefined,
     }
     hud.setDirector(replay.director)
-    editor.setFire(id, fire, near, context, scenario, demoDecisions(fire, near))
+    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near))
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
