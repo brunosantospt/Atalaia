@@ -279,3 +279,50 @@
 .hud .editor .verdict {
   color: var(--ink);
 }
+
+
+/* Danger warning when clicking/placing units on active fire */
+.hud .editor .hint.danger {
+  padding: 8px 10px;
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid #ef4444;
+  border-radius: 4px;
+  color: #fca5a5;
+  animation: pulse-border 1.5s infinite;
+}
+
+.hud .editor .hint .danger-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-right: 4px;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: #dc2626;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.hud .editor .route-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #00d2ff;
+  border: 1px solid rgba(0, 210, 255, 0.4);
+  border-radius: 2px;
+  margin-left: 6px;
+}

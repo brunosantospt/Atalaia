@@ -25,6 +25,7 @@ import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import type { Inventory } from './inventory'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
+import { findSafeRoute } from './routing'
 import {
   aerialFrontM,
   arrivalMin,
@@ -148,6 +149,9 @@ export class Editor {
   private reports: Reports | undefined
   private readonly source = new CustomDataSource('decisions')
   private readonly access = new CustomDataSource('access')
+  private readonly routes = new CustomDataSource('routes')
+  private readonly hazards = new CustomDataSource('hazards')
+  private dangerTimer?: number
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
 
@@ -168,8 +172,11 @@ export class Editor {
     )
     void viewer.dataSources.add(this.source)
     void viewer.dataSources.add(this.access)
+    void viewer.dataSources.add(this.routes)
+    void viewer.dataSources.add(this.hazards)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
+    this.handler.setInputAction((e: { endPosition: Cartesian2 }) => this.hover(e.endPosition), ScreenSpaceEventType.MOUSE_MOVE)
 
     const unit = this.refs.unit as HTMLSelectElement
     for (const [id, spec] of Object.entries(sup.units)) {
@@ -251,6 +258,7 @@ export class Editor {
     const start = this.loaded?.fire.start
     this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
     this.renderReport()
+    this.draw()
   }
 
   toggle(open = !this.open) {
@@ -337,6 +345,7 @@ export class Editor {
     this.viewer.scene.canvas.style.cursor = tool ? 'crosshair' : ''
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
       button.classList.toggle('on', button.dataset.tool === tool)
+    this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent =
       tool === 'point'
         ? 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
@@ -351,24 +360,95 @@ export class Editor {
 
   private cancel() {
     this.setTool(null)
+    this.hazards.entities.removeAll()
+    if (this.dangerTimer !== undefined) {
+      window.clearTimeout(this.dangerTimer)
+      this.dangerTimer = undefined
+    }
+    this.refs.hint.classList.remove('danger')
+  }
+
+  /** Interactive cursor feedback when hovering over the active fire perimeter */
+  private hover(position: Cartesian2) {
+    if (!this.open || !this.tool || !this.loaded) return
+    const p = this.pick(position)
+    if (!p) return
+
+    const cell = cellOf(this.loaded.scenario.grid, p)
+    const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
+    const isFire = cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes
+    this.viewer.scene.canvas.style.cursor = isFire ? 'not-allowed' : 'crosshair'
+  }
+
+  private showDangerWarning(point: LonLat, arrivalMin: number) {
+    if (this.dangerTimer !== undefined) {
+      window.clearTimeout(this.dangerTimer)
+      this.dangerTimer = undefined
+    }
+
+    this.refs.hint.classList.add('danger')
+    this.refs.hint.innerHTML = `<span class="danger-badge">ZONA ATIVA DE FOGO</span> Impossível posicionar meios! O fogo atingiu este ponto aos <b>T+${Math.round(arrivalMin)} min</b> (hora atual: T+${Math.round(this.minutes)} min). Risco de encurralamento!`
+
+    this.hazards.entities.removeAll()
+    this.hazards.entities.add({
+      position: Cartesian3.fromDegrees(point.lon, point.lat),
+      point: {
+        pixelSize: 15,
+        color: Color.RED.withAlpha(0.9),
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Infinity,
+      },
+      label: {
+        text: `⚠️ FOGO ATIVO (T+${Math.round(arrivalMin)}m)`,
+        font: 'bold 12px ui-monospace, Menlo, monospace',
+        fillColor: Color.RED,
+        outlineColor: Color.BLACK,
+        outlineWidth: 3,
+        style: 2,
+        pixelOffset: new Cartesian2(0, -22),
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Infinity,
+      },
+    })
+
+    this.dangerTimer = window.setTimeout(() => {
+      this.refs.hint.classList.remove('danger')
+      this.hazards.entities.removeAll()
+      this.dangerTimer = undefined
+      this.setTool(this.tool)
+    }, 4500)
   }
 
   private click(position: Cartesian2) {
     if (!this.open || !this.tool || !this.loaded) return
     const p = this.pick(position)
     if (!p) return
+
+    const { context, stations, scenario } = this.loaded
+    const access = context ? snapToRoad(context, p, SNAP_M) : undefined
+    const point = access ? { lon: access.lon, lat: access.lat } : p
+
+    // Active fire safety check: reject placing ground crews inside active fire perimeter
+    const cell = cellOf(scenario.grid, point)
+    const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
+    if (cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes) {
+      this.showDangerWarning(point, activeRun.arrival[cell])
+      return
+    }
+
     if (this.tool !== 'point') {
-      this.drawing.push(p)
+      this.drawing.push(point)
       this.draw()
       return
     }
-    const { context, stations } = this.loaded
-    const access = context ? snapToRoad(context, p, SNAP_M) : undefined
-    const point = access ? { lon: access.lon, lat: access.lat } : p
+
     const d = this.decisions[this.active]
     const id = nextId(d.points, 'p')
     d.points[id] = point
     d.assignments.push({ unit: this.unit, count: this.count, from: this.from(stations), target: id, task: isAerial(this.sup.units[this.unit]) ? 'direct' : this.task })
+    this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = access
       ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
       : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
@@ -435,13 +515,25 @@ export class Editor {
     const d = this.decisions[this.active]
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
     const eta = target ? this.eta(a, target) : undefined
+    const isGround = !isAerial(unit)
+    const station = this.loaded?.stations.find((s) => s.id === a.from)
+
+    let routeBadge = ''
+    if (isGround && target && station && this.loaded?.context) {
+      const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+      const route = findSafeRoute(this.loaded.scenario.grid, this.loaded.context.osm.roads, activeRun?.arrival, this.minutes, station, target)
+      if (route?.isDetour) {
+        routeBadge = `<span class="route-badge" title="Desvio seguro: ${route.distanceKm.toFixed(1)} km contornando estradas cortadas pelo fogo">Desvio seguro</span>`
+      }
+    }
+
     li.innerHTML = `
-      <div class="who"><b></b><span class="n"></span><span class="from"></span><em></em></div>
+      <div class="who"><b></b><span class="n"></span><span class="from"></span>${routeBadge}<em></em></div>
       <div class="what"></div>
       <div class="ctl"><button type="button" title="Menos">−</button><button type="button" title="Mais">+</button><button type="button" class="x" title="Retirar">×</button></div>`
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `× ${a.count}`
-    li.querySelector('.from')!.textContent = isAerial(unit) ? 'base aérea' : (this.loaded?.stations.find((s) => s.id === a.from)?.short ?? '')
+    li.querySelector('.from')!.textContent = isAerial(unit) ? 'base aérea' : (station?.short ?? '')
     li.querySelector('em')!.textContent = eta === undefined ? '' : `T+${Math.round(eta)} min`
     li.querySelector('.what')!.textContent = `${TASK_NAME[a.task]} · ${this.whatText(a)}`
     const [less, more, x] = li.querySelectorAll('button')
@@ -455,7 +547,16 @@ export class Editor {
   private eta(a: Assignment, target: LonLat): number {
     const unit = this.sup.units[a.unit]
     const station = this.loaded?.stations.find((s) => s.id === a.from)
-    const km = isAerial(unit) ? this.sup.dispatch.airBaseKm : station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm
+    let km = isAerial(unit) ? this.sup.dispatch.airBaseKm : station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm
+
+    // For ground units, use real safe driving route along OSM road network
+    if (!isAerial(unit) && station && this.loaded?.context) {
+      const d = this.decisions[this.active]
+      const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+      const route = findSafeRoute(this.loaded.scenario.grid, this.loaded.context.osm.roads, activeRun?.arrival, this.minutes, station, target)
+      if (route) km = route.distanceKm
+    }
+
     return arrivalMin(this.sup, unit, km, false)
   }
 
@@ -595,11 +696,54 @@ export class Editor {
     return { free: makeReport(grid, context, runs.free, minutes), A: makeReport(grid, context, runs.A, minutes), B: makeReport(grid, context, runs.B, minutes) }
   }
 
-  /** The active decision on the ground: points, lines (built in time solid, late dashed), the line being drawn. */
+  /** The active decision on the ground: points, lines (built in time solid, late dashed), safe road routes, the line being drawn. */
   private draw() {
     const { entities } = this.source
     entities.removeAll()
+    this.routes.entities.removeAll()
     const d = this.decisions[this.active]
+    const { context, scenario, stations } = this.loaded ?? {}
+    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+
+    // 1. Draw blue road routes connecting stations to ground attack points
+    if (context && scenario && stations) {
+      for (const [id, p] of Object.entries(d.points)) {
+        const units = d.assignments.filter((a) => a.target === id)
+        const groundUnits = units.filter((a) => !isAerial(this.sup.units[a.unit]))
+        if (!groundUnits.length) continue
+
+        const uniqueStations = [...new Set(groundUnits.map((a) => a.from))]
+        for (const stationId of uniqueStations) {
+          const station = stations.find((s) => s.id === stationId)
+          if (!station) continue
+
+          const route = findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, p)
+          if (route && route.path.length >= 2) {
+            // Vibrant neon blue safe driving route avoiding active fire front
+            this.routes.entities.add({
+              polyline: {
+                positions: route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
+                width: 4,
+                clampToGround: true,
+                material: Color.fromCssColorString('#00d2ff'),
+              },
+            })
+          } else if (!route) {
+            // Access road cut by fire perimeter! Show dashed hazard line
+            this.routes.entities.add({
+              polyline: {
+                positions: [Cartesian3.fromDegrees(station.lon, station.lat), Cartesian3.fromDegrees(p.lon, p.lat)],
+                width: 2.5,
+                clampToGround: true,
+                material: new PolylineDashMaterialProperty({ color: Color.RED, dashLength: 10 }),
+              },
+            })
+          }
+        }
+      }
+    }
+
+    // 2. Draw attack points
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       const aerial = units.some((a) => isAerial(this.sup.units[a.unit]))
@@ -619,6 +763,8 @@ export class Editor {
         },
       })
     }
+
+    // 3. Draw lines
     for (const [id, line] of Object.entries(d.lines)) {
       const a = d.assignments.find((x) => x.target === id)
       if (!a) continue
@@ -633,6 +779,8 @@ export class Editor {
       if (built.length > 1) this.polyline(built, AMBER, false)
       if (late.length > 1) this.polyline(late, DIM, true)
     }
+
+    // 4. Line being drawn
     if (this.drawing.length) {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
       entities.add({ position: Cartesian3.fromDegrees(this.drawing[0].lon, this.drawing[0].lat), point: { pixelSize: 6, color: INK, heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity } })
