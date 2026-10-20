@@ -1,0 +1,27 @@
+{
+ "file": "canopy.npz",
+ "grid": "the package grid (grid.json), row 0 north",
+ "arrays": {
+  "cover_pct": "canopy cover, %",
+  "height_dm": "canopy height, dm",
+  "base_dm": "canopy base height, dm",
+  "bulk_cg_m3": "canopy bulk density, hundredths of kg/m3"
+ },
+ "source": "DGT national LiDAR 2024-25, MDS-2m minus MDT-2m (canopy height model), aggregated to the 30 m cells by FireRenderer (tools/terrain/src/terrain/elmfire.py canopy_layers)",
+ "method": {
+  "cover": "share of the cell's 2 m pixels with vegetation >= 4 m",
+  "height": "90th percentile of those pixels",
+  "base": "assumed, not measured: 0.30 (eucalyptus) or 0.35 (others) x height, >= 1.5 m",
+  "bulk": "assumed: cover x 0.20 kg/m3 (pine), 0.15 (eucalyptus, acacia), 0.08 (oak, other broadleaves), 0.12 (others)",
+  "gaps": "cells without LiDAR take their COS class's median; non-burnable cells have no canopy"
+ },
+ "caveat": "today's canopy (2024-25), not 2016's: the 2016 burn scar has regrown (pine about 10 m inside it, 18 m around)",
+ "summary": {
+  "mode": "lidar",
+  "lidar_cells_pct": 93.6,
+  "canopy_cells_pct": 72.0,
+  "crown_capable_cells_pct (cover >= 39 %)": 50.4,
+  "median_height_m": 15.7,
+  "median_bulk_kgm3": 0.07
+ }
+}
