@@ -911,23 +911,64 @@ export class Editor {
               },
             })
 
-            if (this.role === 'psp' || cut.urgency === 'urgente') {
-              this.agency.entities.add({
-                position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
-                label: {
-                  text: `⛔ CORTE: ${cut.label}`,
-                  font: '10px ui-monospace, monospace',
-                  fillColor: Color.WHITE,
-                  backgroundColor: Color.fromCssColorString('rgba(180, 20, 20, 0.88)'),
-                  showBackground: true,
-                  style: 2,
-                  pixelOffset: new Cartesian2(0, -18),
-                  heightReference: HeightReference.CLAMP_TO_GROUND,
-                  disableDepthTestDistance: Infinity,
-                },
-              })
-            }
+            // Cut barricade pin positioned at exact fire intersection
+            this.agency.entities.add({
+              position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
+              point: {
+                pixelSize: 8,
+                color: cutColor,
+                outlineColor: Color.WHITE,
+                outlineWidth: 2,
+                heightReference: HeightReference.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Infinity,
+              },
+              label: {
+                text: `⛔ CORTE: ${cut.label}`,
+                font: '11px ui-monospace, monospace',
+                fillColor: Color.WHITE,
+                backgroundColor: Color.fromCssColorString('rgba(180, 20, 20, 0.92)'),
+                showBackground: true,
+                style: 2,
+                pixelOffset: new Cartesian2(0, -18),
+                heightReference: HeightReference.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Infinity,
+              },
+            })
           }
+        }
+
+        // Draw readable road name badges on the 3D map for all named/classified highways (EN, EM, Ruas)
+        const labeledRoads = new Set<string>()
+        for (const r of context.osm.roads) {
+          if (!r.name && !r.ref) continue
+          const fullLabel = r.name && r.ref ? `${r.ref} · ${r.name}` : (r.ref ?? r.name!)
+          if (labeledRoads.has(fullLabel) || r.pts.length < 2) continue
+
+          const midPt = r.pts[Math.floor(r.pts.length / 2)]
+          const dist = distanceM(scenario.ignition, { lon: midPt[0], lat: midPt[1] })
+          if (dist > 3500) continue
+          labeledRoads.add(fullLabel)
+
+          this.agency.entities.add({
+            position: Cartesian3.fromDegrees(midPt[0], midPt[1]),
+            point: {
+              pixelSize: 4,
+              color: Color.fromCssColorString('#94a3b8'),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+            label: {
+              text: `🛣️ ${fullLabel}`,
+              font: '10px ui-monospace, monospace',
+              fillColor: Color.fromCssColorString('#f1f5f9'),
+              backgroundColor: Color.fromCssColorString('rgba(15, 23, 42, 0.82)'),
+              showBackground: true,
+              style: 2,
+              pixelOffset: new Cartesian2(0, -12),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+          })
         }
       }
 

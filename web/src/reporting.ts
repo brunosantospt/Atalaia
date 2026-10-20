@@ -7,9 +7,9 @@
 
 import type { Run } from './fastModel'
 import { fmtKm, fmtTime, wallClock } from './format'
-import type { LonLat } from './geo'
+import { distanceM, toPTTM06, type LonLat } from './geo'
 import type { Grid } from './grid'
-import { roadLabel, type Context, type Road, type RoadClass } from './osm'
+import type { Context, Place, Road, RoadClass } from './osm'
 
 export type AgencyRole = 'cmd' | 'psp' | 'inem'
 
@@ -22,6 +22,7 @@ export interface RoadCutItem {
   urgency: 'cortado' | 'urgente' | 'preventivo'
   coord: LonLat
   pts: [number, number][]
+  isPaved: boolean
 }
 
 export interface MedicalPointItem {
@@ -69,10 +70,85 @@ export const DEFAULT_HOSPITAL: { name: string; location: LonLat } = {
 }
 
 /**
+ * Produces an informative, real-world label for a road:
+ * - If official name & ref exist: e.g. "EN 205 (Rua Central)" or "EM 599 (Rua da Castanheira)"
+ * - If only name or ref: e.g. "Rua do Cruzeiro" or "EN 304"
+ * - If unnamed in OSM: contextualizes with the nearest place/village from osm.places:
+ *   e.g. "Caminho Florestal (Lugar de Mós)" or "Estrada Municipal (direção Felgueiras)"
+ */
+export function getSmartRoadLabel(r: Road, places: Place[] = []): string {
+  if (r.name && r.ref) return `${r.ref} (${r.name})`
+  if (r.name) return r.name
+  if (r.ref) {
+    const type = r.ref.startsWith('EN')
+      ? 'Estrada Nacional'
+      : r.ref.startsWith('EM')
+        ? 'Estrada Municipal'
+        : r.ref.startsWith('IC') || r.ref.startsWith('IP')
+          ? 'Itinerário'
+          : 'Via'
+    return `${r.ref} (${type})`
+  }
+
+  // Unnamed road: resolve nearest place from pts
+  if (places && places.length > 0 && r.pts.length > 0) {
+    const midIdx = Math.floor(r.pts.length / 2)
+    const pt: LonLat = { lon: r.pts[midIdx][0], lat: r.pts[midIdx][1] }
+    let nearest: Place | null = null
+    let minD = Infinity
+
+    for (const pl of places) {
+      const d = distanceM(pt, pl)
+      if (d < minD) {
+        minD = d
+        nearest = pl
+      }
+    }
+
+    const baseKind =
+      r.cls === 'paved' ? 'Estrada Municipal' : r.cls === 'track' ? 'Caminho Florestal' : 'Trilho Rural'
+
+    if (nearest) {
+      if (minD < 500) return `${baseKind} (${nearest.name})`
+      return `${baseKind} (direção ${nearest.name})`
+    }
+    return baseKind
+  }
+
+  return r.cls === 'paved' ? 'Estrada Municipal' : r.cls === 'track' ? 'Caminho Florestal' : 'Trilho Rural'
+}
+
+/**
+ * Finds the exact coordinate on the road polyline closest to the fire arrival cell.
+ */
+function findRoadCutCoordinate(r: Road, grid: Grid, hitCell: number): LonLat {
+  if (!r.pts.length) return { lon: 0, lat: 0 }
+  const col = hitCell % grid.cols
+  const row = (hitCell - col) / grid.cols
+  const targetX = grid.xmin + (col + 0.5) * grid.cellsize
+  const targetY = grid.ymin + (grid.rows - row - 0.5) * grid.cellsize
+
+  let best = r.pts[0]
+  let bestD = Infinity
+
+  for (const pt of r.pts) {
+    const { x, y } = toPTTM06({ lon: pt[0], lat: pt[1] })
+    const d = Math.hypot(x - targetX, y - targetY)
+    if (d < bestD) {
+      bestD = d
+      best = pt
+    }
+  }
+
+  return { lon: best[0], lat: best[1] }
+}
+
+/**
  * Detects all road segments threatened or intersected by the active fire spread within `horizonMin`.
+ * Prioritizes paved highways and roads with official names/references for police traffic orders.
  */
 export function detectThreatenedRoads(
-  _grid: Grid,
+  grid: Grid,
   context: Context,
   run: Run,
   currentMin: number,
@@ -80,6 +156,7 @@ export function detectThreatenedRoads(
 ): RoadCutItem[] {
   const { arrival } = run
   const byLabel = new Map<string, RoadCutItem>()
+  const places = context.osm.places
 
   for (const { road, cells: rc } of context.roadCells) {
     let minT = Infinity
@@ -96,16 +173,15 @@ export function detectThreatenedRoads(
 
     if (minT <= currentMin + horizonMin && hitCell >= 0) {
       const r: Road = context.osm.roads[road]
-      const label = roadLabel(r)
+      const label = getSmartRoadLabel(r, places)
       const minutesToImpact = Math.round(minT - currentMin)
 
       let urgency: 'cortado' | 'urgente' | 'preventivo' = 'preventivo'
       if (minutesToImpact <= 0) urgency = 'cortado'
       else if (minutesToImpact <= 25) urgency = 'urgente'
 
-
-      // Center coords in WGS84 approx or first point
-      const coord: LonLat = r.pts[0] ? { lon: r.pts[0][0], lat: r.pts[0][1] } : { lon: 0, lat: 0 }
+      const coord = findRoadCutCoordinate(r, grid, hitCell)
+      const isPaved = r.cls === 'paved' || !!r.name || !!r.ref
 
       const existing = byLabel.get(label)
       if (!existing || minT < existing.firstArrivalMin) {
@@ -118,12 +194,18 @@ export function detectThreatenedRoads(
           urgency,
           coord,
           pts: r.pts,
+          isPaved,
         })
       }
     }
   }
 
-  return [...byLabel.values()].sort((a, b) => a.firstArrivalMin - b.firstArrivalMin)
+  // Sort: 1) Urgency (cortado/urgente first), 2) Paved/Named roads first, 3) Arrival time
+  return [...byLabel.values()].sort((a, b) => {
+    // Paved/classified roads get higher priority for traffic police
+    if (a.isPaved !== b.isPaved) return a.isPaved ? -1 : 1
+    return a.firstArrivalMin - b.firstArrivalMin
+  })
 }
 
 /** Calculates safety buffer (minutes) of a proposed Medical Point relative to fire perimeter. */
@@ -175,8 +257,8 @@ export function formatPSPDispatch(
       else if (r.urgency === 'urgente') tag = '⚠️ [URGENTE - IMPACTO < 25 MIN]'
 
       const tempo = r.minutesToImpact <= 0 ? 'Já atingida pelo fogo' : `Impacto em ~${r.minutesToImpact} min`
-      lines.push(`${idx + 1}. ${tag} ${r.label} (${r.cls})`)
-      lines.push(`   Previsão: ${tempo} | Ref: ${r.coord.lat.toFixed(5)}, ${r.coord.lon.toFixed(5)}`)
+      lines.push(`${idx + 1}. ${tag} ${r.label}`)
+      lines.push(`   Tipo: ${r.cls.toUpperCase()} | Previsão: ${tempo} | GPS: ${r.coord.lat.toFixed(5)}, ${r.coord.lon.toFixed(5)}`)
     })
   }
 
