@@ -23,8 +23,9 @@ void main() {
     d = distance(eye.xyz / eye.w, u_centerEC);
   }
   float k = smoothstep(u_radius, u_radius * 1.5, d) * u_strength;
+  // Outside the light: nearly grey and much darker, so the colour inside the light stands out.
   float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-  vec3 outside = mix(vec3(luma), color.rgb, 0.25) * 0.38;
+  vec3 outside = mix(vec3(luma), color.rgb, 0.12) * 0.3;
   out_FragColor = vec4(mix(color.rgb, outside, k), color.a);
 }
 `

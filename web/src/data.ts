@@ -58,6 +58,18 @@ export interface Fire {
   source: Record<string, string>
 }
 
+/** ERA5 hourly weather over the fire, as scripts/build_fires.py writes it; local time, one entry per hour. */
+export interface Weather {
+  timeZone: string
+  time: string[] // "YYYY-MM-DDTHH:MM"
+  tempC: number[]
+  rhPct: number[]
+  precipMm: number[]
+  windKmh: number[] // at 10 m
+  windFromDeg: number[] // where the wind comes from
+  gustKmh: number[]
+}
+
 export type Ring = [number, number][]
 
 /** Polygons as rings of [lon, lat]: the first ring is the outline, the rest are unburned islands. */
@@ -90,6 +102,7 @@ async function getJSON<T>(path: string): Promise<T> {
 
 export const loadFireIndex = () => getJSON<FireIndexEntry[]>('/fires/index.json')
 export const loadFire = (id: string) => getJSON<Fire>(`/fires/${id}/fire.json`)
+export const loadWeather = (id: string) => getJSON<Weather>(`/fires/${id}/weather.json`)
 export const loadStations = () => getJSON<{ stations: Station[] }>('/stations.json').then((d) => d.stations)
 
 interface Feature {

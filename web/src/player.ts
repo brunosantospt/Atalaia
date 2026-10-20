@@ -123,6 +123,7 @@ export class Player {
   private frame(shot: Shot, driving: boolean, revealCurrent: boolean, fade: number, untimed: boolean): Frame {
     const revealed = new Set(this.shots.slice(0, this.index).flatMap((s) => s.reveal))
     if (revealCurrent) shot.reveal.forEach((id) => revealed.add(id))
+    for (const s of this.shots.slice(0, this.index + 1)) s.conceal.forEach((id) => revealed.delete(id))
     return {
       index: this.index,
       shot,

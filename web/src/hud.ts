@@ -3,8 +3,9 @@
 // Data credits are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
 
 import type { Fire, FireIndexEntry } from './data'
-import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtRange, fmtTime, wallClock } from './format'
+import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, toPTTM06, type LonLat } from './geo'
+import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
 import { SettingsPanel } from './settings'
@@ -17,6 +18,14 @@ export interface HudActions {
   next(): void
   goTo(i: number): void
   pickFire(id: string): void
+}
+
+/** The free run of the fast model behind the simulated shots, as the HUD reads it. */
+export interface Simulated {
+  known: Known
+  areaHa(hours: number): number
+  poc(areaHa: number): number
+  intensityKWPerM: number
 }
 
 export interface CameraReadout {
@@ -39,7 +48,7 @@ const TEMPLATE = `
     <div class="line dim" data-ref="coords"></div>
   </section>
   <section class="panel clock">
-    <div class="live"><i></i><span data-ref="mode">Replay</span> · observado</div>
+    <div class="live"><i></i><span data-ref="mode">Replay</span> · <span data-ref="source">observado</span></div>
     <div class="time" data-ref="time"></div>
     <div class="line dim" data-ref="date"></div>
     <div class="pair"><span data-ref="elapsed"></span><span data-ref="area"></span></div>
@@ -67,12 +76,12 @@ const TEMPLATE = `
       <div class="ticks" data-ref="ticks"></div>
       <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · A decisões A/B · E editor · S settings · H esconde o HUD</div>
   </section>
 `
 
 type Refs = Record<
-  | 'word' | 'place' | 'coords' | 'mode' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
+  | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
   | 'hdg' | 'pitch' | 'rng' | 'tm' | 'dms' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear',
   HTMLElement
@@ -81,13 +90,15 @@ type Refs = Record<
 export class Hud {
   readonly settings: SettingsPanel
   private readonly refs: Refs
+  private readonly ledger: Ledger
   private fire: Fire | undefined
+  private sim: Simulated | undefined
   private shots: Shot[] = []
   private ticks: HTMLElement[] = []
   private shown = new Map<string, string>()
 
   constructor(
-    private readonly root: HTMLElement,
+    readonly root: HTMLElement,
     fires: FireIndexEntry[],
     private readonly actions: HudActions,
   ) {
@@ -97,6 +108,7 @@ export class Hud {
       [...root.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     ) as unknown as Refs
 
+    this.ledger = new Ledger(root)
     this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
@@ -104,9 +116,12 @@ export class Hud {
     this.refs.play.addEventListener('click', () => actions.toggle())
   }
 
-  setFire(fire: Fire, shots: Shot[]) {
+  setFire(fire: Fire, shots: Shot[], sim: Simulated | undefined) {
     this.fire = fire
     this.shots = shots
+    this.sim = sim
+    this.ledger.el.hidden = !sim
+    if (sim) this.ledger.set(sim.known)
     this.settings.setFire(fire.id)
     this.refs.ticks.replaceChildren()
     this.ticks = shots.map((s, i) => {
@@ -125,20 +140,28 @@ export class Hud {
     this.root.classList.toggle('hidden')
   }
 
+  /** The decision editor is open on the left: the title, ledger and position give it the room. */
+  setEditing(on: boolean) {
+    this.root.classList.toggle('editing', on)
+  }
+
   /** Screen left free by the title, clock, rail, caption card and open settings; all of it when the HUD is hidden. */
   safeArea(): SafeArea {
     const { width, height } = this.root.getBoundingClientRect()
     const pad = 12
-    if (this.root.classList.contains('hidden')) return { top: pad, bottom: height - pad, left: pad, right: width - pad }
+    if (this.root.classList.contains('hidden')) return { top: pad, bottom: height - pad, left: pad, right: width - pad, avoid: [] }
     const rect = (sel: string) => this.root.querySelector(sel)!.getBoundingClientRect()
     const rail = rect('.rail')
-    // The rail is hidden on narrow screens and then has no size.
+    const ledger = rect('.ledger')
+    // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
+    const editing = this.root.classList.contains('editing')
     return {
-      top: Math.max(rect('.title').bottom, rect('.clock').bottom) + pad,
+      top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: rect('.bottom').top - pad,
-      left: pad + 8,
+      avoid: ledger.height ? [ledger] : [],
+      left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
   }
@@ -150,17 +173,28 @@ export class Hud {
     const n = this.shots.length
     const lastStep = fire.steps.at(-1)!.step
     const clock = wallClock(fire.start, frame.hours)
+    // Simulated shots read the free run at the clock, so the area grows with the fire and not linearly.
+    const sim = shot.simulated ? this.sim : undefined
+    const areaHa = sim ? sim.areaHa(frame.hours) : frame.areaHa
 
     this.set('word', shot.word)
     this.set('place', [fire.parish, fire.name].filter(Boolean).join(' · '))
     this.set('coords', formatDMS(shot.place))
     this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? 'Replay' : 'Pausa')
+    this.set('source', sim ? 'simulado' : 'observado')
     this.root.classList.toggle('paused', !frame.playing)
+    this.root.classList.toggle('simulated', !!sim)
     this.set('time', fmtTime(clock))
     this.set('date', `${fmtDate(clock)} · hora local`)
     this.set('elapsed', fmtElapsed(frame.hours))
-    this.set('area', fmtHa(frame.areaHa))
-    this.set('step', `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`)
+    this.set('area', fmtHa(areaHa))
+    this.set(
+      'step',
+      sim
+        ? `POC ${fmtPct(sim.poc(areaHa))} · I ${fmtNumber(sim.intensityKWPerM)} kW/m`
+        : `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`,
+    )
+    this.ledger.update(frame.hours)
 
     this.set('hdg', `${pad3(Math.round(((camera.heading % 360) + 360) % 360))}° ${compass(camera.heading)}`)
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))

@@ -192,6 +192,69 @@
   bottom: 32px;
 }
 
+/* ---------- ledger of the instant (ledger.ts) ---------- */
+
+.hud .ledger {
+  left: 34px;
+  bottom: calc(var(--credits-h, 20px) + 200px); /* above the caption card, however long it is */
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.hud .ledger table {
+  margin-top: 6px;
+  border-collapse: collapse;
+}
+.hud .ledger th,
+.hud .ledger td {
+  padding: 1px 0;
+  text-align: left;
+  font-weight: 400;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.hud .ledger th {
+  padding-right: 1em;
+  color: var(--ink);
+}
+.hud .ledger th::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  vertical-align: 1px;
+}
+.hud .ledger .source {
+  padding-right: 1em;
+  color: var(--ink-dim);
+}
+.hud .ledger .text {
+  color: var(--ink-dim);
+}
+.hud .ledger tr.off th::before,
+.hud .ledger tr.wait th::before {
+  background: none;
+  border: 1px solid var(--ink-dim);
+}
+.hud .ledger tr.retro th::before {
+  background: var(--ink-dim);
+  opacity: 0.5;
+}
+.hud .ledger tr.off th,
+.hud .ledger tr.wait th,
+.hud .ledger tr.retro th {
+  color: var(--ink-dim);
+}
+.hud .ledger tr.off .text,
+.hud .ledger tr.retro .text {
+  opacity: 0.6;
+}
+.hud .ledger tr.wait .text {
+  font-style: italic;
+}
+
 /* ---------- caption card and transport ---------- */
 
 .hud .bottom {
@@ -447,11 +510,15 @@
   stroke: none;
 }
 .markers .lead-ignition,
-.markers .lead-step {
+.markers .lead-step,
+.markers .lead-eta,
+.markers .lead-tsat {
   stroke: var(--amber);
 }
 .markers circle.lead-ignition,
-.markers circle.lead-step {
+.markers circle.lead-step,
+.markers circle.lead-eta,
+.markers circle.lead-tsat {
   fill: var(--amber);
 }
 .markers .lead.on {
@@ -486,7 +553,9 @@
   text-shadow: none;
 }
 .markers .tag-ignition b,
-.markers .tag-step b {
+.markers .tag-step b,
+.markers .tag-eta b,
+.markers .tag-tsat b {
   background: var(--amber);
 }
 .markers .tag small {
@@ -563,9 +632,10 @@
   color: var(--ink);
 }
 
-/* Medium screens: the position readout no longer fits beside the card. */
+/* Medium screens: the position readout and the ledger no longer fit beside the card. */
 @media (max-width: 1180px) {
-  .hud .position {
+  .hud .position,
+  .hud .ledger {
     display: none;
   }
 }

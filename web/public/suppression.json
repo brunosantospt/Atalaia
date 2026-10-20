@@ -1,0 +1,109 @@
+{
+  "notes": "Meios de supressão para o modelo rápido (P6) e as decisões A e B (P9). Doutrina e literatura, não medições nos incêndios usados; cada chave de `sources` justifica o valor com o mesmo nome. Fuel classes são as de fuel.json: 0 não combustível, 1 herbáceo, 2 mato, 3 eucalipto e acácia, 4 pinhal e folhosas. O fogo dentro do raio de ação de um meio avança a ROS × rosFactor enquanto o meio tem água e a chama fica abaixo de holdFlameM; acima, o meio não segura (overrun) e o fator é 1. Uma linha construída antes de o fogo lá chegar não arde.",
+  "flame": {
+    "byramA": 0.0775,
+    "byramB": 0.46,
+    "heatYieldKJPerKg": 18000
+  },
+  "hirsch": {
+    "a": 4.6835,
+    "b": -0.7043,
+    "c": -0.00041,
+    "d": -0.000052
+  },
+  "dispatch": {
+    "ecinTurnoutMin": 2,
+    "volunteerTurnoutMin": 20,
+    "roadFactor": 1.3,
+    "waterPointKm": 3,
+    "airBaseKm": 40
+  },
+  "units": {
+    "crew": {
+      "name": "Equipa de combate a pé",
+      "short": "ECIN a pé",
+      "people": 5,
+      "holdFlameM": 1.2,
+      "holdIntensityKWPerM": 350,
+      "rosFactor": 0.6,
+      "radiusM": 80,
+      "speedKmh": 60,
+      "lineMPerH": [0, 160, 30, 45, 40]
+    },
+    "vfci": {
+      "name": "Veículo florestal de combate a incêndios",
+      "short": "VFCI",
+      "people": 5,
+      "waterL": 3000,
+      "flowLPerMin": 200,
+      "holdFlameM": 2.4,
+      "holdIntensityKWPerM": 1700,
+      "rosFactor": 0.35,
+      "radiusM": 120,
+      "speedKmh": 60,
+      "refillMin": 8,
+      "refillKmh": 30
+    },
+    "vttu": {
+      "name": "Veículo tanque tático urbano",
+      "short": "VTTU",
+      "people": 2,
+      "waterL": 12000,
+      "flowLPerMin": 400,
+      "holdFlameM": 2.4,
+      "holdIntensityKWPerM": 1700,
+      "rosFactor": 0.5,
+      "radiusM": 60,
+      "speedKmh": 50,
+      "refillMin": 15,
+      "refillKmh": 40
+    },
+    "hebl": {
+      "name": "Helicóptero bombardeiro ligeiro",
+      "short": "HEBL",
+      "people": 0,
+      "waterL": 900,
+      "holdFlameM": 3.4,
+      "holdIntensityKWPerM": 3500,
+      "rosFactor": 0.2,
+      "holdMin": 25,
+      "radiusM": 100,
+      "speedKmh": 150,
+      "cycleMin": 1,
+      "dropM": [25, 8],
+      "turnoutMin": 10
+    },
+    "avbp": {
+      "name": "Avião bombardeiro pesado, retardante",
+      "short": "AVBP",
+      "people": 0,
+      "waterL": 3000,
+      "holdFlameM": 3.4,
+      "holdIntensityKWPerM": 3500,
+      "rosFactor": 0.1,
+      "holdMin": 60,
+      "radiusM": 150,
+      "speedKmh": 300,
+      "cycleMin": 12,
+      "dropM": [60, 20],
+      "turnoutMin": 15,
+      "maxRunwayMin": 30
+    }
+  },
+  "sources": {
+    "flame.byramA, flame.byramB": "Byram 1959, comprimento de chama L = 0,0775·I^0,46 (L em m, I em kW/m), na forma métrica de Alexander 1982",
+    "flame.heatYieldKJPerKg": "Calor de combustão dos combustíveis finos usado no Rothermel 1972 (8000 BTU/lb ≈ 18 600 kJ/kg), arredondado",
+    "hirsch": "Hirsch, Corey & Martell 1998, Forest Science 44(4): probabilidade de contenção POC = E/(1+E), ln E = 4,6835 − 0,7043·A − 0,00041·I − 0,000052·A·I, A em ha à chegada, I em kW/m",
+    "units.*.holdFlameM, units.*.holdIntensityKWPerM": "Haul chart do NWCG (Andrews & Rothermel 1982, Fireline Handbook): até 1,2 m / 350 kW/m ferramentas manuais; até 2,4 m / 1700 kW/m veículos e máquinas; até 3,4 m / 3500 kW/m meios aéreos com apoio terrestre; acima, sem ataque direto",
+    "units.crew.lineMPerH": "NWCG Fireline Handbook 3 (PMS 410-1), produção de linha por pessoa e modelo de combustível, escalada a 5 pessoas: herbáceo 150–200 m/h, mato 15–40 m/h, floresta 25–60 m/h",
+    "units.vfci.waterL, units.vfci.flowLPerMin": "Despacho n.º 3974/2013, ficha VFCI (4x4, depósito de 3000 L); caudal útil de uma linha de 25 mm ~200 L/min",
+    "units.vttu.waterL": "Despacho n.º 3974/2013, ficha VTTU (10 000 a 15 000 L)",
+    "units.hebl": "DECIR 2025 (ANEPC): HEBL com balde de 800–1000 L; ciclo de 1 min mais ida e volta ao ponto de água a 150 km/h; mancha de descarga ~25×8 m; efeito ~20–30 min",
+    "units.avbp": "DECIR 2025 (ANEPC): AVBP (Fire Boss, 3000 L); retardante reduz o avanço ~90% durante ~1 h; só com pista ou plano de água a menos de 30 min",
+    "units.*.rosFactor, units.*.radiusM": "Estimativa Atalaia: fração do ROS que o fogo mantém no raio de ação do meio enquanto este tem água e a chama está abaixo do limiar, e frente que o meio cobre a partir do ponto de acesso",
+    "units.*.refillMin, units.*.refillKmh": "Estimativa Atalaia: 8 a 15 min de enchimento mais ida e volta ao ponto de água por caminho florestal",
+    "dispatch.ecinTurnoutMin, dispatch.volunteerTurnoutMin": "DON n.º 2 / DECIR 2025: ECIN de prevenção pronta em ≤ 2 min; voluntários a chegar ao quartel 15–30 min",
+    "dispatch.roadFactor": "Estimativa Atalaia: estrada ≈ 1,3 × linha reta em relevo do Minho",
+    "dispatch.waterPointKm, dispatch.airBaseKm": "Estimativa Atalaia, por omissão quando não há rede de pontos de água nem base aérea no cenário"
+  }
+}

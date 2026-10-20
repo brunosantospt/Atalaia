@@ -1,0 +1,68 @@
+/* The A/B split: a handle on the dividing line and a label over each side (splitLayer.ts). */
+
+.split {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  --split: 50%;
+  pointer-events: none;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.split .handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  width: 22px;
+  margin-left: -11px;
+  pointer-events: auto;
+  cursor: col-resize;
+}
+.split .handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+  width: 1px;
+  background: var(--ink);
+  opacity: 0.7;
+}
+.split .handle::after {
+  content: '◂ ▸';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 4px 6px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.split .side {
+  position: absolute;
+  top: 128px; /* under the title and clock panels of the HUD */
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.split .side b {
+  color: var(--amber);
+  font-weight: 600;
+}
+.split .side span {
+  color: var(--ink-dim);
+}
+.split .side.a {
+  left: 0;
+  width: var(--split);
+}
+.split .side.b {
+  left: var(--split);
+  right: 0;
+}

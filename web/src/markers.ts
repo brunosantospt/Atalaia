@@ -20,6 +20,8 @@ const RING_COLOR: Record<MarkerKind, Color> = {
   ignition: Color.fromCssColorString('#f0a33a'),
   step: Color.fromCssColorString('#f0a33a').withAlpha(0.8),
   station: Color.fromCssColorString('#d9dcdf').withAlpha(0.85),
+  eta: Color.fromCssColorString('#f0a33a'),
+  tsat: Color.fromCssColorString('#f0a33a'),
 }
 const LEAD_PX = 54 // horizontal gap between a point and its tag
 const GAP_PX = 6 // between stacked tags
@@ -31,13 +33,14 @@ export interface SafeArea {
   bottom: number
   left: number
   right: number
+  avoid: DOMRect[] // panels inside the area that a tag may not cover
 }
 const SVG = 'http://www.w3.org/2000/svg'
 
 interface Marker {
   spec: MarkerSpec
   world: Cartesian3
-  ring: Entity
+  ring: Entity | undefined // none when the spec's ringM is 0: the reach layer draws its own line
   tag: HTMLElement
   line: SVGLineElement
   dot: SVGCircleElement
@@ -67,15 +70,17 @@ export class MarkerLayer {
 
     for (const spec of specs) {
       const circle = Array.from({ length: 49 }, (_, i) => destination(spec, (i * 360) / 48, spec.ringM))
-      const ring = this.source.entities.add({
-        show: false,
-        polyline: {
-          positions: Cartesian3.fromDegreesArray(circle.flatMap((p) => [p.lon, p.lat])),
-          clampToGround: true,
-          width: spec.kind === 'station' ? 1.5 : 2,
-          material: RING_COLOR[spec.kind],
-        },
-      })
+      const ring = spec.ringM
+        ? this.source.entities.add({
+            show: false,
+            polyline: {
+              positions: Cartesian3.fromDegreesArray(circle.flatMap((p) => [p.lon, p.lat])),
+              clampToGround: true,
+              width: spec.kind === 'station' ? 1.5 : 2,
+              material: RING_COLOR[spec.kind],
+            },
+          })
+        : undefined
       const tag = document.createElement('div')
       tag.className = `tag tag-${spec.kind}`
       tag.innerHTML = `<b></b><span></span><small></small>`
@@ -111,7 +116,7 @@ export class MarkerLayer {
 
     for (const m of this.markers) {
       const on = revealed.has(m.spec.id)
-      m.ring.show = on
+      if (m.ring) m.ring.show = on
       let visible = false
       if (on && occluder.isPointVisible(m.world)) {
         const p = SceneTransforms.worldToWindowCoordinates(scene, m.world, this.window)
@@ -150,6 +155,12 @@ export class MarkerLayer {
       const { w, h } = m.size ?? { w: 0, h: 0 }
       let tx = m.side === 'left' ? x - LEAD_PX - w : x + LEAD_PX
       tx = Math.min(Math.max(tx, safe.left), safe.right - w)
+      if (safe.avoid.some((r) => tx < r.right && tx + w > r.left && ty < r.bottom && ty + h > r.top)) {
+        m.tag.classList.remove('on')
+        m.line.classList.remove('on')
+        m.dot.classList.remove('on')
+        continue
+      }
       m.tag.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`
       const ex = m.side === 'left' ? tx + w : tx
       m.line.setAttribute('x1', x.toFixed(1))

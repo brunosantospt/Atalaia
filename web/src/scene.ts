@@ -63,13 +63,13 @@ export async function createViewer(container: string, center: LonLat): Promise<V
   scene.globe.showGroundAtmosphere = false
   scene.fog.enabled = false
 
-  // Imagery pushed back so the fire is the only strong colour on screen; the spotlight dims
-  // everything outside the area in play further still.
+  // Imagery keeps most of its colour where the spotlight falls (the area in play); the spotlight
+  // (spotlight.ts) is what greys and darkens everything else, so the fire still reads first.
   const imagery = viewer.imageryLayers.get(0)
-  imagery.brightness = 0.8
-  imagery.contrast = 1.25
-  imagery.saturation = 0.22
-  imagery.gamma = 1.1
+  imagery.brightness = 0.92
+  imagery.contrast = 1.15
+  imagery.saturation = 0.62
+  imagery.gamma = 1.05
 
   scene.globe.enableLighting = true
   scene.globe.dynamicAtmosphereLighting = false

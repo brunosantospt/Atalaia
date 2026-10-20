@@ -1,0 +1,253 @@
+/* The decision editor drawer, on the left (editor.ts). Same cloth as the settings drawer. */
+
+.hud .editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  width: min(372px, 100vw);
+  padding: 30px 22px 24px 30px;
+  overflow-y: auto;
+  background: rgba(8, 9, 10, 0.88);
+  border-right: 1px solid var(--ink-faint);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  visibility: hidden;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease, visibility 0s 0.25s;
+}
+.hud .editor.open {
+  visibility: visible;
+  transform: none;
+  transition: transform 0.25s ease;
+}
+.hud.editing .title,
+.hud.editing .ledger,
+.hud.editing .position {
+  display: none;
+}
+.hud .editor header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink-faint);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--ink-dim);
+}
+.hud .editor header button {
+  width: 26px;
+  padding: 0;
+  font-size: 14px;
+}
+.hud .editor button,
+.hud .editor select,
+.hud .editor input {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--ink-faint);
+  cursor: pointer;
+}
+.hud .editor button:hover,
+.hud .editor select:hover {
+  border-color: var(--line);
+}
+.hud .editor button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.hud .editor .tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 14px;
+}
+.hud .editor .tabs button {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 7px 10px;
+  text-align: left;
+  border-left: 2px solid transparent;
+}
+.hud .editor .tabs button b {
+  color: var(--amber);
+  font-weight: 600;
+}
+.hud .editor .tabs button span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-dim);
+}
+.hud .editor .tabs button.on {
+  background: rgba(220, 224, 228, 0.07);
+  border-left-color: var(--ink);
+}
+.hud .editor .name {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 10px;
+  cursor: text;
+}
+.hud .editor section {
+  margin-top: 18px;
+}
+.hud .editor h3 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.2em;
+  color: var(--ink-dim);
+}
+.hud .editor .note {
+  margin: 8px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.hud .editor .hint {
+  color: var(--amber);
+}
+.hud .editor .assignments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hud .editor .assignments li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 7px 10px;
+  background: var(--panel);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid var(--amber);
+}
+.hud .editor .assignments .none {
+  display: block;
+  border-left-color: transparent;
+  color: var(--ink-dim);
+  text-transform: none;
+}
+.hud .editor .who {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.hud .editor .who b {
+  font-size: 12px;
+  font-weight: 600;
+}
+.hud .editor .who em {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--amber);
+}
+.hud .editor .what {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.hud .editor .ctl {
+  display: flex;
+  gap: 4px;
+}
+.hud .editor .ctl button {
+  width: 22px;
+  padding: 0;
+  line-height: 18px;
+}
+.hud .editor .palette {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+.hud .editor .palette select {
+  padding: 6px 8px;
+  max-width: 100%;
+}
+.hud .editor .palette select[data-ref='task'] {
+  grid-column: 1 / -1;
+}
+.hud .editor .count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.hud .editor .count button {
+  width: 24px;
+  padding: 5px 0;
+}
+.hud .editor .count span {
+  min-width: 16px;
+  text-align: center;
+  color: var(--amber);
+}
+.hud .editor .tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.hud .editor .tools button {
+  padding: 6px 10px;
+  border-left: 2px solid transparent;
+}
+.hud .editor .tools button.on {
+  background: rgba(240, 163, 58, 0.12);
+  border-color: var(--amber);
+  border-left-width: 2px;
+}
+.hud .editor .report {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.hud .editor .report th,
+.hud .editor .report td {
+  padding: 3px 0;
+  text-align: right;
+  font-weight: 400;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor .report th:first-child {
+  text-align: left;
+  color: var(--ink-dim);
+}
+.hud .editor .report tr:first-child th {
+  color: var(--ink-dim);
+}
+.hud .editor .report tr:first-child th.on {
+  color: var(--amber);
+}
+.hud .editor .report .none {
+  text-align: left;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.hud .editor footer {
+  display: flex;
+  gap: 6px;
+  margin-top: 22px;
+}
+.hud .editor footer button {
+  flex: 1;
+  padding: 6px 8px;
+  color: var(--ink-dim);
+}

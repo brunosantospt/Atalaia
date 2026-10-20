@@ -1,14 +1,17 @@
-// The replay as a list of camera shots, derived only from fire.json and the nearest stations:
-// overview with the stations, ignition, one shot per observed step, a pass along the spread
-// axis and the final balance. Each shot frames the area in play and says what to reveal.
+// The replay as a list of camera shots, derived from fire.json, the nearest stations and the
+// free run of the fast model: overview with the stations, ignition, what is known at the
+// detection, how far the fire gets before each means arrives, the satellite's checkpoint, one
+// shot per observed step, a pass along the spread axis and the final balance. Each shot frames
+// the area in play and says what to reveal.
 
 import { Cartographic, sampleTerrainMostDetailed, type TerrainProvider } from 'cesium'
 import type { Pose } from './camera'
 import type { Fire, NearStation, Progression, Step } from './data'
-import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
+import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock } from './format'
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLonLat, type BBox, type LonLat } from './geo'
+import type { Reach } from './reach'
 
-export type ShotKind = 'overview' | 'ignition' | 'spread' | 'axis' | 'balance'
+export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance'
 
 export interface Shot {
   kind: ShotKind
@@ -16,6 +19,7 @@ export interface Shot {
   title: string // caption card
   caption: string
   place: LonLat // whose coordinates sit under the word
+  simulated: boolean // the fire on screen is the free run of the fast model, not the observed one
   step: number // last fire step shown, -1 before the ignition
   hours: number // fire clock once the camera arrives
   areaHa: number // burned area shown once the camera arrives
@@ -26,9 +30,10 @@ export interface Shot {
   moveS: number
   holdS: number
   reveal: string[] // marker ids that appear with this shot
+  conceal: string[] // marker ids that go away from this shot on
 }
 
-export type MarkerKind = 'ignition' | 'step' | 'station'
+export type MarkerKind = 'ignition' | 'step' | 'station' | 'eta' | 'tsat'
 
 export interface MarkerSpec extends LonLat {
   id: string
@@ -37,7 +42,7 @@ export interface MarkerSpec extends LonLat {
   badge: string
   label: string
   detail: string
-  ringM: number
+  ringM: number // 0 for no ring (the reach layer draws the outline)
 }
 
 export interface Story {
@@ -51,7 +56,13 @@ const MARGIN_OVERVIEW = 1.75 // stations near the frame edge would fall under th
 const MIN_RANGE_M = 1200
 const SPOT = 1.25 // spotlight radius over half the framed diagonal
 
-export function buildStory(fire: Fire, progression: Progression, stations: NearStation[], fovy: number): Story {
+export function buildStory(
+  fire: Fire,
+  progression: Progression,
+  stations: NearStation[],
+  fovy: number,
+  reach?: Reach,
+): Story {
   const half = Math.tan(fovy / 2)
   const fit = (radiusM: number, margin = MARGIN) => Math.max(MIN_RANGE_M, (margin * radiusM) / half)
   const framed = (range: number) => (range * half) / MARGIN // ground radius a range shows
@@ -108,6 +119,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
       ? `${stations.length === 1 ? 'Um quartel' : `${stations.length} quartéis`} a menos de 20 km da ignição, em linha reta.`
       : 'Nenhum quartel a menos de 20 km da ignição.',
     place: bboxCenter(all),
+    simulated: false,
     step: -1,
     hours: 0,
     areaHa: 0,
@@ -119,6 +131,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
     holdS: 4,
     // The ignition too: it is where the distances are measured from.
     reveal: ['ignition:0', ...stations.map((s) => `station:${s.id}`)],
+    conceal: [],
   })
 
   // ---- ignition ----
@@ -142,6 +155,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
     title: `Ignição · ${fmtTime(clock(0))}`,
     caption: `Primeiro polígono mapeado: ${fmtHa(steps[0].areaHa)}. A câmara olha para onde o fogo foi, para ${compass(headings[0])}.`,
     place: ignition,
+    simulated: false,
     step: 0,
     hours: steps[0].hours,
     areaHa: steps[0].areaHa,
@@ -152,7 +166,109 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
     moveS: 5,
     holdS: 4,
     reveal: fire.ignitions.flatMap((ign, i) => (ign.hours <= steps[0].hours ? [`ignition:${i}`] : [])),
+    conceal: [],
   })
+
+  // ---- the decision's instant: what is known, how far the fire gets before help arrives, T_sat ----
+  if (reach) {
+    const { detection, etas, tsat } = reach
+    const minutes = (m: number) => `T+${m} min`
+    const satClock = fmtTime(clock(detection.satelliteMin / 60))
+
+    shots.push({
+      kind: 'known',
+      word: 'Conhecido',
+      title: `Deteção pelo drone · ${fmtTime(clock(detection.droneMin / 60))} · ${minutes(detection.droneMin)}`,
+      caption:
+        `Ponto de ignição, meteo da hora, combustível, relevo e quartéis: tudo o que há para decidir. ` +
+        `Satélite: sem passagem até ${satClock}. Os perímetros observados só existem em retrospetiva.`,
+      place: ignition,
+      simulated: true,
+      step: -1,
+      hours: detection.droneMin / 60,
+      areaHa: reach.areaByMin[detection.droneMin],
+      untimed: false,
+      path: [pose(ignition, headings[0], -50, 2200)],
+      driftDeg: 4,
+      spot: SPOT * framed(2200),
+      moveS: 4,
+      holdS: 6,
+      reveal: [],
+      conceal: [],
+    })
+
+    // The tag has its own id: the outline stays on the ground after the tags are gone.
+    for (const eta of etas)
+      markers.push({
+        id: `tag:${eta.id}`,
+        kind: 'eta',
+        lon: eta.head.lon,
+        lat: eta.head.lat,
+        h: 0,
+        badge: eta.unit,
+        label: `${eta.from} · ${minutes(eta.minutes)}`,
+        detail: `${fmtHa(eta.areaHa)} · POC ${fmtPct(eta.poc)}`,
+        ringM: 0,
+      })
+    const first = etas[0]
+    const lastEta = etas.at(-1)!
+    const reachR = Math.max(lastEta.radiusM * 1.5, 1500)
+    shots.push({
+      kind: 'reach',
+      word: 'Alcance',
+      title: `Até à chegada · ${minutes(first.minutes)} a ${minutes(lastEta.minutes)}`,
+      caption:
+        `Contorno do fogo livre à chegada de cada meio. ${first.unit} de ${first.from}: ${fmtHa(first.areaHa)}, POC ${fmtPct(first.poc)}. ` +
+        `${lastEta.unit}: ${fmtHa(lastEta.areaHa)}, POC ${fmtPct(lastEta.poc)}. Anéis a 1, 2 e 5 km.`,
+      place: lastEta.center,
+      simulated: true,
+      step: -1,
+      hours: lastEta.minutes / 60,
+      areaHa: lastEta.areaHa,
+      untimed: false,
+      path: [pose(lastEta.center, headings[0], -45, fit(reachR))],
+      driftDeg: 5,
+      spot: SPOT * reachR,
+      moveS: 4,
+      holdS: 7,
+      reveal: ['scale', ...etas.flatMap((e) => [e.id, `tag:${e.id}`])],
+      conceal: [],
+    })
+
+    markers.push({
+      id: 'tsat',
+      kind: 'tsat',
+      lon: tsat.head.lon,
+      lat: tsat.head.lat,
+      h: 0,
+      badge: 'SAT',
+      label: `Satélite · ${satClock}`,
+      detail: `${fmtHa(tsat.areaHa)} · POC ${fmtPct(tsat.poc)}`,
+      ringM: 0,
+    })
+    const satR = Math.max(tsat.radiusM * 1.4, 1500)
+    shots.push({
+      kind: 'checkpoint',
+      word: 'Satélite',
+      title: `T_sat · ${satClock} · ${minutes(detection.satelliteMin)}`,
+      caption:
+        `Sem o drone, o satélite só detetaria o fogo agora: ${fmtHa(tsat.areaHa)} livres, POC ${fmtPct(tsat.poc)}. ` +
+        `O tracejado fica como fantasma até ao fim.`,
+      place: tsat.center,
+      simulated: true,
+      step: -1,
+      hours: detection.satelliteMin / 60,
+      areaHa: tsat.areaHa,
+      untimed: false,
+      path: [pose(tsat.center, headings[0], -50, fit(satR))],
+      driftDeg: 6,
+      spot: SPOT * satR,
+      moveS: 4,
+      holdS: 6,
+      reveal: ['tsat'],
+      conceal: etas.map((e) => `tag:${e.id}`),
+    })
+  }
 
   // ---- one shot per observed step ----
   for (const s of steps.slice(1)) {
@@ -186,6 +302,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
       title: `Passo ${s.step} · ${fmtTime(clock(prev.hours))} → ${fmtTime(clock(s.hours))}`,
       caption: parts.filter(Boolean).join(' · ') + '.',
       place: s.center,
+      simulated: false,
       step: s.step,
       hours: s.hours,
       areaHa: s.areaHa,
@@ -196,6 +313,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
       moveS: 4,
       holdS: 4.5,
       reveal: [`step:${s.step}`, ...newFoci.map((i) => `ignition:${i}`)],
+      conceal: [],
     })
   }
 
@@ -211,6 +329,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
       title: 'Eixo de propagação',
       caption: `${fmtKm(axisM / 1000)} da ignição para ${compass(axis)} em ${fmtHours(far.hours)}.`,
       place: lerpLonLat(ignition, far.center, 0.5),
+      simulated: false,
       step: last.step,
       hours: last.hours,
       areaHa: last.areaHa,
@@ -221,6 +340,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
       moveS: 3.5,
       holdS: Math.max(7, axisM / 700),
       reveal: [],
+      conceal: [],
     })
   }
 
@@ -234,6 +354,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
     title: `Balanço · ${fmtHa(total.total)} · ${fmtHours(last.hours)} observadas`,
     caption: `${fmtHa(total.timed)} com hora · ${fmtHa(total.untimed)} sem hora (a cinzento), que o PT-FireSprd não consegue datar.`,
     place: bboxCenter(fire.bbox),
+    simulated: false,
     step: last.step,
     hours: last.hours,
     areaHa: total.total,
@@ -244,6 +365,7 @@ export function buildStory(fire: Fire, progression: Progression, stations: NearS
     moveS: 4,
     holdS: 7,
     reveal: [],
+    conceal: [],
   })
 
   return { shots, markers }

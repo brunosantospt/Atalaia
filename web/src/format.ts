@@ -32,4 +32,6 @@ export const fmtNumber = (n: number, digits = 0) => (digits ? one : whole).forma
 export const fmtKm = (km: number) => `${(km < 10 ? upToOne : whole).format(km)} km`
 
 /** Camera range: metres up close, kilometres further out. */
+/** A probability as a percentage; under half a percent it reads "< 1 %", never a flat zero. */
+export const fmtPct = (p: number) => (p < 0.005 ? '< 1 %' : `${Math.round(p * 100)} %`)
 export const fmtRange = (m: number) => (m < 1000 ? `${whole.format(m)} m` : `${upToOne.format(m / 1000)} km`)
