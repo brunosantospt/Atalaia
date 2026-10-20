@@ -1,19 +1,24 @@
-// The fire spread engines the twin can run (engines/ and engines/CONTRACT.md). Kept by hand until
-// the API lists them with their state (GET /engines, P5).
+// The fire spread engines the twin can run (engines/ and engines/CONTRACT.md), as the API lists them
+// (GET /api/engines, docs/contracts.md): what each one is and whether it can run on this machine.
 
-export type EngineId = 'elmfire' | 'simfire'
+export type EngineState = 'ready' | 'not_installed' | 'no_docker'
 
 export interface Engine {
-  id: EngineId
+  id: string
   name: string
   version: string
   method: string
-  ready: boolean // its engines/<id>/test.sh passes
+  state: EngineState
 }
 
-export const ENGINES: Engine[] = [
-  { id: 'elmfire', name: 'ELMFIRE', version: '2025.0717', method: 'Level set · Rothermel, copas e projeções', ready: true },
-  { id: 'simfire', name: 'SimFire', version: '2.0.1', method: 'Autómato celular · Rothermel, 8 vizinhos', ready: true },
-]
+export const DEFAULT_ENGINE = 'elmfire' // the API's default too
 
-export const DEFAULT_ENGINE: EngineId = 'elmfire'
+/** The engines and their state, or null when the API is not running (api/serve.sh). */
+export async function fetchEngines(): Promise<Engine[] | null> {
+  try {
+    const res = await fetch('/api/engines')
+    return res.ok ? await res.json() : null
+  } catch {
+    return null
+  }
+}

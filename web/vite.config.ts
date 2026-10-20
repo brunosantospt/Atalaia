@@ -5,6 +5,8 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 // so they are served as static files instead of being bundled.
 const cesiumBuild = 'node_modules/cesium/Build/Cesium'
 const cesiumBaseUrl = 'cesium'
+// The API (api/serve.sh, docs/contracts.md) answers under /api, on its own port.
+const proxy = { '/api': 'http://127.0.0.1:5181' }
 
 export default defineConfig({
   define: {
@@ -13,6 +15,8 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 5000, // Cesium alone is ~4 MB minified
   },
+  server: { proxy },
+  preview: { proxy },
   plugins: [
     viteStaticCopy({
       targets: ['Workers', 'ThirdParty', 'Assets', 'Widgets'].map((dir) => ({
