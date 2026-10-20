@@ -1115,7 +1115,7 @@ export class Editor {
             })
             ;(lineEntity as any)._roadCut = cut
 
-            // Cut barricade pin with distinct barrier billboard and label
+            // Cut barricade pin with distinct barrier icon (clean map: no text label, hover tooltip provides details)
             const cutEntity = this.agency.entities.add({
               position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
               billboard: {
@@ -1126,60 +1126,9 @@ export class Editor {
                 heightReference: HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Infinity,
               },
-              label: {
-                text: `⛔ CORTE: ${cut.label}`,
-                font: 'bold 12px ui-monospace, monospace',
-                fillColor: Color.WHITE,
-                backgroundColor: Color.fromCssColorString(
-                  cut.urgency === 'cortado'
-                    ? 'rgba(180, 20, 20, 0.94)'
-                    : cut.urgency === 'urgente'
-                      ? 'rgba(215, 75, 15, 0.94)'
-                      : 'rgba(185, 110, 10, 0.94)',
-                ),
-                showBackground: true,
-                style: 2,
-                pixelOffset: new Cartesian2(0, -48),
-                heightReference: HeightReference.CLAMP_TO_GROUND,
-                disableDepthTestDistance: Infinity,
-              },
             })
             ;(cutEntity as any)._roadCut = cut
           }
-        }
-
-        // Draw readable road name badges on the 3D map for all named/classified highways (EN, EM, Ruas)
-        const labeledRoads = new Set<string>()
-        for (const r of context.osm.roads) {
-          if (!r.name && !r.ref) continue
-          const fullLabel = r.name && r.ref ? `${r.ref} · ${r.name}` : (r.ref ?? r.name!)
-          if (labeledRoads.has(fullLabel) || r.pts.length < 2) continue
-
-          const midPt = r.pts[Math.floor(r.pts.length / 2)]
-          const dist = distanceM(scenario.ignition, { lon: midPt[0], lat: midPt[1] })
-          if (dist > 3500) continue
-          labeledRoads.add(fullLabel)
-
-          this.agency.entities.add({
-            position: Cartesian3.fromDegrees(midPt[0], midPt[1]),
-            point: {
-              pixelSize: 4,
-              color: Color.fromCssColorString('#94a3b8'),
-              heightReference: HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Infinity,
-            },
-            label: {
-              text: `🛣️ ${fullLabel}`,
-              font: '10px ui-monospace, monospace',
-              fillColor: Color.fromCssColorString('#f1f5f9'),
-              backgroundColor: Color.fromCssColorString('rgba(15, 23, 42, 0.82)'),
-              showBackground: true,
-              style: 2,
-              pixelOffset: new Cartesian2(0, -12),
-              heightReference: HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Infinity,
-            },
-          })
         }
       }
 
