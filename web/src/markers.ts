@@ -22,6 +22,7 @@ const RING_COLOR: Record<MarkerKind, Color> = {
   station: Color.fromCssColorString('#d9dcdf').withAlpha(0.85),
   eta: Color.fromCssColorString('#f0a33a'),
   tsat: Color.fromCssColorString('#f0a33a'),
+  means: Color.fromCssColorString('#f0a33a'),
 }
 const LEAD_PX = 54 // horizontal gap between a point and its tag
 const GAP_PX = 6 // between stacked tags

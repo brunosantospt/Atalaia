@@ -38,7 +38,7 @@ export interface Shot {
   area?: (hours: number) => string // the HUD's area line, when it is not the free run's
 }
 
-export type MarkerKind = 'ignition' | 'step' | 'station' | 'eta' | 'tsat'
+export type MarkerKind = 'ignition' | 'step' | 'station' | 'eta' | 'tsat' | 'means'
 
 export interface MarkerSpec extends LonLat {
   id: string

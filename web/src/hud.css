@@ -197,16 +197,24 @@
 .hud .ledger {
   left: 34px;
   bottom: calc(var(--credits-h, 20px) + 200px); /* above the caption card, however long it is */
+  padding: 10px 14px 9px 12px;
   font-size: 10px;
   letter-spacing: 0.08em;
+  background: rgba(8, 9, 10, 0.72);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid var(--amber);
+  backdrop-filter: blur(4px);
+}
+.hud .ledger .eyebrow {
+  color: var(--ink);
 }
 .hud .ledger table {
-  margin-top: 6px;
+  margin-top: 7px;
   border-collapse: collapse;
 }
 .hud .ledger th,
 .hud .ledger td {
-  padding: 1px 0;
+  padding: 2px 0;
   text-align: left;
   font-weight: 400;
   white-space: nowrap;
@@ -512,13 +520,15 @@
 .markers .lead-ignition,
 .markers .lead-step,
 .markers .lead-eta,
-.markers .lead-tsat {
+.markers .lead-tsat,
+.markers .lead-means {
   stroke: var(--amber);
 }
 .markers circle.lead-ignition,
 .markers circle.lead-step,
 .markers circle.lead-eta,
-.markers circle.lead-tsat {
+.markers circle.lead-tsat,
+.markers circle.lead-means {
   fill: var(--amber);
 }
 .markers .lead.on {
@@ -555,8 +565,19 @@
 .markers .tag-ignition b,
 .markers .tag-step b,
 .markers .tag-eta b,
-.markers .tag-tsat b {
+.markers .tag-tsat b,
+.markers .tag-means b {
   background: var(--amber);
+}
+.markers .tag-means {
+  padding: 5px 10px 5px 5px;
+  background: rgba(8, 9, 10, 0.78);
+  border-color: rgba(240, 163, 58, 0.45);
+}
+.markers .tag-means span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 .markers .tag small {
   font-size: 9px;

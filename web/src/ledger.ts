@@ -33,7 +33,7 @@ export class Ledger {
   constructor(parent: HTMLElement) {
     this.el = document.createElement('section')
     this.el.className = 'panel ledger'
-    this.el.innerHTML = '<div class="eyebrow">Conhecido em T</div><table></table>'
+    this.el.innerHTML = '<div class="eyebrow">Dados conhecidos em tempo real</div><table></table>'
     parent.append(this.el)
   }
 

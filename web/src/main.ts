@@ -105,6 +105,7 @@ async function main() {
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => rerun(),
+    safeArea: () => hud.safeArea(),
     editing: (open) => {
       hud.setEditing(open)
       if (!replay) return
@@ -322,6 +323,7 @@ async function main() {
   scene.postRender.addEventListener(() => {
     replay?.markers.update(revealed)
     replay?.reach.update(revealed)
+    editor.updateTags()
   })
 
   document.addEventListener('keydown', (e) => {

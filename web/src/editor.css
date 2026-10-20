@@ -7,8 +7,8 @@
   bottom: 0;
   z-index: 2;
   box-sizing: border-box;
-  width: min(372px, 100vw);
-  padding: 30px 22px 24px 30px;
+  width: min(400px, 100vw);
+  padding: 28px 22px 24px 28px;
   overflow-y: auto;
   background: rgba(8, 9, 10, 0.88);
   border-right: 1px solid var(--ink-faint);
@@ -71,7 +71,9 @@
 .hud .editor .tabs button {
   display: flex;
   gap: 8px;
-  align-items: baseline;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
   padding: 7px 10px;
   text-align: left;
   border-left: 2px solid transparent;
@@ -81,9 +83,11 @@
   font-weight: 600;
 }
 .hud .editor .tabs button span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.4;
   color: var(--ink-dim);
 }
 .hud .editor .tabs button.on {
@@ -127,10 +131,10 @@
   gap: 6px;
 }
 .hud .editor .assignments li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 8px;
-  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
   background: var(--panel);
   border: 1px solid var(--ink-faint);
   border-left: 2px solid var(--amber);
@@ -144,27 +148,45 @@
 .hud .editor .who {
   display: flex;
   gap: 8px;
-  align-items: baseline;
+  align-items: center;
 }
 .hud .editor .who b {
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
-.hud .editor .who em {
-  margin-left: auto;
+.hud .editor .who .n {
+  color: var(--amber);
+}
+.hud .editor .who .task {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-dim);
+}
+.hud .editor .meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+}
+.hud .editor .meta em {
+  flex-shrink: 0;
   font-style: normal;
   color: var(--amber);
 }
 .hud .editor .what {
-  grid-column: 1 / -1;
   font-size: 10px;
+  line-height: 1.45;
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--ink-dim);
 }
 .hud .editor .ctl {
   display: flex;
+  flex-shrink: 0;
   gap: 4px;
+  margin-left: auto;
 }
 .hud .editor .ctl button {
   width: 22px;
@@ -172,16 +194,27 @@
   line-height: 18px;
 }
 .hud .editor .palette {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
-.hud .editor .palette select {
-  padding: 6px 8px;
-  max-width: 100%;
+.hud .editor .field {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
 }
-.hud .editor .palette select[data-ref='task'] {
-  grid-column: 1 / -1;
+.hud .editor .field label {
+  font-size: 10px;
+  color: var(--ink-dim);
+}
+.hud .editor .palette select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hud .editor .count {
   display: flex;
@@ -264,14 +297,68 @@
   background: none;
   border: 0;
 }
-.hud .editor .who .from {
+.hud .editor .meta .from {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--ink-dim);
 }
-.hud .editor .palette select[data-ref='from'] {
-  grid-column: 1 / -1;
+/* The stations table: what each quartel still has for this decision, and when a VFCI from it arrives. */
+.hud .editor h3 span {
+  margin-left: 6px;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+}
+.hud .editor .stations {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.hud .editor .stations th,
+.hud .editor .stations td {
+  padding: 4px 2px;
+  text-align: right;
+  font-weight: 400;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor .stations tr:first-child th {
+  padding-bottom: 5px;
+  color: var(--ink-dim);
+  letter-spacing: 0.12em;
+}
+.hud .editor .stations th:first-child {
+  max-width: 120px;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+.hud .editor .stations tr:not(:first-child) {
+  cursor: pointer;
+}
+.hud .editor .stations tr:not(:first-child):hover {
+  background: rgba(220, 224, 228, 0.05);
+}
+.hud .editor .stations tr.on th:first-child {
+  color: var(--amber);
+}
+.hud .editor .stations tr.on td,
+.hud .editor .stations tr.on th {
+  background: rgba(240, 163, 58, 0.08);
+}
+.hud .editor .stations .eta {
+  color: var(--amber);
+}
+.hud .editor .stations .free {
+  text-align: center;
+  color: var(--ink-dim);
+}
+.hud .editor .stations .none {
+  text-align: left;
+  text-transform: none;
+  color: var(--ink-dim);
 }
 .hud .editor .stock.out {
   color: var(--amber);
