@@ -251,3 +251,31 @@
   padding: 6px 8px;
   color: var(--ink-dim);
 }
+.hud .editor .hour h3 span {
+  margin-left: 8px;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+}
+.hud .editor .hour input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--amber);
+  background: none;
+  border: 0;
+}
+.hud .editor .who .from {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-dim);
+}
+.hud .editor .palette select[data-ref='from'] {
+  grid-column: 1 / -1;
+}
+.hud .editor .stock.out {
+  color: var(--amber);
+}
+.hud .editor .verdict {
+  color: var(--ink);
+}

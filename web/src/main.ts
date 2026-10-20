@@ -25,7 +25,7 @@ import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
-import { makeReport } from './report'
+import { makeReport, recommend } from './report'
 import { createViewer } from './scene'
 import { addHeights, buildStory } from './shots'
 import { SplitLayer } from './splitLayer'
@@ -97,13 +97,16 @@ async function main() {
     pickFire: (id) => (location.hash = id),
   })
   // The decision editor: what it draws is simulated again at once and shown split.
-  const editor = new Editor(viewer, hud.root, suppression, {
+  const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => rerun(),
     editing: (open) => {
       hud.setEditing(open)
       if (!replay) return
       if (open) {
         replay.player.playing = false // the mouse has the camera and the map takes the clicks
+        // The drawer's hour starts where the replay stands; before the replay starts, at the end of the run.
+        const hours = replay.player.update(0).hours
+        editor.setHours(hours > 0 ? hours : DECISION_MIN / 60)
         if (!replay.split) rerun()
       }
     },
@@ -190,13 +193,16 @@ async function main() {
       A: makeReport(grid, context, runs.A),
       B: makeReport(grid, context, runs.B),
     }
+    // The recommended decision (fewer places reached, then less burned) is named as such on its side of the split.
+    const pick = reports && recommend(reports.A, reports.B).pick
+    const label = (d: Decision) => (d.id === pick ? `${d.name} · recomendada` : d.name)
     const position = replay.split?.position
     replay.split?.destroy()
     replay.split = new SplitLayer(
       viewer,
       document.getElementById('overlay')!,
       grid,
-      [{ name: a.name, arrival: runs.A.arrival }, { name: b.name, arrival: runs.B.arrival }],
+      [{ name: label(a), arrival: runs.A.arrival }, { name: label(b), arrival: runs.B.arrival }],
       DECISION_MIN,
     )
     if (position !== undefined) replay.split.setPosition(position)
@@ -231,7 +237,9 @@ async function main() {
     if (!replay) return
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving
-    const frame = player.update(dt)
+    const played = player.update(dt)
+    // While the editor is open its hour slider holds the clock of the split, and the HUD reads that hour.
+    const frame = editor.open && split ? { ...played, hours: editor.hours } : played
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     const simulated = frame.shot.simulated || !!split
     fire.set(simulated ? { step: -1, fade: 1, untimed: false } : frame.fire)

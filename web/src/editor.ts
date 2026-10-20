@@ -20,10 +20,11 @@ import {
 import type { Fire, NearStation } from './data'
 import { lineSchedule, type Run, type Scenario } from './fastModel'
 import { cellOf } from './grid'
-import { fmtHa, fmtKm, fmtNumber } from './format'
+import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
-import type { Report } from './report'
+import type { Inventory } from './inventory'
+import { makeReport, recommend, type Report, type Verdict } from './report'
 import {
   aerialFrontM,
   arrivalMin,
@@ -76,6 +77,10 @@ const TEMPLATE = `
     <button type="button" data-tab="1"><b>B</b><span></span></button>
   </div>
   <input class="name" data-ref="name" maxlength="40" spellcheck="false" title="Nome da decisão">
+  <section class="hour">
+    <h3>Hora <span data-ref="hourText"></span></h3>
+    <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
+  </section>
   <section>
     <h3>Meios no terreno</h3>
     <ul class="assignments" data-ref="list"></ul>
@@ -83,6 +88,7 @@ const TEMPLATE = `
   <section>
     <h3>Adicionar</h3>
     <div class="palette">
+      <select data-ref="from" title="Quartel de origem"></select>
       <select data-ref="unit" title="Meio"></select>
       <div class="count">
         <button type="button" data-ref="less" title="Menos">−</button>
@@ -95,6 +101,7 @@ const TEMPLATE = `
         <option value="shuttle">abastecimento</option>
       </select>
     </div>
+    <p class="note stock" data-ref="stock"></p>
     <p class="note" data-ref="capacity"></p>
     <div class="tools">
       <button type="button" data-tool="point">Ponto de ataque</button>
@@ -104,8 +111,9 @@ const TEMPLATE = `
     <p class="note hint" data-ref="hint"></p>
   </section>
   <section>
-    <h3>Relatório às 6 h</h3>
+    <h3>Relatório <span data-ref="reportAt"></span></h3>
     <table class="report" data-ref="report"></table>
+    <p class="note verdict" data-ref="verdict"></p>
     <p class="note" data-ref="detail"></p>
   </section>
   <footer>
@@ -132,6 +140,9 @@ export class Editor {
   private unit: UnitId = 'vfci'
   private count = 1
   private task: Task = 'direct'
+  private fromId = 'none' // station id of the next assignment ('air' for aerial units)
+  /** Minute of the simulation the drawer shows: the split and the report follow it. */
+  private minutes = 360
   private loaded: Loaded | undefined
   private runs: Runs | undefined
   private reports: Reports | undefined
@@ -144,6 +155,7 @@ export class Editor {
     private readonly viewer: Viewer,
     parent: HTMLElement,
     private readonly sup: Suppression,
+    private readonly inventory: Inventory | null,
     private readonly actions: EditorActions,
   ) {
     this.el = document.createElement('aside')
@@ -169,8 +181,15 @@ export class Editor {
     unit.value = this.unit
     unit.addEventListener('change', () => {
       this.unit = unit.value as UnitId
-      this.renderPalette()
+      this.setCount(this.count)
     })
+    const from = this.refs.from as HTMLSelectElement
+    from.addEventListener('change', () => {
+      this.fromId = from.value
+      this.setCount(this.count)
+    })
+    const hour = this.refs.hour as HTMLInputElement
+    hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
     const task = this.refs.task as HTMLSelectElement
     task.addEventListener('change', () => (this.task = task.value as Task))
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
@@ -207,6 +226,25 @@ export class Editor {
     return this.el.classList.contains('open')
   }
 
+  /** Hours after the ignition the drawer stands at. */
+  get hours(): number {
+    return this.minutes / 60
+  }
+
+  setHours(hours: number) {
+    const max = this.loaded?.scenario.durationMin ?? 360
+    this.setMinutes(Math.round((Math.min(Math.max(hours, 0), max / 60) * 60) / 5) * 5)
+  }
+
+  private setMinutes(minutes: number) {
+    this.minutes = minutes
+    const hour = this.refs.hour as HTMLInputElement
+    hour.value = String(minutes)
+    const start = this.loaded?.fire.start
+    this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
+    this.renderReport()
+  }
+
   toggle(open = !this.open) {
     if (open === this.open) return
     this.el.classList.toggle('open', open)
@@ -226,7 +264,21 @@ export class Editor {
     this.decisions = load(fireId) ?? (snapped.map(clone) as [Decision, Decision])
     this.runs = this.reports = undefined
     this.active = 0
+    const from = this.refs.from as HTMLSelectElement
+    from.replaceChildren(
+      ...stations.map((s) => {
+        const option = document.createElement('option')
+        option.value = s.id
+        option.textContent = `${s.short} · ${fmtKm(s.km)}`
+        return option
+      }),
+    )
+    this.fromId = stations[0]?.id ?? 'none'
+    from.value = this.fromId
+    ;(this.refs.hour as HTMLInputElement).max = String(scenario.durationMin)
+    this.setMinutes(scenario.durationMin)
     this.cancel()
+    this.setCount(this.count)
     this.render()
   }
 
@@ -246,9 +298,26 @@ export class Editor {
   }
 
   private setCount(count: number) {
-    this.count = Math.min(Math.max(count, 1), 6)
+    this.count = Math.min(Math.max(count, 1), Math.max(1, this.available(this.unit, this.from(this.loaded?.stations ?? []))))
     this.refs.count.textContent = String(this.count)
     this.renderPalette()
+  }
+
+  /** What the station has of a unit (inventory.json), or undefined when nothing is known: aerial means, unknown stations. */
+  private stock(unit: UnitId, from: string): number | undefined {
+    if (isAerial(this.sup.units[unit])) return undefined
+    const stock = this.inventory?.[from]
+    if (!stock) return undefined
+    if (unit === 'crew') return stock.decir.ecin + stock.decir.eip
+    return stock.units[unit]
+  }
+
+  /** How many of a unit the station still has for the active decision, leaving out one assignment (the one being changed). */
+  private available(unit: UnitId, from: string, except = -1): number {
+    const stock = this.stock(unit, from)
+    if (stock === undefined) return 6
+    const used = this.decisions[this.active].assignments.reduce((n, a, k) => (k !== except && a.unit === unit && a.from === from ? n + a.count : n), 0)
+    return Math.max(0, stock - used)
   }
 
   private setTool(tool: Tool | null) {
@@ -311,7 +380,8 @@ export class Editor {
   }
 
   private from(stations: NearStation[]): string {
-    return isAerial(this.sup.units[this.unit]) ? 'air' : (stations[0]?.id ?? 'none')
+    if (isAerial(this.sup.units[this.unit])) return 'air'
+    return stations.some((s) => s.id === this.fromId) ? this.fromId : (stations[0]?.id ?? 'none')
   }
 
   private remove(k: number) {
@@ -327,7 +397,7 @@ export class Editor {
 
   private recount(k: number, by: number) {
     const a = this.decisions[this.active].assignments[k]
-    a.count = Math.min(Math.max(a.count + by, 1), 6)
+    a.count = Math.min(Math.max(a.count + by, 1), Math.max(1, this.available(a.unit, a.from, k)))
     this.commit()
   }
 
@@ -358,11 +428,12 @@ export class Editor {
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
     const eta = target ? this.eta(a, target) : undefined
     li.innerHTML = `
-      <div class="who"><b></b><span class="n"></span><em></em></div>
+      <div class="who"><b></b><span class="n"></span><span class="from"></span><em></em></div>
       <div class="what"></div>
       <div class="ctl"><button type="button" title="Menos">−</button><button type="button" title="Mais">+</button><button type="button" class="x" title="Retirar">×</button></div>`
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `× ${a.count}`
+    li.querySelector('.from')!.textContent = isAerial(unit) ? 'base aérea' : (this.loaded?.stations.find((s) => s.id === a.from)?.short ?? '')
     li.querySelector('em')!.textContent = eta === undefined ? '' : `T+${Math.round(eta)} min`
     li.querySelector('.what')!.textContent = `${TASK_NAME[a.task]} · ${this.whatText(a)}`
     const [less, more, x] = li.querySelectorAll('button')
@@ -448,10 +519,25 @@ export class Editor {
     }
     this.refs.capacity.textContent = parts.join(' · ')
     ;(this.refs.task as HTMLSelectElement).hidden = isAerial(unit)
+    ;(this.refs.from as HTMLSelectElement).hidden = isAerial(unit)
+    // What the station still has of this unit for the active decision (inventory.json: an estimate by tier).
+    const from = this.from(this.loaded?.stations ?? [])
+    const stock = this.stock(this.unit, from)
+    const left = this.available(this.unit, from)
+    const station = this.loaded?.stations.find((s) => s.id === from)
+    this.refs.stock.textContent = isAerial(unit)
+      ? `da base aérea a ${this.sup.dispatch.airBaseKm} km · sem limite de meios nesta estimativa`
+      : stock === undefined
+        ? station
+          ? `${station.short}: sem estimativa de meios`
+          : 'sem quartel a menos de 20 km'
+        : `${station?.short ?? from}: ${left} de ${stock} ${unit.short} ${left === 1 ? 'disponível' : 'disponíveis'} para ${this.decisions[this.active].id}${left ? '' : ' · esgotado'}`
+    this.refs.stock.classList.toggle('out', left === 0)
     for (const button of this.el.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
       const tool = button.dataset.tool as Tool
-      button.disabled = (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))
+      button.disabled = left === 0 || (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))
     }
+    if (left === 0) this.setTool(null)
     if (this.tool && (this.tool === 'line' ? !unit.lineMPerH : this.tool === 'drops' ? !isAerial(unit) : false)) this.setTool(null)
   }
 
@@ -464,6 +550,8 @@ export class Editor {
       return
     }
     const cols = ['free', 'A', 'B'] as const
+    const at = this.reportsAt(this.minutes) ?? r
+    this.refs.reportAt.textContent = at.A.minutes >= r.A.minutes ? `às ${fmtNumber(r.A.minutes / 60, 1)} h` : `a ${fmtElapsed(at.A.minutes / 60)}`
     const rows: [string, (x: Report) => string][] = [
       ['Área ardida', (x) => fmtHa(x.burnedHa)],
       ['Casas atingidas', (x) => String(x.homes)],
@@ -477,16 +565,26 @@ export class Editor {
       const tr = document.createElement('tr')
       tr.innerHTML = `<th></th>${cols.map(() => '<td></td>').join('')}`
       tr.querySelector('th')!.textContent = label
-      tr.querySelectorAll('td').forEach((td, i) => (td.textContent = text(r[cols[i]])))
+      tr.querySelectorAll('td').forEach((td, i) => (td.textContent = text(at[cols[i]])))
       table.append(tr)
     }
-    const mine = r[this.decisions[this.active].id as 'A' | 'B']
+    this.refs.verdict.textContent = verdictText(recommend(r.A, r.B), r)
+    const mine = at[this.decisions[this.active].id as 'A' | 'B']
     const places = mine.places.slice(0, 4).map((p) => `${p.name} T+${Math.round(p.minute)} min`)
     const roads = mine.roadsCut.slice(0, 4).map((c) => `${c.label} ${fmtKm(c.km)}`)
     this.refs.detail.textContent =
       `${this.decisions[this.active].id}: ` +
       [places.length ? `lugares ${places.join(', ')}` : 'nenhum lugar atingido', roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada'].join(' · ') +
       '. Casas do OSM rural: um mínimo.'
+  }
+
+  /** The reports as they stand at a minute of the runs, or undefined at the end (the 6 h reports are given). */
+  private reportsAt(minutes: number): Reports | undefined {
+    const runs = this.runs
+    const context = this.loaded?.context
+    if (!runs || !context || !this.reports || minutes >= this.reports.A.minutes) return undefined
+    const { grid } = this.loaded!.scenario
+    return { free: makeReport(grid, context, runs.free, minutes), A: makeReport(grid, context, runs.A, minutes), B: makeReport(grid, context, runs.B, minutes) }
   }
 
   /** The active decision on the ground: points, lines (built in time solid, late dashed), the line being drawn. */
@@ -572,6 +670,18 @@ export class Editor {
   }
 }
 
+/** "Recomendação: A · atinge 2 lugares em vez de 4" */
+function verdictText(v: Verdict, r: Reports): string {
+  if (!v.pick) return `Recomendação: empate · ${r.A.places.length} lugares e ${fmtHa(r.A.burnedHa)} em ambas`
+  const [mine, other] = v.pick === 'A' ? [r.A, r.B] : [r.B, r.A]
+  const why =
+    v.by === 'places'
+      ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
+      : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
+  return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
+}
+
+const placesText = (n: number) => (n === 0 ? 'não atinge nenhum lugar' : `atinge ${n} ${n === 1 ? 'lugar' : 'lugares'}`)
 const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' : 'Decisão B', points: {}, lines: {}, assignments: [] })
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
 

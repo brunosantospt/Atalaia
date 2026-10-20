@@ -90,3 +90,15 @@ export function makeReport(grid: Grid, context: Context, run: Run, minutes = run
     roadsCut: [...byLabel.values()].sort((a, b) => b.km - a.km),
   }
 }
+
+/** Which of two decisions to recommend: the one that reaches fewer places, then the one that burns less. */
+export interface Verdict {
+  pick: 'A' | 'B' | null // null: nothing tells them apart
+  by: 'places' | 'area' | 'tie'
+}
+
+export function recommend(a: Report, b: Report): Verdict {
+  if (a.places.length !== b.places.length) return { pick: a.places.length < b.places.length ? 'A' : 'B', by: 'places' }
+  if (Math.abs(a.burnedHa - b.burnedHa) >= 1) return { pick: a.burnedHa < b.burnedHa ? 'A' : 'B', by: 'area' }
+  return { pick: null, by: 'tie' }
+}
