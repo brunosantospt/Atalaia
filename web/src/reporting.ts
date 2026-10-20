@@ -84,9 +84,11 @@ export function getSmartRoadLabel(r: Road, places: Place[] = []): string {
       ? 'Estrada Nacional'
       : r.ref.startsWith('EM')
         ? 'Estrada Municipal'
-        : r.ref.startsWith('IC') || r.ref.startsWith('IP')
-          ? 'Itinerário'
-          : 'Via'
+        : r.ref.startsWith('CM')
+          ? 'Caminho Municipal'
+          : r.ref.startsWith('IC') || r.ref.startsWith('IP')
+            ? 'Itinerário'
+            : 'Via'
     return `${r.ref} (${type})`
   }
 
