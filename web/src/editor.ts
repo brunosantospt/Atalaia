@@ -15,6 +15,7 @@ import {
   PolylineDashMaterialProperty,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
+  VerticalOrigin,
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
@@ -34,6 +35,7 @@ import {
   type AgencyRole,
   type MedicalPointItem,
   type MultiAgencyDispatch,
+  type RoadCutItem,
 } from './reporting'
 import { DispatchModal } from './dispatchModal'
 import {
@@ -138,6 +140,117 @@ const TEMPLATE = `
   </footer>
 `
 
+const BARRICADE_CANVASES = new Map<string, HTMLCanvasElement>()
+
+function getBarricadeCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTMLCanvasElement {
+  const cached = BARRICADE_CANVASES.get(urgency)
+  if (cached) return cached
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 72
+  canvas.height = 72
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+
+  const color =
+    urgency === 'cortado'
+      ? '#dc2626'
+      : urgency === 'urgente'
+        ? '#ea580c'
+        : '#d97706'
+
+  // Shadow
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.75)'
+  ctx.shadowBlur = 6
+  ctx.shadowOffsetY = 3
+
+  // Legs / A-frame (Dark metal)
+  ctx.strokeStyle = '#1e293b'
+  ctx.lineWidth = 4.5
+  ctx.lineCap = 'round'
+
+  // Left leg
+  ctx.beginPath()
+  ctx.moveTo(14, 66)
+  ctx.lineTo(26, 30)
+  ctx.stroke()
+
+  // Right leg
+  ctx.beginPath()
+  ctx.moveTo(58, 66)
+  ctx.lineTo(46, 30)
+  ctx.stroke()
+
+  // Cross brace
+  ctx.lineWidth = 3
+  ctx.strokeStyle = '#334155'
+  ctx.beginPath()
+  ctx.moveTo(17, 54)
+  ctx.lineTo(55, 54)
+  ctx.stroke()
+
+  // Barricade Beam (horizontal bar with diagonal hazard stripes)
+  ctx.shadowBlur = 5
+  ctx.shadowOffsetY = 2
+  const bx = 4, by = 28, bw = 64, bh = 20, r = 4
+
+  ctx.save()
+  ctx.beginPath()
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(bx, by, bw, bh, r)
+  } else {
+    ctx.rect(bx, by, bw, bh)
+  }
+  ctx.clip()
+
+  // White base
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(bx, by, bw, bh)
+
+  // Diagonal warning stripes
+  ctx.fillStyle = color
+  const stripeW = 14
+  for (let x = bx - 28; x < bx + bw + 28; x += stripeW * 2) {
+    ctx.beginPath()
+    ctx.moveTo(x, by + bh)
+    ctx.lineTo(x + stripeW, by + bh)
+    ctx.lineTo(x + stripeW + bh, by)
+    ctx.lineTo(x + bh, by)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  // Beam outline
+  ctx.strokeStyle = '#0f172a'
+  ctx.lineWidth = 2
+  ctx.strokeRect(bx, by, bw, bh)
+  ctx.restore()
+
+  // Top Warning Badge: Red/Amber circular "No Entry" / "Trânsito Proibido" sign ⛔
+  ctx.shadowBlur = 6
+  ctx.shadowOffsetY = 2
+  ctx.beginPath()
+  ctx.arc(36, 15, 13, 0, Math.PI * 2)
+  ctx.fillStyle = color
+  ctx.fill()
+  ctx.lineWidth = 2.5
+  ctx.strokeStyle = '#ffffff'
+  ctx.stroke()
+
+  // White horizontal minus bar inside the circle (International No Entry sign ⛔)
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(26, 12.5, 20, 5, 2)
+  } else {
+    ctx.rect(26, 12.5, 20, 5)
+  }
+  ctx.fill()
+
+  BARRICADE_CANVASES.set(urgency, canvas)
+  return canvas
+}
+
 interface Loaded {
   fireId: string
   fire: Fire
@@ -171,12 +284,13 @@ export class Editor {
   private readonly dispatchModal = new DispatchModal()
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
+  private cutTooltip: HTMLElement | null = null
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
 
   constructor(
     private readonly viewer: Viewer,
-    parent: HTMLElement,
+    private readonly root: HTMLElement,
     private readonly sup: Suppression,
     private readonly inventory: Inventory | null,
     private readonly actions: EditorActions,
@@ -185,7 +299,7 @@ export class Editor {
     this.el.className = 'editor'
     this.el.setAttribute('aria-label', 'Editor de decisões')
     this.el.innerHTML = TEMPLATE
-    parent.append(this.el)
+    this.root.append(this.el)
     this.refs = Object.fromEntries(
       [...this.el.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     )
@@ -286,9 +400,13 @@ export class Editor {
   }
 
   toggle(open = !this.open) {
+    if (this.role !== 'cmd' && open) return
     if (open === this.open) return
     this.el.classList.toggle('open', open)
-    if (!open) this.setTool(null)
+    if (!open) {
+      this.setTool(null)
+      this.hideCutTooltip()
+    }
     this.actions.editing(open)
   }
 
@@ -384,9 +502,31 @@ export class Editor {
     this.refs.hint.classList.remove('danger')
   }
 
-  /** Interactive cursor feedback when hovering over the active fire perimeter */
+  /** Interactive cursor feedback and tooltips for road cuts, PMA, and active fire perimeter */
   private hover(position: Cartesian2) {
-    if (!this.open || !this.tool || !this.loaded) return
+    // 1. Check if hovering over any road cut or PMA entity
+    const picked = this.viewer.scene.pick(position)
+    const cut: RoadCutItem | undefined = (picked?.id as any)?._roadCut
+    const pma: MedicalPointItem | undefined = (picked?.id as any)?._pma
+
+    if (cut) {
+      this.showCutTooltip(position, cut)
+      this.viewer.scene.canvas.style.cursor = 'pointer'
+      return
+    } else if (pma) {
+      this.showPmaTooltip(position, pma)
+      this.viewer.scene.canvas.style.cursor = 'pointer'
+      return
+    } else {
+      this.hideCutTooltip()
+    }
+
+    // 2. Active fire perimeter check if editor is open and tool is active
+    if (!this.open || !this.tool || !this.loaded) {
+      this.viewer.scene.canvas.style.cursor = 'default'
+      return
+    }
+
     const p = this.pick(position)
     if (!p) return
 
@@ -394,6 +534,69 @@ export class Editor {
     const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
     const isFire = cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes
     this.viewer.scene.canvas.style.cursor = isFire ? 'not-allowed' : 'crosshair'
+  }
+
+  private showCutTooltip(position: Cartesian2, cut: RoadCutItem) {
+    if (!this.cutTooltip) {
+      this.cutTooltip = document.createElement('div')
+      this.cutTooltip.className = 'road-cut-tooltip'
+      this.root.append(this.cutTooltip)
+    }
+
+    const urgencyBadge =
+      cut.urgency === 'cortado'
+        ? '<span class="status-badge red">🚨 CORTE ATIVO · INTERDITADO</span>'
+        : cut.urgency === 'urgente'
+          ? `<span class="status-badge orange">⚠️ CORTE IMINENTE · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+          : `<span class="status-badge yellow">🚧 CORTE PREVENTIVO · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+
+    this.cutTooltip.className = `road-cut-tooltip ${cut.urgency}`
+    this.cutTooltip.style.left = `${position.x}px`
+    this.cutTooltip.style.top = `${position.y}px`
+    this.cutTooltip.innerHTML = `
+      <div class="tooltip-header">
+        <span class="icon">⛔</span>
+        <span class="title">ESTRADA CORTADA</span>
+      </div>
+      <div class="tooltip-road">${cut.label}</div>
+      <div class="tooltip-status">${urgencyBadge}</div>
+      <div class="tooltip-detail">Tipo: ${cut.isPaved ? 'Via Pavimentada / Asfaltada' : 'Acesso Rural / Florestal'}</div>
+      <div class="tooltip-action">👮 <b>Ação PSP/GNR:</b> Colocar barreira física e desviar tráfego</div>
+    `
+    this.cutTooltip.hidden = false
+  }
+
+  private showPmaTooltip(position: Cartesian2, pma: MedicalPointItem) {
+    if (!this.cutTooltip) {
+      this.cutTooltip = document.createElement('div')
+      this.cutTooltip.className = 'road-cut-tooltip'
+      this.root.append(this.cutTooltip)
+    }
+
+    this.cutTooltip.className = 'road-cut-tooltip inem'
+    this.cutTooltip.style.left = `${position.x}px`
+    this.cutTooltip.style.top = `${position.y}px`
+    this.cutTooltip.innerHTML = `
+      <div class="tooltip-header">
+        <span class="icon">🚑</span>
+        <span class="title" style="color:#4ade80;">INEM · POSTO MÉDICO AVANÇADO</span>
+      </div>
+      <div class="tooltip-road">${pma.name}</div>
+      <div class="tooltip-status">
+        <span class="status-badge" style="background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.5);">
+          🛡️ Margem Segura: ${Math.round(pma.safeBufferMin)} min
+        </span>
+      </div>
+      <div class="tooltip-detail">Hospital Destino: ${pma.hospitalDestination ?? 'Hospital de Braga'} (${pma.routeKm ? `${pma.routeKm.toFixed(1)} km · ETA ${Math.round(pma.etaMin ?? 0)} min` : 'Rota Ativa'})</div>
+      <div class="tooltip-action" style="color:#86efac;">🚑 <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
+    `
+    this.cutTooltip.hidden = false
+  }
+
+  private hideCutTooltip() {
+    if (this.cutTooltip && !this.cutTooltip.hidden) {
+      this.cutTooltip.hidden = true
+    }
   }
 
   private showDangerWarning(point: LonLat, arrivalMin: number) {
@@ -902,7 +1105,7 @@ export class Editor {
                   ? Color.fromCssColorString('#ff3b30')
                   : Color.fromCssColorString('#f0a33a')
 
-            this.agency.entities.add({
+            const lineEntity = this.agency.entities.add({
               polyline: {
                 positions: cut.pts.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
                 width: this.role === 'psp' ? 5 : 3,
@@ -910,30 +1113,38 @@ export class Editor {
                 material: new PolylineDashMaterialProperty({ color: cutColor, dashLength: 10 }),
               },
             })
+            ;(lineEntity as any)._roadCut = cut
 
-            // Cut barricade pin positioned at exact fire intersection
-            this.agency.entities.add({
+            // Cut barricade pin with distinct barrier billboard and label
+            const cutEntity = this.agency.entities.add({
               position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
-              point: {
-                pixelSize: 8,
-                color: cutColor,
-                outlineColor: Color.WHITE,
-                outlineWidth: 2,
+              billboard: {
+                image: getBarricadeCanvas(cut.urgency),
+                width: 44,
+                height: 44,
+                verticalOrigin: VerticalOrigin.BOTTOM,
                 heightReference: HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Infinity,
               },
               label: {
                 text: `⛔ CORTE: ${cut.label}`,
-                font: '11px ui-monospace, monospace',
+                font: 'bold 12px ui-monospace, monospace',
                 fillColor: Color.WHITE,
-                backgroundColor: Color.fromCssColorString('rgba(180, 20, 20, 0.92)'),
+                backgroundColor: Color.fromCssColorString(
+                  cut.urgency === 'cortado'
+                    ? 'rgba(180, 20, 20, 0.94)'
+                    : cut.urgency === 'urgente'
+                      ? 'rgba(215, 75, 15, 0.94)'
+                      : 'rgba(185, 110, 10, 0.94)',
+                ),
                 showBackground: true,
                 style: 2,
-                pixelOffset: new Cartesian2(0, -18),
+                pixelOffset: new Cartesian2(0, -48),
                 heightReference: HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Infinity,
               },
             })
+            ;(cutEntity as any)._roadCut = cut
           }
         }
 
@@ -975,7 +1186,7 @@ export class Editor {
       // Draw PMA and ambulance route for INEM & Command
       if (this.role === 'inem' || this.role === 'cmd') {
         for (const pma of this.pmaList) {
-          this.agency.entities.add({
+          const pmaEntity = this.agency.entities.add({
             position: Cartesian3.fromDegrees(pma.location.lon, pma.location.lat),
             point: {
               pixelSize: 13,
@@ -997,9 +1208,10 @@ export class Editor {
               disableDepthTestDistance: Infinity,
             },
           })
+          ;(pmaEntity as any)._pma = pma
 
           if (pma.ambulanceRoute && pma.ambulanceRoute.length >= 2) {
-            this.agency.entities.add({
+            const routeEntity = this.agency.entities.add({
               polyline: {
                 positions: pma.ambulanceRoute.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
                 width: 4,
@@ -1007,6 +1219,7 @@ export class Editor {
                 material: Color.fromCssColorString('#00e676'),
               },
             })
+            ;(routeEntity as any)._pma = pma
           }
         }
       }
@@ -1027,6 +1240,12 @@ export class Editor {
 
   setRole(role: AgencyRole) {
     this.role = role
+    if (role !== 'cmd') {
+      if (this.open) {
+        this.toggle(false)
+      }
+    }
+    this.hideCutTooltip()
     this.draw()
   }
 

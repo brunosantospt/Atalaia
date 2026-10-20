@@ -438,3 +438,147 @@
   from { transform: translate(-50%, 15px); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
 }
+
+/* Ensure editor drawer is hidden when in PSP or INEM mode to prevent overlap */
+.hud.role-psp .editor,
+.hud.role-inem .editor {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateX(-100%) !important;
+}
+
+/* Road cut and PMA hover tooltip on Cesium canvas */
+.road-cut-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  background: rgba(12, 14, 18, 0.95);
+  border: 1px solid rgba(220, 38, 38, 0.7);
+  border-left: 5px solid #dc2626;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(220, 38, 38, 0.3);
+  backdrop-filter: blur(10px);
+  transform: translate(-50%, -100%);
+  margin-top: -18px;
+  white-space: nowrap;
+  animation: tooltipFadeIn 0.12s ease-out;
+}
+
+.road-cut-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(12, 14, 18, 0.95) transparent transparent transparent;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translate(-50%, -90%); }
+  to { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+.road-cut-tooltip.urgente {
+  border-color: rgba(234, 88, 12, 0.8);
+  border-left-color: #ea580c;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(234, 88, 12, 0.3);
+}
+
+.road-cut-tooltip.preventivo {
+  border-color: rgba(217, 119, 6, 0.8);
+  border-left-color: #d97706;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(217, 119, 6, 0.3);
+}
+
+.road-cut-tooltip.inem {
+  border-color: rgba(34, 197, 94, 0.8);
+  border-left-color: #22c55e;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+.road-cut-tooltip .tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.road-cut-tooltip .tooltip-header .icon {
+  font-size: 14px;
+}
+
+.road-cut-tooltip .tooltip-header .title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ef4444;
+}
+
+.road-cut-tooltip.urgente .tooltip-header .title {
+  color: #f97316;
+}
+
+.road-cut-tooltip.preventivo .tooltip-header .title {
+  color: #fbbf24;
+}
+
+.road-cut-tooltip .tooltip-road {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.road-cut-tooltip .tooltip-status {
+  margin-bottom: 4px;
+}
+
+.road-cut-tooltip .status-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.road-cut-tooltip .status-badge.red {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+}
+
+.road-cut-tooltip .status-badge.orange {
+  background: rgba(234, 88, 12, 0.25);
+  color: #fdba74;
+  border: 1px solid rgba(234, 88, 12, 0.5);
+}
+
+.road-cut-tooltip .status-badge.yellow {
+  background: rgba(217, 119, 6, 0.25);
+  color: #fde047;
+  border: 1px solid rgba(217, 119, 6, 0.5);
+}
+
+.road-cut-tooltip .tooltip-detail {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.road-cut-tooltip .tooltip-action {
+  font-size: 10.5px;
+  color: #93c5fd;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 5px;
+  margin-top: 4px;
+}
+
