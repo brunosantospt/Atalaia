@@ -30,6 +30,7 @@ Nada fora desta pasta muda: a API, o contrato e o motor ficam como estão.
 | `attack.py` | Linhas de ataque inferidas → `fires/<id>/attack_lines.json`, `attack_lines.png` |
 | `run.py` | Uma corrida do ELMFIRE com opções → `fires/<id>/runs/<nome>/result.json`, `preview.png` (a grade de chegada vai para `data/hindcast/<id>/<nome>.npy`) |
 | `table.py` | As corridas de um incêndio numa tabela Markdown |
+| `grid.py` | Grelha corridas × horas contra o observado → `fires/<id>/grid.png` |
 | `common.py` | Pacote do incêndio (via `api/fires.py`), chegada observada interpolada, pontuação |
 | `fuels.py` | Modelos de combustível portugueses e a tradução da COS 2015 |
 | `engine/run.sh`, `engine/adapter.py` | O ELMFIRE de `engines/elmfire` (mesma imagem Docker, mesmo contrato) com quatro campos opcionais a mais no pedido |
@@ -60,6 +61,7 @@ hindcast/test.sh                                    # ponta a ponta em Vieira, ~
   - `--no-canopy`: sem copas;
   - `--spotting --seed n`: as projeções;
   - `--adj`, `--wind-mult`: os fatores de calibração;
+  - `--weather cerra`, `--topowind`: o vento do CERRA e o vento do relevo a 30 m (precisam dos ficheiros do ramo `feature/cerra-wind-engine`);
   - `--barriers`: as linhas;
   - `--start-step`, `--duration-min`: o início e a duração.
 - **A corrida igual à da API:** `--fuels sb --dead fixed --no-canopy` dá os mesmos dados de entrada que o `POST /api/run`.
@@ -174,36 +176,54 @@ Por isso as linhas são **inferidas**, e cada uma diz como (`tier`, `source`).
 
 ### Vieira do Minho, 22,5 h a partir das 10:00 (perímetro do passo 0)
 
-Cada linha acrescenta uma coisa à anterior, e as corridas com projeções têm três sementes.
+Cada passo muda uma coisa nos dados de entrada do ELMFIRE. As corridas com projeções têm três sementes (o intervalo é o das três).
 
-| Corrida | 15:00 (5 h) | 03:30 (17,5 h) | 08:30 (22,5 h) | Sørensen último passo | Sørensen oficial | Fora do oficial | Satélite |
-|---|---|---|---|---|---|---|---|
-| Observado (PT-FireSprd) | 707 ha | 1573 ha | 1621 ha | | | | |
-| 0. Como a API (S&B, humidades fixas, sem copas) | 155 | 1355 | 1798 | 0,73 | 0,75 | 442 ha | 0,38 |
-| 1. Humidades mortas da meteo, copas do LiDAR | 144 | 1182 | 1497 | 0,72 | 0,77 | 212 | 0,35 |
-| 2. + cicatrizes | 144 | 1136 | 1405 | 0,74 | 0,79 | 121 | 0,35 |
-| 3. + combustíveis portugueses | 219 | 1321 | 1646 | 0,78 | 0,83 | 196 | 0,46 |
-| 4. + vivas de seca (30 % e 70 %) | 348 | 1639 | 2077 | 0,76 | 0,82 | 476 | 0,59 |
-| 5. + projeções (3 sementes) | 380–456 | 1660–1858 | 2128–2353 | 0,76–0,79 | 0,82–0,84 | 497–595 | 0,65–0,74 |
-| **6. + linhas de ataque inferidas (3 sementes)** | **407–489** | **1577–1658** | **1918–1976** | **0,81–0,84** | **0,87–0,89** | **258–316** | **0,66–0,73** |
+| # | O que muda | 15:00 (5 h) | 03:30 (17,5 h) | 08:30 (22,5 h) | Sørensen 08:30 | Sørensen oficial | Fora do oficial | Satélite |
+|---|---|---|---|---|---|---|---|---|
+| | **Observado** (PT-FireSprd) | 707 ha | 1573 ha | 1621 ha | | (1840 ha) | | |
+| 0 | Como a API: S&B, mortas fixas 6/8/10 %, sem copas | 155 | 1355 | 1798 | 0,73 | 0,74 | 442 ha | 0,38 |
+| 1 | + humidades mortas de hora a hora (Simard 1968) | 158 | 1351 | 1701 | 0,74 | 0,75 | 369 | 0,38 |
+| 2 | + copas do LiDAR | 144 | 1182 | 1497 | 0,72 | 0,77 | 212 | 0,35 |
+| 3 | + cicatrizes | 144 | 1136 | 1405 | 0,74 | 0,79 | 120 | 0,35 |
+| 4 | + combustíveis portugueses | 219 | 1321 | 1646 | 0,78 | 0,83 | 196 | 0,46 |
+| 5 | + vivas de seca (30 % e 70 %) | 348 | 1639 | 2077 | 0,76 | 0,82 | 476 | 0,59 |
+| 6 | + projeções | 380–456 | 1660–1858 | 2128–2353 | 0,76–0,79 | 0,82–0,84 | 497–595 | 0,65–0,74 |
+| 6w | 6 + TopoWind sobre o ERA5 | 356–431 | 1642–1661 | 2095–2147 | 0,74–0,79 | 0,80–0,85 | 459–523 | 0,64–0,72 |
+| 6c | 6 com CERRA em vez de ERA5 | 238–311 | 1611–1684 | 2129–2264 | 0,73–0,77 | 0,78–0,82 | 517–587 | 0,47–0,54 |
+| 6cw | 6 com CERRA + TopoWind | 226–358 | 1558–1701 | 1950–2208 | 0,73 | 0,78–0,79 | 458–631 | 0,45–0,52 |
+| x1 | 6 + velocidade × 1,5 (calibração, não fica) | 830 | 2929 | 4005 | 0,57 | 0,62 | 2184 | 0,90 |
+| x2 | 6 + vento × 2 (calibração, não fica) | 631 | 2113 | 2605 | 0,75 | 0,77 | 888 | 0,79 |
+| 7 | 6 + linhas de ataque, hora do fogo observado | 407–489 | 1577–1658 | 1918–1976 | 0,81–0,83 | 0,87–0,89 | 258–316 | 0,66–0,73 |
+| **8** | **6 + linhas de ataque, hora do fogo do modelo** | **423–492** | **1646–1782** | **1933–2058** | **0,84–0,85** | **0,89–0,90** | **246–315** | **0,71–0,77** |
 
-- **As cicatrizes** cortam para metade a área ardida fora do perímetro oficial (212 → 121 ha). O fogo passa a dividir-se à volta de Sobradelo da Goma, como o real.
-- **Só com dados** (linhas 0 a 5, sem linhas de ataque), o Sørensen do último passo vai de 0,73 a 0,76–0,79. As linhas de ataque levam-no a 0,81–0,84, mas estão traçadas ao longo do perímetro final: essa parte do ganho é por construção.
-- **Os combustíveis portugueses** sobem o Sørensen do último passo de 0,74 para 0,78. Com as vivas de seca, a corrida principal fica com mais do dobro da da API (155 → 348 ha às 15:00).
-- **As linhas,** nas três sementes:
-  - cortam cerca de metade da área fora do perímetro oficial (≈ 530 → ≈ 280 ha);
-  - sobem o Sørensen em cerca de 0,05;
-  - **não baixam o satélite.**
+**Grelhas:**
+- `fires/VieiradoMinho_10082016/grid.png`: todos os passos lado a lado, com a semente 1 nas corridas com projeções.
+- `grid_wind.png`: as quatro fontes de vento, sem linhas, nas três sementes.
+
+Cada célula mostra o fogo a uma hora:
+- **laranja:** arderam os dois;
+- **vermelho:** só o modelo;
+- **azul:** só o observado.
+
+Fazem-se com `grid.py`.
+
+- **As cicatrizes** cortam para metade a área ardida fora do perímetro oficial (212 → 120 ha). O fogo passa a dividir-se à volta de Sobradelo da Goma, como o real.
+- **As copas** abrandam o fogo: debaixo das árvores o ELMFIRE usa um vento abrigado.
+- **Os combustíveis portugueses** sobem o Sørensen do último passo de 0,74 para 0,78. Com as vivas de seca, a corrida principal passa a mais do dobro da da API (155 → 348 ha às 15:00).
+- **Só com dados** (passos 0 a 6, sem linhas), o Sørensen do último passo vai de 0,73 a 0,76–0,79.
+- **O vento** (6w, 6c, 6cw), testado sem linhas para se ver o efeito sozinho:
+  - **TopoWind** (`scripts/build_wind_field.py`, ramo `feature/cerra-wind-engine`): fica dentro do intervalo das sementes. Redistribui o vento entre encostas, mas a média é a mesma, e debaixo das árvores o ELMFIRE corta-o para 10–15 % na mesma.
+  - **CERRA:** tem menos vento à tarde do que o ERA5, e a corrida principal fica mais lenta (238–311 ha às 15:00).
+- **As linhas de ataque** estão onde o perímetro final segue estradas, por isso parte do ganho é por construção. O satélite não sobe com elas.
+  - **Linhas com a hora do fogo observado (7):** a frente do modelo chega a muitas estradas antes do fogo real, sobretudo no flanco norte, e passa antes de a linha existir. Isso conta como erro de supressão o que é erro de horas do modelo.
+  - **Linhas com a hora do fogo do modelo (8):** as mesmas estradas, cada uma a segurar 60 min antes de lá chegar o fogo da corrida livre com a mesma semente (`attack.py --timing run --run <corrida>`), e nunca antes das 10:30. Os registos dizem que as linhas seguraram, não quando foram feitas.
+  - **Diferença entre as duas:** a 8 é melhor em todas as medidas: Sørensen 0,84–0,85 (contra 0,81–0,83) e satélite 0,71–0,77. A área fora do oficial fica igual.
+  - **O que sobra fora do oficial** (≈ 280 ha) fica onde o perímetro não tem estrada: o canto nordeste e o lóbulo noroeste. Ali não se inventam linhas.
 - **Ainda lento na corrida principal:** às 15:00 tem 380–490 ha, contra 707. Há três razões prováveis:
   - os ventos locais (as rajadas de 80 km/h);
   - as projeções a longa distância no eucalipto;
   - o fogo da noite anterior.
-- **Calibrar** não resolve:
-  - **Velocidade × 1,5** (`--adj`): acerta nas 15:00 mas alarga também os flancos, e o fogo chega a 3600 ha de manhã.
-  - **Vento × 2** (`--wind-mult`): dá uma forma mais estreita, mas também queima de mais.
-  - **CERRA** (reanálise de 5,5 km): tem menos vento à tarde do que o ERA5, e fica ainda mais lento.
-
-  Estes três ensaios foram feitos no FireRenderer, com a mesma cadeia.
+- **Calibrar não resolve** (x1, x2): acerta nas 15:00, mas alarga os flancos e queima de mais (2600–4000 ha de manhã).
 - **Limite do ELMFIRE:** com vento × 2,5 ou velocidade × 2,5 falha sem erro: queima 0 ha. O `run.py` avisa quando o fogo não sai do ponto de partida.
 
 ### Cabeceiras de Basto, 32,5 h a partir das 04:00 (sem copas: não há LiDAR desta zona)

@@ -19,7 +19,11 @@ final perimeter, ANEPC publishes no line maps), so these lines are inferred, and
 
 Timing (from_min, minutes after step 0): when the observed fire (progression.geojson, interpolated between the steps)
 first comes within --reach-m of the line, minus --lead minutes (crews are placed ahead of the front), rounded down to
---step (each distinct from_min splits the run, as in the API) and never before --earliest. Settlement defence is not
+--step (each distinct from_min splits the run, as in the API) and never before --earliest.
+With --timing run --run <name>, the same rule on the fire of a run.py run (a free run, no lines): the records say
+these lines held, not when they were made, and the model's fire gets there at other times than the real one. Timed
+on the model's own fire, a line fails only where the model's fire is faster than crews placed --lead min ahead of it.
+Writes attack_lines_<name>.json. Settlement defence is not
 inferred: OpenStreetMap maps few houses in these parishes.
 
 The location of every line comes from the final perimeter, so a run with them matches that perimeter better by
@@ -42,7 +46,7 @@ from shapely.geometry import LineString, MultiLineString
 from shapely.ops import linemerge
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import evidence, fire_dir, fires, observed_arrival, official  # noqa: E402
+from common import CACHE, evidence, fire_dir, fires, observed_arrival, official  # noqa: E402
 
 HIGHWAYS = ("primary", "secondary", "tertiary", "unclassified", "residential", "track", "service")
 
@@ -59,6 +63,10 @@ def main(argv=None):
     p.add_argument("--earliest", type=float, default=30.0)
     p.add_argument("--step", type=float, default=60.0)
     p.add_argument("--width", type=float, default=20.0, help="width_m of each line")
+    p.add_argument("--timing", choices=["observed", "run"], default="observed",
+                   help="time each line by the observed fire, or by a run's own fire (--run): crews in place before "
+                        "the modelled front, so a line fails only if the model's fire beats it there")
+    p.add_argument("--run", help="with --timing run: the run.py run whose arrival times the lines (a free run)")
     args = p.parse_args(argv)
 
     fire = fires.Fire(args.fire)
@@ -74,18 +82,22 @@ def main(argv=None):
     ring, inner = outer.exterior, outer.buffer(-args.near_m)
 
     obs = observed_arrival(fire)
+    clock = obs
+    if args.timing == "run":
+        clock = np.load(CACHE / args.fire / f"{args.run}.npy").astype(float)   # minutes after step 0 (run.py)
+    who = "observed" if args.timing == "observed" else f"modelled ({args.run})"
     xs, ys = fire.centres()
-    timed = np.isfinite(obs)
-    xs, ys, ts = xs[timed], ys[timed], obs[timed]
+    timed = np.isfinite(clock)
+    xs, ys, ts = xs[timed], ys[timed], clock[timed]
 
     def when(geom) -> tuple[float, str]:
         d = shapely.distance(geom, shapely.points(xs, ys))
         near = d <= args.reach_m
         if near.any():
-            t, how = ts[near].min() - args.lead, "observed arrival within reach"
+            t, how = ts[near].min() - args.lead, f"{who} arrival within reach"
         else:
             i = int(np.argmin(d))
-            t, how = ts[i] - args.lead, f"nearest observed cell, {d[i]:.0f} m away"
+            t, how = ts[i] - args.lead, f"nearest {who} cell, {d[i]:.0f} m away"
         return max(args.earliest, np.floor(t / args.step) * args.step), how
 
     osm = json.loads((fire.folder / "osm.json").read_text())
@@ -184,7 +196,8 @@ def main(argv=None):
            "crossings_left_out_km": round(sum(r.length for r in crossing) / 1000, 2),
            "barriers": out}
     d = fire_dir(args.fire)
-    (d / "attack_lines.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False))
+    name = "attack_lines" if args.timing == "observed" else f"attack_lines_{args.run}"
+    (d / f"{name}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False))
     print(f"{len(out)} linhas ({sum(b['tier'] == 'connector' for b in out)} ligações), "
           f"{sum(b['length_m'] for b in out) / 1000:.1f} km; perímetro oficial {doc['official_boundary_km']} km, "
           f"{doc['boundary_along_scars_km']} km junto a cicatrizes, {doc['boundary_covered_km']} km com linhas; "
@@ -208,8 +221,8 @@ def main(argv=None):
         dr.line([px(*c) for c in geom.coords], fill=(255, 255, 255) if tier == "road" else (120, 255, 120), width=4)
         x0, y0 = px(*geom.coords[0])
         dr.text((x0 + 4, y0 - 12), f"{t / 60:.0f}h", fill=(255, 255, 255))
-    img.save(d / "attack_lines.png")
-    print(f"-> {d}/attack_lines.json, attack_lines.png")
+    img.save(d / f"{name}.png")
+    print(f"-> {d}/{name}.json, {name}.png")
 
 
 if __name__ == "__main__":

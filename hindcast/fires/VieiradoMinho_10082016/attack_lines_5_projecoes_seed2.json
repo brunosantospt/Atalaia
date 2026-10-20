@@ -1,0 +1,1146 @@
+{
+ "fire": "VieiradoMinho_10082016",
+ "format": "decision.barriers of docs/contracts.md (path, width_m, from_min, from step 0), plus label, tier, source and length_m; POST /api/run takes path, width_m and from_min",
+ "options": {
+  "fire": "VieiradoMinho_10082016",
+  "near_m": 60.0,
+  "min_run": 300.0,
+  "min_along": 0.5,
+  "bridge_m": 250.0,
+  "reach_m": 400.0,
+  "lead": 60.0,
+  "earliest": 30.0,
+  "step": 60.0,
+  "width": 20.0,
+  "timing": "run",
+  "run": "5_projecoes_seed2"
+ },
+ "official_boundary_km": 34.05,
+ "boundary_along_scars_km": 3.01,
+ "boundary_covered_km": 11.53,
+ "crossings_left_out_km": 2.81,
+ "barriers": [
+  {
+   "label": "road 1",
+   "tier": "road",
+   "source": "road along the official perimeter, 350 m of a 350 m held line (unclassified); time: nearest modelled (5_projecoes_seed2) cell, 480 m away",
+   "path": [
+    [
+     -8.196781,
+     41.531548
+    ],
+    [
+     -8.19706,
+     41.53178
+    ],
+    [
+     -8.19764,
+     41.5316
+    ],
+    [
+     -8.19803,
+     41.53164
+    ],
+    [
+     -8.19873,
+     41.53222
+    ],
+    [
+     -8.19913,
+     41.53296
+    ],
+    [
+     -8.1997,
+     41.532833
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1260.0,
+   "length_m": 345
+  },
+  {
+   "label": "road 2",
+   "tier": "road",
+   "source": "road along the official perimeter, 654 m of a 654 m held line (residential, tertiary); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.169984,
+     41.555498
+    ],
+    [
+     -8.17076,
+     41.55535
+    ],
+    [
+     -8.1716,
+     41.55547
+    ],
+    [
+     -8.17248,
+     41.55518
+    ],
+    [
+     -8.17366,
+     41.55595
+    ],
+    [
+     -8.17489,
+     41.55578
+    ],
+    [
+     -8.17608,
+     41.55512
+    ],
+    [
+     -8.176828,
+     41.555341
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 644
+  },
+  {
+   "label": "road 3",
+   "tier": "road",
+   "source": "road along the official perimeter, 327 m of a 327 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.166456,
+     41.551909
+    ],
+    [
+     -8.16689,
+     41.55264
+    ],
+    [
+     -8.16748,
+     41.55299
+    ],
+    [
+     -8.1681,
+     41.55304
+    ],
+    [
+     -8.16855,
+     41.55281
+    ],
+    [
+     -8.169282,
+     41.55312
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 300.0,
+   "length_m": 319
+  },
+  {
+   "label": "road 4",
+   "tier": "road",
+   "source": "road along the official perimeter, 184 m of a 484 m held line (tertiary, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.16807,
+     41.53689
+    ],
+    [
+     -8.16813,
+     41.53661
+    ],
+    [
+     -8.16863,
+     41.53639
+    ],
+    [
+     -8.169165,
+     41.535556
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 360.0,
+   "length_m": 183
+  },
+  {
+   "label": "road 5",
+   "tier": "road",
+   "source": "road along the official perimeter, 301 m of a 484 m held line (tertiary, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.16807,
+     41.53689
+    ],
+    [
+     -8.16725,
+     41.53733
+    ],
+    [
+     -8.16725,
+     41.53797
+    ],
+    [
+     -8.16634,
+     41.53843
+    ],
+    [
+     -8.166061,
+     41.538829
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 360.0,
+   "length_m": 297
+  },
+  {
+   "label": "road 6",
+   "tier": "road",
+   "source": "road along the official perimeter, 1290 m of a 1290 m held line (residential, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.155893,
+     41.535375
+    ],
+    [
+     -8.1562,
+     41.53561
+    ],
+    [
+     -8.15672,
+     41.53554
+    ],
+    [
+     -8.15769,
+     41.53578
+    ],
+    [
+     -8.15828,
+     41.53565
+    ],
+    [
+     -8.15919,
+     41.53577
+    ],
+    [
+     -8.15959,
+     41.53546
+    ],
+    [
+     -8.16006,
+     41.53542
+    ],
+    [
+     -8.16072,
+     41.5356
+    ],
+    [
+     -8.16127,
+     41.53611
+    ],
+    [
+     -8.16205,
+     41.53616
+    ],
+    [
+     -8.16253,
+     41.53639
+    ],
+    [
+     -8.16463,
+     41.53686
+    ],
+    [
+     -8.16513,
+     41.53676
+    ],
+    [
+     -8.1652,
+     41.5363
+    ],
+    [
+     -8.16554,
+     41.53603
+    ],
+    [
+     -8.16648,
+     41.53623
+    ],
+    [
+     -8.16752,
+     41.53576
+    ],
+    [
+     -8.16822,
+     41.53586
+    ],
+    [
+     -8.16863,
+     41.53567
+    ],
+    [
+     -8.16884,
+     41.5361
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 1278
+  },
+  {
+   "label": "road 7",
+   "tier": "road",
+   "source": "road along the official perimeter, 1673 m of a 1776 m held line (residential, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.16426,
+     41.55641
+    ],
+    [
+     -8.16301,
+     41.55645
+    ],
+    [
+     -8.16304,
+     41.55688
+    ],
+    [
+     -8.16263,
+     41.55753
+    ],
+    [
+     -8.16224,
+     41.55881
+    ],
+    [
+     -8.16157,
+     41.55925
+    ],
+    [
+     -8.16131,
+     41.55927
+    ],
+    [
+     -8.16098,
+     41.55897
+    ],
+    [
+     -8.16057,
+     41.55886
+    ],
+    [
+     -8.15785,
+     41.5595
+    ],
+    [
+     -8.15664,
+     41.55939
+    ],
+    [
+     -8.1548,
+     41.55891
+    ],
+    [
+     -8.15471,
+     41.55902
+    ],
+    [
+     -8.15513,
+     41.56001
+    ],
+    [
+     -8.15493,
+     41.56121
+    ],
+    [
+     -8.15529,
+     41.56244
+    ],
+    [
+     -8.155,
+     41.56297
+    ],
+    [
+     -8.1541,
+     41.56298
+    ],
+    [
+     -8.153516,
+     41.563184
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 360.0,
+   "length_m": 1652
+  },
+  {
+   "label": "road 8",
+   "tier": "road",
+   "source": "road along the official perimeter, 103 m of a 1776 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.162852,
+     41.558488
+    ],
+    [
+     -8.16266,
+     41.55832
+    ],
+    [
+     -8.16263,
+     41.55763
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 360.0,
+   "length_m": 101
+  },
+  {
+   "label": "road 9",
+   "tier": "road",
+   "source": "road along the official perimeter, 373 m of a 448 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.15861,
+     41.55871
+    ],
+    [
+     -8.16004,
+     41.55857
+    ],
+    [
+     -8.16081,
+     41.55834
+    ],
+    [
+     -8.16124,
+     41.55846
+    ],
+    [
+     -8.16168,
+     41.55882
+    ],
+    [
+     -8.16198,
+     41.55883
+    ],
+    [
+     -8.16236,
+     41.55842
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 363
+  },
+  {
+   "label": "road 10",
+   "tier": "road",
+   "source": "road along the official perimeter, 75 m of a 448 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.16211,
+     41.55879
+    ],
+    [
+     -8.161619,
+     41.55822
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 75
+  },
+  {
+   "label": "road 11",
+   "tier": "road",
+   "source": "road along the official perimeter, 187 m of a 1549 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.15209,
+     41.53595
+    ],
+    [
+     -8.15263,
+     41.5356
+    ],
+    [
+     -8.15334,
+     41.53547
+    ],
+    [
+     -8.153973,
+     41.535144
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 185
+  },
+  {
+   "label": "road 12",
+   "tier": "road",
+   "source": "road along the official perimeter, 954 m of a 1549 m held line (track, unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.1424,
+     41.53583
+    ],
+    [
+     -8.14273,
+     41.53547
+    ],
+    [
+     -8.14355,
+     41.53535
+    ],
+    [
+     -8.1443,
+     41.53489
+    ],
+    [
+     -8.14601,
+     41.53489
+    ],
+    [
+     -8.1496,
+     41.53548
+    ],
+    [
+     -8.15095,
+     41.53608
+    ],
+    [
+     -8.15152,
+     41.5359
+    ],
+    [
+     -8.152474,
+     41.535135
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 947
+  },
+  {
+   "label": "road 13",
+   "tier": "road",
+   "source": "road along the official perimeter, 278 m of a 1549 m held line (track, unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.15197,
+     41.53551
+    ],
+    [
+     -8.15208,
+     41.53601
+    ],
+    [
+     -8.15182,
+     41.53629
+    ],
+    [
+     -8.149718,
+     41.536224
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 270
+  },
+  {
+   "label": "road 14",
+   "tier": "road",
+   "source": "road along the official perimeter, 130 m of a 1549 m held line (track, unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.141471,
+     41.536548
+    ],
+    [
+     -8.14173,
+     41.53656
+    ],
+    [
+     -8.14239,
+     41.53618
+    ],
+    [
+     -8.1424,
+     41.53583
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 130
+  },
+  {
+   "label": "road 15",
+   "tier": "road",
+   "source": "road along the official perimeter, 409 m of a 409 m held line (residential, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.151682,
+     41.561091
+    ],
+    [
+     -8.15181,
+     41.56158
+    ],
+    [
+     -8.15139,
+     41.56296
+    ],
+    [
+     -8.15146,
+     41.5632
+    ],
+    [
+     -8.15167,
+     41.56327
+    ],
+    [
+     -8.15244,
+     41.56285
+    ],
+    [
+     -8.15258,
+     41.56291
+    ],
+    [
+     -8.152461,
+     41.563357
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 360.0,
+   "length_m": 402
+  },
+  {
+   "label": "road 16",
+   "tier": "road",
+   "source": "road along the official perimeter, 740 m of a 1010 m held line (residential, track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.15139,
+     41.56301
+    ],
+    [
+     -8.15099,
+     41.56279
+    ],
+    [
+     -8.15037,
+     41.56272
+    ],
+    [
+     -8.14973,
+     41.56217
+    ],
+    [
+     -8.14921,
+     41.56233
+    ],
+    [
+     -8.14867,
+     41.5628
+    ],
+    [
+     -8.1475,
+     41.56327
+    ],
+    [
+     -8.14622,
+     41.56408
+    ],
+    [
+     -8.14574,
+     41.56454
+    ],
+    [
+     -8.14583,
+     41.56469
+    ],
+    [
+     -8.14541,
+     41.56496
+    ],
+    [
+     -8.145945,
+     41.565363
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 733
+  },
+  {
+   "label": "road 17",
+   "tier": "road",
+   "source": "road along the official perimeter, 151 m of a 1010 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.146411,
+     41.563151
+    ],
+    [
+     -8.14687,
+     41.56324
+    ],
+    [
+     -8.14759,
+     41.563
+    ],
+    [
+     -8.14809,
+     41.563
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 147
+  },
+  {
+   "label": "road 18",
+   "tier": "road",
+   "source": "road along the official perimeter, 119 m of a 1010 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.14657,
+     41.56395
+    ],
+    [
+     -8.147945,
+     41.563694
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 118
+  },
+  {
+   "label": "road 19",
+   "tier": "road",
+   "source": "road along the official perimeter, 952 m of a 952 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.136196,
+     41.565768
+    ],
+    [
+     -8.13644,
+     41.56571
+    ],
+    [
+     -8.13734,
+     41.566
+    ],
+    [
+     -8.13847,
+     41.56587
+    ],
+    [
+     -8.14035,
+     41.56536
+    ],
+    [
+     -8.14093,
+     41.56508
+    ],
+    [
+     -8.14148,
+     41.56452
+    ],
+    [
+     -8.14283,
+     41.56453
+    ],
+    [
+     -8.14344,
+     41.56409
+    ],
+    [
+     -8.14403,
+     41.56467
+    ],
+    [
+     -8.145882,
+     41.565538
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 946
+  },
+  {
+   "label": "road 20",
+   "tier": "road",
+   "source": "road along the official perimeter, 700 m of a 700 m held line (unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.127797,
+     41.538924
+    ],
+    [
+     -8.12872,
+     41.53923
+    ],
+    [
+     -8.12918,
+     41.53908
+    ],
+    [
+     -8.12977,
+     41.53913
+    ],
+    [
+     -8.13167,
+     41.5389
+    ],
+    [
+     -8.1332,
+     41.53854
+    ],
+    [
+     -8.1343,
+     41.53859
+    ],
+    [
+     -8.13549,
+     41.5378
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 694
+  },
+  {
+   "label": "road 21",
+   "tier": "road",
+   "source": "road along the official perimeter, 125 m of a 663 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.132869,
+     41.562083
+    ],
+    [
+     -8.134072,
+     41.562721
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 123
+  },
+  {
+   "label": "road 22",
+   "tier": "road",
+   "source": "road along the official perimeter, 335 m of a 663 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.13351,
+     41.56241
+    ],
+    [
+     -8.130051,
+     41.563821
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 328
+  },
+  {
+   "label": "road 23",
+   "tier": "road",
+   "source": "road along the official perimeter, 203 m of a 663 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.13091,
+     41.5635
+    ],
+    [
+     -8.13065,
+     41.56347
+    ],
+    [
+     -8.129149,
+     41.562316
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 201
+  },
+  {
+   "label": "road 24",
+   "tier": "road",
+   "source": "road along the official perimeter, 73 m of a 1046 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.12461,
+     41.56438
+    ],
+    [
+     -8.12411,
+     41.56487
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 69
+  },
+  {
+   "label": "road 25",
+   "tier": "road",
+   "source": "road along the official perimeter, 232 m of a 1046 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.123215,
+     41.566046
+    ],
+    [
+     -8.12418,
+     41.5658
+    ],
+    [
+     -8.12436,
+     41.56515
+    ],
+    [
+     -8.12399,
+     41.56463
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 224
+  },
+  {
+   "label": "road 26",
+   "tier": "road",
+   "source": "road along the official perimeter, 613 m of a 1046 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.123872,
+     41.564126
+    ],
+    [
+     -8.1242,
+     41.56611
+    ],
+    [
+     -8.12407,
+     41.5663
+    ],
+    [
+     -8.12313,
+     41.56663
+    ],
+    [
+     -8.12213,
+     41.56638
+    ],
+    [
+     -8.12101,
+     41.56646
+    ],
+    [
+     -8.12051,
+     41.56635
+    ],
+    [
+     -8.120417,
+     41.56674
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 602
+  },
+  {
+   "label": "road 27",
+   "tier": "road",
+   "source": "road along the official perimeter, 128 m of a 1046 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.120542,
+     41.565747
+    ],
+    [
+     -8.12099,
+     41.56621
+    ],
+    [
+     -8.12167,
+     41.56635
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 122
+  },
+  {
+   "label": "road 28",
+   "tier": "road",
+   "source": "road along the official perimeter, 25 m of a 1692 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.117426,
+     41.541681
+    ],
+    [
+     -8.11718,
+     41.54159
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 23
+  },
+  {
+   "label": "road 29",
+   "tier": "road",
+   "source": "road along the official perimeter, 1331 m of a 1692 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.10283,
+     41.5413
+    ],
+    [
+     -8.10435,
+     41.54137
+    ],
+    [
+     -8.1069,
+     41.54267
+    ],
+    [
+     -8.10761,
+     41.5427
+    ],
+    [
+     -8.11407,
+     41.541
+    ],
+    [
+     -8.11682,
+     41.54106
+    ],
+    [
+     -8.11725,
+     41.541754
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 1329
+  },
+  {
+   "label": "road 30",
+   "tier": "road",
+   "source": "road along the official perimeter, 75 m of a 1692 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.11524,
+     41.54097
+    ],
+    [
+     -8.114646,
+     41.540463
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 75
+  },
+  {
+   "label": "road 31",
+   "tier": "road",
+   "source": "road along the official perimeter, 205 m of a 1692 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.109554,
+     41.543567
+    ],
+    [
+     -8.10936,
+     41.54318
+    ],
+    [
+     -8.10892,
+     41.54291
+    ],
+    [
+     -8.10761,
+     41.5427
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 205
+  },
+  {
+   "label": "road 32",
+   "tier": "road",
+   "source": "road along the official perimeter, 56 m of a 1692 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "path": [
+    [
+     -8.103167,
+     41.540865
+    ],
+    [
+     -8.10283,
+     41.5413
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 540.0,
+   "length_m": 56
+  },
+  {
+   "label": "connector 33",
+   "tier": "connector",
+   "source": "official perimeter between the ends of two road lines 162 m apart (no road in OpenStreetMap); time: the later of the two lines",
+   "path": [
+    [
+     -8.155893,
+     41.535375
+    ],
+    [
+     -8.156314,
+     41.535751
+    ],
+    [
+     -8.15597,
+     41.535969
+    ],
+    [
+     -8.15561,
+     41.536358
+    ],
+    [
+     -8.15505,
+     41.536532
+    ],
+    [
+     -8.154455,
+     41.536516
+    ],
+    [
+     -8.153868,
+     41.536011
+    ],
+    [
+     -8.153641,
+     41.535568
+    ],
+    [
+     -8.153973,
+     41.535144
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 480.0,
+   "length_m": 427
+  }
+ ]
+}

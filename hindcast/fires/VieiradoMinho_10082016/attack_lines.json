@@ -11,7 +11,9 @@
   "lead": 60.0,
   "earliest": 30.0,
   "step": 60.0,
-  "width": 20.0
+  "width": 20.0,
+  "timing": "observed",
+  "run": null
  },
  "official_boundary_km": 34.05,
  "boundary_along_scars_km": 3.01,

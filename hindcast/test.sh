@@ -8,7 +8,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here/.."
-py="$here/.venv/bin/python -I"
+py="${PY:-$here/.venv/bin/python} -I"
 fire=VieiradoMinho_10082016
 $py hindcast/evidence.py $fire > /dev/null
 $py hindcast/attack.py $fire > /dev/null

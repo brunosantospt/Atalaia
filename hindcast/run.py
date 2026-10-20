@@ -16,6 +16,8 @@ ignitions. It goes through engine/run.sh (engines/elmfire plus four optional req
   canopy              ELMFIRE's crown fire layers from fires/<id>/canopy.npz when there is one (DGT LiDAR, see README)
   --spotting          ELMFIRE's ember model, the middle values of its own forecast template; --seed picks the draw
   --adj, --wind-mult  calibration knobs: ELMFIRE's spread rate adjustment, and a factor on the wind speed
+  --weather cerra     CERRA (5.5 km) instead of ERA5, from weather_cerra.json (feature/cerra-wind-engine)
+  --topowind          the wind per 30 m cell of scripts/build_wind_field.py (feature/cerra-wind-engine)
   --barriers FILE     barriers in decision.barriers format (attack.py writes one); only path, width_m and from_min
                       are used, through the API's own Scenario model
 
@@ -29,6 +31,7 @@ import json
 import subprocess
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import numpy as np
@@ -63,11 +66,25 @@ def emc_pct(temp_c: float, rh: float) -> float:
     return 21.0606 + 0.005565 * rh ** 2 - 0.00035 * rh * t - 0.483199 * rh
 
 
+def topowind():
+    """calculate_micro_wind of scripts/build_wind_field.py (feature/cerra-wind-engine): the 30 m terrain wind."""
+    sys.path.insert(0, str(HERE.parent / "scripts"))
+    try:
+        from build_wind_field import calculate_micro_wind
+    except ImportError:
+        raise SystemExit("--topowind precisa de scripts/build_wind_field.py (ramo feature/cerra-wind-engine)") from None
+    return calculate_micro_wind
+
+
 def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict]:
-    """weather.json at `minutes` after `start`: wind and temperature/humidity linear between the hours, the direction
-    the short way round (as Fire.weather), and the dead fuel moistures from them."""
-    w = json.loads((fire.folder / "weather.json").read_text())
-    hours = np.array([(fires.parse_time(t) - start).total_seconds() / 60 for t in w["time"]])
+    """weather.json (or weather_cerra.json with --weather cerra) at `minutes` after `start`: wind and temperature/
+    humidity linear between the hours, the direction the short way round (as Fire.weather), and the dead fuel
+    moistures from them. With --topowind the wind becomes one value per cell (scripts/build_wind_field.py)."""
+    name = "weather.json" if args.weather == "era5" else "weather_cerra.json"
+    if not (fire.folder / name).exists():
+        raise SystemExit(f"falta web/public/fires/{fire.id}/{name} (scripts/build_weather_cerra.py)")
+    w = json.loads((fire.folder / name).read_text())
+    hours = np.array([(fires.parse_time(t[:16]) - start).total_seconds() / 60 for t in w["time"]])
     if min(minutes) < hours[0] or max(minutes) > hours[-1]:
         raise SystemExit("a corrida sai da meteo do incêndio (weather.json)")
     temp = np.interp(minutes, hours, w["tempC"])
@@ -81,6 +98,14 @@ def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict
         out.append({"t_min": float(t), "wind_kmh": round(float(s), 2), "wind_from_deg": round(float(d), 1),
                     "dead_1h_pct": round(m1, 1), "dead_10h_pct": round(m10, 1), "dead_100h_pct": round(m100, 1),
                     "live_herb_pct": args.live_herb, "live_woody_pct": args.live_woody})
+    if args.topowind:
+        micro = topowind()
+        layers = fire.layers()
+        slope, aspect = layers["slope_deg"].astype(float), layers["aspect_deg"].astype(float)
+        for o, m in zip(out, minutes):
+            hour = (start + timedelta(minutes=float(m))).hour
+            speed, wfrom = micro(o["wind_kmh"], o["wind_from_deg"], hour, slope, aspect)
+            o["wind_kmh"], o["wind_from_deg"] = np.round(speed, 2).tolist(), np.round(wfrom, 1).tolist()
     return out
 
 
@@ -101,6 +126,11 @@ def main(argv=None):
                    help="use fires/<id>/canopy.npz when there is one")
     p.add_argument("--spotting", action="store_true")
     p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--weather", choices=["era5", "cerra"], default="era5",
+                   help="weather.json (ERA5) or weather_cerra.json (CERRA 5.5 km, scripts/build_weather_cerra.py)")
+    p.add_argument("--topowind", action="store_true",
+                   help="the wind per 30 m cell from scripts/build_wind_field.py (slope/aspect speed-up, deflection, "
+                        "daytime upslope wind)")
     p.add_argument("--adj", type=float, default=1.0)
     p.add_argument("--wind-mult", type=float, default=1.0)
     p.add_argument("--barriers", type=Path)
