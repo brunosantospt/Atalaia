@@ -1,0 +1,8 @@
+# hindcast (setup.sh). The API's own needs (api/fires.py, api/runs.py) plus scipy, pillow and requests.
+numpy>=2.0
+scipy>=1.13
+shapely>=2.1
+pyproj>=3.7
+pydantic>=2.7
+requests>=2.32
+pillow>=10.4
