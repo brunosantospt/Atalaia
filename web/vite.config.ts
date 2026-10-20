@@ -15,8 +15,18 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 5000, // Cesium alone is ~4 MB minified
   },
-  server: { proxy },
-  preview: { proxy },
+  server: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+    cors: true,
+    proxy,
+  },
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+    cors: true,
+    proxy,
+  },
   plugins: [
     viteStaticCopy({
       targets: ['Workers', 'ThirdParty', 'Assets', 'Widgets'].map((dir) => ({

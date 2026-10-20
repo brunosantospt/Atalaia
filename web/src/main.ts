@@ -16,7 +16,7 @@ import { demoDecisions } from './decisions'
 import { loadDetection } from './detection'
 import { CUT, decisionShots } from './director'
 import { Editor, type Reports, type Runs } from './editor'
-import { burnedHa, params, simulate, type Scenario } from './fastModel'
+import { burnedHa, computeFWISeries, params, simulate, type Scenario } from './fastModel'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
 import { Hud, type CameraReadout } from './hud'
@@ -132,7 +132,8 @@ async function main() {
     const near = nearestStations(stations, fire.ignition)
     // The free run: the fire as the fast model lets it go with nobody on it, from the ignition.
     const startIndex = Math.max(0, weather.time.indexOf(fire.start.slice(0, 16)))
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire.ignition, stations: near, suppression, durationMin: DECISION_MIN }
+    const fwiSeries = computeFWISeries(weather)
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire.ignition, stations: near, suppression, durationMin: DECISION_MIN, fwiSeries }
     const free = simulate(scenario, null)
     const reach = computeReach(grid, free, fire, near, suppression, detection)
     console.info(
@@ -177,7 +178,7 @@ async function main() {
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
-      known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa },
+      known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
       areaHa: (hours) => freeAreaHa(reach, hours),
       poc: (areaHa) => containmentProbability(suppression, areaHa, reach.intensityKWPerM),
       intensityKWPerM: reach.intensityKWPerM,
