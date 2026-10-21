@@ -412,8 +412,10 @@ async function main() {
     if (e.metaKey || e.ctrlKey || e.altKey) return
     if (e.key === 'Escape' && hud.settings.open) return hud.settings.toggle(false)
     if (editor.handleKey(e)) return e.preventDefault()
-    // Arrows and space belong to a focused radio in the settings, letters to the editor's fields.
-    if (!replay || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
+    // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.
+    const { target } = e
+    const field = target instanceof HTMLSelectElement || (target instanceof HTMLInputElement && (target.type !== 'range' || e.key.startsWith('Arrow')))
+    if (!replay || field) return
     const { player } = replay
     const actions: Record<string, () => void> = {
       ' ': () => player.toggle(),
