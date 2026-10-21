@@ -1,135 +1,197 @@
-// High-resolution realistic wildfire simulation on the terrain:
-// 1. Continuous, unbroken 3D flame ribbon along the active front (multi-tongued wildfire billboards)
-// 2. Dense, billowing dark volumetric smoke cloud layer rising over the burned basin and drifting with the wind
-// 3. Deep charred pitch-black earth and ash scar behind the active front
-// 4. Supersampled bilinear anti-pixelated ground drape with linear texture filtering
+// Realistic continuous wildfire simulation on the 3D terrain:
+// 1. Radiant, multi-tonal active flame ribbon draped directly over the topography (incandescent white-gold crest,
+//    bright golden yellow, fiery orange, deep amber-crimson, smoldering embers).
+// 2. Subtle layers of dark charcoal, soot, and ash for the burned area, keeping mountain relief and contours visible.
+// 3. Soft, atmospheric smoke veil drifting downwind over the burned basin.
+// 4. Zero billboard sprites or emoji-like icons — 100% continuous GPU-accelerated terrain shader.
+// 5. Screen-space A/B split comparison slider adhering to 3D terrain.
 
 import {
-  Billboard,
-  BillboardCollection,
-  Cartesian3,
-  Cartographic,
-  Color,
-  type ImageryLayer,
-  Math as CesiumMath,
-  NearFarScalar,
+  ClassificationType,
+  EllipsoidSurfaceAppearance,
+  GeometryInstance,
+  GroundPrimitive,
+  Material,
   Rectangle,
-  SingleTileImageryProvider,
-  SplitDirection,
-  TextureMagnificationFilter,
-  TextureMinificationFilter,
-  VerticalOrigin,
+  RectangleGeometry,
   type Viewer,
 } from 'cesium'
 import type { Weather } from './data'
-import { lonLatAt, type Grid } from './grid'
+import type { Grid } from './grid'
 import './split.css'
-
-const KEY = 0.5
-const FLAME_WINDOW_MIN = 18 // minutes a cell actively carries tall flames
-const SMOKE_WINDOW_MIN = 65 // minutes a cell emits rising billowing smoke
-const MAX_FLAMES = 260 // dense pool of flame billboards forming a continuous fire ribbon
-const MAX_SMOKE = 150 // volumetric smoke puffs forming the dark billowing smoke blanket
 
 export interface Side {
   name: string
   arrival: Float32Array
 }
 
-interface Look {
-  alpha: number
-  brightness?: number
-  saturation?: number
-}
+const FIRE_SHADER = /* glsl */ `
+czm_material czm_getMaterial(czm_materialInput materialInput) {
+  czm_material m = czm_getDefaultMaterial(materialInput);
 
-// Active front: incandescent, vibrant fire glow on the ground
-const FRONT: Look = { alpha: 0.95, brightness: 1.35, saturation: 1.35 }
-// Burned scar: deep charred pitch-black earth and ash
-const SCAR: Look = { alpha: 0.92, brightness: 0.04, saturation: 0.0 }
+  // 1. Screen-space A/B Split slider clipping
+  if (splitSide >= 0.0) {
+    float screenWidth = max(czm_viewport.z, 1.0);
+    float screenX = gl_FragCoord.x / screenWidth;
+    if (splitSide < 0.5 && screenX > split) {
+      m.alpha = 0.0;
+      return m;
+    }
+    if (splitSide > 0.5 && screenX < split) {
+      m.alpha = 0.0;
+      return m;
+    }
+  }
+
+  // 2. Texture lookup: R = arrival time (0..span), G = burned mask (0..1)
+  vec4 s = texture(image, materialInput.st);
+  float arrivalMin = s.r * span;
+  float age = minutes - arrivalMin;
+
+  // Unburned cell or flame hasn't arrived yet
+  if (s.g < 0.20 || age < 0.0) {
+    m.alpha = 0.0;
+    return m;
+  }
+
+  // Smooth sub-meter anti-aliased edge
+  float edgeFade = smoothstep(0.20, 0.72, s.g);
+
+  // Micro heat-shimmer and organic wave turbulence along the fireline
+  float flicker = 0.88 + 0.12 * sin(czm_frameNumber * 0.35 + materialInput.st.s * 820.0 + materialInput.st.t * 540.0);
+  float wave = 0.94 + 0.06 * sin(czm_frameNumber * 0.15 + materialInput.st.s * 310.0 - materialInput.st.t * 220.0);
+
+  // 3. Multi-tonal Wildfire Thermal Palette
+  // Incandescent white-gold crest -> radiant golden yellow -> intense fire orange -> deep amber -> glowing embers
+  vec3 cWhiteGold   = vec3(1.0, 0.98, 0.74);    // incandescent crest along mountain ridges
+  vec3 cGolden      = vec3(1.0, 0.82, 0.18);    // radiant golden yellow flame body
+  vec3 cOrange      = vec3(1.0, 0.46, 0.04);    // pure fiery vibrant orange
+  vec3 cAmber       = vec3(0.85, 0.22, 0.02);   // deep fiery amber-crimson
+  vec3 cEmber       = vec3(0.42, 0.10, 0.02);   // glowing dark red coals
+  vec3 cCharcoal    = vec3(0.065, 0.058, 0.052);// matte dark charcoal soot
+  vec3 cAsh         = vec3(0.12, 0.10, 0.09);   // subtle ash gray-brown
+  vec3 cSmoke       = vec3(0.15, 0.14, 0.13);   // soft warm smoke veil
+
+  vec3 color;
+  vec3 emission;
+  float alpha;
+
+  if (age < 2.5) {
+    // Leading active crest (0 to 2.5 min): Incandescent crest, white-gold to golden yellow
+    float t = age / 2.5;
+    color = mix(cWhiteGold, cGolden, t) * flicker;
+    emission = color * 1.4;
+    alpha = 0.95;
+  } else if (age < 8.0) {
+    // Main flaming body (2.5 to 8.0 min): Radiant golden yellow to pure flame orange
+    float t = (age - 2.5) / 5.5;
+    color = mix(cGolden, cOrange, t) * flicker;
+    emission = color * 1.15;
+    alpha = 0.93;
+  } else if (age < 18.0) {
+    // Deep flame ribbon (8.0 to 18.0 min): Flame orange to deep amber-crimson
+    float t = (age - 8.0) / 10.0;
+    color = mix(cOrange, cAmber, t) * wave;
+    emission = color * 0.70;
+    alpha = 0.90;
+  } else if (age < 35.0) {
+    // Smoldering embers (18.0 to 35.0 min): Amber to glowing dark red embers
+    float t = (age - 18.0) / 17.0;
+    color = mix(cAmber, cEmber, t);
+    emission = cEmber * (1.0 - t * 0.70) * 0.45;
+    alpha = mix(0.88, 0.80, t);
+  } else {
+    // Burned area: subtle layers of dark charcoal, soot, and ash keeping terrain relief visible
+    float sootNoise = 0.92 + 0.16 * fract(sin(dot(materialInput.st * 380.0, vec2(12.9898, 78.233))) * 43758.5453);
+    float k = clamp((age - 35.0) / 45.0, 0.0, 1.0);
+    vec3 baseScar = mix(cEmber * 0.45, cCharcoal * sootNoise, k);
+
+    // Subtle ash layer near margins & terrain folds
+    float ashMod = 0.85 + 0.15 * sin(materialInput.st.s * 85.0 + materialInput.st.t * 65.0);
+    vec3 finalScar = mix(cAsh * ashMod, baseScar, clamp((age - 35.0) / 30.0, 0.35, 1.0));
+
+    // Soft, non-exaggerated smoke veil lingering over recently burned basin
+    if (age < 65.0) {
+      float smokeHaze = (1.0 - (age - 35.0) / 30.0) * 0.20;
+      finalScar = mix(finalScar, cSmoke, smokeHaze);
+    }
+
+    color = finalScar;
+    emission = cEmber * (1.0 - k) * 0.12;
+    // Subtle alpha (0.76 - 0.82) preserves 3D terrain shadows and satellite relief underneath
+    alpha = mix(0.82, 0.76, k);
+  }
+
+  m.diffuse = color;
+  m.emission = emission;
+  m.alpha = alpha * edgeFade;
+  return m;
+}
+`
 
 export class SplitLayer {
-  private readonly layers: ImageryLayer[] = []
+  private readonly primitives: GroundPrimitive[] = []
+  private readonly materials: Material[] = []
   private root: HTMLElement | undefined
   position = 0.5
   private visible = true
 
-  // 3D Flames & Volumetric Smoke
-  private readonly flames: BillboardCollection
-  private readonly flamePool: Billboard[] = []
-  private readonly smoke: BillboardCollection
-  private readonly smokePool: Billboard[] = []
-  private frame = 0
-  private readonly flameImage: string
-  private readonly smokeImage: string
-
   constructor(
     private readonly viewer: Viewer,
     parent: HTMLElement,
-    private readonly grid: Grid,
-    private readonly sides: Side[],
+    grid: Grid,
+    sides: Side[],
     private readonly durationMin: number,
-    private readonly weather?: Weather,
+    _weather?: Weather,
   ) {
     const rect = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
-    const split = sides.length > 1
+    const isSplit = sides.length > 1
+    const span = Math.max(1, durationMin)
 
-    // 1. Drape imagery layers: supersampled with bilinear anti-pixelation
-    const scale = 2
-    const outW = grid.cols * scale
-    const outH = grid.rows * scale
-
+    // Build one GPU GroundPrimitive per side (Side A on left, Side B on right, or single Free run)
     sides.forEach((side, s) => {
-      const url = encodeHighRes(grid, side.arrival, durationMin, scale)
-      const direction = !split ? SplitDirection.NONE : s === 0 ? SplitDirection.LEFT : SplitDirection.RIGHT
-      this.layers.push(
-        this.add(url, outW, outH, rect, direction, FRONT),
-        this.add(url, outW, outH, rect, direction, SCAR),
-      )
+      const canvas = encodeGridTexture(grid, side.arrival, durationMin, 2)
+      const splitSide = isSplit ? (s === 0 ? 0.0 : 1.0) : -1.0
+
+      const material = new Material({
+        fabric: {
+          uniforms: {
+            image: canvas,
+            minutes: 0,
+            span,
+            split: this.position,
+            splitSide,
+          },
+          source: FIRE_SHADER,
+        },
+        translucent: true,
+      })
+      this.materials.push(material)
+
+      const primitive = viewer.scene.primitives.add(
+        new GroundPrimitive({
+          geometryInstances: new GeometryInstance({
+            geometry: new RectangleGeometry({
+              rectangle: rect,
+              vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            }),
+          }),
+          appearance: new EllipsoidSurfaceAppearance({
+            material,
+            flat: true,
+            aboveGround: false,
+          }),
+          classificationType: ClassificationType.TERRAIN,
+        }),
+      ) as GroundPrimitive
+
+      this.primitives.push(primitive)
     })
 
-    // 2. Dense 3D Flame Ribbon pool
-    this.flameImage = makeFlameSprite()
-    this.flames = viewer.scene.primitives.add(new BillboardCollection())
-    const initPos = Cartesian3.fromDegrees(
-      (this.grid.rect.west + this.grid.rect.east) / 2,
-      (this.grid.rect.south + this.grid.rect.north) / 2,
-      200,
-    )
-    for (let i = 0; i < MAX_FLAMES; i++) {
-      const bb = this.flames.add({
-        position: initPos,
-        image: this.flameImage,
-        sizeInMeters: true,
-        width: 48,
-        height: 38,
-        verticalOrigin: VerticalOrigin.BOTTOM,
-        scaleByDistance: new NearFarScalar(800, 1.0, 18_000, 2.6),
-        show: false,
-      })
-      this.flamePool.push(bb)
-    }
-
-    // 3. Volumetric Billowing Smoke Blanket pool
-    this.smokeImage = makeSmokeSprite()
-    this.smoke = viewer.scene.primitives.add(new BillboardCollection())
-    for (let i = 0; i < MAX_SMOKE; i++) {
-      const bb = this.smoke.add({
-        position: initPos,
-        image: this.smokeImage,
-        sizeInMeters: true,
-        width: 140,
-        height: 140,
-        verticalOrigin: VerticalOrigin.CENTER,
-        scaleByDistance: new NearFarScalar(800, 1.0, 22_000, 2.2),
-        show: false,
-      })
-      this.smokePool.push(bb)
-    }
-
     this.set(0)
-    if (!split) return
+    if (!isSplit) return
 
-    // 4. Split compare slider (when both A and B are present)
+    // Interactive A/B split comparison slider
     this.root = document.createElement('div')
     this.root.className = 'split'
     this.root.innerHTML = `
@@ -154,171 +216,98 @@ export class SplitLayer {
   }
 
   setPosition(position: number) {
-    if (!this.root) return
     this.position = Math.min(Math.max(position, 0), 1)
-    this.root.style.setProperty('--split', `${(this.position * 100).toFixed(2)}%`)
+    if (this.root) {
+      this.root.style.setProperty('--split', `${(this.position * 100).toFixed(2)}%`)
+    }
+    for (const mat of this.materials) {
+      mat.uniforms.split = this.position
+    }
     this.viewer.scene.splitPosition = this.position
   }
 
   show(on: boolean) {
     this.visible = on
-    for (const layer of this.layers) layer.show = on
-    this.flames.show = on
-    this.smoke.show = on
+    for (const primitive of this.primitives) {
+      primitive.show = on
+    }
     if (this.root) this.root.hidden = !on
   }
 
-  /** Show fires as they stand `hours` after the ignition */
+  /** Advance simulated fire to `hours` after ignition */
   set(hours: number) {
-    const t = Math.min(Math.max(hours * 60, 0), this.durationMin)
-    const front = 1 - (KEY * t) / this.durationMin
-    const scar = 1 - (KEY * Math.max(t - FLAME_WINDOW_MIN, 0)) / this.durationMin
-
-    // 1. Update drape imagery thresholds (active flame vs black charred scar)
-    for (let i = 0; i < this.layers.length; i += 2) {
-      this.layers[i].colorToAlphaThreshold = front
-      this.layers[i + 1].colorToAlphaThreshold = scar
+    if (!this.visible) return
+    const minutes = Math.min(Math.max(hours * 60, 0), this.durationMin)
+    for (const mat of this.materials) {
+      mat.uniforms.minutes = minutes
     }
-
-    if (!this.visible || t <= 0) {
-      this.flames.show = false
-      this.smoke.show = false
-      for (let i = 0; i < this.flamePool.length; i++) this.flamePool[i].show = false
-      for (let i = 0; i < this.smokePool.length; i++) this.smokePool[i].show = false
-      return
-    }
-
-    const { cols } = this.grid
-    const isSplit = this.sides.length > 1
-    const frame = ++this.frame
-
-    // Wind direction and speed from weather
-    const hourIdx = Math.min(Math.floor(hours), (this.weather?.windFromDeg.length ?? 1) - 1)
-    const windFrom = this.weather?.windFromDeg[hourIdx] ?? 315
-    const windToRad = CesiumMath.toRadians(windFrom + 180) // direction wind is blowing towards
-    const windSin = Math.sin(windToRad)
-    const windCos = Math.cos(windToRad)
-
-    // 2. Identify active front cells for the continuous flame ribbon [t - FLAME_WINDOW_MIN, t]
-    // and smoke cells for the billowing smoke cloud [t - SMOKE_WINDOW_MIN, t]
-    const flameCells: { lon: number; lat: number; age: number; k: number }[] = []
-    const smokeCells: { lon: number; lat: number; age: number; k: number }[] = []
-
-    for (let sIdx = 0; sIdx < this.sides.length; sIdx++) {
-      const arr = this.sides[sIdx].arrival
-      for (let k = 0; k < arr.length; k++) {
-        const arrivalMin = arr[k]
-        const age = t - arrivalMin
-        if (age < 0 || age > SMOKE_WINDOW_MIN) continue
-
-        const col = k % cols
-        const row = (k - col) / cols
-        const pos = lonLatAt(this.grid, col + 0.5, row + 0.5)
-
-        if (isSplit) {
-          const normLon = (pos.lon - this.grid.rect.west) / (this.grid.rect.east - this.grid.rect.west)
-          if (sIdx === 0 && normLon > this.position) continue
-          if (sIdx === 1 && normLon < this.position) continue
-        }
-
-        if (age <= FLAME_WINDOW_MIN) {
-          flameCells.push({ lon: pos.lon, lat: pos.lat, age, k })
-        }
-        smokeCells.push({ lon: pos.lon, lat: pos.lat, age, k })
-      }
-    }
-
-    // 3. Update continuous 3D Flame Ribbon
-    const numFlames = flameCells.length
-    const flameStep = numFlames > MAX_FLAMES ? Math.ceil(numFlames / MAX_FLAMES) : 1
-    let usedFlames = 0
-
-    for (let i = 0; i < numFlames && usedFlames < MAX_FLAMES; i += flameStep) {
-      const cell = flameCells[i]
-      const bb = this.flamePool[usedFlames]
-      const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
-
-      // Jitter slightly along normal to create natural irregular fiery teeth
-      const jitterLon = (Math.sin(cell.k * 53.3) * 0.15 * (this.grid.rect.east - this.grid.rect.west)) / cols
-      const jitterLat = (Math.cos(cell.k * 67.7) * 0.15 * (this.grid.rect.north - this.grid.rect.south)) / this.grid.rows
-      bb.position = Cartesian3.fromDegrees(cell.lon + jitterLon, cell.lat + jitterLat, h - 0.5)
-
-      const life = Math.min(1, cell.age / 0.5) * Math.max(0, 1 - Math.pow(cell.age / FLAME_WINDOW_MIN, 2.5))
-      const flicker = 0.84 + 0.16 * Math.sin(frame * 0.45 + cell.k * 17.1)
-      bb.scale = life * flicker
-      bb.show = life > 0.02
-      usedFlames++
-    }
-    for (let i = usedFlames; i < MAX_FLAMES; i++) this.flamePool[i].show = false
-    this.flames.show = true
-
-    // 4. Update dense, billowing volumetric Smoke Blanket
-    const numSmoke = smokeCells.length
-    const smokeStep = numSmoke > MAX_SMOKE ? Math.ceil(numSmoke / MAX_SMOKE) : 1
-    let usedSmoke = 0
-
-    for (let i = 0; i < numSmoke && usedSmoke < MAX_SMOKE; i += smokeStep) {
-      const cell = smokeCells[i]
-      const bb = this.smokePool[usedSmoke]
-      const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
-
-      // As smoke ages, it rises vertically and drifts downwind
-      const driftM = Math.min(500, cell.age * 9.0)
-      const dLon = (windSin * driftM) / 111_000
-      const dLat = (windCos * driftM) / 111_000
-      const riseM = 22 + Math.min(180, cell.age * 2.8)
-
-      bb.position = Cartesian3.fromDegrees(cell.lon + dLon, cell.lat + dLat, h + riseM)
-
-      // Smoke billow scale & opacity curve: blooms rapidly, hangs dense, then disperses
-      const smokeLife = Math.min(1, cell.age / 2.0) * Math.max(0, 1 - Math.pow(cell.age / SMOKE_WINDOW_MIN, 2.0))
-      const billow = 0.92 + 0.08 * Math.sin(frame * 0.18 + cell.k * 11.3)
-      bb.scale = smokeLife * billow
-      bb.show = smokeLife > 0.03
-      usedSmoke++
-    }
-    for (let i = usedSmoke; i < MAX_SMOKE; i++) this.smokePool[i].show = false
-    this.smoke.show = true
   }
 
   destroy() {
-    for (const layer of this.layers) this.viewer.imageryLayers.remove(layer, true)
-    this.viewer.scene.primitives.remove(this.flames)
-    this.viewer.scene.primitives.remove(this.smoke)
-    if (!this.root) return
-    this.root.remove()
+    for (const primitive of this.primitives) {
+      this.viewer.scene.primitives.remove(primitive)
+    }
+    this.primitives.length = 0
+    this.materials.length = 0
+    if (this.root) {
+      this.root.remove()
+      this.root = undefined
+    }
     this.viewer.scene.splitPosition = 0
-  }
-
-  private add(
-    url: string,
-    tileWidth: number,
-    tileHeight: number,
-    rectangle: Rectangle,
-    splitDirection: SplitDirection,
-    look: Look,
-  ): ImageryLayer {
-    const provider = new SingleTileImageryProvider({
-      url,
-      tileWidth,
-      tileHeight,
-      rectangle,
-    })
-    const layer = this.viewer.imageryLayers.addImageryProvider(provider)
-    layer.splitDirection = splitDirection
-    layer.colorToAlpha = Color.WHITE
-    layer.colorToAlphaThreshold = 1
-    // Linear texture filtering removes the Minecraft blocky edges
-    layer.minificationFilter = TextureMinificationFilter.LINEAR
-    layer.magnificationFilter = TextureMagnificationFilter.LINEAR
-    Object.assign(layer, look)
-    return layer
   }
 }
 
-/** Supersample the arrival grid with bilinear anti-pixelation into a high-res image */
-function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, scale = 2): string {
+/**
+ * Encodes grid arrival times into a high-resolution, supersampled canvas texture:
+ * - Channel R: normalized arrival time (0..255)
+ * - Channel G: burned cell mask (0..255) with smooth bilinear anti-aliasing
+ * - Unburned cells adjacent to the perimeter inherit the nearest arrival time so
+ *   bilinear texture filtering blends the boundary mask without smearing arrival times.
+ */
+function encodeGridTexture(grid: Grid, arrival: Float32Array, durationMin: number, scale = 2): HTMLCanvasElement {
   const { cols, rows } = grid
+  const span = Math.max(1, durationMin)
+  const code = (m: number) => Math.min(255, Math.max(0, Math.round((m / span) * 255)))
+
+  const total = cols * rows
+  const arrCode = new Uint8Array(total)
+  const burnMask = new Uint8Array(total)
+
+  for (let k = 0; k < total; k++) {
+    const a = arrival[k]
+    if (Number.isFinite(a) && a < durationMin) {
+      arrCode[k] = code(a)
+      burnMask[k] = 255
+    } else {
+      arrCode[k] = 255
+      burnMask[k] = 0
+    }
+  }
+
+  // Flood-fill 2-ring unburned border cells with the nearest arrival code
+  // so linear texture filtering blends the mask (G) without smearing arrival (R)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const k = r * cols + c
+      if (burnMask[k] === 0) {
+        let minCode = 255
+        for (let dr = -2; dr <= 2; dr++) {
+          for (let dc = -2; dc <= 2; dc++) {
+            const nr = r + dr
+            const nc = c + dc
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue
+            const nk = nr * cols + nc
+            if (burnMask[nk] > 0) {
+              minCode = Math.min(minCode, arrCode[nk])
+            }
+          }
+        }
+        arrCode[k] = minCode
+      }
+    }
+  }
+
+  // Supersample grid with bilinear interpolation
   const outW = cols * scale
   const outH = rows * scale
   const canvas = document.createElement('canvas')
@@ -326,16 +315,7 @@ function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, s
   canvas.height = outH
   const ctx = canvas.getContext('2d')!
   const imgData = ctx.createImageData(outW, outH)
-  const data = new Uint32Array(imgData.data.buffer)
-
-  const n = cols * rows
-  const burnedMask = new Uint8Array(n)
-  for (let i = 0; i < n; i++) {
-    if (arrival[i] < durationMin) burnedMask[i] = 1
-  }
-
-  // Pre-fill white (transparent in Cesium colorToAlpha)
-  data.fill(0xffffffff)
+  const data = imgData.data
 
   for (let py = 0; py < outH; py++) {
     const gy = (py + 0.5) / scale - 0.5
@@ -349,119 +329,34 @@ function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, s
       const c1 = Math.max(0, Math.min(cols - 1, c0 + 1))
       const fx = gx - c0
 
-      const idx00 = r0 * cols + c0
-      const idx10 = r0 * cols + c1
-      const idx01 = r1 * cols + c0
-      const idx11 = r1 * cols + c1
-
-      const b00 = burnedMask[idx00]
-      const b10 = burnedMask[idx10]
-      const b01 = burnedMask[idx01]
-      const b11 = burnedMask[idx11]
-
-      if (b00 + b10 + b01 + b11 === 0) continue
-
       const w00 = (1 - fx) * (1 - fy)
       const w10 = fx * (1 - fy)
       const w01 = (1 - fx) * fy
       const w11 = fx * fy
 
-      const burnWeight = w00 * b00 + w10 * b10 + w01 * b01 + w11 * b11
-      if (burnWeight < 0.42) continue
+      const k00 = r0 * cols + c0
+      const k10 = r0 * cols + c1
+      const k01 = r1 * cols + c0
+      const k11 = r1 * cols + c1
 
-      let sumArr = 0
-      let sumW = 0
-      if (b00) { sumArr += w00 * arrival[idx00]; sumW += w00 }
-      if (b10) { sumArr += w10 * arrival[idx10]; sumW += w10 }
-      if (b01) { sumArr += w01 * arrival[idx01]; sumW += w01 }
-      if (b11) { sumArr += w11 * arrival[idx11]; sumW += w11 }
+      const m00 = burnMask[k00]
+      const m10 = burnMask[k10]
+      const m01 = burnMask[k01]
+      const m11 = burnMask[k11]
 
-      let a = sumW > 0 ? sumArr / sumW : durationMin
-      // Sub-cell gradient across border
-      if (burnWeight < 0.95) {
-        a += (0.95 - burnWeight) * 3.5
-      }
+      const mask = Math.round(w00 * m00 + w10 * m10 + w01 * m01 + w11 * m11)
+      const arr = Math.round(
+        w00 * arrCode[k00] + w10 * arrCode[k10] + w01 * arrCode[k01] + w11 * arrCode[k11],
+      )
 
-      if (a < durationMin) {
-        const k = Math.min(255, Math.max(0, Math.round((255 * KEY * a) / durationMin)))
-        // Little-endian 0xAABBGGRR: Alpha=255, Blue=k, Green=163, Red=255
-        data[py * outW + px] = (0xff << 24) | (k << 16) | (0xa3 << 8) | 0xff
-      }
+      const offset = (py * outW + px) * 4
+      data[offset] = arr      // R: arrival time
+      data[offset + 1] = mask // G: burned mask
+      data[offset + 2] = 255  // B: reserved / suppression line
+      data[offset + 3] = 255  // A: opaque
     }
   }
 
   ctx.putImageData(imgData, 0, 0)
-  return canvas.toDataURL('image/png')
-}
-
-/** Procedural multi-tongued wildfire flame sprite forming a continuous fiery wall */
-function makeFlameSprite(): string {
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 128
-  const g = canvas.getContext('2d')!
-
-  // Broad incandescent glowing base
-  const baseGrad = g.createRadialGradient(64, 115, 4, 64, 100, 58)
-  baseGrad.addColorStop(0, 'rgba(255, 255, 230, 1.0)')
-  baseGrad.addColorStop(0.35, 'rgba(255, 205, 45, 0.95)')
-  baseGrad.addColorStop(0.7, 'rgba(255, 85, 12, 0.82)')
-  baseGrad.addColorStop(1, 'rgba(180, 20, 0, 0)')
-  g.fillStyle = baseGrad
-  g.beginPath()
-  g.ellipse(64, 115, 60, 20, 0, 0, Math.PI * 2)
-  g.fill()
-
-  const drawTongue = (cx: number, cy: number, w: number, h: number, curve: number) => {
-    const grad = g.createRadialGradient(cx, cy + h * 0.4, 2, cx, cy, h * 0.72)
-    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)')
-    grad.addColorStop(0.28, 'rgba(255, 215, 55, 0.96)')
-    grad.addColorStop(0.62, 'rgba(255, 95, 12, 0.88)')
-    grad.addColorStop(0.85, 'rgba(210, 35, 5, 0.55)')
-    grad.addColorStop(1, 'rgba(120, 10, 0, 0)')
-    g.fillStyle = grad
-    g.beginPath()
-    g.moveTo(cx, cy - h)
-    g.bezierCurveTo(cx + w + curve, cy - h * 0.3, cx + w, cy + h * 0.4, cx, cy + h * 0.5)
-    g.bezierCurveTo(cx - w, cy + h * 0.4, cx - w + curve, cy - h * 0.3, cx, cy - h)
-    g.fill()
-  }
-
-  // 5 overlapping fire tongues forming a thick wall of flame
-  drawTongue(64, 60, 28, 56, 4)
-  drawTongue(42, 68, 24, 46, -3)
-  drawTongue(86, 68, 24, 46, 3)
-  drawTongue(22, 82, 19, 34, -5)
-  drawTongue(106, 82, 19, 34, 5)
-
-  return canvas.toDataURL('image/png')
-}
-
-/** Volumetric multi-lobed dark billowing smoke cloud puff */
-function makeSmokeSprite(): string {
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 128
-  const g = canvas.getContext('2d')!
-
-  const drawPuff = (cx: number, cy: number, r: number, alpha: number) => {
-    const grad = g.createRadialGradient(cx, cy, r * 0.08, cx, cy, r)
-    grad.addColorStop(0, `rgba(22, 19, 18, ${alpha})`)
-    grad.addColorStop(0.48, `rgba(32, 28, 26, ${alpha * 0.72})`)
-    grad.addColorStop(0.82, `rgba(45, 40, 38, ${alpha * 0.28})`)
-    grad.addColorStop(1, 'rgba(50, 45, 42, 0)')
-    g.fillStyle = grad
-    g.beginPath()
-    g.arc(cx, cy, r, 0, Math.PI * 2)
-    g.fill()
-  }
-
-  // Overlapping soft organic lobes
-  drawPuff(64, 64, 58, 0.72)
-  drawPuff(46, 50, 46, 0.62)
-  drawPuff(82, 52, 46, 0.62)
-  drawPuff(54, 82, 42, 0.58)
-  drawPuff(76, 78, 42, 0.58)
-
-  return canvas.toDataURL('image/png')
+  return canvas
 }
