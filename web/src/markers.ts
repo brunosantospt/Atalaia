@@ -14,13 +14,14 @@ import {
   type Viewer,
 } from 'cesium'
 import { destination } from './geo'
+import { BEST_CSS } from './reachLayer'
 import type { MarkerKind, MarkerSpec } from './shots'
 
 const RING_COLOR: Record<MarkerKind, Color> = {
   ignition: Color.fromCssColorString('#f0a33a'),
   step: Color.fromCssColorString('#f0a33a').withAlpha(0.8),
   station: Color.fromCssColorString('#d9dcdf').withAlpha(0.85),
-  eta: Color.fromCssColorString('#f0a33a'),
+  best: Color.fromCssColorString(BEST_CSS),
   tsat: Color.fromCssColorString('#f0a33a'),
 }
 const LEAD_PX = 54 // horizontal gap between a point and its tag
@@ -40,7 +41,7 @@ const SVG = 'http://www.w3.org/2000/svg'
 interface Marker {
   spec: MarkerSpec
   world: Cartesian3
-  ring: Entity | undefined // none when the spec's ringM is 0: the reach layer draws its own line
+  ring: Entity | undefined // none when the spec's ringM is 0
   tag: HTMLElement
   line: SVGLineElement
   dot: SVGCircleElement
@@ -92,6 +93,12 @@ export class MarkerLayer {
       line.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('r', '3')
+      if (spec.kind === 'best') {
+        // Green like its line on the ground (reachLayer.ts); hud.css colours the other kinds.
+        tag.querySelector('b')!.style.background = BEST_CSS
+        line.style.stroke = BEST_CSS
+        dot.style.fill = BEST_CSS
+      }
       this.svg.append(line, dot)
       this.root.append(tag)
       this.markers.push({
