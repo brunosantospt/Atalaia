@@ -1,4 +1,4 @@
-﻿import 'cesium/Build/Cesium/Widgets/widgets.css'
+import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
@@ -298,8 +298,13 @@ async function main() {
     const fresh = decisionShots(data, scenario.grid, stations, suppression, editor.decisions, runs, reports, fovy)
     await addHeights({ shots: fresh, markers: [] }, viewer.terrainProvider)
     if (replay?.story !== story) return // another fire meanwhile
-    const kept = story.shots.filter((s) => !DIRECTOR_KINDS.has(s.kind))
-    story.shots = [...kept, ...fresh]
+    const beforeSpread = story.shots.filter(
+      (s) => !DIRECTOR_KINDS.has(s.kind) && s.kind !== 'spread' && s.kind !== 'axis' && s.kind !== 'balance',
+    )
+    const spreadAndAfter = story.shots.filter(
+      (s) => s.kind === 'spread' || s.kind === 'axis' || s.kind === 'balance',
+    )
+    story.shots = [...beforeSpread, ...fresh, ...spreadAndAfter]
     setShots()
   }
 

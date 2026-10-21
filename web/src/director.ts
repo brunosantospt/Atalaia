@@ -19,7 +19,7 @@ const MARGIN = 1.35
 const MIN_RANGE_M = 1500
 const SPOT = 1.25
 /** The kinds the director's cut keeps (key D): the 90 s of the demo, without the step-by-step observed spread. */
-export const CUT: ShotKind[] = ['overview', 'ignition', 'known', 'reach', 'checkpoint', 'balance', 'decision', 'versus', 'outcome']
+export const CUT: ShotKind[] = ['overview', 'ignition', 'known', 'reach', 'checkpoint', 'decision', 'versus', 'outcome', 'balance']
 
 export function decisionShots(
   fire: Fire,
@@ -39,7 +39,7 @@ export function decisionShots(
   const far = fire.steps.reduce((a, b) => (distanceM(ignition, b.center) > distanceM(ignition, a.center) ? b : a))
   const axis = distanceM(ignition, far.center) > 100 ? bearingDeg(ignition, far.center) : 0
   const durationMin = runs.A.durationMin
-  const endH = durationMin / 60
+  const endH = Math.min(5.0, durationMin / 60)
   const areaOf = memo((run: 'free' | 'A' | 'B', minute: number) => burnedHa(grid, runs[run], minute))
   const shots: Shot[] = []
 
@@ -63,7 +63,7 @@ export function decisionShots(
       const fromName = isAerial(unit) ? (base?.short ?? 'da base aérea') : (station?.short ?? '')
       return `${unit.short}×${a.count} ${fromName} T+${minutes} min`
     })
-    const hours = Math.min(Math.max(lastMin, 15), durationMin) / 60
+    const hours = 2.5
     shots.push({
       kind: 'decision',
       word: `Decisão ${id}`,
@@ -93,21 +93,21 @@ export function decisionShots(
   // ---- A against B, side by side, as the fire runs from the first shot's hour to the end ----
   const burned = burnedBox(grid, runs, durationMin) ?? bboxOf([ignition])
   const r = Math.max(bboxRadiusM(burned), 800)
-  const fromH = Math.min(...shots.map((s) => s.hours), endH)
+  const fromH = 2.5
   const pair = (h: number) => `A ${fmtHa(areaOf('A', h * 60))} · B ${fmtHa(areaOf('B', h * 60))}`
   const verdict = reports && recommend(reports.A, reports.B)
   const line = (id: 'A' | 'B', rep: Report | undefined) =>
-    `${id}: ${fmtHa(areaOf(id, durationMin))}${rep ? `, ${rep.places.length} ${rep.places.length === 1 ? 'lugar' : 'lugares'}` : ''}`
+    `${id}: ${fmtHa(areaOf(id, endH * 60))}${rep ? `, ${rep.places.length} ${rep.places.length === 1 ? 'lugar' : 'lugares'}` : ''}`
   shots.push({
     kind: 'versus',
     word: 'A vs B',
-    title: `A vs B · ${fmtHa(areaOf('A', durationMin))} vs ${fmtHa(areaOf('B', durationMin))} às ${endH} h`,
-    caption: `Arrasta a linha para comparar. Livre: ${fmtHa(areaOf('free', durationMin))}. ${line('A', reports?.A)}. ${line('B', reports?.B)}.`,
+    title: `A vs B · ${fmtHa(areaOf('A', endH * 60))} vs ${fmtHa(areaOf('B', endH * 60))} às ${endH} h`,
+    caption: `Arrasta a linha para comparar. Livre: ${fmtHa(areaOf('free', endH * 60))}. ${line('A', reports?.A)}. ${line('B', reports?.B)}.`,
     place: bboxCenter(burned),
     simulated: true,
     step: -1,
     hours: fromH,
-    areaHa: areaOf('A', durationMin),
+    areaHa: areaOf('A', endH * 60),
     untimed: false,
     path: [pose(bboxCenter(burned), 0, -88, fit(r))],
     driftDeg: 0,
@@ -140,7 +140,7 @@ export function decisionShots(
     simulated: true,
     step: -1,
     hours: endH,
-    areaHa: areaOf(pick ?? 'A', durationMin),
+    areaHa: areaOf(pick ?? 'A', endH * 60),
     untimed: false,
     path: [pose(bboxCenter(burned), axis - 20, -58, fit(r))],
     driftDeg: 12,

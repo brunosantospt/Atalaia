@@ -18,11 +18,11 @@ import {
 } from 'cesium'
 import type { Progression, Ring } from './data'
 
-export const FIRE_AMBER = Color.fromCssColorString('#f59e0b')
-const FRONT = FIRE_AMBER.withAlpha(0.92) // what the latest step added: vibrant active flame
-const SCAR = Color.fromCssColorString('#12100e').withAlpha(0.85) // burned in earlier steps: charred black ash
-const UNTIMED = Color.fromCssColorString('#262220').withAlpha(0.75) // burned, time unknown: dark soot
-const OUTLINE = FIRE_AMBER.withAlpha(0.95)
+export const FIRE_AMBER = Color.fromCssColorString('#d97706')
+const FRONT = FIRE_AMBER.withAlpha(0.90) // what the latest step added: warm glowing flame
+const SCAR = Color.fromCssColorString('#2a2826').withAlpha(0.75) // burned in earlier steps: subtle mineral ash gray
+const UNTIMED = Color.fromCssColorString('#383533').withAlpha(0.65) // burned, time unknown: soft ash soot
+const OUTLINE = Color.fromCssColorString('#ea580c').withAlpha(0.85)
 
 export interface FireState {
   step: number // last step shown, -1 for none

@@ -55,71 +55,67 @@ czm_material czm_getMaterial(czm_materialInput materialInput) {
   }
 
   // Smooth sub-meter anti-aliased edge
-  float edgeFade = smoothstep(0.20, 0.72, s.g);
+  float edgeFade = smoothstep(0.18, 0.65, s.g);
 
   // Micro heat-shimmer and organic wave turbulence along the fireline
   float flicker = 0.88 + 0.12 * sin(czm_frameNumber * 0.35 + materialInput.st.s * 820.0 + materialInput.st.t * 540.0);
   float wave = 0.94 + 0.06 * sin(czm_frameNumber * 0.15 + materialInput.st.s * 310.0 - materialInput.st.t * 220.0);
 
-  // 3. Multi-tonal Wildfire Thermal Palette
-  // Incandescent white-gold crest -> radiant golden yellow -> intense fire orange -> deep amber -> glowing embers
-  vec3 cWhiteGold   = vec3(1.0, 0.98, 0.74);    // incandescent crest along mountain ridges
-  vec3 cGolden      = vec3(1.0, 0.82, 0.18);    // radiant golden yellow flame body
-  vec3 cOrange      = vec3(1.0, 0.46, 0.04);    // pure fiery vibrant orange
-  vec3 cAmber       = vec3(0.85, 0.22, 0.02);   // deep fiery amber-crimson
-  vec3 cEmber       = vec3(0.42, 0.10, 0.02);   // glowing dark red coals
-  vec3 cCharcoal    = vec3(0.065, 0.058, 0.052);// matte dark charcoal soot
-  vec3 cAsh         = vec3(0.12, 0.10, 0.09);   // subtle ash gray-brown
-  vec3 cSmoke       = vec3(0.15, 0.14, 0.13);   // soft warm smoke veil
+  // 3. Natural Muted Wildfire Palette (Acinzentado & Menos Vivo)
+  // Thin, sharp glowing perimeter edge cooling rapidly into realistic mineral ash and charcoal
+  vec3 cWhiteGold    = vec3(0.96, 0.93, 0.80);    // warm white-gold glowing crest
+  vec3 cWarmAmber    = vec3(0.88, 0.64, 0.24);    // natural desaturated golden amber
+  vec3 cMutedFlame   = vec3(0.78, 0.40, 0.12);    // organic muted fire flame
+  vec3 cCoolingEmber = vec3(0.40, 0.16, 0.06);    // dark reddish-amber cooling coals
+  vec3 cAshGray      = vec3(0.24, 0.23, 0.22);    // subtle mineral ash gray (predominant)
+  vec3 cDarkCharcoal = vec3(0.13, 0.125, 0.12);   // soft soot and charcoal
+  vec3 cAshHighlight = vec3(0.29, 0.28, 0.26);    // lighter ash deposits on ridges
+  vec3 cSmoke        = vec3(0.55, 0.54, 0.52);    // soft pale grayish-white smoke veil
 
   vec3 color;
   vec3 emission;
   float alpha;
 
-  if (age < 2.5) {
-    // Leading active crest (0 to 2.5 min): Incandescent crest, white-gold to golden yellow
-    float t = age / 2.5;
-    color = mix(cWhiteGold, cGolden, t) * flicker;
-    emission = color * 1.4;
+  if (age < 1.4) {
+    // 1. Leading incandescent edge (0.0 to 1.4 min): Thin, sharp glowing crest line
+    float t = age / 1.4;
+    color = mix(cWhiteGold, cWarmAmber, t) * flicker;
+    emission = color * 1.35;
     alpha = 0.95;
-  } else if (age < 8.0) {
-    // Main flaming body (2.5 to 8.0 min): Radiant golden yellow to pure flame orange
-    float t = (age - 2.5) / 5.5;
-    color = mix(cGolden, cOrange, t) * flicker;
-    emission = color * 1.15;
-    alpha = 0.93;
-  } else if (age < 18.0) {
-    // Deep flame ribbon (8.0 to 18.0 min): Flame orange to deep amber-crimson
-    float t = (age - 8.0) / 10.0;
-    color = mix(cOrange, cAmber, t) * wave;
-    emission = color * 0.70;
-    alpha = 0.90;
-  } else if (age < 35.0) {
-    // Smoldering embers (18.0 to 35.0 min): Amber to glowing dark red embers
-    float t = (age - 18.0) / 17.0;
-    color = mix(cAmber, cEmber, t);
-    emission = cEmber * (1.0 - t * 0.70) * 0.45;
-    alpha = mix(0.88, 0.80, t);
+  } else if (age < 4.2) {
+    // 2. Active flaming ribbon (1.4 to 4.2 min): Warm golden amber to muted flame
+    float t = (age - 1.4) / 2.8;
+    color = mix(cWarmAmber, cMutedFlame, t) * flicker;
+    emission = color * 1.05;
+    alpha = 0.92;
+  } else if (age < 8.5) {
+    // 3. Cooling embers (4.2 to 8.5 min): Muted flame to cooling dark coals
+    float t = (age - 4.2) / 4.3;
+    color = mix(cMutedFlame, cCoolingEmber, t) * wave;
+    emission = cCoolingEmber * (1.0 - t * 0.70) * 0.40;
+    alpha = mix(0.90, 0.82, t);
   } else {
-    // Burned area: subtle layers of dark charcoal, soot, and ash keeping terrain relief visible
-    float sootNoise = 0.92 + 0.16 * fract(sin(dot(materialInput.st * 380.0, vec2(12.9898, 78.233))) * 43758.5453);
-    float k = clamp((age - 35.0) / 45.0, 0.0, 1.0);
-    vec3 baseScar = mix(cEmber * 0.45, cCharcoal * sootNoise, k);
+    // 4. Burned area: subtle mineral ash gray and soft charcoal with organic relief variations
+    float sootNoise = 0.88 + 0.24 * fract(sin(dot(materialInput.st * 340.0, vec2(12.9898, 78.233))) * 43758.5453);
+    float k = clamp((age - 8.5) / 35.0, 0.0, 1.0);
+    
+    // Base tone: blend of ash gray and charcoal with noise
+    vec3 baseScar = mix(cCoolingEmber * 0.35, cDarkCharcoal * sootNoise, k);
 
-    // Subtle ash layer near margins & terrain folds
-    float ashMod = 0.85 + 0.15 * sin(materialInput.st.s * 85.0 + materialInput.st.t * 65.0);
-    vec3 finalScar = mix(cAsh * ashMod, baseScar, clamp((age - 35.0) / 30.0, 0.35, 1.0));
+    // Subtle ash deposit highlights following terrain relief
+    float ashMod = 0.50 + 0.50 * sin(materialInput.st.s * 75.0 + materialInput.st.t * 55.0);
+    vec3 finalScar = mix(baseScar, mix(cAshGray, cAshHighlight, ashMod), clamp((age - 8.5) / 25.0, 0.40, 0.85));
 
-    // Soft, non-exaggerated smoke veil lingering over recently burned basin
-    if (age < 65.0) {
-      float smokeHaze = (1.0 - (age - 35.0) / 30.0) * 0.20;
+    // Soft, pale grayish-white smoke haze lingering over recently burned basin
+    if (age < 55.0) {
+      float smokeHaze = (1.0 - (age - 8.5) / 46.5) * 0.22;
       finalScar = mix(finalScar, cSmoke, smokeHaze);
     }
 
     color = finalScar;
-    emission = cEmber * (1.0 - k) * 0.12;
-    // Subtle alpha (0.76 - 0.82) preserves 3D terrain shadows and satellite relief underneath
-    alpha = mix(0.82, 0.76, k);
+    emission = cCoolingEmber * (1.0 - k) * 0.08;
+    // Calibrated alpha preserves 3D terrain relief, shadows, and satellite imagery underneath
+    alpha = mix(0.78, 0.70, k);
   }
 
   m.diffuse = color;
