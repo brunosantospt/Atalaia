@@ -36,7 +36,7 @@ const TEMPLATE = `
     <h3>Motor de propagação</h3>
     <div class="choices" data-ref="engines"></div>
     <p class="note" data-ref="no-api" hidden>A API está desligada, por isso não há motores. Corre api/serve.sh.</p>
-    <p class="note">O replay mostra o incêndio observado. O motor escolhido é o que corre as simulações das decisões A e B.</p>
+    <p class="note">O replay mostra o incêndio de referência (observado, ou simulado no ELMFIRE). O motor escolhido é o que corre as simulações das decisões A e B.</p>
   </section>
 `
 
