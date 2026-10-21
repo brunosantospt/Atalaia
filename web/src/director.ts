@@ -1,16 +1,17 @@
 // The director's shots: after the observed replay, the decisions A and B as the editor holds
-// them, played on the fast model. One shot per decision (its means on the ground at the hour
-// the last of them arrives), A against B side by side as the fire runs to the end of the run,
-// and the outcome with the recommendation. Built again whenever the decisions change.
+// them, played on the runs on the screen (the engine's, or the fast model's until they come). One
+// shot per decision (its means on the ground at the hour the last of them arrives), A against B
+// side by side as the fire runs until the later of the two stops, and the outcome with the
+// recommendation and when each fire is out. Built again whenever the decisions change.
 
 import type { Pose } from './camera'
 import type { Fire, NearStation } from './data'
 import type { Reports, Runs } from './editor'
 import { burnedHa } from './fastModel'
-import { fmtHa, fmtKm, fmtTime, wallClock } from './format'
+import { fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, distanceM, type LonLat } from './geo'
 import { lonLatAt, type Grid } from './grid'
-import { describeVerdict, recommend, type Report } from './report'
+import { describeEnd, describeVerdict, endMinute, fireEnd, recommend, type Report } from './report'
 import type { Shot, ShotKind } from './shots'
 import { arrivalMin, isAerial, type Decision, type Suppression } from './suppression'
 import { findAirBase } from './airBases'
@@ -38,8 +39,11 @@ export function decisionShots(
   const ignition = fire.ignition
   const far = fire.steps.reduce((a, b) => (distanceM(ignition, b.center) > distanceM(ignition, a.center) ? b : a))
   const axis = distanceM(ignition, far.center) > 100 ? bearingDeg(ignition, far.center) : 0
-  const durationMin = runs.A.durationMin
+  // The clock runs until both fires are out, or to the end of the runs.
+  const durationMin = Math.max(endMinute(grid, runs.A), endMinute(grid, runs.B))
   const endH = durationMin / 60
+  const end = (id: 'free' | 'A' | 'B') => describeEnd(fireEnd(grid, runs[id]), fire.start, runs[id].durationMin)
+  const engine = runs.A.engine ? `Simulado com ${runs.A.engine}.` : 'Modelo rápido; o motor físico confirma depois.'
   const areaOf = memo((run: 'free' | 'A' | 'B', minute: number) => burnedHa(grid, runs[run], minute))
   const shots: Shot[] = []
 
@@ -96,13 +100,13 @@ export function decisionShots(
   const fromH = Math.min(...shots.map((s) => s.hours), endH)
   const pair = (h: number) => `A ${fmtHa(areaOf('A', h * 60))} · B ${fmtHa(areaOf('B', h * 60))}`
   const verdict = reports && recommend(reports.A, reports.B)
-  const line = (id: 'A' | 'B', rep: Report | undefined) =>
-    `${id}: ${fmtHa(areaOf(id, durationMin))}${rep ? `, ${rep.places.length} ${rep.places.length === 1 ? 'lugar' : 'lugares'}` : ''}`
+  const places = (id: 'A' | 'B', rep: Report | undefined) =>
+    rep ? ` ${id} atinge ${rep.places.length} ${rep.places.length === 1 ? 'lugar' : 'lugares'}${rep.minutes < durationMin ? ` às ${fmtNumber(rep.minutes / 60)} h` : ''}.` : ''
   shots.push({
     kind: 'versus',
     word: 'A vs B',
-    title: `A vs B · ${fmtHa(areaOf('A', durationMin))} vs ${fmtHa(areaOf('B', durationMin))} às ${endH} h`,
-    caption: `Arrasta a linha para comparar. Livre: ${fmtHa(areaOf('free', durationMin))}. ${line('A', reports?.A)}. ${line('B', reports?.B)}.`,
+    title: `A vs B · ${fmtHa(fireEnd(grid, runs.A).burnedHa)} vs ${fmtHa(fireEnd(grid, runs.B).burnedHa)}`,
+    caption: `Arrasta a linha para comparar. A: ${end('A')}. B: ${end('B')}. Livre: ${end('free')}.${places('A', reports?.A)}${places('B', reports?.B)}`,
     place: bboxCenter(burned),
     simulated: true,
     step: -1,
@@ -128,14 +132,16 @@ export function decisionShots(
   shots.push({
     kind: 'outcome',
     word: 'Resultado',
-    title: verdict && reports ? describeVerdict(verdict, reports.A, reports.B) : `Resultado às ${endH} h`,
-    caption: picked
-      ? [
-          picked.places.length ? `lugares atingidos ${picked.places.map((p) => `${p.name} T+${Math.round(p.minute)} min`).join(', ')}` : 'nenhum lugar atingido',
-          picked.firstHomeMin === null ? 'nenhuma casa' : `1.ª casa T+${Math.round(picked.firstHomeMin)} min`,
-          roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada',
-        ].join(' · ') + '. O motor físico confirma depois; isto é o modelo rápido.'
-      : `${pair(endH)}. Sem dados OSM: a recomendação precisa dos lugares.`,
+    title: verdict && reports ? describeVerdict(verdict, reports.A, reports.B) : `A: ${end('A')}`,
+    caption:
+      `A: ${end('A')}. B: ${end('B')}. ` +
+      (picked
+        ? [
+            picked.places.length ? `lugares atingidos ${picked.places.map((p) => `${p.name} T+${Math.round(p.minute)} min`).join(', ')}` : 'nenhum lugar atingido',
+            picked.firstHomeMin === null ? 'nenhuma casa' : `1.ª casa T+${Math.round(picked.firstHomeMin)} min`,
+            roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada',
+          ].join(' · ') + `. ${engine}`
+        : `Sem dados OSM: a recomendação precisa dos lugares. ${engine}`),
     place: bboxCenter(burned),
     simulated: true,
     step: -1,

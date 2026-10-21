@@ -1,9 +1,9 @@
-// The report at the end of a run (6 h by default): what a decision left burned, from the
-// arrival grid of the fast model and the OSM context. Hectares, homes and villages reached
+// The report at the end of a run (or at a minute of it): what a decision left burned, from the
+// arrival grid of a run (the fast model or an engine) and the OSM context. Hectares, homes and villages reached
 // with the minute the fire got there, and the roads it crossed.
 
 import type { Run } from './fastModel'
-import { fmtHa, fmtNumber } from './format'
+import { fmtHa, fmtNumber, fmtTime, wallClock } from './format'
 import { cellHa, type Grid } from './grid'
 import { roadLabel, type Context, type RoadClass } from './osm'
 
@@ -116,3 +116,47 @@ export function recommend(a: Report, b: Report): Verdict {
   if (Math.abs(a.burnedHa - b.burnedHa) >= 1) return { pick: a.burnedHa < b.burnedHa ? 'A' : 'B', by: 'area' }
   return { pick: null, by: 'tie' }
 }
+
+/** How a run ends: the minute the fire stopped and the area then, or not stopped by the end of the run. */
+export interface FireEnd {
+  minute: number | null // the last cell reached, when the fire has stopped; null when it still grows at the end
+  burnedHa: number // at the end of the run
+  edge: boolean // it reached the grid's border: the area is a minimum, and the fire did not stop there
+}
+
+const QUIET_MIN = 60 // stopped: no new cell in the run's last hour
+
+const ends = new WeakMap<Run, FireEnd>()
+export function fireEnd(grid: Grid, run: Run): FireEnd {
+  const known = ends.get(run)
+  if (known) return known
+  const { arrival, durationMin } = run
+  let last = -Infinity
+  let cells = 0
+  let edge = false
+  for (let i = 0; i < arrival.length; i++) {
+    const t = arrival[i]
+    if (!(t <= durationMin)) continue
+    cells++
+    if (t > last) last = t
+    const col = i % grid.cols
+    const row = (i - col) / grid.cols
+    if (col === 0 || row === 0 || col === grid.cols - 1 || row === grid.rows - 1) edge = true
+  }
+  const end = { minute: !edge && last <= durationMin - QUIET_MIN ? Math.max(last, 0) : null, burnedHa: cells * cellHa(grid), edge }
+  ends.set(run, end)
+  return end
+}
+
+/** "Extinto às 21:40 (T+11h 40min) · 820,0 ha", "Não extinto em 24 h · 1942,2 ha" */
+export function describeEnd(end: FireEnd, start: string, durationMin: number): string {
+  if (end.minute === null) {
+    const hours = fmtNumber(durationMin / 60)
+    return end.edge ? `Não extinto em ${hours} h · sai da grelha, mais de ${fmtHa(end.burnedHa)}` : `Não extinto em ${hours} h · ${fmtHa(end.burnedHa)}`
+  }
+  const m = Math.round(end.minute)
+  return `Extinto às ${fmtTime(wallClock(start, m / 60))} (T+${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}min) · ${fmtHa(end.burnedHa)}`
+}
+
+/** The hour the fire is over in a run: when it stopped, else the end of the run. */
+export const endMinute = (grid: Grid, run: Run) => fireEnd(grid, run).minute ?? run.durationMin

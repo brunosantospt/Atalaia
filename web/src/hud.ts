@@ -27,6 +27,7 @@ export interface HudActions {
   next(): void
   goTo(i: number): void
   pickFire(id: string): void
+  pickEngine?(): void // the settings' engine changed: the decisions run on it
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
   resetNorth?(): void
@@ -232,7 +233,7 @@ export class Hud {
 
     this.ledger = new Ledger(root)
     this.alerts = new AlertStack(root, (at) => actions.flyTo?.(at))
-    this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire })
+    this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire, pickEngine: actions.pickEngine })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
     this.refs.next.addEventListener('click', () => actions.next())

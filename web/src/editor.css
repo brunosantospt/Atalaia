@@ -424,6 +424,20 @@
 .hud .editor .report tr:first-child th.on {
   color: var(--amber);
 }
+/* How each run ends: the extinction and the final area first, the 6 h area beside it. */
+.hud .editor .ends td.end {
+  padding-left: 8px;
+  text-align: left;
+  white-space: normal;
+  color: var(--ink);
+}
+.hud .editor .ends td:last-child {
+  padding-left: 8px;
+  color: var(--ink-dim);
+}
+.hud .editor .ends tr.on th {
+  color: var(--amber);
+}
 .hud .editor .report .none {
   text-align: left;
   text-transform: none;

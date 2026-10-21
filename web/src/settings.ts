@@ -21,6 +21,7 @@ interface Stored {
 
 export interface SettingsActions {
   pickFire(id: string): void
+  pickEngine?(): void
 }
 
 const TEMPLATE = `
@@ -46,7 +47,7 @@ export class SettingsPanel {
   private engines: Engine[] | null = null
   private asked = 0 // engine lists asked for, so a late answer does not replace a newer one
 
-  constructor(parent: HTMLElement, fires: FireIndexEntry[], actions: SettingsActions) {
+  constructor(parent: HTMLElement, fires: FireIndexEntry[], private readonly actions: SettingsActions) {
     this.el = document.createElement('aside')
     this.el.className = 'settings'
     this.el.setAttribute('aria-label', 'Settings')
@@ -97,6 +98,7 @@ export class SettingsPanel {
         return choice('engine', e.id, { name: e.name, detail: `${e.version} · ${e.method}`, state }, () => {
           this.stored = { ...this.stored, engine: e.id }
           save(this.stored)
+          this.actions.pickEngine?.()
         })
       }),
     )
