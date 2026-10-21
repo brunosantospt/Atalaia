@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atalaia · Pitch</title>
+  <link rel="stylesheet" href="vendor/reveal.js-5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-5.1.0/dist/reveal.css">
+  <style>
+    /* Mesma linguagem do HUD da app (web/src/hud.css): cinzas neutros, texto mono em maiúsculas,
+       e o âmbar só para o fogo. Assim a passagem dos slides para a demo não salta. */
+    :root {
+      --bg: #0d0e0f;
+      --ink: #d9dcdf;
+      --ink-dim: #8b9096;
+      --ink-faint: rgba(220, 224, 228, 0.16);
+      --line: rgba(220, 224, 228, 0.35);
+      --amber: #f0a33a;
+      --blue: #3d7bff;
+      --red: #e03131;
+      --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+      --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    html, body, .reveal-viewport { background: var(--bg); }
+    .reveal { font-family: var(--sans); color: var(--ink); font-size: 38px; }
+    .reveal .slides { text-align: left; }
+    .reveal .slides > section { height: 100%; display: flex !important; flex-direction: column; justify-content: center; }
+    .reveal .slides > section.stack, .reveal .slides > section[hidden] { display: none !important; }
+    .reveal h1, .reveal h2, .reveal h3 { font-family: var(--sans); color: var(--ink); font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 0.4em; text-transform: none; }
+    .reveal h1 { font-size: 2.6em; }
+    .reveal h2 { font-size: 1.6em; }
+    .reveal p { margin: 0 0 0.6em; line-height: 1.35; }
+    .reveal strong { color: var(--ink); }
+    .reveal .fire { color: var(--amber); }
+
+    /* rótulo "intel" no canto, como no HUD */
+    .tag { font-family: var(--mono); font-size: 0.42em; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 1.2em; display: block; }
+    .src { position: absolute; left: 0; bottom: 0; font-family: var(--mono); font-size: 0.36em; color: var(--ink-dim); letter-spacing: 0.04em; }
+    .dim { color: var(--ink-dim); }
+    .mono { font-family: var(--mono); }
+
+    /* marcador do que falta preencher a partir da build de quinta */
+    .tbd { font-family: var(--mono); font-size: 0.8em; color: var(--ink-dim); border: 1px dashed var(--line); padding: 0.05em 0.35em; border-radius: 3px; white-space: nowrap; }
+
+    /* cantos de mira, como no HUD */
+    .frame::before, .frame::after { content: ''; position: absolute; width: 28px; height: 28px; border-color: var(--line); border-style: solid; }
+    .frame::before { top: -10px; left: -10px; border-width: 1px 0 0 1px; }
+    .frame::after { bottom: -10px; right: -10px; border-width: 0 1px 1px 0; }
+
+    /* 1 · título */
+    /* Um só logótipo fora dos slides: grande ao centro no título, desliza para o canto nos restantes */
+    #logo { position: fixed; z-index: 30; top: 43%; left: 50%; width: min(52vw, 92vh); transform: translate(-50%, -50%);
+      transition: top 1.1s cubic-bezier(.65,0,.25,1), left 1.1s cubic-bezier(.65,0,.25,1), width 1.1s cubic-bezier(.65,0,.25,1), transform 1.1s cubic-bezier(.65,0,.25,1), opacity .6s; pointer-events: none; }
+    body.no-anim #logo { transition: none; }
+    body.logo-flying .reveal .slides > section.present { opacity: 0 !important; transition: none !important; }
+    body:not(.on-title) #logo { top: 2.2vh; left: 1.6vw; width: min(13vw, 23vh); transform: translate(0, 0); opacity: .85; }
+    .title-logo { width: 62%; max-width: 760px; display: block; margin: 0 0 1em; }
+    .title-line { font-family: var(--mono); font-size: 0.5em; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); }
+
+    /* 2 · número grande */
+    .big { font-size: 4.2em; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
+    .big .unit { font-size: 0.35em; font-weight: 600; color: var(--ink-dim); letter-spacing: 0; }
+    .row { display: flex; gap: 2.2em; align-items: flex-end; }
+    .lead { font-size: 1.15em; font-weight: 600; color: var(--ink); margin: 0 0 0.3em; }
+    .count { font-variant-numeric: tabular-nums; display: inline-block; }
+    /* a área ardida "arde" enquanto sobe e arrefece para o cinza no fim */
+    .count.burn { transition: color 1.2s ease, text-shadow 1.2s ease; }
+    .count.burn.counting { color: var(--amber); text-shadow: 0 0 28px rgba(240, 163, 58, 0.55), 0 0 64px rgba(224, 49, 49, 0.25); animation: flicker 0.18s infinite alternate; transition: none; }
+    @keyframes flicker { from { opacity: 1; } to { opacity: 0.88; } }
+
+    /* 3 · 100 pontos, 1 em âmbar */
+    .dots { display: grid; grid-template-columns: repeat(20, 22px); gap: 12px; margin: 0.4em 0 1em; }
+    .dots i { width: 22px; height: 22px; border-radius: 50%; background: var(--ink-faint); display: block; }
+    .dots i.hot { background: var(--amber); box-shadow: 0 0 18px rgba(240, 163, 58, 0.7); }
+    .bar { height: 26px; display: flex; width: 100%; max-width: 1100px; border-radius: 3px; overflow: hidden; margin: 0.2em 0 0.4em; }
+    .bar span { display: block; height: 100%; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; }
+    .agencies { display: flex; gap: 0.5em; flex-wrap: wrap; margin-top: 0.6em; }
+    .agencies span { font-family: var(--mono); font-size: 0.42em; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--line); padding: 0.5em 0.8em; color: var(--ink-dim); }
+
+    /* desafio, no estilo "DETECT. TRACK. AVOID." */
+    .challenge .shout { font-family: var(--mono); font-size: 2.6em; white-space: nowrap; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; margin: 0 0 0.25em; line-height: 1; }
+    .challenge .shout span { margin-right: 0.35em; }
+    .challenge .sub { font-family: var(--mono); font-size: 0.85em; color: var(--ink); margin-bottom: 2.2em; }
+    .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8em; }
+    .pill { border: 1px solid var(--ink-faint); background: rgba(220, 224, 228, 0.03); padding: 0.7em 0.9em; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 0.6em; align-items: center; }
+    .pill .num { grid-column: 1 / 3; font-family: var(--mono); font-size: 0.42em; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 0.3em; }
+    .pill svg { width: 1.2em; height: 1.2em; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .pill .lbl { font-family: var(--mono); font-size: 0.6em; letter-spacing: 0.14em; text-transform: uppercase; }
+    /* proposta: fontes, frase-chave e dados úteis */
+    .chips { display: flex; flex-wrap: wrap; gap: 0.35em; margin-top: 0.6em; }
+    .chips span { font-family: var(--mono); font-size: 0.36em; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--ink-faint); padding: 0.3em 0.55em; color: var(--ink-dim); }
+    .chips.data span { font-size: 0.5em; color: var(--ink); }
+    .punch { margin-top: 1em; }
+    .punch .line { font-size: 1.15em; font-weight: 700; }
+    .punch .who { font-family: var(--mono); font-size: 0.38em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin-top: 0.7em; }
+    .reveal .fragment.fade-in-quick { transition-duration: .35s; }
+    /* 4 · um cenário: fogo → meios → efeito */
+    .flow { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap: 0.8em; align-items: stretch; margin-top: 0.6em; }
+    .flow .card { position: relative; border: 1px solid var(--line); padding: 0.8em 1em; }
+    .flow .card h3 { font-size: 0.85em; margin-bottom: 0.3em; }
+    .flow .card p { font-size: 0.6em; color: var(--ink-dim); margin: 0; }
+    .flow .letter { font-family: var(--mono); font-size: 0.45em; letter-spacing: 0.2em; color: var(--ink-dim); }
+    .flow .arrow { align-self: center; font-family: var(--mono); color: var(--ink-dim); font-size: 0.8em; }
+    /* (estilos antigos do A vs B, sem uso por agora) */
+    .ab { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1em; align-items: stretch; margin-top: 0.6em; }
+    .ab .card { position: relative; border: 1px solid var(--line); padding: 0.8em 1em; }
+    .ab .card h3 { font-size: 1em; margin-bottom: 0.3em; }
+    .ab .card p { font-size: 0.62em; color: var(--ink-dim); margin: 0; }
+    .ab .vs { align-self: center; font-family: var(--mono); color: var(--ink-dim); font-size: 0.6em; letter-spacing: 0.2em; }
+    .ab .letter { font-family: var(--mono); font-size: 0.45em; letter-spacing: 0.2em; color: var(--ink-dim); }
+    .same { font-family: var(--mono); font-size: 0.42em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin-top: 1.2em; text-align: center; }
+
+    /* 5 · demo */
+    .demo { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; }
+    .demo .rec { width: 18px; height: 18px; border-radius: 50%; background: var(--amber); display: inline-block; margin-right: 0.5em; animation: blink 1.4s infinite; }
+    @keyframes blink { 50% { opacity: 0.2; } }
+    .demo .box { position: relative; border: 1px dashed var(--line); padding: 1.2em 2em; margin-top: 1em; font-family: var(--mono); font-size: 0.45em; color: var(--ink-dim); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.8; }
+
+    /* 6 · validação */
+    .val img { width: 100%; display: block; border: 1px solid var(--ink-faint); }
+    .val .caps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-family: var(--mono); font-size: 0.38em; color: var(--ink-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.4em; }
+    .legend { font-family: var(--mono); font-size: 0.38em; color: var(--ink-dim); margin-top: 0.5em; }
+    .legend b { display: inline-block; width: 12px; height: 12px; margin: 0 0.4em 0 1.2em; vertical-align: -1px; }
+    .legend b:first-child { margin-left: 0; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; margin-top: 0.9em; }
+    .kpi .n { font-size: 1.5em; font-weight: 800; letter-spacing: -0.02em; }
+    .kpi .l { font-size: 0.5em; color: var(--ink-dim); line-height: 1.3; }
+
+    /* 7 · comparação */
+    .cmp { width: 100%; border-collapse: collapse; font-size: 0.7em; margin-top: 0.4em; }
+    .cmp th, .cmp td { text-align: left; padding: 0.55em 0.8em; border-bottom: 1px solid var(--ink-faint); vertical-align: top; }
+    .cmp th { font-family: var(--mono); font-size: 0.75em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); font-weight: 400; }
+    .cmp td:last-child { font-family: var(--mono); text-align: center; color: var(--ink-dim); }
+    .cmp tr.us td { color: var(--ink); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(220, 224, 228, 0.05); font-weight: 600; }
+    .cmp tr.us td:last-child { color: var(--ink); }
+
+    /* 8 · fecho */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; margin: 0.4em 0 1.2em; }
+    .steps div { border-top: 1px solid var(--line); padding-top: 0.5em; font-size: 0.7em; line-height: 1.35; }
+    .steps .k { font-family: var(--mono); font-size: 0.7em; letter-spacing: 0.16em; color: var(--ink-dim); text-transform: uppercase; display: block; margin-bottom: 0.3em; }
+    .team { font-family: var(--mono); font-size: 0.42em; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+    .closing { font-size: 1.5em; font-weight: 700; line-height: 1.25; max-width: 1400px; }
+
+    /* créditos */
+    .credits { columns: 2; column-gap: 2em; font-size: 0.42em; line-height: 1.5; color: var(--ink-dim); }
+    .credits p { break-inside: avoid; margin-bottom: 0.7em; }
+    .credits strong { color: var(--ink); font-weight: 600; }
+
+    .reveal .progress { color: var(--amber); height: 3px; }
+    .reveal .slide-number { font-family: var(--mono); background: transparent; color: var(--ink-dim); font-size: 14px; }
+  </style>
+</head>
+<body>
+<img id="logo" src="img/atalaia-logo-dark.svg?v=2" alt="Atalaia — Ver primeiro. Decidir melhor.">
+<div class="reveal">
+<div class="slides">
+
+  <!-- ============================== 1 · TÍTULO · 0:00–0:05 ============================== -->
+  <section data-state="title" data-timing="5" data-transition-speed="slow">
+    <div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;padding-bottom:17%;">
+      <div class="title-line">Gémeo digital de decisão para incêndios rurais · Hack4Guimarães 2035 · Desafio 2</div>
+    </div>
+    <aside class="notes">
+      5 s · Narrador · ainda em silêncio enquanto o slide aparece.
+
+      "Somos a Atalaia."
+
+      (Passar logo para o número.)
+    </aside>
+  </section>
+
+  <!-- ============================== 2 · GANCHO · 0:05–0:25 ============================== -->
+  <section data-timing="20" data-transition-speed="slow">
+    <p class="lead">Só em 2026 arderam em espaço rural</p>
+    <div class="row">
+      <div class="big"><span class="count burn" data-to="74274" data-ms="1200">74 274</span><span class="unit"> ha</span></div>
+      <div class="big" style="font-size:2.4em;"><span class="count" data-to="8343" data-ms="1200">8 343</span><span class="unit"> ocorrências</span></div>
+    </div>
+    <p class="fragment" style="margin-top:1em;font-size:1.1em;">≈ <strong>três concelhos de Guimarães</strong>.</p>
+    <div class="src">ICNF · SGIF · dados provisórios até 13 out 2026 · <span class="tbd">atualizar na manhã de 26 out</span></div>
+    <aside class="notes">
+      20 s · Impacto (30 %) · Narrador
+
+      (Os dois números sobem juntos ao entrar no slide, ~1 s. Deixar acabar antes de falar.)
+      "Este ano já arderam em Portugal 74 mil hectares. Mais de 8 300 ocorrências — quase 30 por dia." (pausa)
+      [clique] "Três concelhos de Guimarães."
+
+      Notas:
+      - 74 274 ha = 742,7 km² ≈ 3,1 × Guimarães (241,7 km²). Confirmar a área do concelho na CAOP.
+      - Na manhã de 26 out: voltar a tirar o print do widget do ICNF e atualizar os dois números.
+      - Até agosto, 2026 estava abaixo da média da década: nunca dizer "ano recorde".
+      Passagem: "Mas o número que importa não é este."
+    </aside>
+  </section>
+
+  <!-- ============================== 3 · PROBLEMA · 0:25–0:45 ============================== -->
+  <section data-timing="20">
+    <span class="tag">O problema · decide-se nos primeiros minutos</span>
+    <h2>1 % dos incêndios fez <span class="fire">82 %</span> da área ardida <span class="dim" style="font-size:0.5em;font-weight:400;">até 31 ago</span></h2>
+    <div class="dots" aria-label="100 pontos, um destacado">
+      <i class="hot"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="fragment">
+      <p style="font-size:0.75em;" class="dim">Nesses minutos, cada entidade olha para o seu ecrã — e os mapas mostram o que <em>já</em> ardeu.</p>
+      <div class="agencies"><span>Bombeiros</span><span>Proteção Civil</span><span>Câmara</span><span>GNR / PSP</span><span>INEM</span></div>
+    </div>
+    <div class="src">ICNF, relatório provisório a 31 ago 2026: 68 de 6 910 incêndios (≥ 100 ha) = 55 370 de 67 130 ha · via ECO, 4 set 2026</div>
+    <aside class="notes">
+      20 s · Impacto (30 %) · Narrador
+
+      "Até agosto, 1 % dos incêndios fez 82 % da área ardida. Tudo se decide nos poucos que escapam ao primeiro ataque."
+      [clique] "E nesses minutos cada entidade olha para o seu ecrã — e os mapas mostram o que já ardeu, não o que vai arder."
+
+      Notas:
+      - Dizer sempre "até agosto" junto ao 82 %: é outro instantâneo, diferente do 13 out do slide anterior.
+      - "Pouca ajuda de simulação" é a frase do enunciado do desafio. Não dizer que as entidades não têm ferramentas.
+      Passagem: "E se pudéssemos ver o que vai arder antes de decidir?"
+    </aside>
+  </section>
+
+  <!-- ============================== 4 · O DESAFIO DA UMINHO · 0:45–1:00 ============================== -->
+  <section data-timing="15" class="challenge">
+    <span class="tag">O desafio · Universidade do Minho · Desafio 2</span>
+    <h1 class="shout">
+      <span class="fragment" data-fragment-index="0">Rápida.</span>
+      <span class="fragment" data-fragment-index="1">Precisa.</span>
+      <span class="fragment fire" data-fragment-index="2">Prática.</span>
+    </h1>
+    <p class="sub">Uma simulação do incêndio para quem decide — enquanto ainda há tempo.</p>
+    <div class="pills">
+      <div class="pill fragment" data-fragment-index="0">
+        <span class="num">01</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/></svg>
+        <span class="lbl">Em tempo real</span>
+      </div>
+      <div class="pill fragment" data-fragment-index="1">
+        <span class="num">02</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>
+        <span class="lbl">Fiel ao incêndio real</span>
+      </div>
+      <div class="pill fragment" data-fragment-index="2">
+        <span class="num">03</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
+        <span class="lbl">Clara para quem decide</span>
+      </div>
+    </div>
+    <div class="src">Hack4Guimarães 2035 · Desafio 2, "Resposta a emergências e incêndios rurais" · <span class="tbd">confirmar a redação com o enunciado</span></div>
+    <aside class="notes">
+      15 s · Impacto + Inovação · Narrador
+
+      "Por isso, a Universidade do Minho desafiou-nos: dar a quem decide uma simulação do incêndio que seja
+      [clique] rápida — em tempo real, durante o incidente;
+      [clique] precisa — fiel ao fogo real;
+      [clique] e prática — clara para quem está no terreno."
+
+      Notas:
+      - O enunciado fala em "pouca ajuda de simulação" e em mostrar o efeito das decisões "de forma compreensível para quem decide". Confirmar as palavras exatas antes de as citar.
+      Passagem: "A nossa resposta chama-se…" → (logótipo)
+    </aside>
+  </section>
+
+  <!-- ============================== 4b · LOGÓTIPO · 1:00–1:03 ============================== -->
+  <section data-timing="3" data-logo-center data-transition-speed="slow">
+    <aside class="notes">3 s · "…Atalaia." O logótipo volta do canto para o centro. Deixar respirar e avançar.</aside>
+  </section>
+
+  <!-- ============================== 5 · PROPOSTA · 1:03–1:18 ============================== -->
+  <section data-timing="15">
+    <span class="tag">A proposta · um gémeo digital de decisão</span>
+    <h2>Coloque os meios onde quiser.<br><span class="dim">Veja o que o fogo faz antes de os enviar.</span></h2>
+    <div class="flow">
+      <div class="card frame fragment">
+        <span class="letter">1 · O INCÊNDIO</span>
+        <h3>Dados reais, de fontes fiáveis</h3>
+        <p>Vento, humidade, combustível e relevo daquele dia, a partir do perímetro observado.</p>
+        <div class="chips"><span>IPMA</span><span>ERA5</span><span>CERRA</span><span>Copernicus DEM</span><span>LiDAR DGT</span><span>COS DGT</span><span>PT-FireSprd</span></div>
+      </div>
+      <div class="arrow fragment">→</div>
+      <div class="card frame fragment">
+        <span class="letter">2 · OS MEIOS</span>
+        <h3>Uso dos recursos, manual ou inteligente</h3>
+        <p>Viaturas reais dos quartéis do distrito, colocadas à mão por quem comanda <span class="tbd">ou propostas pelo sistema · se o ILS entrar</span>.</p>
+      </div>
+      <div class="arrow fragment">→</div>
+      <div class="card frame fragment">
+        <span class="letter">3 · O EFEITO</span>
+        <h3>Uma simulação fidedigna, em tempo real</h3>
+        <p>O incêndio corre com os meios no terreno, <span class="tbd">em [N] s</span>.</p>
+      </div>
+    </div>
+    <div class="punch fragment">
+      <div class="line">Um só mapa. <span class="fire">Cada decisão, planeada.</span></div>
+      <div class="chips data">
+        <span>Estradas a cortar</span><span>Tempo de chegada ao fogo</span><span>Aldeias e casas em risco</span><span>Área ardida hora a hora</span><span>Corredor de evacuação</span>
+      </div>
+      <div class="who">Bombeiros · Proteção Civil · Câmara · GNR/PSP · INEM</div>
+    </div>
+    <aside class="notes">
+      15 s · Inovação (25 %) · Condutor da demo
+
+      [clique] "Partimos de dados reais — IPMA, ERA5, CERRA, o relevo e o combustível do território."
+      [clique] "Quem comanda põe os meios onde quiser — à mão, ou com ajuda do sistema."
+      [clique] "E a simulação mostra o efeito em tempo real."
+      [clique] "Um só mapa, cada decisão planeada: que estradas cortar, quanto tempo até ao fogo, que aldeias estão em risco — para todas as entidades."
+
+      Notas:
+      - CERRA e o FWI do IPMA vêm dos ramos feature/cerra-wind-engine e hindcast; confirmar que estão no main antes do lock. Tirar da lista o que não entrar.
+      - "Inteligente" só se o ILS entrar até quinta; senão dizer "à mão" e apagar o marcador.
+      - "Tempo real" = o modelo rápido no browser (milissegundos por corrida); o ELMFIRE confirma em 10–40 s. Medir [N] no portátil do pitch.
+      - Os dados úteis listados existem em reporting.ts (cortes de via, PMA e corredor) e no relatório do editor (aldeias, área por hora, ETA dos meios).
+      Passagem: "Vamos ver ao vivo."
+    </aside>
+  </section>
+
+  <!-- ============================== 5 · DEMO · 1:00–3:10 ============================== -->
+  <section data-background-color="#000" data-timing="112">
+    <div class="demo">
+      <div class="tag" style="margin:0;"><span class="rec"></span>Demo ao vivo · 1 min 52 s</div>
+      <h1 style="margin-top:0.4em;">Atalaia</h1>
+      <div class="box frame">
+        Placeholder · guião da demo a fechar depois do feature freeze (qui 22 out)<br>
+        Incêndio: <span class="tbd">Vieira do Minho, 10 ago 2016?</span>
+        &nbsp;·&nbsp; números: <span class="tbd">da corrida final</span>
+      </div>
+    </div>
+    <aside class="notes">
+      ~112 s · Viabilidade técnica (25 %) · Condutor da demo (Técnico em espera)
+
+      PLACEHOLDER. A demo corre numa janela própria do browser (não num iframe: a app usa espaço, setas, R, H, D, L e S, tal como o reveal).
+      Alt+Tab para a app; no fim, Alt+Tab de volta e seta para a direita.
+
+      Guião a fechar na quinta, a partir da build final:
+      - [ ] incêndio e hora de partida
+      - [ ] que meios se colocam e onde (os que a demo corre de facto)
+      - [ ] números do efeito: [X] ha, [Y] aldeias / casas, [Z] estradas cortadas
+      - [ ] vistas por papel (Proteção Civil · PSP/GNR · INEM): ficam ou caem?
+      - [ ] resumo ao comandante (P11): fica ou cai?
+
+      Plano B: vídeo gravado da própria app em media/demo.mp4 (gravar depois do freeze). Qualquer pausa > 5 s → o colega de apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.
+
+      Passagem: "E podemos confiar nisto? Testámos contra um incêndio real."
+    </aside>
+  </section>
+
+  <!-- ============================== 6 · VALIDAÇÃO · 3:10–3:30 ============================== -->
+  <section class="val" data-timing="20">
+    <span class="tag">Confiança · reconstituímos um incêndio real</span>
+    <h2 style="font-size:1.2em;">Vieira do Minho, 11 ago 2016, 08:30 · <span class="dim">22,5 h a partir do perímetro das 10:00</span></h2>
+    <div class="caps">
+      <span>Observado · PT-FireSprd</span>
+      <span>Modelo base (como a API)</span>
+      <span>Só com dados</span>
+      <span>Com linhas de ataque inferidas</span>
+    </div>
+    <img src="img/vieira_validation_0830.png" alt="Perímetro observado e três simulações do ELMFIRE às 08:30 de 11 ago 2016">
+    <div class="legend"><b style="background:#f8a62a"></b>arderam os dois<b style="background:var(--red)"></b>só o modelo<b style="background:var(--blue)"></b>só o observado</div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">0,73 → 0,76–0,79</div><div class="l">Sørensen só com dados públicos:<br>combustíveis portugueses, LiDAR, cicatrizes, projeções</div></div>
+      <div class="kpi"><div class="n">0,84–0,85</div><div class="l">Sørensen com as linhas de ataque<br>inferidas do perímetro oficial (ICNF, GNR/GTF)</div></div>
+      <div class="kpi"><div class="n">71–77 %</div><div class="l">dos focos de satélite (NASA FIRMS) alcançados,<br>com 246–315 ha fora do perímetro oficial (com linhas)</div></div>
+    </div>
+    <aside class="notes">
+      20 s · Técnico (25 %) + Impacto · Técnico
+
+      "Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no distrito de Braga. Motor ELMFIRE, combustíveis portugueses, LiDAR da DGT.
+      Só com dados públicos, a sobreposição com o real sobe de 0,73 para quase 0,8; com as linhas de ataque inferidas, 0,85."
+
+      Regras (do README do hindcast, não negociáveis):
+      - Mostrar SEMPRE os dois números lado a lado: 0,76–0,79 só com dados e 0,84–0,85 com linhas. Nunca o 0,85 sozinho.
+      - As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial parou ao longo das estradas: melhoram o Sørensen em parte por construção. Nunca dizer que vêm "dos registos".
+      - O satélite nunca se lê sozinho: o x1 (velocidade × 1,5) alcança 0,90 dos focos a queimar de mais. Por isso o KPI leva os ha fora do oficial.
+      - Os valores S nos mosaicos usam ponto decimal (gerados pelo grid.py).
+      - Intervalos = 3 sementes das projeções.
+      - Para o Q&amp;A: a corrida principal (10:00–15:00) fica 1,4 a 1,9× lenta de mais (380–490 ha contra 707 às 15:00). Dizer o que falha, não arredondar.
+      - Os resultados estão no ramo hindcast-registos, ainda não no main: integrar antes do lock de sexta.
+      Passagem: "Já há quem preveja a propagação em Portugal. O que trazemos de novo?"
+    </aside>
+  </section>
+
+  <!-- ============================== 7 · DIFERENÇA · 3:30–3:45 ============================== -->
+  <section data-timing="15">
+    <span class="tag">O que é novo · a decisão no centro</span>
+    <table class="cmp">
+      <thead><tr><th>Ferramenta</th><th>Mostra</th><th>Testa os seus meios</th></tr></thead>
+      <tbody>
+        <tr><td>fogos.pt</td><td>Ocorrências ativas e meios empenhados</td><td>—</td></tr>
+        <tr><td>IPMA · EFFIS</td><td>Risco do dia, índice meteorológico</td><td>—</td></tr>
+        <tr><td>Copernicus EMS</td><td>O que ardeu, horas ou dias depois</td><td>—</td></tr>
+        <tr><td>incendiosportugal.pt</td><td>Previsão de propagação, como se ninguém atuasse</td><td>—</td></tr>
+        <tr class="us"><td>Atalaia</td><td>O que vai arder com os meios que colocar, num mapa comum</td><td>Sim</td></tr>
+      </tbody>
+    </table>
+    <aside class="notes">
+      15 s · Inovação (25 %) · Continuidade
+
+      "Há quem mostre onde há fogo, o risco do dia, o que ardeu. O incendiosportugal.pt já prevê a propagação — mas como se ninguém atuasse.
+      Nós pomos a decisão no centro."
+
+      Notas:
+      - incendiosportugal.pt: bom mapa público; a página do modelo diz que as previsões assumem que não há combate. Elogiar, não atacar.
+      - Existem simuladores comerciais (Technosylva Wildfire Analyst). Nunca dizer "ninguém faz isto".
+      Passagem: "E isto não acaba hoje."
+    </aside>
+  </section>
+
+  <!-- ============================== 8 · FECHO · 3:45–4:00 ============================== -->
+  <section data-timing="15">
+    <span class="tag">A seguir</span>
+    <div class="steps">
+      <div><span class="k">1 · Piloto</span>Uma zona de Guimarães com a proteção civil municipal e o Laboratório da Paisagem, antes do próximo verão. <span class="tbd">confirmar com o mentor</span></div>
+      <div><span class="k">2 · Treino</span>Incêndios passados como exercícios para os bombeiros do distrito e a UMinho.</div>
+      <div><span class="k">3 · Deteção</span>Drones em patrulha a alimentar o mesmo mapa, minutos depois da ignição.</div>
+    </div>
+    <p class="closing fragment">Este ano arderam três Guimarães.<br><span class="dim">Da próxima vez, quem decide vê o que vai arder — <span class="fire">para cada decisão</span> — antes de enviar os meios.</span></p>
+    <div class="team" style="margin-top:1.4em;">Equipa Atalaia · <span class="tbd">nomes e uma palavra cada</span></div>
+    <aside class="notes">
+      15 s · Apresentação e continuidade (20 %) · Continuidade (passos) → Narrador (fecho)
+
+      Continuidade: "A seguir: um piloto em Guimarães com a proteção civil e o Laboratório da Paisagem; treino; e drones a alimentar o mesmo mapa."
+      [clique] Narrador: "Este ano arderam três Guimarães. (pausa) Da próxima vez, quem decide vê o que vai arder — para cada decisão. Obrigado."
+
+      Notas:
+      - Confirmar com o Prof. Paulo Afonso que apoia o passo 1 antes de o dizer em palco.
+      - O fecho repete o número do início de propósito. Segurar a pausa depois de "três Guimarães".
+    </aside>
+  </section>
+
+  <!-- ============================== CRÉDITOS (fora do tempo) ============================== -->
+  <section data-timing="0">
+    <span class="tag">Créditos · dados, código e ferramentas</span>
+    <div class="credits">
+      <p><strong>Incêndios observados:</strong> PT-FireSprd v1, Benali et al., <em>Earth System Science Data</em>, 2023.</p>
+      <p><strong>Registos oficiais:</strong> ICNF, SGIF; perímetros GNR/GTF; relatório provisório RIF05/2016.</p>
+      <p><strong>Satélite:</strong> "We acknowledge the use of data and imagery from LANCE FIRMS operated by NASA's Earth Science Data and Information System (ESDIS)".</p>
+      <p><strong>Motor de propagação:</strong> ELMFIRE, Chris Lautenberger (EPL 2.0). SimFire 2.0.1 como alternativa.</p>
+      <p><strong>Combustíveis:</strong> Fernandes et al. (2009), <em>Modelos de combustível florestal para Portugal</em>; parâmetros de Paixão (2017); COS2015 (DGT).</p>
+      <p><strong>Relevo e copas:</strong> Copernicus DEM GLO-30; LiDAR nacional da DGT (MDS/MDT 2 m).</p>
+      <p><strong>Meteorologia:</strong> ERA5 via Open-Meteo; CERRA (Copernicus).</p>
+      <p><strong>Meios:</strong> Matos (2025), tese de doutoramento, Universidade do Minho, hdl 1822/97938 (CC BY-NC-SA 4.0); INE; CAOP2025 (DGT, CC BY 4.0).</p>
+      <p><strong>Otimização:</strong> Mendes &amp; Alvelos (2023), <em>European Journal of Operational Research</em> 304(3). <span class="tbd">só se o ILS entrar</span></p>
+      <p><strong>Mapa e dados vetoriais:</strong> CesiumJS e Cesium ion; © contribuidores do OpenStreetMap (ODbL).</p>
+      <p><strong>Apresentação:</strong> reveal.js (MIT).</p>
+      <p><strong>IA:</strong> assistentes de programação (Claude, Anthropic) usados no código e nos documentos, como as regras pedem.</p>
+    </div>
+    <aside class="notes">Fora do tempo. Fica no fim para o júri e para o PDF da submissão.</aside>
+  </section>
+
+</div>
+</div>
+
+<script src="vendor/reveal.js-5.1.0/dist/reveal.js"></script>
+<script src="vendor/reveal.js-5.1.0/plugin/notes/notes.js"></script>
+<script>
+  document.body.classList.add('no-anim');
+  Reveal.initialize({
+    width: 1920,
+    height: 1080,
+    margin: 0.06,
+    hash: true,
+    controls: false,
+    progress: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    backgroundTransition: 'fade',
+    center: false,
+    // 4 min no total; a vista do orador (tecla S) mostra o ritmo por slide
+    totalTime: 240,
+    pdfSeparateFragments: false,
+    plugins: [RevealNotes],
+  });
+
+  // Números que sobem ao entrar no slide (slide 2). O HTML já traz o valor final,
+  // por isso o PDF e quem tiver "reduzir movimento" veem o número certo sem animação.
+  const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let runId = 0;
+  function countUp(slide, wait = 0) {
+    const els = slide.querySelectorAll('.count');
+    if (!els.length || reduce || Reveal.isPrintView?.()) return;
+    const id = ++runId;
+    els.forEach((el) => {
+      const to = +el.dataset.to, ms = +el.dataset.ms || 2000, delay = +el.dataset.delay || 0;
+      el.textContent = '0';
+      el.classList.add('counting');
+      const t0 = performance.now() + wait + delay;
+      const tick = (now) => {
+        if (id !== runId) return;
+        const t = Math.min(1, Math.max(0, (now - t0) / ms));
+        el.textContent = fmt(Math.round(to * ease(t)));
+        if (t < 1) requestAnimationFrame(tick);
+        else el.classList.remove('counting');
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+  const syncLogo = () => document.body.classList.toggle('on-title', (Reveal.getIndices().h === 0 || Reveal.getCurrentSlide()?.hasAttribute('data-logo-center')) && !Reveal.isPrintView?.());
+  Reveal.on('ready', syncLogo);
+  Reveal.on('slidechanged', syncLogo);
+  if (Reveal.isReady()) syncLogo();
+  Reveal.on('ready', () => requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-anim'))));
+  if (Reveal.isReady()) requestAnimationFrame(() => document.body.classList.remove('no-anim'));
+  Reveal.on('ready', (e) => countUp(e.currentSlide));
+  // Ao sair do logótipo central: primeiro o logo voa para o canto, só depois aparece o slide.
+  const LOGO_MS = 1100;
+  const centred = (sl, h) => h === 0 || sl?.hasAttribute('data-logo-center');
+  let flyTimer;
+  Reveal.on('slidechanged', (e) => {
+    const flying = Reveal.isReady() && !!e.previousSlide && centred(e.previousSlide, Reveal.getSlides().indexOf(e.previousSlide)) && !centred(e.currentSlide, e.indexh);
+    clearTimeout(flyTimer);
+    document.body.classList.toggle('logo-flying', flying);
+    if (flying) flyTimer = setTimeout(() => document.body.classList.remove('logo-flying'), LOGO_MS);
+    countUp(e.currentSlide, flying ? LOGO_MS : 0);
+  });
+</script>
+</body>
+</html>
