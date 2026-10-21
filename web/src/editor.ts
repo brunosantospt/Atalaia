@@ -20,7 +20,7 @@ import {
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
-import { freeArrival, type Run, type Scenario } from './fastModel'
+import { burnedHa, freeArrival, type Run, type Scenario } from './fastModel'
 import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
@@ -28,7 +28,7 @@ import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, groundOf, ILS_NAME, type Change, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
-import { describeVerdict, makeReport, recommend, type Report } from './report'
+import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
@@ -72,6 +72,12 @@ type Tool = 'point' | 'line' | 'drops' | 'pma'
 export type Runs = Record<'free' | 'A' | 'B', Run>
 export type Reports = Record<'free' | 'A' | 'B', Report>
 
+/** Where the shown runs stand with the engine (main.ts): asked, waiting for the ILS's B, shown, or not there. */
+export type EngineStatus =
+  | { state: 'running' | 'waiting'; name: string }
+  | { state: 'done'; name: string; seconds: number } // 0: all from the API's cache
+  | { state: 'down'; name: string; reason: string }
+
 export interface EditorActions {
   /** The decisions changed: simulate them again and show them. */
   changed(): void
@@ -100,6 +106,7 @@ const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ?
 const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
 const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
 const ILS_AFTER_MS = 800 // A has to be still this long before B is searched again
+const ILS_HORIZON_MIN = 360 // the ILS judges its plans at 6 h of the fast model: ~5 ms a plan, where 24 h costs several times that
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
@@ -150,6 +157,11 @@ const TEMPLATE = `
     <button type="button" data-ref="ils" class="primary-btn" title="O B é procurado sozinho ao abrir o incêndio e sempre que o A muda: 10 s à procura de onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023). Este botão repete a procura."></button>
     <p class="note" data-ref="ilsNote"></p>
     <ul class="assignments changes" data-ref="ilsChanges"></ul>
+  </section>
+  <section class="end">
+    <h3>Fim do incêndio <span data-ref="engine"></span></h3>
+    <table class="report ends" data-ref="ends"></table>
+    <p class="note" data-ref="engineNote"></p>
   </section>
   <section>
     <h3>Relatório <span data-ref="reportAt"></span></h3>
@@ -290,6 +302,8 @@ export class Editor {
   private loaded: Loaded | undefined
   private runs: Runs | undefined
   private reports: Reports | undefined
+  private judged: Reports | undefined // what the verdict compares: the reports, or at 6 h for the fast model
+  private engine: EngineStatus | undefined
   private readonly source = new CustomDataSource('decisions')
   private readonly access = new CustomDataSource('access')
   private readonly routes = new CustomDataSource('routes')
@@ -539,7 +553,7 @@ export class Editor {
     this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
     this.decisions = [empty('A'), empty('B')]
     this.proposeB()
-    this.runs = this.reports = undefined
+    this.runs = this.reports = this.judged = this.engine = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
     this.updateStationDropdown()
@@ -580,11 +594,23 @@ export class Editor {
     this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica no mapa para os vértices da linha aérea de descargas (duplo clique ou Enter conclui).`
   }
 
-  /** The runs of Livre, A and B, and their reports when the fire has OSM context. */
-  setRuns(runs: Runs | undefined, reports: Reports | undefined) {
+  /** The runs of Livre, A and B, their reports when the fire has OSM context, and those the verdict compares. */
+  setRuns(runs: Runs | undefined, reports: Reports | undefined, judged = reports) {
     this.runs = runs
     this.reports = reports
+    this.judged = judged
     this.render()
+  }
+
+  /** What the engine is doing with the runs on the screen. */
+  setEngine(status: EngineStatus) {
+    this.engine = status
+    this.renderEnds()
+  }
+
+  /** Whether B is being searched (or about to be): it changes every 1.5 s until the search ends. */
+  get searching(): boolean {
+    return this.ils !== undefined || this.ilsDue !== undefined
   }
 
   /** Keys while the drawer is open: Enter closes a line, Escape drops the tool or the drawer. */
@@ -1155,7 +1181,8 @@ export class Editor {
       this.stopIls()
       this.refs.ilsNote.textContent = `A procura falhou: ${e.message}`
     }
-    const request: IlsRequest = { scenario: loaded.scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), budgetMs: ILS_BUDGET_MS, seed: 1 }
+    const scenario = { ...loaded.scenario, durationMin: Math.min(loaded.scenario.durationMin, ILS_HORIZON_MIN) }
+    const request: IlsRequest = { scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), budgetMs: ILS_BUDGET_MS, seed: 1 }
     worker.postMessage(request)
     this.renderIls()
   }
@@ -1206,7 +1233,7 @@ export class Editor {
       return
     }
     const { result, changes } = done
-    const hours = fmtNumber((this.loaded?.scenario.durationMin ?? 360) / 60)
+    const hours = fmtNumber(Math.min(this.loaded?.scenario.durationMin ?? ILS_HORIZON_MIN, ILS_HORIZON_MIN) / 60)
     const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
     if (!result.improved) {
       note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
@@ -1363,8 +1390,50 @@ export class Editor {
     this.renderList(d)
     this.setCount(this.count)
     this.renderIls()
+    this.renderEnds()
     this.renderReport()
     this.draw()
+  }
+
+  /** How each run ends (when the fire stops, and what it burned), and which engine ran them. */
+  private renderEnds() {
+    const table = this.refs.ends
+    const runs = this.runs
+    const status = this.engine
+    this.refs.engine.textContent = !status
+      ? ''
+      : status.state === 'running'
+        ? `${status.name} a correr…`
+        : status.state === 'waiting'
+          ? `${status.name} à espera do B…`
+          : status.state === 'done'
+            ? `${status.name} · ${status.seconds ? `${fmtNumber(status.seconds)} s` : 'cache'}`
+            : `${status.name} indisponível — modelo rápido`
+    this.refs.engine.title = status?.state === 'down' ? status.reason : ''
+    this.refs.engineNote.textContent = !runs
+      ? ''
+      : runs.A.engine
+        ? `Corrido com ${runs.A.engine} (API). Só as linhas entram no motor; as descargas aéreas não.`
+        : 'Modelo rápido: uma pré-visualização. Às 24 h só cresce até à borda da grelha; a recomendação é às 6 h.'
+    if (!runs || !this.loaded) {
+      table.innerHTML = '<tr><td class="none">Sem simulação ainda.</td></tr>'
+      return
+    }
+    const { grid } = this.loaded.scenario
+    const start = this.loaded.fire.start
+    table.replaceChildren(
+      ...(['free', 'A', 'B'] as const).map((id) => {
+        const run = runs[id]
+        const tr = document.createElement('tr')
+        tr.innerHTML = '<th></th><td class="end"></td><td></td>'
+        tr.classList.toggle('on', id === this.decisions[this.active].id)
+        const cells = tr.children
+        cells[0].textContent = id === 'free' ? 'Livre' : id
+        cells[1].textContent = describeEnd(fireEnd(grid, run), start, run.durationMin)
+        cells[2].textContent = `6 h: ${fmtHa(burnedHa(grid, run, 360))}`
+        return tr
+      }),
+    )
   }
 
   /** The palette's unit changed. */
@@ -1575,7 +1644,8 @@ export class Editor {
       tr.querySelectorAll('td').forEach((td, i) => (td.textContent = text(at[cols[i]])))
       table.append(tr)
     }
-    this.refs.verdict.textContent = describeVerdict(recommend(r.A, r.B), r.A, r.B)
+    const j = this.judged ?? r
+    this.refs.verdict.textContent = describeVerdict(recommend(j.A, j.B), j.A, j.B)
     const mine = at[this.decisions[this.active].id as 'A' | 'B']
     const places = mine.places.slice(0, 4).map((p) => `${p.name} T+${Math.round(p.minute)} min`)
     const roads = mine.roadsCut.slice(0, 4).map((c) => `${c.label} ${fmtKm(c.km)}`)
@@ -1999,4 +2069,5 @@ function lineLengthM(line: LonLat[]): number {
   for (let i = 1; i < line.length; i++) m += distanceM(line[i - 1], line[i])
   return m
 }
+
 

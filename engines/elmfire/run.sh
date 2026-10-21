@@ -5,5 +5,9 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/env.sh"
 
-exec docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
-  -v "$here/adapter.py:/engine/adapter.py:ro" "$ELMFIRE_IMAGE" python3 /engine/adapter.py
+# ELMFIRE's fuel model table, for requests that add models to it (fuel_models); vendor/ is from setup.sh.
+table=$here/vendor/elmfire/build/source/fuel_models.csv
+mounts=(-v "$here/adapter.py:/engine/adapter.py:ro")
+[ -f "$table" ] && mounts+=(-v "$table:/engine/fuel_models_default.csv:ro")
+
+exec docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp "${mounts[@]}" "$ELMFIRE_IMAGE" python3 /engine/adapter.py

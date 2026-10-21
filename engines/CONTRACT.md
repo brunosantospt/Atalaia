@@ -36,6 +36,11 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
   - os restantes valem 0 se faltarem: `elevation_m`, `slope_deg`, `aspect_deg`, `canopy_cover_pct`, `canopy_height_m`, `canopy_base_m`, `canopy_bulk_kgm3`.
   - `slope_deg` é o declive em graus a partir da horizontal; `aspect_deg` é para onde a encosta está virada, a descer, em graus a partir do norte (0 = norte, 90 = este), como no LANDFIRE. Cada incêndio traz os três na sua pasta, descritos em `web/public/fires/<id>/terrain.json`.
 
+- **Só no ELMFIRE, opcionais** (do ramo `hindcast-registos`; sem eles corre como antes):
+  - `fuel_models`: linhas a mais para a tabela de combustíveis do ELMFIRE, nas colunas e unidades dela (`api/fuels.py`), com códigos que ela não tem (211–237, os modelos portugueses). Precisa do `vendor/` do `setup.sh`;
+  - `spotting`: o grupo `&SPOTTING` do ELMFIRE (projeções), nome → valor;
+  - `seed`: a semente das projeções.
+
 Cada valor de `burned`, de `layers` e de cada momento de `weather` pode ser um número para a grade toda ou uma matriz `rows` × `cols`, com a linha 0 no bordo norte.
 
 ## Resultado

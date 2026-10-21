@@ -69,6 +69,7 @@ export interface Run {
   arrival: Float32Array // minute the fire reaches each cell, Infinity if never within the duration
   durationMin: number
   runtimeMs: number
+  engine?: string // the engine that ran it through the API ("ELMFIRE 2025.0717"); absent for the fast model
 }
 
 interface Zone {

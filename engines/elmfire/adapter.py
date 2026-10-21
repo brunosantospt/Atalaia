@@ -3,6 +3,12 @@
 Runs inside the atalaia/elmfire image (see Dockerfile), next to ELMFIRE, GDAL and numpy; run.sh
 starts it. The request and the result are described in ../CONTRACT.md. ELMFIRE's own log only
 comes out, on stderr, when a run fails, so stdout carries nothing but the result.
+
+Optional request fields, from the hindcast-registos branch (hindcast/engine/adapter.py); a request
+without them runs as before:
+  fuel_models  rows added to ELMFIRE's fuel model table, in its columns and units (api/fuels.py)
+  spotting     ELMFIRE's &SPOTTING settings, name -> value
+  seed         the random seed spotting draws from (&MONTE_CARLO SEED)
 """
 
 import json
@@ -19,6 +25,8 @@ from osgeo import gdal, osr
 gdal.UseExceptions()
 
 NODATA = -9999
+# ELMFIRE's own fuel model table, mounted by run.sh from vendor/; extra models are added to a copy of it.
+DEFAULT_FUEL_TABLE = Path('/engine/fuel_models_default.csv')
 
 # ELMFIRE reads the wind at 20 ft in mph; forecasts give it at 10 m in km/h. This is the factor
 # ELMFIRE itself uses between the two (1.609 km/h per mph, and the 20 ft wind is 0.87 of the 10 m one).
@@ -116,6 +124,27 @@ def wind_from_bands(wind_from: np.ndarray) -> np.ndarray:
     return to - 180
 
 
+def fortran(v) -> str:
+    if isinstance(v, bool):
+        return '.TRUE.' if v else '.FALSE.'
+    if isinstance(v, str):
+        return f"'{v}'"
+    return repr(float(v)) if isinstance(v, float) else str(v)
+
+
+def write_fuel_table(folder: Path, models: list):
+    """ELMFIRE's table plus the request's `fuel_models` rows (codes it does not have, e.g. 211-237)."""
+    if not DEFAULT_FUEL_TABLE.exists():
+        raise RuntimeError('fuel_models: falta a tabela do ELMFIRE; corre engines/elmfire/setup.sh')
+    rows = DEFAULT_FUEL_TABLE.read_text().strip().splitlines()
+    taken = {int(r.split(',')[0]) for r in rows}
+    for m in models:
+        if int(m[0]) in taken:
+            raise ValueError(f'fuel_models: o código {m[0]} já está na tabela do ELMFIRE')
+        rows.append(','.join([str(int(m[0])), str(m[1]), fortran(bool(m[2]))] + [f'{float(x):.6g}' for x in m[3:]]))
+    (folder / 'fuel_models.csv').write_text('\n'.join(rows) + '\n')
+
+
 def burned_at_start(grid: Grid, req: dict) -> np.ndarray:
     return grid.array('burned', req.get('burned', 0)) > 0
 
@@ -134,6 +163,8 @@ def write_inputs(folder: Path, grid: Grid, req: dict):
     grid.write(folder / 'adj.tif', grid.array('adj', 1.0), gdal.GDT_Float32)
     # phi <= 0 is burned at the start, with a time of arrival of 0; phi > 0 is not burned.
     grid.write(folder / 'phi.tif', np.where(burned_at_start(grid, req), -1.0, 1.0), gdal.GDT_Float32)
+    if req.get('fuel_models'):
+        write_fuel_table(folder, req['fuel_models'])
 
 
 def namelist(grid: Grid, req: dict) -> str:
@@ -185,12 +216,16 @@ def namelist(grid: Grid, req: dict) -> str:
         '/',
         '&MONTE_CARLO',
         f'NUM_METEOROLOGY_TIMES = {len(weather)}',
+        *([f"SEED = {int(req['seed'])}"] if 'seed' in req else []),
         '/',
         '&MISCELLANEOUS',
         "PATH_TO_GDAL = '/usr/bin'",
         "SCRATCH = './scratch'",
+        *(["FUEL_MODEL_FILE = 'fuel_models.csv'", "MISCELLANEOUS_INPUTS_DIRECTORY = './inputs'"] if req.get('fuel_models') else []),
         '/',
     ]
+    if req.get('spotting'):
+        lines += ['&SPOTTING', *[f'{k} = {fortran(v)}' for k, v in req['spotting'].items()], '/']
     return '\n'.join(lines) + '\n'
 
 
