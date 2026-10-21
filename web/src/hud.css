@@ -10,6 +10,26 @@
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* Tactical dark scrollbars across the application */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) #08090a;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: #08090a;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
 .hud,
 .markers {
   position: absolute;
@@ -121,6 +141,14 @@
 .hud .title .line {
   font-size: 12px;
 }
+.hud .title .line[data-ref="coords"] {
+  cursor: pointer;
+  transition: color 0.15s ease;
+  user-select: text;
+}
+.hud .title .line[data-ref="coords"]:hover {
+  color: var(--amber);
+}
 
 .hud .clock {
   top: 30px;
@@ -185,6 +213,204 @@
 .hud .rail label {
   font-size: 9px;
   margin: 0;
+}
+
+
+
+/* ---------- minimized tactical hazard badge & popover ---------- */
+
+.hud-alert-container {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hud-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+.hud-alert-badge:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(203, 213, 225, 0.5);
+  color: #f8fafc;
+  transform: translateY(-1px);
+}
+.hud-alert-badge.pulsing {
+  border-color: rgba(245, 158, 11, 0.65);
+  color: #fbbf24;
+  animation: pulse-danger-glow 1.8s infinite;
+}
+.hud-alert-badge.emergency {
+  border-color: rgba(239, 68, 68, 0.7);
+  color: #f87171;
+  background: rgba(25, 12, 14, 0.95);
+}
+.hud-alert-badge.emergency.pulsing {
+  border-color: rgba(239, 68, 68, 0.8);
+  color: #f87171;
+  animation: pulse-emergency-glow 1.3s infinite;
+}
+
+@keyframes pulse-danger-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45);
+    border-color: rgba(245, 158, 11, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgba(245, 158, 11, 0.35);
+    border-color: #fbbf24;
+  }
+}
+
+@keyframes pulse-emergency-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+    border-color: rgba(239, 68, 68, 0.65);
+  }
+  50% {
+    box-shadow: 0 0 16px 4px rgba(239, 68, 68, 0.4);
+    border-color: #f87171;
+  }
+}
+
+.hud-alert-badge .hazard-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+
+.tactical-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.popover-title .title-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.hud-alert-popover {
+  margin-top: 8px;
+  width: 320px;
+  background: rgba(14, 16, 20, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: popover-appear 0.15s ease-out;
+}
+.hud-alert-popover[hidden] {
+  display: none !important;
+}
+.hud-alert-container.emergency .hud-alert-popover {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.hud-alert-popover header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hud-alert-popover .popover-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+.hud-alert-container.emergency .popover-title {
+  color: #f87171;
+}
+.hud-alert-popover .btn-close-popover {
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.hud-alert-popover .btn-close-popover:hover {
+  color: var(--ink);
+}
+.hud-alert-popover .popover-stat {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px 8px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.hud-alert-popover .popover-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink);
+  margin: 0;
+}
+.hud-alert-popover .popover-dispatch-btn {
+  background: #f59e0b;
+  color: #08090a;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: all 0.15s ease;
+  width: 100%;
+  margin-top: 2px;
+}
+.hud-alert-container.emergency .popover-dispatch-btn {
+  background: #ef4444;
+  color: #ffffff;
+}
+.hud-alert-popover .popover-dispatch-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+@keyframes popover-appear {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hud .rail span[data-ref^="coord"] {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.hud .rail span[data-ref^="coord"]:hover {
+  color: var(--amber);
 }
 
 /* ---------- ledger of the instant (ledger.ts) ---------- */
@@ -709,4 +935,182 @@
   .hud .time {
     font-size: 24px;
   }
+}
+
+
+
+/* ---------- left edge toggle button for editor ---------- */
+
+.editor-edge-toggle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 54px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f8fafc;
+  cursor: pointer;
+  padding: 0;
+  z-index: 100;
+  pointer-events: auto;
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.5);
+  transition: left 0.25s ease, background 0.18s ease, width 0.18s ease;
+}
+.editor-edge-toggle:hover {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  width: 26px;
+}
+.editor-edge-toggle .toggle-icon-svg {
+  transition: transform 0.25s ease;
+}
+.hud.editing .editor-edge-toggle {
+  left: min(400px, 100vw);
+}
+.hud.editing .editor-edge-toggle .toggle-icon-svg {
+  transform: rotate(180deg);
+}
+.hud.role-psp .editor-edge-toggle,
+.hud.role-inem .editor-edge-toggle {
+  display: none !important;
+}
+
+/* ---------- bottom-right navigation cluster (Ignition, North, Compass Rose) ---------- */
+
+.hud .bottom-nav-cluster {
+  position: absolute;
+  right: 34px;
+  bottom: calc(var(--credits-h, 20px) + 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.hud .bottom-nav-cluster .nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.18s ease;
+  padding: 0;
+}
+.hud .bottom-nav-cluster .nav-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(203, 213, 225, 0.45);
+  color: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+.hud .bottom-nav-cluster .nav-btn:active {
+  transform: translateY(0);
+  background: rgba(15, 23, 42, 0.95);
+}
+.hud .bottom-nav-cluster .nav-btn .nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+.hud .bottom-nav-cluster .nav-btn .nav-svg-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.hud .bottom-nav-cluster .nav-btn.north-btn .nav-icon {
+  transform-origin: center center;
+  transition: transform 0.08s linear;
+}
+.hud .bottom-nav-cluster .nav-btn .nav-label {
+  font-size: 7.5px;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+  color: #64748b;
+  transition: color 0.18s ease;
+}
+.hud .bottom-nav-cluster .nav-btn:hover .nav-label {
+  color: #cbd5e1;
+}
+
+.bottom-compass {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(241, 245, 249, 0.32);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.bottom-compass:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.65);
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+.bottom-compass .compass-dial {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  transition: transform 0.08s linear;
+}
+.bottom-compass .compass-svg {
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+
+.hud .rail {
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  pointer-events: auto;
+}
+.hud .rail span[data-ref^="coord"] {
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: all;
+  transition: all 0.15s ease;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.hud .rail span[data-ref^="coord"]:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: underline;
 }

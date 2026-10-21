@@ -42,7 +42,7 @@ export class Ledger {
       '<button type="button" class="eyebrow" title="Mostra ou esconde os dados (L)"><i></i>Dados conhecidos em tempo real</button><table></table>'
     parent.append(this.el)
     this.el.querySelector('button')!.addEventListener('click', () => this.toggle())
-    this.fold(localStorage.getItem(STORAGE_KEY) === 'folded')
+    this.fold(localStorage.getItem(STORAGE_KEY) !== 'open')
   }
 
   /** Folds the table away under the title, or opens it again. */

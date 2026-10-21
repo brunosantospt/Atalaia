@@ -20,7 +20,7 @@ import {
 } from 'cesium'
 import type { Fire, NearStation } from './data'
 import { lineSchedule, type Run, type Scenario } from './fastModel'
-import { cellOf } from './grid'
+import { cellOf, lonLatAt, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
@@ -29,10 +29,10 @@ import { diffDecisions, groundOf, type Change, type Progress, type Result, type 
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
+import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
   buildMultiAgencyDispatch,
-  detectThreatenedRoads,
   evaluateMedicalPointSafety,
   type AgencyRole,
   type MedicalPointItem,
@@ -41,11 +41,24 @@ import {
 } from './reporting'
 import { DispatchModal } from './dispatchModal'
 import {
+  ICON_HAZARD,
+  ICON_PROTECAO_CIVIL,
+  ICON_PSP,
+  ICON_INEM,
+  ICON_CLIPBOARD,
+  ICON_ROAD_CUT,
+  ICON_PMA,
+  ICON_CHECK,
+  ICON_SHIELD,
+  ICON_BOLT,
+} from './icons'
+import {
   aerialFrontM,
   arrivalMin,
   attackMPerH,
   dropCycleMin,
   dutyCycle,
+  flameLengthM,
   isAerial,
   refillMin,
   workMin,
@@ -74,8 +87,8 @@ const SNAP_M = 400 // a click further than this from any road stays where it is
 const ACCESS_SHOWN_M = 2500 // access dots are shown this far from the ignition while a point tool is on
 const TASK_NAME: Record<Task, string> = {
   direct: 'ataque direto',
-  line: 'linha',
-  drops: 'descargas',
+  line: 'linha apeada',
+  drops: 'linha aérea',
   protect: 'proteção',
   shuttle: 'abastecimento',
 }
@@ -114,8 +127,8 @@ const TEMPLATE = `
   <section>
     <h3>Adicionar</h3>
     <div class="palette">
-      <div class="field"><label>Quartel</label><select data-ref="from" title="Quartel de origem"></select></div>
       <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
+      <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
       <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
         <option value="direct">ataque direto</option>
         <option value="protect">proteção</option>
@@ -125,15 +138,19 @@ const TEMPLATE = `
         <button type="button" data-ref="less" title="Menos">−</button>
         <span data-ref="count">1</span>
         <button type="button" data-ref="more" title="Mais">+</button>
+        <button type="button" class="info" data-ref="capacityInfo" aria-label="Capacidade e rendimento deste meio" title="Ver capacidade e rendimento deste meio">i</button>
       </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
-    <p class="note" data-ref="capacity"></p>
     <div class="tools">
       <button type="button" data-ref="quickAdd" class="primary-btn" title="Posiciona este meio automaticamente no acesso seguro mais próximo da frente de fogo">+ Colocar Meio</button>
       <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
       <button type="button" data-tool="line" title="Desenha uma linha apeada no mapa">Linha apeada</button>
       <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
+    </div>
+    <div class="line-actions" data-ref="lineActions" hidden>
+      <button type="button" class="finish-line-btn" data-ref="finishLine" disabled title="Concluir e registar esta linha nos meios no terreno">✓ Concluir Linha</button>
+      <button type="button" class="cancel-line-btn" data-ref="cancelLine" title="Cancelar traçado da linha">✕ Cancelar</button>
     </div>
     <p class="note hint" data-ref="hint"></p>
   </section>
@@ -149,8 +166,8 @@ const TEMPLATE = `
     <p class="note verdict" data-ref="verdict"></p>
     <p class="note" data-ref="detail"></p>
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,224,228,0.15);display:flex;flex-direction:column;gap:6px;">
-      <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">📢 Reportar às Entidades (PSP/INEM)</button>
-      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">➕ Ponto Socorro (PMA)</button>
+      <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">${ICON_CLIPBOARD} Reportar às Entidades (PSP / INEM)</button>
+      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">${ICON_PMA} Ponto Socorro (PMA)</button>
     </div>
   </section>
   <footer>
@@ -158,72 +175,6 @@ const TEMPLATE = `
     <button type="button" data-ref="reset">Repor exemplos</button>
   </footer>
 `
-
-const NO_ENTRY_CANVASES = new Map<string, HTMLCanvasElement>()
-
-function getNoEntrySignCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTMLCanvasElement {
-  const cached = NO_ENTRY_CANVASES.get(urgency)
-  if (cached) return cached
-
-  // High-DPI canvas (48x48) rendered sharp and discreet at 18x18 on the 3D map
-  const canvas = document.createElement('canvas')
-  canvas.width = 48
-  canvas.height = 48
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-
-  const color =
-    urgency === 'cortado'
-      ? '#dc2626'
-      : urgency === 'urgente'
-        ? '#ea580c'
-        : '#d97706'
-
-  const cx = 24
-  const cy = 24
-  const r = 20
-
-  // Drop shadow for contrast on any 3D terrain
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
-  ctx.shadowBlur = 4
-  ctx.shadowOffsetY = 1.5
-
-  // Dark outline ring
-  ctx.beginPath()
-  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
-  ctx.fillStyle = '#0f172a'
-  ctx.fill()
-
-  // White border
-  ctx.shadowBlur = 0
-  ctx.shadowOffsetY = 0
-  ctx.beginPath()
-  ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  ctx.fillStyle = '#ffffff'
-  ctx.fill()
-
-  // Inner colored circle (Red or Amber)
-  ctx.beginPath()
-  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
-  ctx.fillStyle = color
-  ctx.fill()
-
-  // White horizontal prohibition bar (No Entry ⛔)
-  ctx.fillStyle = '#ffffff'
-  const barW = 24
-  const barH = 6
-  const barR = 2
-  ctx.beginPath()
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(cx - barW / 2, cy - barH / 2, barW, barH, barR)
-  } else {
-    ctx.rect(cx - barW / 2, cy - barH / 2, barW, barH)
-  }
-  ctx.fill()
-
-  NO_ENTRY_CANVASES.set(urgency, canvas)
-  return canvas
-}
 
 const UNIT_CANVASES = new Map<string, HTMLCanvasElement>()
 
@@ -295,6 +246,44 @@ interface Loaded {
   examples: [Decision, Decision]
 }
 
+/** Clips road coordinates to only the contiguous segments engulfed by the active fire perimeter. */
+function clipRoadToFire(
+  pts: [number, number][],
+  grid: Grid,
+  arrival: Float32Array,
+  currentMin: number,
+): [number, number][][] {
+  const segments: [number, number][][] = []
+  let current: [number, number][] = []
+
+  for (let i = 0; i < pts.length; i++) {
+    const pt = pts[i]
+    const cell = cellOf(grid, { lon: pt[0], lat: pt[1] })
+    const isBurned = cell >= 0 && arrival[cell] <= currentMin
+
+    if (isBurned) {
+      if (current.length === 0 && i > 0) {
+        current.push(pts[i - 1])
+      }
+      current.push(pt)
+    } else {
+      if (current.length > 0) {
+        current.push(pt)
+        if (current.length >= 2) {
+          segments.push(current)
+        }
+        current = []
+      }
+    }
+  }
+
+  if (current.length >= 2) {
+    segments.push(current)
+  }
+
+  return segments
+}
+
 export class Editor {
   readonly el: HTMLElement
   decisions: [Decision, Decision] = [empty('A'), empty('B')]
@@ -327,6 +316,9 @@ export class Editor {
   private readonly tip: HTMLElement
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
+  private currentCapacityText = ''
+  private activeTipAnchor: HTMLElement | null = null
+  private currentFlameM = 0
 
   constructor(
     private readonly viewer: Viewer,
@@ -357,6 +349,11 @@ export class Editor {
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
     this.handler.setInputAction((e: { endPosition: Cartesian2 }) => this.hover(e.endPosition), ScreenSpaceEventType.MOUSE_MOVE)
+    this.handler.setInputAction(() => {
+      if (this.open && (this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
+        this.finishLine()
+      }
+    }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
     const unit = this.refs.unit as HTMLSelectElement
     for (const [id, spec] of Object.entries(sup.units)) {
@@ -379,6 +376,29 @@ export class Editor {
     this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
+    this.refs.capacityInfo?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      if (this.tip.hidden || this.activeTipAnchor !== this.refs.capacityInfo) {
+        this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+        this.activeTipAnchor = this.refs.capacityInfo
+        this.refs.capacityInfo.classList.add('active')
+      } else {
+        this.hideTip()
+      }
+    })
+    this.refs.capacityInfo?.addEventListener('mouseenter', () => {
+      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+    })
+    this.refs.capacityInfo?.addEventListener('mouseleave', () => {
+      if (this.activeTipAnchor !== this.refs.capacityInfo) {
+        this.hideTip()
+      }
+    })
+    document.addEventListener('click', () => {
+      if (this.activeTipAnchor === this.refs.capacityInfo) {
+        this.hideTip()
+      }
+    })
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.ils.addEventListener('click', () => (this.ils ? this.stopIls(true) : this.runIls()))
     this.refs.close.addEventListener('click', () => this.toggle(false))
@@ -399,6 +419,8 @@ export class Editor {
       this.decisions[this.active].name = name.value.trim() || this.decisions[this.active].id
       this.commit()
     })
+    this.refs.finishLine?.addEventListener('click', () => this.finishLine())
+    this.refs.cancelLine?.addEventListener('click', () => this.setTool(null))
     for (const tab of this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]'))
       tab.addEventListener('click', () => {
         this.active = Number(tab.dataset.tab)
@@ -406,7 +428,18 @@ export class Editor {
         this.render()
       })
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.addEventListener('click', () => this.setTool(this.tool === button.dataset.tool ? null : (button.dataset.tool as Tool)))
+      button.addEventListener('click', () => {
+        const next = button.dataset.tool as Tool
+        if (this.tool === next) {
+          if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
+            this.finishLine()
+            return
+          }
+          this.setTool(null)
+          return
+        }
+        this.setTool(next)
+      })
     this.renderPalette()
     this.toggle(false)
   }
@@ -433,6 +466,22 @@ export class Editor {
     this.setMinutes(Math.round((Math.min(Math.max(hours, 0), max / 60) * 60) / 5) * 5)
   }
 
+  /** Synchronizes simulation hour with active playback or timeline, updating road cuts and tactical perimeters dynamically. */
+  syncTime(hours: number) {
+    const targetMin = Math.round(Math.max(0, hours) * 60)
+    if (this.minutes !== targetMin) {
+      this.minutes = targetMin
+      const hour = this.refs.hour as HTMLInputElement
+      if (hour && document.activeElement !== hour) hour.value = String(targetMin)
+      const start = this.loaded?.fire.start
+      if (this.refs.hourText) {
+        this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
+      }
+      this.renderReport()
+      this.draw()
+    }
+  }
+
   private setMinutes(minutes: number) {
     this.minutes = minutes
     const hour = this.refs.hour as HTMLInputElement
@@ -456,7 +505,15 @@ export class Editor {
   }
 
   /** A fire opened: its decisions come back from this browser, or start from the examples, on the roads. */
-  setFire(fireId: string, fire: Fire, stations: NearStation[], context: Context | undefined, scenario: Scenario, examples: [Decision, Decision]) {
+  setFire(
+    fireId: string,
+    fire: Fire,
+    stations: NearStation[],
+    context: Context | undefined,
+    scenario: Scenario,
+    examples: [Decision, Decision],
+    intensityKWPerM?: number,
+  ) {
     const snapped = examples.map((d) => {
       const points = Object.fromEntries(
         Object.entries(d.points).map(([id, p]) => [id, context ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
@@ -473,10 +530,38 @@ export class Editor {
     this.fromId = stations[0]?.id ?? 'none'
     this.updateStationDropdown()
     ;(this.refs.hour as HTMLInputElement).max = String(scenario.durationMin)
-    this.setMinutes(scenario.durationMin)
+    this.setMinutes(0)
     this.cancel()
     this.setCount(this.count)
+
+    const intensity = intensityKWPerM ?? fire.periods[0]?.intensityKWPerM ?? 2000
+    this.currentFlameM = flameLengthM(this.sup, intensity)
+
     this.render()
+  }
+
+  /** Opens the editor, selects the appropriate aerial unit (HEBL/AVBP) and the closest CMA base with stock. */
+  mobilizeAerial(flameM?: number) {
+    this.toggle(true)
+    const flame = flameM ?? this.currentFlameM
+    const chosenUnit: UnitId = flame >= 3.4 ? 'avbp' : 'hebl'
+    this.setUnit(chosenUnit)
+    const bases = airBasesForUnit(chosenUnit)
+    const ignition = this.loaded?.scenario.ignition
+    if (ignition) {
+      const sorted = [...bases].sort((a, b) => distanceM(a, ignition) - distanceM(b, ignition))
+      const available = sorted.find((b) => this.available(chosenUnit, b.id) > 0) ?? sorted[0]
+      if (available) {
+        this.fromId = available.id
+        const fromSelect = this.refs.from as HTMLSelectElement
+        if (fromSelect) fromSelect.value = this.fromId
+        this.setCount(1)
+      }
+    }
+    this.setTool('drops')
+    const baseObj = findAirBase(this.fromId)
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica e arrasta no mapa para criar linha aérea de descargas ou clica no mapa.`
   }
 
   /** The runs of Livre, A and B, and their reports when the fire has OSM context. */
@@ -501,9 +586,12 @@ export class Editor {
     this.renderPalette()
   }
 
-  /** What the station has of a unit (inventory.json), or undefined when nothing is known: aerial means, unknown stations. */
+  /** What the station or CMA has of a unit (inventory.json or airBases.ts). */
   private stock(unit: UnitId, from: string): number | undefined {
-    if (isAerial(this.sup.units[unit])) return undefined
+    if (isAerial(this.sup.units[unit])) {
+      const base = findAirBase(from)
+      return base?.units[unit]
+    }
     const stock = this.inventory?.[from]
     if (!stock) return undefined
     if (unit === 'crew') return stock.decir.ecin + stock.decir.eip
@@ -518,16 +606,18 @@ export class Editor {
     return Math.max(0, stock - used)
   }
 
-  /** How many of the palette's unit go out now: the count, cut to what the station has left. Nothing
-   *  left gives 0 and says so: a station with 3 VFCI cannot send a 4th. */
+  /** How many of the palette's unit go out now: the count, cut to what the station has left. */
   private placeable(): number {
     const from = this.from(this.loaded?.stations ?? [])
     const left = this.available(this.unit, from)
     if (left > 0) return Math.min(this.count, left)
-    const station = this.loaded?.stations.find((s) => s.id === from)
+    const unit = this.sup.units[this.unit]
+    const base = isAerial(unit) ? findAirBase(from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === from) : undefined
+    const name = base?.short ?? station?.short ?? from
     this.setTool(null)
     this.refs.hint.classList.add('danger')
-    this.refs.hint.textContent = `${station?.short ?? from} já não tem ${this.sup.units[this.unit].short} disponíveis nesta decisão: retira um do terreno ou escolhe outro quartel.`
+    this.refs.hint.textContent = `${name} já não tem ${unit.short} disponíveis nesta decisão: retira um do terreno ou escolhe outr${base ? 'a base aérea' : 'o quartel'}.`
     return 0
   }
 
@@ -563,16 +653,55 @@ export class Editor {
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
       button.classList.toggle('on', button.dataset.tool === tool)
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent =
-      tool === 'point'
-        ? 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
-        : tool === 'line'
-          ? 'Clica os vértices da linha; Enter termina, Esc cancela. A linha avança ao ritmo da equipa.'
-          : tool === 'drops'
-            ? 'Clica os vértices da linha de água; Enter termina. As descargas percorrem-na em ciclo.'
-            : ''
+    this.updateLineActionsUI()
+    if (!tool) {
+      this.refs.hint.textContent = ''
+    } else if (tool === 'point') {
+      this.refs.hint.textContent = 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
+    }
     this.drawAccess()
     this.draw()
+  }
+
+  private updateLineActionsUI() {
+    if (!this.refs.lineActions) return
+    const isLine = this.tool === 'line' || this.tool === 'drops'
+    this.refs.lineActions.hidden = !isLine
+    if (!isLine) return
+
+    const finishBtn = this.refs.finishLine as HTMLButtonElement
+    if (!finishBtn) return
+
+    const len = this.drawing.length
+    if (len < 2) {
+      finishBtn.disabled = true
+      finishBtn.textContent = '✓ Concluir Linha'
+      finishBtn.title = 'Uma linha precisa de pelo menos 2 pontos desenhados no mapa'
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent =
+        len === 1
+          ? '📍 1º vértice colocado no mapa. Clica para colocar o próximo vértice da linha.'
+          : this.tool === 'line'
+            ? '📍 Clica no mapa para colocar os vértices da linha apeada de defesa.'
+            : '📍 Clica no mapa para colocar os vértices da linha aérea de descargas.'
+    } else {
+      const lenM = lineLengthM(this.drawing)
+      finishBtn.disabled = false
+      finishBtn.textContent = '✓ Concluir Linha'
+      finishBtn.title = 'Concluir traçado e registar linha nos meios no terreno'
+
+      const unit = this.sup.units[this.unit]
+      let rateInfo = ''
+      if (this.tool === 'line' && unit.lineMPerH) {
+        const rateMPerH = (unit.lineMPerH[2] || 30) * this.count
+        const hours = lenM / rateMPerH
+        const pax = this.count * (unit.people || 5)
+        rateInfo = ` · Estimativa: ~${hours < 1 ? `${Math.round(hours * 60)} min` : `${hours.toFixed(1)} h`} (${this.count} equipa${this.count > 1 ? 's' : ''} / ${pax} operacionais)`
+      }
+
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent = `📍 ${len} vértices · ${fmtNumber(lenM)} m de linha${rateInfo}. Clica em "✓ Concluir Linha", duplo clique no mapa, ou Enter.`
+    }
   }
 
   private cancel() {
@@ -634,23 +763,23 @@ export class Editor {
 
     const urgencyBadge =
       cut.urgency === 'cortado'
-        ? '<span class="status-badge red">🚨 CORTE ATIVO · INTERDITADO</span>'
+        ? `<span class="status-badge red"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE ATIVO · INTERDITADO</span>`
         : cut.urgency === 'urgente'
-          ? `<span class="status-badge orange">⚠️ CORTE IMINENTE · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
-          : `<span class="status-badge yellow">🚧 CORTE PREVENTIVO · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+          ? `<span class="status-badge orange"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE IMINENTE · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+          : `<span class="status-badge yellow"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE PREVENTIVO · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
 
     this.cutTooltip.className = `road-cut-tooltip ${cut.urgency}`
     this.cutTooltip.style.left = `${position.x}px`
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">⛔</span>
+        <span class="icon">${ICON_ROAD_CUT}</span>
         <span class="title">ESTRADA CORTADA</span>
       </div>
       <div class="tooltip-road">${cut.label}</div>
       <div class="tooltip-status">${urgencyBadge}</div>
       <div class="tooltip-detail">Tipo: ${cut.isPaved ? 'Via Pavimentada / Asfaltada' : 'Acesso Rural / Florestal'}</div>
-      <div class="tooltip-action">👮 <b>Ação PSP/GNR:</b> Colocar barreira física e desviar tráfego</div>
+      <div class="tooltip-action"><span class="badge-svg" style="display:inline-flex;vertical-align:middle;margin-right:5px;">${ICON_PSP}</span> <b>Ação PSP / GNR:</b> Colocar barreira física e desviar tráfego</div>
     `
     this.cutTooltip.hidden = false
   }
@@ -667,22 +796,33 @@ export class Editor {
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">🚑</span>
-        <span class="title" style="color:#4ade80;">INEM · POSTO MÉDICO AVANÇADO</span>
+        <span class="icon">${ICON_PMA}</span>
+        <span class="title" style="color:#6ee7b7;">INEM · POSTO MÉDICO AVANÇADO</span>
       </div>
       <div class="tooltip-road">${pma.name}</div>
       <div class="tooltip-status">
-        <span class="status-badge" style="background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.5);">
-          🛡️ Margem Segura: ${Math.round(pma.safeBufferMin)} min
+        <span class="status-badge" style="background:rgba(15,23,42,0.65);color:#6ee7b7;border:1px solid rgba(52,211,153,0.35);">
+          <span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Margem Segura: ${Math.round(pma.safeBufferMin)} min
         </span>
       </div>
       <div class="tooltip-detail">Hospital Destino: ${pma.hospitalDestination ?? 'Hospital de Braga'} (${pma.routeKm ? `${pma.routeKm.toFixed(1)} km · ETA ${Math.round(pma.etaMin ?? 0)} min` : 'Rota Ativa'})</div>
-      <div class="tooltip-action" style="color:#86efac;">🚑 <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
+      <div class="tooltip-action" style="color:#6ee7b7;"><span class="badge-svg" style="display:inline-flex;vertical-align:middle;margin-right:5px;">${ICON_INEM}</span> <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
     `
     this.cutTooltip.hidden = false
   }
 
-  private showUnitTooltip(position: Cartesian2, unitInfo: { assignment: Assignment; point: LonLat; allUnits: Assignment[] }) {
+  private showUnitTooltip(
+    position: Cartesian2,
+    unitInfo: {
+      assignment: Assignment
+      point: LonLat
+      allUnits: Assignment[]
+      radiusM?: number
+      growMPerH?: number
+      arrived?: boolean
+      earliestArrival?: number
+    },
+  ) {
     if (!this.cutTooltip) {
       this.cutTooltip = document.createElement('div')
       this.cutTooltip.className = 'road-cut-tooltip'
@@ -691,15 +831,18 @@ export class Editor {
 
     const { assignment: a } = unitInfo
     const spec = this.sup.units[a.unit]
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
-    const taskLabel = TASK_NAME[a.task] ?? a.task
-
-    const isTanker = a.unit === 'vttu'
-    const isCrew = a.unit === 'crew'
     const isAerialUnit = isAerial(spec)
+    const base = isAerialUnit ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
+    const taskLabel = TASK_NAME[a.task] ?? a.task
+    const isCrew = a.unit === 'crew'
+
+    const originDetail = isAerialUnit
+      ? (base ? `${base.name} (${base.operator})` : 'Centro de Meios Aéreos')
+      : (station?.name ?? 'Quartel de Bombeiros')
 
     const resourceDetail = isAerialUnit
-      ? `${spec.waterL} L de água/retardante · Apoio Aéreo`
+      ? `${spec.waterL} L de água/retardante · ${base?.aircraftModel ?? 'Apoio Aéreo'}`
       : isCrew
         ? `${spec.people * a.count} operacionais apeados (ferramentas manuais)`
         : `${a.count} veículo${a.count > 1 ? 's' : ''} (${spec.short}) · ${spec.people * a.count} bombeiros · ${(spec.waterL ?? 0) * a.count} L de água`
@@ -709,18 +852,20 @@ export class Editor {
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">${isAerialUnit ? '✈️' : isTanker ? '💧' : isCrew ? '🥾' : '🚒'}</span>
+        <span class="icon">${ICON_PROTECAO_CIVIL}</span>
         <span class="title" style="color:#60a5fa;">MEIO NO TERRENO · SIOPS</span>
       </div>
       <div class="tooltip-road">${spec.short} (${a.count > 1 ? `${a.count} veículos` : spec.name})</div>
       <div class="tooltip-status">
         <span class="status-badge" style="background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.5);">
-          🎯 Tarefa: ${taskLabel.toUpperCase()}
+          Tarefa: ${taskLabel.toUpperCase()}
         </span>
       </div>
-      <div class="tooltip-detail">Origem: ${station?.name ?? 'Base Aérea'}</div>
+      <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
-      <div class="tooltip-action" style="color:#93c5fd;">✅ Meio alocado e ativo no cenário</div>
+      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
+      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
+      <div class="tooltip-action" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_CHECK}</span> Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
   }
@@ -784,47 +929,108 @@ export class Editor {
     let targetPoint: LonLat | undefined
 
     if (aerial) {
-      // Planes and helicopters drop water freely over the fire without needing a road
-      const angle = (Object.keys(d.points).length * 60) * Math.PI / 180
+      // Find advancing head of the fire front
+      let headPoint: LonLat = scenario.ignition
+      if (activeRun) {
+        const frontCells: number[] = []
+        const step = Math.max(1, Math.floor(activeRun.arrival.length / 5000))
+        for (let i = 0; i < activeRun.arrival.length; i += step) {
+          const t = activeRun.arrival[i]
+          if (t <= this.minutes && t >= Math.max(0, this.minutes - 45)) {
+            frontCells.push(i)
+          }
+        }
+        if (frontCells.length > 0) {
+          const chosen = frontCells[frontCells.length - 1]
+          const col = chosen % scenario.grid.cols
+          const row = (chosen - col) / scenario.grid.cols
+          headPoint = lonLatAt(scenario.grid, col, row)
+        }
+      }
+      const existing = Object.values(d.points)
+      const angle = (existing.length * 60 * Math.PI) / 180
       targetPoint = {
-        lon: scenario.ignition.lon + Math.cos(angle) * 0.009,
-        lat: scenario.ignition.lat + Math.sin(angle) * 0.009,
+        lon: headPoint.lon + Math.cos(angle) * 0.005,
+        lat: headPoint.lat + Math.sin(angle) * 0.005,
       }
     } else if (context && context.access.length > 0) {
+      const existing = Object.values(d.points)
+      const station = stations.find((s) => s.id === this.fromId) ?? stations[0]
+
+      // 1. Collect points along the active fire perimeter
+      const frontPoints: LonLat[] = []
+      if (activeRun) {
+        const step = Math.max(1, Math.floor(activeRun.arrival.length / 3000))
+        for (let i = 0; i < activeRun.arrival.length; i += step) {
+          const t = activeRun.arrival[i]
+          if (t <= this.minutes && t >= Math.max(0, this.minutes - 60)) {
+            const col = i % scenario.grid.cols
+            const row = (i - col) / scenario.grid.cols
+            frontPoints.push(lonLatAt(scenario.grid, col, row))
+          }
+        }
+      }
+      if (frontPoints.length === 0) {
+        frontPoints.push(scenario.ignition)
+      }
+
+      // 2. Filter candidates: must be strictly UNBURNED with >= 15 min buffer, and not occupied
       const candidates = context.access.filter((a) => {
         const cell = cellOf(scenario.grid, a)
-        return cell >= 0 && (!activeRun || activeRun.arrival[cell] > this.minutes)
+        if (cell < 0) return false
+        if (activeRun && activeRun.arrival[cell] <= this.minutes + 15) return false
+        if (existing.some((p) => distanceM(p, a) < 220)) return false
+        return true
       })
 
-      if (candidates.length > 0) {
-        const existing = Object.values(d.points)
-        candidates.sort((a, b) => distanceM(scenario.ignition, a) - distanceM(scenario.ignition, b))
-        targetPoint = candidates.find((c) => !existing.some((p) => distanceM(p, c) < 250)) ?? candidates[0]
+      // 3. Score candidates by proximity to active front and confirmed safe road route from station
+      const scored: { pt: LonLat; distToFront: number; hasRoute: boolean }[] = []
+      for (const a of candidates) {
+        let minDist = Infinity
+        for (const fp of frontPoints) {
+          const dist = distanceM(a, fp)
+          if (dist < minDist) minDist = dist
+        }
+        if (minDist > 3000) continue
+        const route = station ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, a) : undefined
+        scored.push({ pt: a, distToFront: minDist, hasRoute: !!route })
+      }
+
+      scored.sort((a, b) => {
+        if (a.hasRoute !== b.hasRoute) return a.hasRoute ? -1 : 1
+        return a.distToFront - b.distToFront
+      })
+
+      if (scored.length > 0) {
+        targetPoint = scored[0].pt
+      } else if (candidates.length > 0) {
+        candidates.sort((a, b) => distanceM(a, frontPoints[0]) - distanceM(b, frontPoints[0]))
+        targetPoint = candidates[0]
       }
     }
 
     if (!targetPoint) {
-      const angle = (Object.keys(d.points).length * 45) * Math.PI / 180
-      targetPoint = {
-        lon: scenario.ignition.lon + Math.cos(angle) * 0.012,
-        lat: scenario.ignition.lat + Math.sin(angle) * 0.012,
-      }
+      this.refs.hint.classList.add('danger')
+      this.refs.hint.textContent = 'Não foi encontrado um acesso rodoviário seguro fora do fogo para este quartel. Clica no mapa no local pretendido.'
+      return
     }
 
     const id = nextId(d.points, 'p')
+    const fromId = this.from(stations)
+    const base = aerial ? findAirBase(fromId) : undefined
     d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
     d.assignments.push({
       unit: this.unit,
       count,
-      from: this.from(stations),
+      from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
     })
 
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado com sucesso no setor da frente de fogo!`
-      : `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
+      : `✓ Meio colocado no acesso seguro mais próximo da frente! Rota rodoviária calculada no mapa.`
     this.commit()
   }
 
@@ -857,24 +1063,31 @@ export class Editor {
     const count = this.placeable()
     if (!count) return
     if (this.tool !== 'point') {
+      if (this.drawing.length > 0) {
+        const last = this.drawing[this.drawing.length - 1]
+        if (distanceM(last, point) < 8) return
+      }
       this.drawing.push(point)
+      this.updateLineActionsUI()
       this.draw()
       return
     }
 
     const d = this.decisions[this.active]
     const id = nextId(d.points, 'p')
+    const fromId = this.from(stations)
+    const base = aerial ? findAirBase(fromId) : undefined
     d.points[id] = point
     d.assignments.push({
       unit: this.unit,
       count,
-      from: this.from(stations),
+      from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
     })
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado livremente nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? point, point) / 1000)}) alocado nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
       : access
         ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
         : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
@@ -883,20 +1096,31 @@ export class Editor {
 
   private finishLine() {
     if (!this.loaded || (this.tool !== 'line' && this.tool !== 'drops')) return
-    if (this.drawing.length < 2) return void (this.refs.hint.textContent = 'Uma linha precisa de dois cliques pelo menos.')
+    if (this.drawing.length < 2) {
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent = 'Uma linha precisa de pelo menos dois cliques.'
+      return
+    }
     const count = this.placeable()
     if (!count) return
     const d = this.decisions[this.active]
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing
-    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task: this.tool })
+    const task = this.tool
+    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task })
+    const lenM = lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
     this.commit()
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `✓ ${task === 'line' ? 'Linha apeada' : 'Linha aérea'} de ${fmtNumber(lenM)} m registada! Adicionada aos Meios no terreno.`
   }
 
   private from(stations: NearStation[]): string {
-    if (isAerial(this.sup.units[this.unit])) return 'air'
+    if (isAerial(this.sup.units[this.unit])) {
+      const bases = airBasesForUnit(this.unit)
+      return bases.some((b) => b.id === this.fromId) ? this.fromId : (bases[0]?.id ?? 'cma-braga')
+    }
     return stations.some((s) => s.id === this.fromId) ? this.fromId : (stations[0]?.id ?? 'none')
   }
 
@@ -1055,6 +1279,37 @@ export class Editor {
   private updateStationDropdown() {
     const from = this.refs.from as HTMLSelectElement
     if (!this.loaded) return
+    const unit = this.sup.units[this.unit]
+    const aerial = isAerial(unit)
+
+    if (this.refs.fromLabel) {
+      this.refs.fromLabel.textContent = aerial ? 'Base Aérea / CMA' : 'Quartel'
+    }
+
+    if (aerial) {
+      const bases = airBasesForUnit(this.unit)
+      const ignition = this.loaded.scenario.ignition
+      const sortedBases = [...bases].sort((a, b) => distanceM(a, ignition) - distanceM(b, ignition))
+
+      const current = sortedBases.some((b) => b.id === this.fromId) ? this.fromId : (sortedBases[0]?.id ?? '')
+      this.fromId = current
+
+      from.replaceChildren(
+        ...sortedBases.map((b) => {
+          const option = document.createElement('option')
+          option.value = b.id
+          const km = distanceM(b, ignition) / 1000
+          const stock = this.stock(this.unit, b.id)
+          const left = this.available(this.unit, b.id)
+          const badge = stock !== undefined ? ` (${left}/${stock} disp.)` : ''
+          option.textContent = `${b.short} · ${fmtKm(km)}${badge}`
+          return option
+        }),
+      )
+      from.value = this.fromId
+      return
+    }
+
     const stations = this.loaded.stations
     const current = from.value || this.fromId
 
@@ -1064,7 +1319,12 @@ export class Editor {
         option.value = s.id
         const stock = this.stock(this.unit, s.id)
         const left = this.available(this.unit, s.id)
-        const badge = stock !== undefined ? ` (${left}/${stock} disp.)` : ''
+        const badge =
+          stock !== undefined
+            ? this.unit === 'crew'
+              ? ` (${left}/${stock} eq. · ${left * 5} op.)`
+              : ` (${left}/${stock} disp.)`
+            : ''
         option.textContent = `${s.short} · ${fmtKm(s.km)}${badge}`
         return option
       }),
@@ -1084,7 +1344,11 @@ export class Editor {
     if (!task) return
     task.innerHTML = ''
 
-    if (this.unit === 'vttu') {
+    if (isAerial(this.sup.units[this.unit])) {
+      task.innerHTML = `
+        <option value="direct">ataque direto (descargas)</option>
+      `
+    } else if (this.unit === 'vttu') {
       task.innerHTML = `
         <option value="shuttle">abastecimento (cisterna móvel)</option>
         <option value="protect">proteção de estruturas</option>
@@ -1102,7 +1366,6 @@ export class Editor {
     } else {
       task.innerHTML = `
         <option value="direct">ataque direto</option>
-        <option value="protect">proteção</option>
       `
     }
 
@@ -1163,7 +1426,8 @@ export class Editor {
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
     const eta = target ? this.eta(a, target) : undefined
     const isGround = !isAerial(unit)
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
+    const base = isAerial(unit) ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
 
     let routeBadge = ''
     if (isGround && target && station && this.loaded?.context) {
@@ -1174,6 +1438,14 @@ export class Editor {
       }
     }
 
+    let fromText = ''
+    if (isAerial(unit)) {
+      const airKm = base && target ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm
+      fromText = base ? `${base.short} · ${fmtKm(airKm)}` : `Base aérea · ${this.sup.dispatch.airBaseKm} km`
+    } else {
+      fromText = station?.short ?? ''
+    }
+
     li.innerHTML = `
       <div class="who"><b></b><span class="n"></span><span class="task"></span>
         <div class="ctl"><button type="button" class="info" aria-label="O que faz">i</button><button type="button" class="x" title="Retirar">×</button></div>
@@ -1182,7 +1454,7 @@ export class Editor {
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
-    li.querySelector('.from')!.textContent = isAerial(unit) ? `Base aérea · ${this.sup.dispatch.airBaseKm} km` : (station?.short ?? '')
+    li.querySelector('.from')!.textContent = fromText
     li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
     const [info, x] = li.querySelectorAll('button')
     const what = this.whatText(a)
@@ -1208,13 +1480,18 @@ export class Editor {
 
   private hideTip() {
     this.tip.hidden = true
+    this.activeTipAnchor = null
+    this.refs.capacityInfo?.classList.remove('active')
   }
 
-  /** Minutes until an assignment is at work, from its station or the air base. */
+  /** Minutes until an assignment is at work, from its station or CMA / air base. */
   private eta(a: Assignment, target: LonLat): number {
     const unit = this.sup.units[a.unit]
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
-    let km = isAerial(unit) ? this.sup.dispatch.airBaseKm : station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm
+    const base = isAerial(unit) ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
+    let km = isAerial(unit)
+      ? (base ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm)
+      : (station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm)
 
     // For ground units, use real safe driving route along OSM road network
     if (!isAerial(unit) && station && this.loaded?.context) {
@@ -1224,7 +1501,7 @@ export class Editor {
       if (route) km = route.distanceKm
     }
 
-    return arrivalMin(this.sup, unit, km, false)
+    return arrivalMin(this.sup, unit, km, a.unit === 'crew')
   }
 
   /** What the assignment can do, in one line: the front it holds and how it grows, line built, drops, water. */
@@ -1293,26 +1570,34 @@ export class Editor {
       if (unit.lineMPerH) parts.push(`linha: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
       parts.push(`segura chama até ${unit.holdFlameM} m`)
     }
-    this.refs.capacity.textContent = parts.join(' · ')
+    this.currentCapacityText = parts.join(' · ')
+    if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
+      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+    }
     this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
-    this.refs.from.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
-    // What the station still has of this unit for the active decision (inventory.json: Table 41 of
-    // Matos 2025 in the Braga district, an estimate by tier elsewhere).
+    this.refs.from.closest<HTMLElement>('.field')!.hidden = false
+    // What the station or CMA still has of this unit for the active decision.
     const from = this.from(this.loaded?.stations ?? [])
     const stock = this.stock(this.unit, from)
     const left = this.available(this.unit, from)
-    const station = this.loaded?.stations.find((s) => s.id === from)
+    const station = !isAerial(unit) ? this.loaded?.stations.find((s) => s.id === from) : undefined
     if (isAerial(unit)) {
-      this.refs.stock.textContent = `da base aérea a ${this.sup.dispatch.airBaseKm} km · sem limite de meios nesta estimativa`
-      this.refs.stock.classList.remove('out')
+      const base = findAirBase(from)
+      const km = base && this.loaded ? distanceM(base, this.loaded.scenario.ignition) / 1000 : this.sup.dispatch.airBaseKm
+      const deployed = (stock ?? 0) - left
+      this.refs.stock.textContent = base
+        ? `${base.short}: ${left} de ${stock} ${unit.short} disponíveis${deployed > 0 ? ` (${deployed} em uso)` : ''} · ${base.operator} · ${base.aircraftModel}`
+        : `Base aérea a ${fmtKm(km)} · ${left} de ${stock ?? 1} disponíveis`
+      this.refs.stock.classList.toggle('out', left === 0)
     } else if (stock === undefined) {
       this.refs.stock.textContent = station ? `${station.short}: sem estimativa de meios` : 'sem quartel selecionado'
       this.refs.stock.classList.remove('out')
     } else {
       const deployed = stock - left
       const source = this.inventory?.[from] ? stockSource(this.inventory[from]) : ''
+      const unitDesc = this.unit === 'crew' ? `equipas ECIN (${left * 5} operacionais)` : unit.short
       this.refs.stock.textContent =
-        `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis` +
+        `${station?.short ?? from}: ${left} de ${stock} ${unitDesc} disponíveis` +
         (deployed > 0 ? `, ${deployed} já nesta decisão` : '') +
         (left === 0 ? ' · ESGOTADO' : '') +
         ` · ${source}`
@@ -1405,26 +1690,68 @@ export class Editor {
                 material: Color.fromCssColorString('#00d2ff'),
               },
             })
-          } else if (!route) {
-            // Access road cut by fire perimeter! Show dashed hazard line
-            this.routes.entities.add({
-              polyline: {
-                positions: [Cartesian3.fromDegrees(station.lon, station.lat), Cartesian3.fromDegrees(p.lon, p.lat)],
-                width: 2.5,
-                clampToGround: true,
-                material: new PolylineDashMaterialProperty({ color: Color.RED, dashLength: 10 }),
-              },
-            })
           }
         }
       }
     }
 
-    // 2. Draw attack points with discreet tactical badge icon and clean label
+    // 2. Draw attack points with operational combat perimeter and tactical badge icon
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       if (!units.length) continue
       const mainUnit = units[0]
+
+      // 2.1 Calculate operational suppression perimeter based on Matos 2025 doctrine & fastModel
+      const cell = this.loaded ? cellOf(this.loaded.scenario.grid, p) : -1
+      const fuelClass = cell >= 0 && this.loaded ? this.loaded.scenario.grid.fuelClass[cell] : 2
+      let totalR0 = 0
+      let totalGrowMPerH = 0
+      let maxReachM = 0
+      let earliestArrival = Infinity
+
+      for (const a of units) {
+        const spec = this.sup.units[a.unit]
+        const arriveMin = this.eta(a, p) ?? 0
+        earliestArrival = Math.min(earliestArrival, arriveMin)
+        const r0 = isAerial(spec)
+          ? aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
+          : spec.radiusM * Math.sqrt(a.count)
+        totalR0 = Math.max(totalR0, r0)
+
+        const grow = a.task === 'protect' ? 0 : attackMPerH(spec, fuelClass) * a.count
+        totalGrowMPerH += grow
+        maxReachM = Math.max(maxReachM, spec.reachM ?? r0)
+      }
+
+      const activeMin = Math.max(0, this.minutes - earliestArrival)
+      const currentRadiusM = Math.max(
+        25,
+        Math.min(maxReachM || 1000, totalR0 + (totalGrowMPerH * activeMin) / 60),
+      )
+      const arrived = this.minutes >= earliestArrival
+
+      const unitColorMap: Record<UnitId, Color> = {
+        vfci: Color.fromCssColorString('#dc2626'),
+        crew: Color.fromCssColorString('#f59e0b'),
+        vttu: Color.fromCssColorString('#0284c7'),
+        hebl: Color.fromCssColorString('#0d9488'),
+        avbp: Color.fromCssColorString('#4f46e5'),
+      }
+      const unitColor = unitColorMap[mainUnit.unit] ?? AMBER
+
+      // Active suppression perimeter circle clamped to ground
+      entities.add({
+        position: Cartesian3.fromDegrees(p.lon, p.lat),
+        ellipse: {
+          semiMajorAxis: currentRadiusM,
+          semiMinorAxis: currentRadiusM,
+          material: unitColor.withAlpha(arrived ? 0.20 : 0.08),
+          outline: true,
+          outlineColor: arrived ? unitColor : DIM,
+          outlineWidth: 2,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        },
+      })
 
       const pointEntity = entities.add({
         position: Cartesian3.fromDegrees(p.lon, p.lat),
@@ -1448,7 +1775,15 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(pointEntity as any)._unitInfo = { assignment: mainUnit, point: p, allUnits: units }
+      ;(pointEntity as any)._unitInfo = {
+        assignment: mainUnit,
+        point: p,
+        allUnits: units,
+        radiusM: currentRadiusM,
+        growMPerH: totalGrowMPerH,
+        arrived,
+        earliestArrival,
+      }
     }
 
     // 3. Draw lines
@@ -1457,6 +1792,29 @@ export class Editor {
       if (!a) continue
       if (a.task === 'drops') {
         this.polyline(line, INK, true)
+        const dropEntity = entities.add({
+          position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
+          billboard: {
+            image: getUnitTacticalCanvas(a.unit),
+            width: 20,
+            height: 20,
+            verticalOrigin: VerticalOrigin.CENTER,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+          label: {
+            text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
+            font: 'bold 10px ui-monospace, Menlo, monospace',
+            fillColor: INK,
+            outlineColor: Color.BLACK,
+            outlineWidth: 3,
+            style: 2,
+            pixelOffset: new Cartesian2(0, 16),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+        })
+        ;(dropEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
         continue
       }
       const schedule = this.loaded && lineSchedule(this.loaded.scenario, d, a)
@@ -1465,53 +1823,107 @@ export class Editor {
       const [built, late] = splitLine(line, fraction)
       if (built.length > 1) this.polyline(built, AMBER, false)
       if (late.length > 1) this.polyline(late, DIM, true)
+
+      const lineEntity = entities.add({
+        position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
+        billboard: {
+          image: getUnitTacticalCanvas(a.unit),
+          width: 20,
+          height: 20,
+          verticalOrigin: VerticalOrigin.CENTER,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Infinity,
+        },
+        label: {
+          text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
+          font: 'bold 10px ui-monospace, Menlo, monospace',
+          fillColor: AMBER,
+          outlineColor: Color.BLACK,
+          outlineWidth: 3,
+          style: 2,
+          pixelOffset: new Cartesian2(0, 16),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Infinity,
+        },
+      })
+      ;(lineEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
     }
 
     // 4. Line being drawn
     if (this.drawing.length) {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
-      entities.add({ position: Cartesian3.fromDegrees(this.drawing[0].lon, this.drawing[0].lat), point: { pixelSize: 6, color: INK, heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity } })
+      for (let i = 0; i < this.drawing.length; i++) {
+        const pt = this.drawing[i]
+        entities.add({
+          position: Cartesian3.fromDegrees(pt.lon, pt.lat),
+          point: {
+            pixelSize: i === 0 ? 8 : 6,
+            color: i === 0 ? Color.WHITE : AMBER,
+            outlineColor: Color.BLACK,
+            outlineWidth: 1.5,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+          label: {
+            text: String(i + 1),
+            font: 'bold 9px ui-monospace, Menlo, monospace',
+            fillColor: Color.WHITE,
+            outlineColor: Color.BLACK,
+            outlineWidth: 2,
+            style: 2,
+            pixelOffset: new Cartesian2(0, -12),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+        })
+      }
     }
 
     // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
     this.agency.entities.removeAll()
     if (context && scenario && activeRun) {
-      const threatened = detectThreatenedRoads(scenario.grid, context, activeRun, this.minutes)
-
-      // Draw threatened roads for PSP & Command
+      // Draw cut roads strictly inside the fire perimeter as the fire advances
       if (this.role === 'psp' || this.role === 'cmd') {
-        for (const cut of threatened) {
-          if (cut.pts && cut.pts.length >= 2) {
-            const cutColor =
-              cut.urgency === 'cortado'
-                ? Color.fromCssColorString('#e63946')
-                : cut.urgency === 'urgente'
-                  ? Color.fromCssColorString('#ff3b30')
-                  : Color.fromCssColorString('#f0a33a')
+        for (const { road, cells } of context.roadCells) {
+          let hasBurned = false
+          let minArrival = Infinity
+          for (let k = 0; k < cells.length; k++) {
+            const t = activeRun.arrival[cells[k]]
+            if (t <= this.minutes) {
+              hasBurned = true
+              if (t < minArrival) minArrival = t
+            }
+          }
+          if (!hasBurned) continue
 
+          const r = context.osm.roads[road]
+          if (!r || !r.pts || r.pts.length < 2) continue
+
+          const burnedSegments = clipRoadToFire(r.pts, scenario.grid, activeRun.arrival, this.minutes)
+          for (const seg of burnedSegments) {
             const lineEntity = this.agency.entities.add({
               polyline: {
-                positions: cut.pts.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
-                width: this.role === 'psp' ? 5 : 3,
+                positions: seg.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
+                width: 4,
                 clampToGround: true,
-                material: new PolylineDashMaterialProperty({ color: cutColor, dashLength: 10 }),
+                material: new PolylineDashMaterialProperty({
+                  color: Color.fromCssColorString('#e63946'),
+                  dashLength: 10,
+                }),
               },
             })
-            ;(lineEntity as any)._roadCut = cut
-
-            // Cut pin with discreet small No-Entry circular sign (⛔)
-            const cutEntity = this.agency.entities.add({
-              position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
-              billboard: {
-                image: getNoEntrySignCanvas(cut.urgency),
-                width: 18,
-                height: 18,
-                verticalOrigin: VerticalOrigin.CENTER,
-                heightReference: HeightReference.CLAMP_TO_GROUND,
-                disableDepthTestDistance: Infinity,
-              },
-            })
-            ;(cutEntity as any)._roadCut = cut
+            const roadItem: RoadCutItem = {
+              id: road,
+              label: r.name || r.ref || (r.cls === 'paved' ? 'Estrada Secundária' : 'Caminho Rural'),
+              cls: r.cls,
+              firstArrivalMin: minArrival,
+              minutesToImpact: 0,
+              urgency: 'cortado',
+              coord: { lon: seg[0][0], lat: seg[0][1] },
+              pts: r.pts,
+              isPaved: r.cls === 'paved' || !!r.name || !!r.ref,
+            }
+            ;(lineEntity as any)._roadCut = roadItem
           }
         }
       }

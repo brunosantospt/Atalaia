@@ -7,6 +7,7 @@
 import type { Station, Weather } from './data'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
 import { distanceM, toPTTM06, type LonLat } from './geo'
+import { findAirBase } from './airBases'
 import { cellHa, cellOf, cellOfXY, centerXY, type Grid } from './grid'
 import {
   aerialFrontM,
@@ -318,9 +319,11 @@ function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lin
           return zone
         },
       )
+      const base = findAirBase(a.from)
+      const airKm = base && line?.length ? distanceM(base, line[0]) / 1000 : sup.dispatch.airBaseKm
       const interval = dropCycleMin(unit, sup.dispatch.waterPointKm) / Math.max(1, a.count)
       const drops: Drops = {
-        from: arrivalMin(sup, unit, sup.dispatch.airBaseKm, false),
+        from: arrivalMin(sup, unit, airKm, false),
         holdMin: unit.holdMin,
         capacity: Math.max(1, Math.floor(unit.holdMin / interval)),
         zones: zoneIds.map((z) => zones[z]),
@@ -335,7 +338,10 @@ function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lin
     const { x, y } = toPTTM06(point)
     const centre = cellOfXY(grid, x, y)
     if (centre.col < 0 || centre.row < 0 || centre.col >= grid.cols || centre.row >= grid.rows) continue
-    const km = station ? distanceM(station, point) / 1000 : sup.dispatch.airBaseKm
+    const base = isAerial(unit) ? findAirBase(a.from) : undefined
+    const km = isAerial(unit)
+      ? (base ? distanceM(base, point) / 1000 : sup.dispatch.airBaseKm)
+      : (station ? distanceM(station, point) / 1000 : sup.dispatch.airBaseKm)
     const arrive = arrivalMin(sup, unit, km, ecin)
     const waterKm = shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm
     const windows: number[] = []
@@ -391,8 +397,9 @@ export function lineSchedule(
   const unit = sup.units[a.unit]
   const line = decision.lines[a.target]
   if (!line?.length || !unit.lineMPerH) return undefined
-  const station = stations.find((s) => s.id === a.from)
-  const km = station ? distanceM(station, line[0]) / 1000 : sup.dispatch.airBaseKm
+  const base = isAerial(unit) ? findAirBase(a.from) : undefined
+  const station = !base ? stations.find((s) => s.id === a.from) : undefined
+  const km = base ? distanceM(base, line[0]) / 1000 : station ? distanceM(station, line[0]) / 1000 : sup.dispatch.airBaseKm
   let t = arrivalMin(sup, unit, km, ecin)
   const cells = rasterise(grid, line)
   const at = cells.map((cell) => {

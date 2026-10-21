@@ -1,6 +1,15 @@
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
-import { Credit, type PerspectiveFrustum } from 'cesium'
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Credit,
+  HeadingPitchRange,
+  Math as CesiumMath,
+  type PerspectiveFrustum,
+} from 'cesium'
 import { applyPose, readPose, type Pose } from './camera'
 import {
   loadFire,
@@ -95,6 +104,57 @@ async function main() {
     })
   let loading: string | undefined
 
+  function resetNorth() {
+    if (replay?.player) {
+      replay.player.playing = false
+      replay.player.userMoved = true
+    }
+    const current = readPose(scene)
+    if (current) {
+      const target = Cartesian3.fromDegrees(current.lon, current.lat, current.h)
+      viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+        offset: new HeadingPitchRange(0, CesiumMath.toRadians(current.pitch), current.range),
+        duration: 0.8,
+      })
+    } else {
+      viewer.camera.flyTo({
+        destination: viewer.camera.position,
+        orientation: {
+          heading: 0,
+          pitch: viewer.camera.pitch,
+          roll: 0,
+        },
+        duration: 0.8,
+      })
+    }
+  }
+
+  function flyToIgnition() {
+    if (!replay) return
+    const { data: fire, story } = replay
+    replay.player.playing = false
+    replay.player.userMoved = true
+
+    // Coordenadas exatas do marcador "I - Ignição"
+    const ignMarker = story.markers.find((m) => m.id === 'ignition:0' || m.badge === 'I')
+    const lon = ignMarker ? ignMarker.lon : fire.ignition.lon
+    const lat = ignMarker ? ignMarker.lat : fire.ignition.lat
+    let height = ignMarker && ignMarker.h > 0 ? ignMarker.h : 0
+    if (!height) {
+      const sampled = viewer.scene.globe.getHeight(Cartographic.fromDegrees(lon, lat))
+      if (sampled !== undefined && Number.isFinite(sampled)) height = sampled
+    }
+    const target = Cartesian3.fromDegrees(lon, lat, height)
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(
+        0, // Norte
+        CesiumMath.toRadians(-35), // inclinação de 35° para perspetiva tática do terreno
+        650, // zoom próximo e centrado no ponto I de ignição
+      ),
+      duration: 1.2,
+    })
+  }
+
   const hud = new Hud(document.getElementById('hud')!, index, {
     toggle: () => replay?.player.toggle(),
     prev: () => replay?.player.prev(),
@@ -106,6 +166,10 @@ async function main() {
       const dispatch = editor.getMultiAgencyDispatch()
       if (dispatch) hud.updateBriefings(dispatch)
     },
+    resetNorth,
+    flyToIgnition,
+    toggleEditor: () => editor.toggle(),
+    mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
   })
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
@@ -122,6 +186,26 @@ async function main() {
       }
     },
   })
+
+  const mouseMovePixel = new Cartesian2()
+  scene.canvas.addEventListener('mousemove', (e) => {
+    mouseMovePixel.x = e.clientX
+    mouseMovePixel.y = e.clientY
+    const ray = viewer.camera.getPickRay(mouseMovePixel)
+    if (!ray) return
+    const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
+    if (cartesian) {
+      const c = Cartographic.fromCartesian(cartesian)
+      hud.updateCursorCoords({
+        lon: CesiumMath.toDegrees(c.longitude),
+        lat: CesiumMath.toDegrees(c.latitude),
+        h: c.height,
+      })
+    } else {
+      hud.updateCursorCoords(undefined)
+    }
+  })
+  scene.canvas.addEventListener('mouseleave', () => hud.updateCursorCoords(undefined))
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
@@ -180,7 +264,7 @@ async function main() {
       shotShown: undefined,
     }
     hud.setDirector(replay.director)
-    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near))
+    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near), reach.intensityKWPerM)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
@@ -301,6 +385,10 @@ async function main() {
     free.set(frame.hours)
     split?.show(splitOn)
     split?.set(frame.hours)
+    // Synchronize editor overlays (cut roads strictly inside the fire, tactical perimeters) with simulation clock
+    if (!editor.open || player.playing) {
+      editor.syncTime(frame.hours)
+    }
     // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
     // the comparison starts with the split in the middle.
     if (frame.shot !== replay.shotShown) {
