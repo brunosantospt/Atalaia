@@ -1,18 +1,10 @@
 [
   {
-    "id": "VieiradoMinho_10082016",
-    "name": "Vieira do Minho",
-    "start": "2016-08-10T10:00",
-    "areaHa": 1970.5,
-    "lon": -8.115289,
-    "lat": 41.557209
-  },
-  {
-    "id": "CabeceirasdeBasto_06092016",
-    "name": "Cabeceiras de Basto",
-    "start": "2016-09-06T04:00",
-    "areaHa": 1825.8,
-    "lon": -7.936506,
-    "lat": 41.552461
+    "id": "Penha_Guimaraes_hipotetico",
+    "name": "Penha, Guimarães (simulado)",
+    "start": "2024-09-16T10:00",
+    "areaHa": 152.6,
+    "lon": -8.243557,
+    "lat": 41.437309
   }
 ]
