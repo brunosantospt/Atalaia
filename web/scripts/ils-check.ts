@@ -1,18 +1,22 @@
-// Regression check of decision B (optimize.ts) on the two demo fires: each fire is loaded as the
-// app loads it (main.ts), A is the editor's example (decisions.ts on the roads, cut to the stock),
-// and the ILS searches B with seed 1, as the editor's worker does. It fails when B is worse than A,
-// or clearly worse than what the search found on 21 Oct (docs/ils.md §5.1).
+// Regression check of decision B (optimize.ts) on the demo fires: each fire is loaded as the app
+// loads it (main.ts), A is the editor's example (decisions.ts on the roads, cut to the stock), and
+// the ILS searches B with seed 1, as the editor's worker does. It fails when B is worse than A, or
+// when A or B moved further than DRIFT from the reference in ils-reference.json.
 //
 // The search stops at PLANS distinct plans instead of at 10 s: with a fixed seed the plans come in
-// the same order on any machine, so B is the same everywhere and the 21 Oct figures come back
-// exactly (Chrome tested ~2000–2400 plans in its 10 s). With --time it runs the editor's 10 s
-// instead, to see what this machine finds in the demo's budget; a slower one finds less.
+// the same order on any machine, so B is the same everywhere (Chrome tested ~2000–2400 plans in its
+// 10 s on 21 Oct). With --time it runs the editor's 10 s instead, to see what this machine finds in
+// the demo's budget; a slower one finds less.
+// The fast model is still changing and each change moves A and B: when one was on purpose, --update
+// takes this run's figures as the new reference.
 // The data comes from public/ on disk: fetch() of the app's own loaders reads the files here.
 //
-// npm run ils:check            (from web/; ~30 s)
+// npm run ils:check              (from web/; ~30 s)
 // npm run ils:check -- --time
+// npm run ils:check -- --update
 
-import { readFile } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
+import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { findAirBase } from '../src/airBases'
@@ -30,36 +34,30 @@ const BUDGET_MS = 10_000 // editor.ts ILS_BUDGET_MS
 const SEED = 1 // editor.ts
 const SNAP_M = 400 // editor.ts: the example's points go to the nearest road within this
 const PLANS = 2000 // per fire, unless --time
-const DRIFT_HA = 0.05 // further than this from the reference is a change of the model, the means or the search
+// How far A or B may move from the reference before the check fails: any change in the places
+// reached, since the demo is told in places, or a quarter of the hectares.
+const DRIFT = { places: 0, ha: 0.25 }
+const SAME_HA = 0.05 // the reference's rounding
 
 type Figures = Pick<Score, 'places' | 'ha'>
 
-interface Check {
-  id: string
-  name: string
-  // Measured 21 Oct, Chrome, 10 s (docs/ils.md §5.1).
-  reference: { a: Figures; b: Figures; plans: number }
-  // What B may not exceed, with slack.
-  limit: Figures
+/** ils-reference.json: what this check found when the reference was last taken. */
+interface Reference {
+  measured: string // date, stop, seed and the last commit that changed src/ or public/
+  fires: {
+    id: string
+    name: string
+    a: Figures
+    b: Figures
+    foundAt: number // the plan at which the search first had this B: what a machine must test in 10 s to show it
+  }[]
 }
 
-const CHECKS: Check[] = [
-  {
-    id: 'VieiradoMinho_10082016',
-    name: 'Vieira do Minho 2016',
-    reference: { a: { places: 3, ha: 871.9 }, b: { places: 0, ha: 138.4 }, plans: 1967 },
-    limit: { places: 0, ha: 200 }, // no place reached, and most of A's hectares saved
-  },
-  {
-    id: 'CabeceirasdeBasto_06092016',
-    name: 'Cabeceiras de Basto 2016',
-    reference: { a: { places: 5, ha: 449.0 }, b: { places: 3, ha: 428.2 }, plans: 2375 },
-    limit: { places: 3, ha: 450 }, // 2 of A's 5 places saved, and no more burned than A
-  },
-]
+const WEB = fileURLToPath(new URL('..', import.meta.url))
+const REFERENCE = fileURLToPath(new URL('./ils-reference.json', import.meta.url))
 
 // The loaders fetch('/fires/…') from the dev server; in node the same paths are read from public/.
-const PUBLIC = fileURLToPath(new URL('../public', import.meta.url))
+const PUBLIC = join(WEB, 'public')
 globalThis.fetch = (async (input: RequestInfo | URL) => {
   const path = typeof input === 'string' ? input : input instanceof URL ? input.pathname : new URL(input.url).pathname
   try {
@@ -103,18 +101,48 @@ function editorA(example: Decision, context: Context, inventory: Inventory | nul
   return { ...example, points: keep(points), lines: keep(example.lines), assignments }
 }
 
-const text = (s: Figures) => `${s.places} ${s.places === 1 ? 'place' : 'places'} · ${s.ha.toFixed(1)} ha`
-const differs = (s: Figures, ref: Figures) => s.places !== ref.places || Math.abs(s.ha - ref.ha) > DRIFT_HA
+/** The last commit that changed the code or the data the figures come from. */
+function commit(): string {
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: WEB, encoding: 'utf8' }).trim()
+    const dirty = git('status', '--porcelain', '--', 'src', 'public') ? ' + uncommitted changes' : ''
+    return `commit ${git('log', '-1', '--format=%h', '--', 'src', 'public')}${dirty}`
+  } catch {
+    return 'no git'
+  }
+}
+
+const plural = (n: number, word: string) => `${n} ${Math.abs(n) === 1 ? word : `${word}s`}`
+const text = (s: Figures) => `${plural(s.places, 'place')} · ${s.ha.toFixed(1)} ha`
+const signed = (x: number, digits = 0) => `${x > 0 ? '+' : ''}${x.toFixed(digits)}`
 const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`
+const rounded = (s: Figures): Figures => ({ places: s.places, ha: Math.round(s.ha * 10) / 10 })
+const same = (s: Figures, ref: Figures) => s.places === ref.places && Math.abs(s.ha - ref.ha) <= SAME_HA
+const tooFar = (s: Figures, ref: Figures) =>
+  Math.abs(s.places - ref.places) > DRIFT.places || Math.abs(s.ha - ref.ha) > DRIFT.ha * ref.ha
+
+function change(s: Figures, ref: Figures): string {
+  if (same(s, ref)) return 'same'
+  const dp = s.places - ref.places
+  const dha = s.ha - ref.ha
+  const pct = ref.ha ? ` (${signed((100 * dha) / ref.ha)} %)` : ''
+  return `${dp ? `${signed(dp)} ${Math.abs(dp) === 1 ? 'place' : 'places'} · ` : ''}${signed(dha, 1)} ha${pct}${tooFar(s, ref) ? ', more than the drift' : ''}`
+}
 
 const byTime = process.argv.includes('--time')
+const update = process.argv.includes('--update')
+if (byTime && update) throw new Error('--update takes the figures of the plan run: leave out --time')
 const stop: Options = byTime ? { budgetMs: BUDGET_MS } : { budgetMs: Infinity, maxPlans: PLANS }
+const reference = JSON.parse(await readFile(REFERENCE, 'utf8')) as Reference
 const [stations, suppression, inventory] = await Promise.all([loadStations(), loadSuppression(), loadInventory()])
-const failures: string[] = []
+const next: Reference = { measured: `${new Date().toISOString().slice(0, 10)} · ${PLANS} plans · seed ${SEED} · ${commit()}`, fires: [] }
+const broken: string[] = [] // B worse than A
+const moved: string[] = [] // A or B further than DRIFT from the reference
 console.log(`ILS check · ${byTime ? `${seconds(BUDGET_MS)} per fire` : `${PLANS} plans per fire`} · seed ${SEED} · node ${process.version}`)
-for (const check of CHECKS) {
-  const [fire, grid, weather, osm] = await Promise.all([loadFire(check.id), loadGrid(check.id), loadWeather(check.id), loadOsm(check.id)])
-  if (!osm) throw new Error(`${check.id}: no osm.json, so no access points for B`)
+console.log(`reference: ${reference.measured}`)
+for (const ref of reference.fires) {
+  const [fire, grid, weather, osm] = await Promise.all([loadFire(ref.id), loadGrid(ref.id), loadWeather(ref.id), loadOsm(ref.id)])
+  if (!osm) throw new Error(`${ref.id}: no osm.json, so no access points for B`)
   const near = nearestStations(stations, fire.ignition)
   const regional = nearestStations(stations, fire.ignition, 30, 65)
   const startIndex = Math.max(0, weather.time.indexOf(fire.start.slice(0, 16)))
@@ -130,7 +158,6 @@ for (const check of CHECKS) {
   }
   const context = buildContext(grid, osm)
   const a = editorA(demoDecision(fire, near), context, inventory, suppression)
-  // When the search first had its final B: how many plans a machine must test in 10 s to show it.
   let found = { plans: 0, elapsedMs: 0 }
   const result = optimize(scenario, groundOf(context), a, {
     ...stop,
@@ -140,27 +167,47 @@ for (const check of CHECKS) {
     },
   })
   const { a: sa, best: sb, plans, elapsedMs, improved } = result
-  const { reference: ref, limit } = check
+  next.fires.push({ ...ref, a: rounded(sa), b: rounded(sb), foundAt: improved ? found.plans : 0 })
 
-  const problems: string[] = []
-  if (better(sa, sb)) problems.push('B is worse than A')
-  if (sb.places > limit.places) problems.push(`B reaches ${sb.places} places, more than ${limit.places}`)
-  if (sb.ha > limit.ha) problems.push(`B burns ${sb.ha.toFixed(1)} ha, more than ${limit.ha.toFixed(1)}`)
-
-  console.log(`\n${check.name} (${check.id})`)
-  console.log(`  A  ${text(sa)} · ${sa.units} units`)
+  console.log(`\n${ref.name} (${ref.id})`)
+  console.log(`  A  ${text(sa).padEnd(21)} ref ${text(ref.a)} · ${change(sa, ref.a)}`)
+  console.log(`  B  ${text(sb).padEnd(21)} ref ${text(ref.b)} · ${change(sb, ref.b)}`)
   console.log(
-    `  B  ${text(sb)} · ${sb.units} units · ${plans} plans · ${seconds(elapsedMs)} · ` +
-      (improved ? `found at plan ${found.plans} (${seconds(found.elapsedMs)})` : 'no plan beat A'),
+    `     ${plural(sb.units, 'unit')} · ${plans} plans · ${seconds(elapsedMs)} · ` +
+      (improved ? `found at plan ${found.plans} (${seconds(found.elapsedMs)}), ref ${ref.foundAt}` : 'no plan beat A'),
   )
-  console.log(`  21 Oct  A ${text(ref.a)} → B ${text(ref.b)} · ${ref.plans} plans in Chrome's 10 s`)
-  if (differs(sa, ref.a)) console.log('  ! A is not the reference A: the fire model or the means changed')
-  else if (!byTime && differs(sb, ref.b)) console.log('  ! same A, other B: the search changed')
-  console.log(`  limit  B ≤ ${limit.places} places, ≤ ${limit.ha.toFixed(1)} ha · ${problems.length ? `FAIL ${problems.join('; ')}` : 'ok'}`)
-  if (problems.length && byTime && plans < ref.plans)
-    console.log(`  ! ${plans} plans in ${seconds(BUDGET_MS)} against Chrome's ${ref.plans}: a slower machine or a busy CPU finds less`)
-  if (problems.length) failures.push(check.name)
+  const problems: string[] = []
+  if (better(sa, sb)) problems.push('B is worse than A, which the search never returns: optimize.ts is broken')
+  if (tooFar(sa, ref.a)) problems.push('A moved more than the drift: the fire model or the means changed')
+  if (tooFar(sb, ref.b))
+    problems.push(
+      byTime
+        ? `B moved more than the drift: ${plans} plans in ${seconds(BUDGET_MS)} here, the reference B needs ${ref.foundAt}`
+        : same(sa, ref.a)
+          ? 'B moved more than the drift with the same A: the search changed'
+          : 'B moved more than the drift',
+    )
+  else if (!byTime && same(sa, ref.a) && !same(sb, ref.b)) console.log('  ! same A, other B: the search changed')
+  if (better(sa, sb)) broken.push(ref.name)
+  else if (problems.length) moved.push(ref.name)
+  console.log(problems.length ? problems.map((p) => `  ${update && !better(sa, sb) ? '~' : 'FAIL'} ${p}`).join('\n') : '  ok')
 }
 
-console.log(failures.length ? `\nFAIL ${failures.join(', ')}` : '\nall ok')
-process.exitCode = failures.length ? 1 : 0
+if (update && !broken.length) {
+  await writeFile(REFERENCE, `${JSON.stringify(next, null, 2)}\n`)
+  console.log(`\nreference updated: ${next.measured}\nupdate the figures in docs/ils.md §5.1 too`)
+} else if (broken.length || moved.length) {
+  console.log(`\nFAIL ${[...broken, ...moved].join(', ')}${update ? ': reference not updated' : ''}`)
+  if (moved.length && byTime)
+    console.log(
+      'With --time, B depends on how many plans this machine tests in 10 s. Without --time the plans\n' +
+        "are the reference's, so a move there is the code's, not the machine's.",
+    )
+  else if (moved.length)
+    console.log(
+      `The figures moved from the reference (${reference.measured}).\n` +
+        'If fastModel.ts, the means or the search changed on purpose and B still beats A, take this run as the reference:\n' +
+        '  npm run ils:check -- --update    (rewrites scripts/ils-reference.json; then the figures in docs/ils.md §5.1)',
+    )
+} else console.log('\nall ok')
+process.exitCode = broken.length || (moved.length && !update) ? 1 : 0
