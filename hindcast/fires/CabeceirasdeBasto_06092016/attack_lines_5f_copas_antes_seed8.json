@@ -1,0 +1,1293 @@
+{
+ "fire": "CabeceirasdeBasto_06092016",
+ "format": "decision.barriers of docs/contracts.md (path, width_m, from_min, from step 0), plus label, tier, source and length_m; POST /api/run takes path, width_m and from_min",
+ "options": {
+  "fire": "CabeceirasdeBasto_06092016",
+  "near_m": 60.0,
+  "min_run": 300.0,
+  "min_along": 0.5,
+  "bridge_m": 250.0,
+  "reach_m": 400.0,
+  "lead": 60.0,
+  "earliest": 30.0,
+  "step": 60.0,
+  "width": 20.0,
+  "timing": "run",
+  "run": "5f_copas_antes_seed8",
+  "preview": false
+ },
+ "official_boundary_km": 29.0,
+ "boundary_along_scars_km": 1.04,
+ "boundary_covered_km": 12.55,
+ "crossings_left_out_km": 2.97,
+ "barriers": [
+  {
+   "label": "road 1",
+   "tier": "road",
+   "source": "road along the official perimeter, 350 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.961492,
+     41.555608
+    ],
+    [
+     -7.96092,
+     41.55587
+    ],
+    [
+     -7.9603,
+     41.55594
+    ],
+    [
+     -7.9607,
+     41.55523
+    ],
+    [
+     -7.96059,
+     41.55472
+    ],
+    [
+     -7.95977,
+     41.55412
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 347
+  },
+  {
+   "label": "road 2",
+   "tier": "road",
+   "source": "road along the official perimeter, 320 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.960401,
+     41.551369
+    ],
+    [
+     -7.96013,
+     41.55064
+    ],
+    [
+     -7.95868,
+     41.54888
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 314
+  },
+  {
+   "label": "road 3",
+   "tier": "road",
+   "source": "road along the official perimeter, 188 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.96028,
+     41.55443
+    ],
+    [
+     -7.95999,
+     41.5538
+    ],
+    [
+     -7.960335,
+     41.552821
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 187
+  },
+  {
+   "label": "road 4",
+   "tier": "road",
+   "source": "road along the official perimeter, 101 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.959153,
+     41.554845
+    ],
+    [
+     -7.95977,
+     41.55412
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 96
+  },
+  {
+   "label": "road 5",
+   "tier": "road",
+   "source": "road along the official perimeter, 125 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.959613,
+     41.555169
+    ],
+    [
+     -7.95992,
+     41.55481
+    ],
+    [
+     -7.95977,
+     41.55412
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 125
+  },
+  {
+   "label": "road 6",
+   "tier": "road",
+   "source": "road along the official perimeter, 705 m of a 1790 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.95977,
+     41.55412
+    ],
+    [
+     -7.95961,
+     41.55369
+    ],
+    [
+     -7.95972,
+     41.55107
+    ],
+    [
+     -7.95859,
+     41.54868
+    ],
+    [
+     -7.95882,
+     41.54847
+    ],
+    [
+     -7.959373,
+     41.548395
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 699
+  },
+  {
+   "label": "road 7",
+   "tier": "road",
+   "source": "road along the official perimeter, 401 m of a 401 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.958328,
+     41.56476
+    ],
+    [
+     -7.95807,
+     41.56371
+    ],
+    [
+     -7.95757,
+     41.56336
+    ],
+    [
+     -7.95822,
+     41.56269
+    ],
+    [
+     -7.95865,
+     41.56157
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 420.0,
+   "length_m": 397
+  },
+  {
+   "label": "road 8",
+   "tier": "road",
+   "source": "road along the official perimeter, 668 m of a 1173 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.95799,
+     41.55808
+    ],
+    [
+     -7.9577,
+     41.55817
+    ],
+    [
+     -7.95718,
+     41.55725
+    ],
+    [
+     -7.95645,
+     41.55763
+    ],
+    [
+     -7.95656,
+     41.55738
+    ],
+    [
+     -7.95519,
+     41.55765
+    ],
+    [
+     -7.9548,
+     41.55864
+    ],
+    [
+     -7.95485,
+     41.55948
+    ],
+    [
+     -7.95517,
+     41.5602
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 651
+  },
+  {
+   "label": "road 9",
+   "tier": "road",
+   "source": "road along the official perimeter, 176 m of a 1173 m held line (unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.95799,
+     41.55808
+    ],
+    [
+     -7.95753,
+     41.55696
+    ],
+    [
+     -7.957141,
+     41.556689
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 174
+  },
+  {
+   "label": "road 10",
+   "tier": "road",
+   "source": "road along the official perimeter, 201 m of a 1173 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.95645,
+     41.55763
+    ],
+    [
+     -7.95566,
+     41.55781
+    ],
+    [
+     -7.95543,
+     41.55804
+    ],
+    [
+     -7.955676,
+     41.558919
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 201
+  },
+  {
+   "label": "road 11",
+   "tier": "road",
+   "source": "road along the official perimeter, 128 m of a 1173 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.955909,
+     41.558719
+    ],
+    [
+     -7.95585,
+     41.55797
+    ],
+    [
+     -7.95623,
+     41.55772
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 180.0,
+   "length_m": 125
+  },
+  {
+   "label": "road 12",
+   "tier": "road",
+   "source": "road along the official perimeter, 603 m of a 1523 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.954443,
+     41.545572
+    ],
+    [
+     -7.95342,
+     41.54586
+    ],
+    [
+     -7.9549,
+     41.54694
+    ],
+    [
+     -7.95499,
+     41.54753
+    ],
+    [
+     -7.95459,
+     41.54777
+    ],
+    [
+     -7.95452,
+     41.54814
+    ],
+    [
+     -7.95468,
+     41.54838
+    ],
+    [
+     -7.95441,
+     41.54869
+    ],
+    [
+     -7.95395,
+     41.54863
+    ],
+    [
+     -7.9535,
+     41.54874
+    ],
+    [
+     -7.95337,
+     41.54894
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 588
+  },
+  {
+   "label": "road 13",
+   "tier": "road",
+   "source": "road along the official perimeter, 405 m of a 1523 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.954136,
+     41.552502
+    ],
+    [
+     -7.95337,
+     41.54894
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 401
+  },
+  {
+   "label": "road 14",
+   "tier": "road",
+   "source": "road along the official perimeter, 180 m of a 1523 m held line (track, unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.95337,
+     41.54894
+    ],
+    [
+     -7.95291,
+     41.54847
+    ],
+    [
+     -7.95231,
+     41.54844
+    ],
+    [
+     -7.951651,
+     41.548604
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 173
+  },
+  {
+   "label": "road 15",
+   "tier": "road",
+   "source": "road along the official perimeter, 335 m of a 1523 m held line (unclassified); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.951372,
+     41.546847
+    ],
+    [
+     -7.95118,
+     41.54753
+    ],
+    [
+     -7.95165,
+     41.54747
+    ],
+    [
+     -7.95276,
+     41.5478
+    ],
+    [
+     -7.95327,
+     41.5487
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 326
+  },
+  {
+   "label": "road 16",
+   "tier": "road",
+   "source": "road along the official perimeter, 402 m of a 402 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.948813,
+     41.590682
+    ],
+    [
+     -7.95042,
+     41.59045
+    ],
+    [
+     -7.9506,
+     41.59023
+    ],
+    [
+     -7.9507,
+     41.58951
+    ],
+    [
+     -7.9501,
+     41.58828
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 391
+  },
+  {
+   "label": "road 17",
+   "tier": "road",
+   "source": "road along the official perimeter, 777 m of a 878 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.94732,
+     41.54821
+    ],
+    [
+     -7.94748,
+     41.548
+    ],
+    [
+     -7.94724,
+     41.54779
+    ],
+    [
+     -7.94622,
+     41.54767
+    ],
+    [
+     -7.94588,
+     41.54701
+    ],
+    [
+     -7.94478,
+     41.54669
+    ],
+    [
+     -7.94503,
+     41.54619
+    ],
+    [
+     -7.94583,
+     41.5458
+    ],
+    [
+     -7.94659,
+     41.54441
+    ],
+    [
+     -7.94741,
+     41.54425
+    ],
+    [
+     -7.94825,
+     41.54437
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 769
+  },
+  {
+   "label": "road 18",
+   "tier": "road",
+   "source": "road along the official perimeter, 101 m of a 878 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.94503,
+     41.54619
+    ],
+    [
+     -7.94459,
+     41.54651
+    ],
+    [
+     -7.944014,
+     41.546467
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 99
+  },
+  {
+   "label": "road 19",
+   "tier": "road",
+   "source": "road along the official perimeter, 553 m of a 553 m held line (tertiary); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.948087,
+     41.544052
+    ],
+    [
+     -7.94604,
+     41.54346
+    ],
+    [
+     -7.94467,
+     41.54427
+    ],
+    [
+     -7.94432,
+     41.54434
+    ],
+    [
+     -7.94319,
+     41.54388
+    ],
+    [
+     -7.942781,
+     41.543218
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 120.0,
+   "length_m": 547
+  },
+  {
+   "label": "road 20",
+   "tier": "road",
+   "source": "road along the official perimeter, 655 m of a 783 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.944705,
+     41.590622
+    ],
+    [
+     -7.94417,
+     41.59035
+    ],
+    [
+     -7.94402,
+     41.58914
+    ],
+    [
+     -7.94411,
+     41.58853
+    ],
+    [
+     -7.94479,
+     41.58812
+    ],
+    [
+     -7.94497,
+     41.58776
+    ],
+    [
+     -7.94525,
+     41.58597
+    ],
+    [
+     -7.944874,
+     41.585327
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 600.0,
+   "length_m": 651
+  },
+  {
+   "label": "road 21",
+   "tier": "road",
+   "source": "road along the official perimeter, 128 m of a 783 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.943481,
+     41.588093
+    ],
+    [
+     -7.94402,
+     41.58917
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 600.0,
+   "length_m": 128
+  },
+  {
+   "label": "road 22",
+   "tier": "road",
+   "source": "road along the official perimeter, 1294 m of a 2251 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.93471,
+     41.59879
+    ],
+    [
+     -7.93519,
+     41.59852
+    ],
+    [
+     -7.93555,
+     41.598
+    ],
+    [
+     -7.9366,
+     41.5976
+    ],
+    [
+     -7.93788,
+     41.59583
+    ],
+    [
+     -7.93869,
+     41.59537
+    ],
+    [
+     -7.93988,
+     41.5952
+    ],
+    [
+     -7.94088,
+     41.5947
+    ],
+    [
+     -7.94139,
+     41.59494
+    ],
+    [
+     -7.94147,
+     41.59564
+    ],
+    [
+     -7.94174,
+     41.59608
+    ],
+    [
+     -7.94283,
+     41.5964
+    ],
+    [
+     -7.94396,
+     41.59727
+    ],
+    [
+     -7.94428,
+     41.59782
+    ],
+    [
+     -7.94418,
+     41.59849
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 1279
+  },
+  {
+   "label": "road 23",
+   "tier": "road",
+   "source": "road along the official perimeter, 219 m of a 2251 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.94401,
+     41.59733
+    ],
+    [
+     -7.94351,
+     41.59727
+    ],
+    [
+     -7.94262,
+     41.5965
+    ],
+    [
+     -7.94193,
+     41.59632
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 216
+  },
+  {
+   "label": "road 24",
+   "tier": "road",
+   "source": "road along the official perimeter, 100 m of a 2251 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.9366,
+     41.5976
+    ],
+    [
+     -7.93617,
+     41.59805
+    ],
+    [
+     -7.936121,
+     41.598391
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 100
+  },
+  {
+   "label": "road 25",
+   "tier": "road",
+   "source": "road along the official perimeter, 238 m of a 2251 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.93246,
+     41.59798
+    ],
+    [
+     -7.933,
+     41.59859
+    ],
+    [
+     -7.93353,
+     41.59891
+    ],
+    [
+     -7.93471,
+     41.59879
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 237
+  },
+  {
+   "label": "road 26",
+   "tier": "road",
+   "source": "road along the official perimeter, 399 m of a 2251 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.93246,
+     41.59798
+    ],
+    [
+     -7.93295,
+     41.59973
+    ],
+    [
+     -7.93361,
+     41.59975
+    ],
+    [
+     -7.93471,
+     41.59879
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 840.0,
+   "length_m": 394
+  },
+  {
+   "label": "road 27",
+   "tier": "road",
+   "source": "road along the official perimeter, 356 m of a 356 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.939053,
+     41.543085
+    ],
+    [
+     -7.93885,
+     41.54459
+    ],
+    [
+     -7.937998,
+     41.546129
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 60.0,
+   "length_m": 353
+  },
+  {
+   "label": "road 28",
+   "tier": "road",
+   "source": "road along the official perimeter, 90 m of a 493 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.9341,
+     41.54954
+    ],
+    [
+     -7.93449,
+     41.54878
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 30.0,
+   "length_m": 90
+  },
+  {
+   "label": "road 29",
+   "tier": "road",
+   "source": "road along the official perimeter, 403 m of a 493 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.93382,
+     41.549183
+    ],
+    [
+     -7.9341,
+     41.54969
+    ],
+    [
+     -7.93372,
+     41.55031
+    ],
+    [
+     -7.93375,
+     41.55115
+    ],
+    [
+     -7.93352,
+     41.55164
+    ],
+    [
+     -7.93401,
+     41.5522
+    ],
+    [
+     -7.934357,
+     41.552192
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 30.0,
+   "length_m": 391
+  },
+  {
+   "label": "road 30",
+   "tier": "road",
+   "source": "road along the official perimeter, 658 m of a 658 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.927638,
+     41.599421
+    ],
+    [
+     -7.92755,
+     41.59863
+    ],
+    [
+     -7.92795,
+     41.59907
+    ],
+    [
+     -7.92862,
+     41.59931
+    ],
+    [
+     -7.92935,
+     41.59944
+    ],
+    [
+     -7.93079,
+     41.59933
+    ],
+    [
+     -7.93083,
+     41.5983
+    ],
+    [
+     -7.93229,
+     41.59763
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1260.0,
+   "length_m": 650
+  },
+  {
+   "label": "road 31",
+   "tier": "road",
+   "source": "road along the official perimeter, 244 m of a 1937 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.93026,
+     41.58265
+    ],
+    [
+     -7.92996,
+     41.58227
+    ],
+    [
+     -7.92896,
+     41.58173
+    ],
+    [
+     -7.92851,
+     41.58172
+    ],
+    [
+     -7.92795,
+     41.58197
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 900.0,
+   "length_m": 244
+  },
+  {
+   "label": "road 32",
+   "tier": "road",
+   "source": "road along the official perimeter, 151 m of a 1937 m held line (tertiary); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.9272,
+     41.58526
+    ],
+    [
+     -7.928506,
+     41.584336
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 900.0,
+   "length_m": 150
+  },
+  {
+   "label": "road 33",
+   "tier": "road",
+   "source": "road along the official perimeter, 802 m of a 1937 m held line (residential, tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.924008,
+     41.587152
+    ],
+    [
+     -7.92462,
+     41.58721
+    ],
+    [
+     -7.92523,
+     41.58656
+    ],
+    [
+     -7.92678,
+     41.58585
+    ],
+    [
+     -7.9272,
+     41.58526
+    ],
+    [
+     -7.92773,
+     41.58347
+    ],
+    [
+     -7.92771,
+     41.5826
+    ],
+    [
+     -7.928187,
+     41.581489
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 900.0,
+   "length_m": 795
+  },
+  {
+   "label": "road 34",
+   "tier": "road",
+   "source": "road along the official perimeter, 101 m of a 1937 m held line (residential, tertiary); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.92792,
+     41.58205
+    ],
+    [
+     -7.926979,
+     41.582588
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 900.0,
+   "length_m": 99
+  },
+  {
+   "label": "road 35",
+   "tier": "road",
+   "source": "road along the official perimeter, 640 m of a 1937 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.92478,
+     41.586273
+    ],
+    [
+     -7.92446,
+     41.58751
+    ],
+    [
+     -7.9246,
+     41.58889
+    ],
+    [
+     -7.92429,
+     41.5897
+    ],
+    [
+     -7.92432,
+     41.59016
+    ],
+    [
+     -7.92476,
+     41.59078
+    ],
+    [
+     -7.92475,
+     41.59186
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 900.0,
+   "length_m": 636
+  },
+  {
+   "label": "road 36",
+   "tier": "road",
+   "source": "road along the official perimeter, 175 m of a 740 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.9285,
+     41.580388
+    ],
+    [
+     -7.92867,
+     41.57949
+    ],
+    [
+     -7.929001,
+     41.578865
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 780.0,
+   "length_m": 175
+  },
+  {
+   "label": "road 37",
+   "tier": "road",
+   "source": "road along the official perimeter, 204 m of a 740 m held line (tertiary, track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.927643,
+     41.577904
+    ],
+    [
+     -7.92865,
+     41.57956
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 780.0,
+   "length_m": 202
+  },
+  {
+   "label": "road 38",
+   "tier": "road",
+   "source": "road along the official perimeter, 57 m of a 740 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.92771,
+     41.57847
+    ],
+    [
+     -7.92824,
+     41.57879
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 780.0,
+   "length_m": 57
+  },
+  {
+   "label": "road 39",
+   "tier": "road",
+   "source": "road along the official perimeter, 304 m of a 740 m held line (track); time: modelled (5f_copas_antes_seed8) arrival within reach",
+   "path": [
+    [
+     -7.92574,
+     41.578273
+    ],
+    [
+     -7.92608,
+     41.57874
+    ],
+    [
+     -7.927,
+     41.5793
+    ],
+    [
+     -7.92753,
+     41.57849
+    ],
+    [
+     -7.92801,
+     41.57842
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 780.0,
+   "length_m": 299
+  },
+  {
+   "label": "road 40",
+   "tier": "road",
+   "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: nearest modelled (5f_copas_antes_seed8) cell, 752 m away",
+   "path": [
+    [
+     -7.9145,
+     41.59697
+    ],
+    [
+     -7.91461,
+     41.59641
+    ],
+    [
+     -7.91588,
+     41.59559
+    ],
+    [
+     -7.91637,
+     41.59556
+    ],
+    [
+     -7.9163,
+     41.59614
+    ],
+    [
+     -7.91688,
+     41.59647
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1860.0,
+   "length_m": 369
+  },
+  {
+   "label": "road 41",
+   "tier": "road",
+   "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: nearest modelled (5f_copas_antes_seed8) cell, 752 m away",
+   "path": [
+    [
+     -7.91447,
+     41.59684
+    ],
+    [
+     -7.91412,
+     41.59638
+    ],
+    [
+     -7.91424,
+     41.59523
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1860.0,
+   "length_m": 187
+  },
+  {
+   "label": "road 42",
+   "tier": "road",
+   "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: nearest modelled (5f_copas_antes_seed8) cell, 752 m away",
+   "path": [
+    [
+     -7.91424,
+     41.59523
+    ],
+    [
+     -7.91376,
+     41.59582
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1860.0,
+   "length_m": 77
+  },
+  {
+   "label": "road 43",
+   "tier": "road",
+   "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: nearest modelled (5f_copas_antes_seed8) cell, 752 m away",
+   "path": [
+    [
+     -7.91424,
+     41.59523
+    ],
+    [
+     -7.914147,
+     41.594111
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1860.0,
+   "length_m": 125
+  },
+  {
+   "label": "road 44",
+   "tier": "road",
+   "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: nearest modelled (5f_copas_antes_seed8) cell, 752 m away",
+   "path": [
+    [
+     -7.913666,
+     41.596882
+    ],
+    [
+     -7.9138,
+     41.59597
+    ],
+    [
+     -7.91364,
+     41.5957
+    ],
+    [
+     -7.91378,
+     41.59546
+    ]
+   ],
+   "width_m": 20.0,
+   "from_min": 1860.0,
+   "length_m": 164
+  }
+ ]
+}

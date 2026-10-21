@@ -12,7 +12,7 @@
 # feature/cerra-wind-engine, both in this branch), the canopy test (5f, 6f, 8f) needs fires/<id>/canopy.npz
 # (canopy.py); without them they are skipped. Needs hindcast/setup.sh, engines/elmfire/setup.sh and the downloads of
 # evidence.py (fetched on the first run). Overwrites the runs it makes.
-# With 10 seeds, about 10 min for Vieira (JOBS=2) and 15 min for Cabeceiras without canopy (JOBS=1) on an Apple
+# With 10 seeds, about 10 min for Vieira (JOBS=2) and 20 min for Cabeceiras (JOBS=1) on an Apple
 # M-series laptop.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)

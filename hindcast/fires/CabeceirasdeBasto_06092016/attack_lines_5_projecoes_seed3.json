@@ -52,7 +52,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 347
   },
   {
@@ -74,7 +74,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 314
   },
   {
@@ -96,7 +96,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 187
   },
   {
@@ -114,7 +114,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 96
   },
   {
@@ -136,7 +136,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 125
   },
   {
@@ -170,7 +170,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 699
   },
   {
@@ -200,7 +200,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 360.0,
+   "from_min": 420.0,
    "length_m": 397
   },
   {
@@ -246,7 +246,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 651
   },
   {
@@ -268,7 +268,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 174
   },
   {
@@ -294,7 +294,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 201
   },
   {
@@ -316,7 +316,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 125
   },
   {
@@ -370,7 +370,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 30.0,
    "length_m": 588
   },
   {
@@ -388,7 +388,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 30.0,
    "length_m": 401
   },
   {
@@ -414,7 +414,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 30.0,
    "length_m": 173
   },
   {
@@ -444,7 +444,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 30.0,
    "length_m": 326
   },
   {
@@ -474,7 +474,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 840.0,
+   "from_min": 900.0,
    "length_m": 391
   },
   {
@@ -584,7 +584,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 30.0,
    "length_m": 547
   },
   {
@@ -836,7 +836,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 30.0,
+   "from_min": 60.0,
    "length_m": 353
   },
   {
@@ -964,7 +964,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 720.0,
+   "from_min": 780.0,
    "length_m": 244
   },
   {
@@ -982,7 +982,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 720.0,
+   "from_min": 780.0,
    "length_m": 150
   },
   {
@@ -1024,7 +1024,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 720.0,
+   "from_min": 780.0,
    "length_m": 795
   },
   {
@@ -1042,7 +1042,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 720.0,
+   "from_min": 780.0,
    "length_m": 99
   },
   {
@@ -1080,7 +1080,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 720.0,
+   "from_min": 780.0,
    "length_m": 636
   },
   {
@@ -1102,7 +1102,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 660.0,
+   "from_min": 720.0,
    "length_m": 175
   },
   {
@@ -1120,7 +1120,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 660.0,
+   "from_min": 720.0,
    "length_m": 202
   },
   {
@@ -1138,7 +1138,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 660.0,
+   "from_min": 720.0,
    "length_m": 57
   },
   {
@@ -1168,13 +1168,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 660.0,
+   "from_min": 720.0,
    "length_m": 299
   },
   {
    "label": "road 40",
    "tier": "road",
-   "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: modelled (5_projecoes_seed3) arrival within reach",
+   "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: nearest modelled (5_projecoes_seed3) cell, 469 m away",
    "path": [
     [
      -7.9145,
@@ -1202,13 +1202,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 369
   },
   {
    "label": "road 41",
    "tier": "road",
-   "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: modelled (5_projecoes_seed3) arrival within reach",
+   "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: nearest modelled (5_projecoes_seed3) cell, 469 m away",
    "path": [
     [
      -7.91447,
@@ -1224,13 +1224,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 187
   },
   {
    "label": "road 42",
    "tier": "road",
-   "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: modelled (5_projecoes_seed3) arrival within reach",
+   "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed3) cell, 469 m away",
    "path": [
     [
      -7.91424,
@@ -1242,13 +1242,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 77
   },
   {
    "label": "road 43",
    "tier": "road",
-   "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: modelled (5_projecoes_seed3) arrival within reach",
+   "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed3) cell, 469 m away",
    "path": [
     [
      -7.91424,
@@ -1260,13 +1260,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 125
   },
   {
    "label": "road 44",
    "tier": "road",
-   "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: modelled (5_projecoes_seed3) arrival within reach",
+   "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed3) cell, 469 m away",
    "path": [
     [
      -7.913666,
@@ -1286,7 +1286,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 164
   }
  ]

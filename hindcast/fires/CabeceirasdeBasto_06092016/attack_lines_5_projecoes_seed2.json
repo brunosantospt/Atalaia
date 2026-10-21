@@ -200,7 +200,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 360.0,
+   "from_min": 420.0,
    "length_m": 397
   },
   {
@@ -246,7 +246,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 651
   },
   {
@@ -268,7 +268,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 174
   },
   {
@@ -294,7 +294,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 201
   },
   {
@@ -316,7 +316,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 180.0,
+   "from_min": 240.0,
    "length_m": 125
   },
   {
@@ -474,7 +474,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 840.0,
+   "from_min": 900.0,
    "length_m": 391
   },
   {
@@ -584,7 +584,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 60.0,
+   "from_min": 120.0,
    "length_m": 547
   },
   {
@@ -714,7 +714,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 780.0,
+   "from_min": 900.0,
    "length_m": 1279
   },
   {
@@ -740,7 +740,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 780.0,
+   "from_min": 900.0,
    "length_m": 216
   },
   {
@@ -762,7 +762,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 780.0,
+   "from_min": 900.0,
    "length_m": 100
   },
   {
@@ -788,7 +788,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 780.0,
+   "from_min": 900.0,
    "length_m": 237
   },
   {
@@ -814,7 +814,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 780.0,
+   "from_min": 900.0,
    "length_m": 394
   },
   {
@@ -836,7 +836,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 30.0,
+   "from_min": 60.0,
    "length_m": 353
   },
   {
@@ -934,7 +934,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 960.0,
+   "from_min": 1260.0,
    "length_m": 650
   },
   {
@@ -1174,7 +1174,7 @@
   {
    "label": "road 40",
    "tier": "road",
-   "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: nearest modelled (5_projecoes_seed2) cell, 670 m away",
    "path": [
     [
      -7.9145,
@@ -1202,13 +1202,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 369
   },
   {
    "label": "road 41",
    "tier": "road",
-   "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: modelled (5_projecoes_seed2) arrival within reach",
+   "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: nearest modelled (5_projecoes_seed2) cell, 670 m away",
    "path": [
     [
      -7.91447,
@@ -1224,13 +1224,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 187
   },
   {
    "label": "road 42",
    "tier": "road",
-   "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed2) cell, 670 m away",
    "path": [
     [
      -7.91424,
@@ -1242,13 +1242,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 77
   },
   {
    "label": "road 43",
    "tier": "road",
-   "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed2) cell, 670 m away",
    "path": [
     [
      -7.91424,
@@ -1260,13 +1260,13 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 125
   },
   {
    "label": "road 44",
    "tier": "road",
-   "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: modelled (5_projecoes_seed2) arrival within reach",
+   "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: nearest modelled (5_projecoes_seed2) cell, 670 m away",
    "path": [
     [
      -7.913666,
@@ -1286,7 +1286,7 @@
     ]
    ],
    "width_m": 20.0,
-   "from_min": 1740.0,
+   "from_min": 1860.0,
    "length_m": 164
   }
  ]

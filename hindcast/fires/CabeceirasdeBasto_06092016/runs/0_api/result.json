@@ -36,8 +36,8 @@
  },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 4.1,
- "wall_s": 5.2,
+ "runtime_s": 3.7,
+ "wall_s": 5.0,
  "notes": [],
  "stats": {
   "burned_ha": 2154.0,

@@ -27,7 +27,7 @@ Nada fora desta pasta muda: a API, o contrato e o motor ficam como estão.
 - **O que é:** um banco de ensaio do ELMFIRE contra incêndios reais. Cada mudança nos dados de entrada é um passo, corrido com as mesmas regras da API e pontuado da mesma maneira. Assim vê-se o que ajuda e o que não ajuda.
 - **Estado em 21/10/2026:**
   - **Vieira do Minho:** completo. São 17 configurações e 2 referências ingénuas, com 10 sementes nas que usam projeções (`ladder.sh` refaz tudo).
-  - **Cabeceiras de Basto:** a escada toda, com 10 sementes, ainda sem copas. O LiDAR da zona já está descarregado; falta correr a escada com ele (ver "Problemas em aberto").
+  - **Cabeceiras de Basto:** a escada toda, com 10 sementes, com as copas do LiDAR e, para comparar, sem elas. O melhor é o passo 3 (0,73); a configuração de Vieira não transfere (0,61).
   - **Ramo:** `hindcast-registos`, ainda não integrado no `main`.
 - **Melhor configuração até agora:**
   - combustíveis portugueses, cicatrizes, vivas de seca (30/70 %) e projeções;
@@ -35,7 +35,11 @@ Nada fora desta pasta muda: a API, o contrato e o motor ficam como estão.
   - linhas de ataque com a hora do fogo do modelo (passo 8).
 
   Em Vieira dá Sørensen 0,83 às 08:30 (mediana de 10 sementes; 0,80–0,85). A API dá 0,73 e a referência ingénua (`b_vento`, uma elipse a favor do vento que sabe a área observada) 0,69. Alcança 67 % dos focos de satélite (63–77 %). Só com dados, sem linhas, fica em 0,78 (0,76–0,80).
-- **O que ainda falha:** a corrida principal (10:00–15:00) fica 1,4 a 1,9 vezes lenta de mais: 376–496 ha às 15:00 (mediana 417), contra 707. Nenhum dado nem calibração testados resolve isto sem queimar de mais depois (ver "Problemas em aberto").
+
+  Em Cabeceiras a mesma configuração dá 0,61 (0,55–0,64), abaixo da API (0,63) e do passo 3 (0,73, combustíveis S&B com humidades de hora a hora, copas e cicatrizes). É a melhor de Vieira, ainda não uma configuração geral.
+- **O que ainda falha** (ver "Problemas em aberto"):
+  - **Vieira:** a corrida principal (10:00–15:00) fica 1,4 a 1,9 vezes lenta de mais: 376–496 ha às 15:00 (mediana 417), contra 707. Nenhum dado nem calibração testados resolve isto sem queimar de mais depois.
+  - **Cabeceiras:** os combustíveis portugueses e as vivas de seca queimam de mais (2283 ha no fim no passo 8, contra 1334), e nenhuma corrida apanha o lóbulo que o fogo real fez para norte nas primeiras horas.
 - **Regras da casa:**
   - **Não se mexe no resto do repositório:** `api/`, `engines/` e os contratos ficam como estão. Tudo o que é novo vive nesta pasta.
   - **Um passo de cada vez:** uma mudança nova entra como um passo novo da tabela.
@@ -57,7 +61,7 @@ Nada fora desta pasta muda: a API, o contrato e o motor ficam como estão.
 | `dgt_tiles.py` | Os tiles MDS-2m e MDT-2m do LiDAR da DGT que cobrem a grade de um incêndio, para o `canopy.py` (a lista é aberta; o download pede login) |
 | `grid.py` | Grelha corridas × horas contra o observado → `fires/<id>/grid.png` |
 | `table.py` | As corridas de um incêndio numa tabela Markdown |
-| `ladder.sh` | Refaz todas as corridas da tabela de resultados de um incêndio (10 sementes), as grelhas e a tabela (~10 min em Vieira com `JOBS=2`, ~15 min em Cabeceiras com `JOBS=1`) |
+| `ladder.sh` | Refaz todas as corridas da tabela de resultados de um incêndio (10 sementes), as grelhas e a tabela (~10 min em Vieira com `JOBS=2`, ~20 min em Cabeceiras com `JOBS=1`) |
 | `test.sh` | Teste ponta a ponta em Vieira (~20 s) |
 | `common.py` | Pacote do incêndio (via `api/fires.py` e `api/runs.py`), chegada observada interpolada, pontuação |
 | `fuels.py` | Modelos de combustível portugueses e a tradução da COS 2015 |
@@ -81,6 +85,7 @@ hindcast/.venv/bin/python -I hindcast/run.py VieiradoMinho_10082016 --name 7_lin
 hindcast/.venv/bin/python -I hindcast/baseline.py VieiradoMinho_10082016   # as referências ingénuas
 hindcast/.venv/bin/python -I hindcast/table.py VieiradoMinho_10082016
 SEEDS=10 JOBS=2 hindcast/ladder.sh                  # tudo de uma vez, ~10 min
+SEEDS=10 JOBS=1 hindcast/ladder.sh CabeceirasdeBasto_06092016   # o mesmo em Cabeceiras, ~20 min
 hindcast/test.sh                                    # ponta a ponta em Vieira, ~20 s
 ```
 
@@ -315,7 +320,7 @@ Por isso as linhas são **inferidas**, e cada uma diz como (`tier`, `source`).
 - **Área por passo e Sørensen:** contra o observado, por passo e no último passo.
 - **Perímetro oficial:** o Sørensen contra o perímetro oficial (GNR) e a área ardida fora dele.
 - **Satélite:** em cada passagem com pelo menos 3 focos neste incêndio, fora das cicatrizes, a fração de focos cuja pegada (375 m ou 1 km) o fogo simulado já tinha alcançado até 30 min depois da passagem. Não depende dos perímetros.
-  - **Lê-se sempre com "Fora do oficial".** Só conta focos alcançados, por isso queimar de mais não custa nada: em Cabeceiras a corrida como a API tem 0,80 queimando 988 ha fora do perímetro oficial, e as corridas com velocidade × 1,5 chegam a 1,00.
+  - **Lê-se sempre com "Fora do oficial".** Só conta focos alcançados, por isso queimar de mais não custa nada: em Cabeceiras a corrida como a API tem 0,80 queimando 988 ha fora do perímetro oficial, e a corrida com velocidade × 1,5 chega a 0,92 com 3233 ha fora.
 - **Referências ingénuas (`baseline.py`):** quanto vale um Sørensen de 0,75? Depende do fogo: num fogo compacto, qualquer mancha com a área certa à volta da ignição já tem um Sørensen alto. Por isso cada incêndio tem duas corridas sem modelo, que fazem batota a favor delas: **sabem a área observada em cada passo**, coisa que nenhum modelo sabe. Não sabem nada de combustível, relevo ou estradas.
   - **`b_uniforme`:** o perímetro do passo 0 a crescer por igual em todas as direções (um círculo à volta dele) até ter a área observada de cada passo, e linear no tempo entre passos.
   - **`b_vento`:** o mesmo, mas a crescer numa elipse a favor do vento médio da corrida. O vento médio é a média dos vetores do `weather.json` de meia em meia hora, do passo 0 ao último. O passo 0 fica no foco de trás da elipse, e o alongamento é o de Alexander (1985) para a velocidade média a 10 m: LB = 1 + 8,729 (1 − e^(−0,030 U))^2,155, com U em km/h. A "distância" de uma célula é |v| − e·(v·u), onde v vai da borda do passo 0 até à célula, u é a direção para onde o vento sopra e e a excentricidade da elipse, √(1 − 1/LB²).
@@ -372,7 +377,7 @@ Fazem-se com `grid.py`.
 - **O vento** (6w, 6c, 6cw), testado sem linhas para se ver o efeito sozinho:
   - **TopoWind** (`scripts/build_wind_field.py`, ramo `feature/cerra-wind-engine`): 0,778 contra 0,782, dentro do intervalo das sementes. Redistribui o vento entre encostas, mas a média é a mesma, e debaixo das árvores o ELMFIRE corta-o para 10–15 % na mesma.
   - **CERRA:** tem menos vento à tarde do que o ERA5, e a corrida principal fica mais lenta (mediana 252 ha às 15:00, contra 417).
-- **As copas de antes do fogo** (5f, 6f, 8f; `--canopy-fill`): dentro da área ardida, o pinhal passa dos ~10 m de hoje para os ~18 m da mesma classe COS fora dela. O fogo fica mais lento, não mais rápido:
+- **As copas de antes do fogo** (5f, 6f, 8f; `--canopy-fill`): dentro da área ardida, as florestas passam a ter as copas da mesma classe COS fora dela, mais densas (cobertura média de 70 para 86 %; o pinhal passa dos ~12 m de hoje para ~18 m). Os matos, metade da área, perdem a copa que têm hoje (16 → 3 %; ver "Coisas a saber"). O fogo fica mais lento, não mais rápido:
   - **sem projeções (5f):** 153 ha às 15:00, contra 348;
   - **com projeções, o resultado é bimodal:** na maioria das sementes as projeções não arrancam, e o fogo fica nos 152–158 ha às 15:00 (6 em 10 no 6f, 9 em 10 no 8f). Nas outras escapa, até 468–504 ha (semente 8);
   - **por isso a mediana cai:** 6f 0,743 contra 0,782, e 8f 0,786 contra 0,827. A semente 8 do 8f é a melhor corrida isolada da tabela (0,854), mas é uma em dez.
@@ -394,11 +399,11 @@ Fazem-se com `grid.py`.
 
 ### Cabeceiras de Basto, 32,5 h a partir das 04:00 (perímetro do passo 0)
 
-Os mesmos passos de Vieira, com as mesmas regras.
+Os mesmos passos de Vieira, com as mesmas regras. São duas tabelas:
+- **com as copas do LiDAR:** a principal, como a de Vieira;
+- **sem copas:** de antes de o LiDAR estar descarregado, para comparar. As corridas dela estão no commit `376d842`; para as refazer, corre-se o `ladder.sh` com o `canopy.npz` posto de lado.
 
-#### Sem copas
-
-Sem `canopy.npz`, o passo 2 (copas) dá exatamente o mesmo que o 1, e fica de fora.
+#### Com copas do LiDAR
 
 | # | O que muda | 13:30 (9,5 h) | 00:30 (20,5 h) | 12:30 (32,5 h) | Sørensen 12:30 | Sørensen oficial | Fora do oficial | Satélite |
 |---|---|---|---|---|---|---|---|---|
@@ -407,41 +412,72 @@ Sem `canopy.npz`, o passo 2 (copas) dá exatamente o mesmo que o 1, e fica de fo
 | b | Referência: elipse a favor do vento (sem modelo, sabe a área) | 594 | 1243 | 1334 | 0,469 | 0,486 | 671 | 0,47 |
 | 0 | Como a API: S&B, mortas fixas 6/8/10 %, sem copas | 298 | 1152 | 2154 | 0,627 | 0,658 | 988 | 0,80 |
 | 1 | + humidades mortas de hora a hora (Simard 1968) | 285 | 1105 | 1743 | 0,696 | 0,728 | 602 | 0,75 |
-| **3** | **1 + cicatrizes** | **285** | **952** | **1379** | **0,738** | **0,769** | **314** | **0,72** |
+| 2 | + copas do LiDAR | 237 | 1026 | 1685 | 0,696 | 0,724 | 570 | 0,75 |
+| **3** | **+ cicatrizes** | **237** | **855** | **1269** | **0,732** | **0,759** | **259** | **0,68** |
+| 4 | + combustíveis portugueses | 303 | 1029 | 1715 | 0,672 | 0,701 | 626 | 0,70 |
+| 5 | + vivas de seca (30 % e 70 %) | 373 | 1283 | 2226 | 0,628 | 0,658 | 1036 | 0,78 |
+| 5f | 5 com as copas de antes do fogo (estimadas) | 368 | 1258 | 2178 | 0,617 | 0,648 | 1022 | 0,78 |
+| 6 | + projeções | 383 (374–416) | 1398 (1335–1800) | 2362 (2253–2710) | 0,618 (0,554–0,630) | 0,647 (0,581–0,661) | 1153 (1054–1519) | 0,80 (0,78–0,81) |
+| 6f | 6 com as copas de antes do fogo | 368 (367–422) | 1299 (1258–1681) | 2228 (2173–2629) | 0,618 (0,547–0,631) | 0,649 (0,575–0,662) | 1054 (1016–1473) | 0,78 (0,78–0,82) |
+| 6w | 6 + TopoWind sobre o ERA5 | 362 (353–380) | 1284 (1194–1470) | 2184 (2103–2545) | 0,623 (0,604–0,638) | 0,651 (0,631–0,666) | 1020 (939–1282) | 0,76 (0,74–0,83) |
+| 6c | 6 com CERRA em vez de ERA5 | 376 (371–387) | 1446 (1298–1680) | 2448 (2350–2816) | 0,593 (0,544–0,606) | 0,623 (0,573–0,636) | 1251 (1160–1610) | 0,78 (0,77–0,81) |
+| 6cw | 6 com CERRA + TopoWind | 361 (351–374) | 1268 (1165–1698) | 2377 (2175–2848) | 0,596 (0,526–0,621) | 0,627 (0,554–0,652) | 1199 (1012–1673) | 0,74 (0,74–0,76) |
+| x1 | 6 + velocidade × 1,5 (calibração, não fica; semente 1) | 506 | 2159 | 4544 | 0,423 | 0,442 | 3233 | 0,92 |
+| x2 | 6 + vento × 2 (calibração, não fica; semente 1) | 390 | 2113 | 3741 | 0,486 | 0,506 | 2442 | 0,88 |
+| 7 | 6 + linhas de ataque, hora do fogo observado | 353 (342–379) | 1369 (1162–1636) | 2192 (2035–2676) | 0,631 (0,557–0,649) | 0,661 (0,587–0,680) | 999 (874–1482) | 0,80 (0,78–0,83) |
+| 8 | 6 + linhas de ataque, hora do fogo do modelo | 342 (336–387) | 1438 (1156–1673) | 2283 (2057–2688) | 0,614 (0,548–0,643) | 0,645 (0,576–0,674) | 1098 (894–1512) | 0,81 (0,78–0,83) |
+| 8f | 8 com as copas de antes do fogo | 332 (330–401) | 1233 (1156–1778) | 2075 (2018–2798) | 0,623 (0,536–0,667) | 0,655 (0,565–0,694) | 927 (891–1614) | 0,78 (0,78–0,82) |
+
+#### Sem copas (para comparar)
+
+Sem `canopy.npz`, o passo 2 dá exatamente o mesmo que o 1 e fica de fora. As referências e os passos 0 e 1 são iguais aos de cima.
+
+| # | O que muda | 13:30 (9,5 h) | 00:30 (20,5 h) | 12:30 (32,5 h) | Sørensen 12:30 | Sørensen oficial | Fora do oficial | Satélite |
+|---|---|---|---|---|---|---|---|---|
+| 3 | 1 + cicatrizes | 285 | 952 | 1379 | 0,738 | 0,769 | 314 | 0,72 |
 | 4 | + combustíveis portugueses | 356 | 1280 | 2060 | 0,658 | 0,689 | 871 | 0,76 |
 | 5 | + vivas de seca (30 % e 70 %) | 438 | 1667 | 2703 | 0,583 | 0,610 | 1454 | 0,82 |
 | 6 | + projeções | 438 (437–486) | 1691 (1668–1768) | 2734 (2699–2874) | 0,580 (0,561–0,587) | 0,607 (0,588–0,614) | 1482 (1447–1620) | 0,82 (0,82–0,85) |
 | 6w | 6 + TopoWind sobre o ERA5 | 370 (370–413) | 1322 (1281–1442) | 2324 (2274–2697) | 0,626 (0,575–0,632) | 0,655 (0,603–0,660) | 1105 (1067–1463) | 0,79 (0,79–0,81) |
 | 6c | 6 com CERRA em vez de ERA5 | 448 (448–551) | 1784 (1767–2115) | 3066 (3042–3675) | 0,520 (0,455–0,523) | 0,546 (0,479–0,549) | 1847 (1828–2460) | 0,82 (0,81–0,83) |
 | 6cw | 6 com CERRA + TopoWind | 383 (383–383) | 1471 (1441–1585) | 2718 (2696–3099) | 0,560 (0,521–0,568) | 0,588 (0,547–0,596) | 1506 (1494–1870) | 0,77 (0,76–0,79) |
-| x1 | 6 + velocidade × 1,5 (calibração, não fica; semente 1) | 757 | 3362 | 6459 | 0,319 | 0,334 | 5148 | 0,93 |
-| x2 | 6 + vento × 2 (calibração, não fica; semente 1) | 831 | 4073 | 6545 | 0,312 | 0,326 | 5251 | 0,89 |
+| x1 | 6 + velocidade × 1,5 (semente 1) | 757 | 3362 | 6459 | 0,319 | 0,334 | 5148 | 0,93 |
+| x2 | 6 + vento × 2 (semente 1) | 831 | 4073 | 6545 | 0,312 | 0,326 | 5251 | 0,89 |
 | 7 | 6 + linhas de ataque, hora do fogo observado | 372 (368–520) | 1578 (1555–1982) | 2530 (2459–3126) | 0,587 (0,512–0,602) | 0,617 (0,538–0,630) | 1321 (1260–1910) | 0,82 (0,82–0,84) |
 | 8 | 6 + linhas de ataque, hora do fogo do modelo | 359 (357–472) | 1600 (1586–1996) | 2675 (2646–3097) | 0,575 (0,522–0,585) | 0,605 (0,550–0,614) | 1450 (1421–1863) | 0,84 (0,84–0,85) |
 
-**Grelhas:** `fires/CabeceirasdeBasto_06092016/grid.png` e `grid_wind.png`, como as de Vieira.
+**Grelhas:** `fires/CabeceirasdeBasto_06092016/grid.png` e `grid_wind.png`, como as de Vieira, com copas.
 
 - **A régua é mais baixa aqui:**
   - **O vento é fraco e muda de direção:** o vetor médio tem 1,2 km/h, contra 6,2 km/h de velocidade média. Por isso a elipse é quase um círculo (LB 1,2), e o `b_vento` fica em 0,469, pouco acima dos 0,423 do círculo.
   - **O fogo real cresce para norte a partir do passo 0,** e uma mancha à volta dele não o apanha.
   - **A API fica 0,16 acima da elipse,** contra 0,03 em Vieira.
-- **O melhor sem copas é o passo 3** (humidades de hora a hora e cicatrizes), com 0,738. As cicatrizes cortam a área final de 1743 para 1379 ha, e a de fora do oficial de 602 para 314 ha. As 11 cicatrizes dos 40 dias antes têm 504 ha dentro da grade.
-- **A configuração de Vieira não transfere sem copas:**
-  - os combustíveis portugueses e as vivas de seca queimam de mais: 2060 e 2703 ha no fim, contra 1334. O Sørensen cai para 0,658 e 0,583;
-  - com projeções e linhas fica em 0,58–0,59;
-  - em Vieira as copas do LiDAR abrigam o vento debaixo das árvores e travam estes combustíveis mais rápidos. Aqui não há nada que os trave.
-- **A direção falha em todas as corridas:**
-  - às 13:30 nenhuma corrida da grelha apanha o lóbulo norte (o azul em cima na grelha), e todas queimam a oeste e a sudoeste do observado (o vermelho);
-  - às 13:30 têm entre 285 e 448 ha (medianas), contra 594. Aqui o fogo do modelo não é só lento: vai também para o lado errado.
+- **O melhor é o passo 3** (humidades de hora a hora, copas e cicatrizes, com os combustíveis S&B): 0,732 com copas e 0,738 sem.
+  - As cicatrizes cortam a área final de 1685 para 1269 ha, e a de fora do oficial de 570 para 259 ha.
+  - As 11 cicatrizes dos 40 dias antes têm 504 ha dentro da grade.
+- **A configuração de Vieira não transfere, com ou sem copas.** Os combustíveis portugueses e as vivas de seca, que em Vieira são o que mais ajuda, aqui queimam de mais:
+  - **com copas:** o passo 5 tem 2226 ha no fim, contra 1334 observados. Com projeções e linhas, os passos 6 a 8 ficam entre 0,614 e 0,631, contra 0,732 do passo 3;
+  - **o que as copas fazem:** travam estes combustíveis, mas não chega. O passo 5 desce de 2703 para 2226 ha (0,583 → 0,628), e o passo 6 de 2734 para 2362 ha (0,580 → 0,618);
+  - **nos passos com combustíveis S&B** as copas quase não mudam nada: no passo 3, 0,738 sem copas e 0,732 com;
+  - falta perceber porquê (ver "Problemas em aberto").
+- **A direção falha em todas as corridas, com ou sem copas:**
+  - às 13:30 nenhuma corrida da grelha apanha o lóbulo norte (o azul em cima na grelha). Ficam à volta do passo 0, com 237 a 383 ha (medianas, com copas), contra 594;
+  - às 12:30 do dia seguinte, o que queimam a mais (o vermelho) fica a oeste, a sudoeste e a sul, e continua a faltar o canto nordeste;
+  - aqui o fogo do modelo não é só lento: vai também para o lado errado.
 - **O vento:**
-  - **TopoWind** ajuda aqui, ao contrário de Vieira: 0,626 contra 0,580, e 1105 ha fora do oficial contra 1482. Provavelmente porque, sem copas, o vento que ele redistribui não é cortado debaixo das árvores.
-  - **CERRA** piora: 0,520, com 3066 ha no fim.
-- **As linhas quase não mudam nada:**
-  - 7 e 8 ficam em 0,587 e 0,575, dentro do intervalo das sementes do 6 (0,561–0,587);
-  - a área fora do oficial desce pouco (1482 → 1321 e 1450 ha);
-  - aqui a 8 não ganha à 7.
-- **Calibrar** (x1, x2) queima perto de 6500 ha no fim: 0,31–0,32.
-- **O satélite** fica entre 0,72 e 0,85 em todas as corridas do modelo, porque queimar de mais também alcança focos (ver "Pontuação").
+  - **TopoWind:** sem copas ajudava (0,626 contra 0,580). Com copas fica dentro do intervalo das sementes (0,623 contra 0,618), como em Vieira. Bate com a ideia de que, debaixo das árvores, o ELMFIRE corta o vento ao ponto de um vento melhor quase não contar.
+  - **CERRA** piora nos dois casos: 0,593 com copas, 0,520 sem.
+- **As copas de antes do fogo (5f, 6f, 8f)** quase não mudam nada aqui:
+  - 5f fica em 0,617 contra 0,628; 6f em 0,618, igual ao 6; 8f em 0,623 contra 0,614, dentro do intervalo das sementes;
+  - **e não é por o anacronismo ser pequeno:** o pinhal ardido em 2016 (17 % da área ardida) tem hoje 3,4 m e 7 % de cobertura. O `--canopy-fill` põe-lhe 15,1 m e 72 %;
+  - **a explicação provável:** metade da área ardida são matos na COS, e o `--canopy-fill` tira-lhes copa (24 → 4 % de cobertura; ver "Coisas a saber"). Em média, dentro da área ardida, a cobertura só sobe de 25 para 31 %;
+  - aqui as projeções também contam pouco (passo 5: 0,628; passo 6: 0,618). Por isso não há o efeito de Vieira, onde as copas de antes do fogo impediam as projeções de arrancar.
+- **As linhas:**
+  - com copas, a 7 sobe um pouco (0,631 contra 0,618 do 6), e a área fora do oficial desce de 1153 para 999 ha;
+  - a 8 fica em 0,614;
+  - as duas empatam semente a semente: cada uma ganha em 5 das 10.
+- **Calibrar** (x1, x2) queima de mais: 3700–4500 ha no fim com copas (0,42–0,49), perto de 6500 sem (0,31–0,32).
+- **O satélite** fica entre 0,68 e 0,84 (medianas) em todas as corridas do modelo, com ou sem copas, sem contar a calibração. Queimar de mais também alcança focos (ver "Pontuação").
 
 ## Histórico de decisões e erros corrigidos (20–21/10/2026)
 
@@ -473,8 +509,8 @@ Sem `canopy.npz`, o passo 2 (copas) dá exatamente o mesmo que o 1, e fica de fo
    O `result.json` passou a guardar a máquina e a imagem (`platform`). O `table.py` junta as sementes de cada corrida numa linha, com a mediana e o intervalo, e o `ladder.sh` corre-as em paralelo (`JOBS`).
 
    **As 3 sementes de antes tinham calhado do lado bom.** O passo 8 dava 0,84–0,85; com 10 dá mediana 0,827 (0,801–0,851). A vantagem da 8 sobre a 7 também encolheu: quase empatam no Sørensen e no satélite, e a 8 ganha fora do oficial (237 contra 269 ha).
-13. **O anacronismo das copas** (`--canopy-fill`, passos 5f, 6f, 8f): o LiDAR é de 2024–25, e dentro da cicatriz de 2016 o pinhal ainda está a crescer (~10 m contra ~18 m à volta). A dúvida era se isto tornava a corrida lenta. Pôr dentro da área ardida as copas da mesma classe COS fora dela torna o fogo mais lento, não mais rápido. Sem projeções, 153 ha às 15:00 contra 348. Com projeções, estas quase nunca arrancam: mediana de 152 ha contra 417. Ficam as copas de hoje, e a suspeita volta ao abrigo do vento.
-14. **A escada toda em Cabeceiras:** antes tinha só 3 corridas. Agora tem todos os passos, com as referências e 10 sementes, ainda sem copas. O melhor é o passo 3 (0,738): os combustíveis portugueses e a seca queimam de mais sem copas que os travem, e todas as corridas vão para oeste em vez de para norte.
+13. **O anacronismo das copas** (`--canopy-fill`, passos 5f, 6f, 8f): o LiDAR é de 2024–25, e dentro da cicatriz de 2016 o pinhal ainda está a crescer (~12 m contra ~18 m à volta). A dúvida era se isto tornava a corrida lenta. Pôr dentro da área ardida as copas da mesma classe COS fora dela torna o fogo mais lento, não mais rápido. Sem projeções, 153 ha às 15:00 contra 348. Com projeções, estas quase nunca arrancam: mediana de 152 ha contra 417. Ficam as copas de hoje, e a suspeita volta ao abrigo do vento. Ao correr Cabeceiras viu-se que o `--canopy-fill` mexe em duas coisas: adensa as florestas e tira a copa aos matos, metade da área ardida. Em Cabeceiras quase não muda nada (ver "Coisas a saber").
+14. **A escada toda em Cabeceiras:** antes tinha só 3 corridas. Agora tem todos os passos, com as referências e 10 sementes: primeiro sem copas (commit `376d842`), depois com o `canopy.npz` do LiDAR. O melhor é o passo 3 nos dois casos (0,738 sem copas, 0,732 com). Os combustíveis portugueses e as vivas de seca queimam de mais: as copas travam-nos (passo 6: 2734 → 2362 ha), mas não chega. Nenhuma corrida apanha o lóbulo norte das primeiras horas.
 15. **O `dgt_tiles.py`:** procura os tiles do LiDAR que cobrem a grade na pesquisa STAC aberta da DGT e descarrega-os com a conta do utilizador. Antes era à mão no portal.
 16. **A memória do Docker:** a primeira escada de 10 sementes corria os dois incêndios ao mesmo tempo e perdeu corridas: o Docker matou contentores por falta de memória (código 137). O `run.py` mostrava só "ELMFIRE falhou", sem o código. Agora mostra o código e a causa provável, e o `ladder.sh` espera pelo lote inteiro antes de parar. As escadas correm um incêndio de cada vez. Com outros contentores a ocupar parte da VM, Cabeceiras voltou a perder corridas com `JOBS=2` e correu com `JOBS=1`. O pico medido em Cabeceiras (`docker stats`, de segundo a segundo) foi 1,73 GiB por contentor.
 
@@ -502,9 +538,24 @@ Sem `canopy.npz`, o passo 2 (copas) dá exatamente o mesmo que o 1, e fica de fo
 - **O ELMFIRE falha sem erro com fogos muito rápidos:** com vento × 2,5 ou velocidade × 2,5 queima 0 ha. O `run.py` avisa em `notes` quando o fogo não sai do ponto de partida.
 - **Cortar a corrida acrescenta área.** Cada troço recomeça a partir das células já ardidas, e a frente salta para as arestas delas. Em Vieira, partir 5 h em 3 troços acrescenta 1,2 % de área, com ou sem linhas; o `POST /api/run` faz o mesmo. O `test.sh` compara as linhas com a mesma corrida partida, sem linhas.
 - **Linhas que começam depois do fim** ficam de fora da corrida, com um aviso. A API recusa-as.
-- **As copas são as de hoje.** O `canopy.npz` vem do LiDAR da DGT de 2024–25. Dentro da cicatriz de 2016 o pinhal tem hoje cerca de 10 m, contra 18 m à volta. A altura da base e a densidade da copa são valores típicos por classe COS: são assumidas, não medidas (`canopy.json`).
-  - **O teste do anacronismo (5f, 6f, 8f):** o `--canopy-fill` põe dentro da área ardida as copas da mesma classe COS fora dela, uma estimativa das de antes do fogo. O fogo fica mais lento, não mais rápido: no passo 5, de 348 para 153 ha às 15:00. Copas mais altas abrigam mais o vento.
-  - **Conclusão:** as copas de hoje não explicam a corrida principal lenta; se alguma coisa, ajudam-na. Ficam as de hoje, porque as de 2016 seriam um palpite.
+- **As copas são as de hoje.** O `canopy.npz` vem do LiDAR da DGT de 2024–25, oito ou nove anos depois dos fogos. A altura da base e a densidade da copa são valores típicos por classe COS: são assumidas, não medidas (`canopy.json`).
+  - **O teste do anacronismo (5f, 6f, 8f):** o `--canopy-fill` põe em cada célula dentro da área ardida (perímetro oficial e passos observados) a mediana da mesma classe COS fora dela e fora das cicatrizes. É uma estimativa das copas de antes do fogo.
+  - **Mexe em duas coisas, não numa.** Médias dentro da área ardida, hoje → com `--canopy-fill`:
+
+    | | Vieira | Cabeceiras |
+    |---|---|---|
+    | Florestas (COS 5.x), parte da área ardida | 39 % | 35 % |
+    | Florestas, cobertura | 70 → 86 % | 33 → 79 % |
+    | Pinhal, parte da área ardida | 5 % | 17 % |
+    | Pinhal, altura e cobertura | 11,8 m e 57 % → 17,9 m e 80 % | 3,4 m e 7 % → 15,1 m e 72 % |
+    | Matos, parte da área ardida | 50 % | 51 % |
+    | Matos, cobertura | 16 → 3 % | 24 → 4 % |
+    | Tudo, altura e cobertura | 9,9 m e 37 % → 10,8 m e 35 % | 5,6 m e 25 % → 8,4 m e 31 % |
+
+    As florestas ficam mais densas e mais altas, e devem abrigar mais o vento. Os matos perdem a copa que têm hoje, porque fora da área ardida a mediana dos matos quase não tem árvores, e devem ficar mais expostos. Os dois efeitos devem puxar em sentidos contrários.
+  - **Em Vieira o fogo fica mais lento,** não mais rápido: no passo 5, de 348 para 153 ha às 15:00, e com projeções estas quase nunca arrancam.
+  - **Em Cabeceiras quase não muda** (passo 5: 0,617 contra 0,628; passo 8: 0,623 contra 0,614), apesar de o anacronismo ser maior: o pinhal ardido em 2016 quase não tem copa hoje.
+  - **Conclusão:** as copas de hoje não explicam a corrida principal lenta de Vieira; se alguma coisa, ajudam-na. Ficam as de hoje: as de 2016 seriam um palpite, e o `--canopy-fill` mistura dois efeitos.
 - **Debaixo das árvores** o ELMFIRE usa um vento abrigado de ~10–15 % do vento a 10 m. É o que mais trava o fogo na floresta, e é porque um vento melhor (CERRA, TopoWind) quase não muda nada.
 - **Ponto de partida:** as corridas partem do perímetro do passo 0, como a API.
 - **Sementes:** as projeções são aleatórias. Comparem-se sempre várias sementes antes de dizer que uma mudança ajuda.
@@ -527,13 +578,10 @@ Sem `canopy.npz`, o passo 2 (copas) dá exatamente o mesmo que o 1, e fica de fo
    - um fator de vento fixo debaixo dos povoamentos (por exemplo 0,3–0,4). O ELMFIRE calcula sempre o fator a partir da cobertura e da altura das copas (`CALC_WIND_ADJUSTMENT_FACTOR_EVERYWHERE`), e não o lê de nenhum raster. A única entrada é uma soma global para ensembles (`RASTER_TO_PERTURB = 'WAF'` no `&MONTE_CARLO`), que o `engine/adapter.py` teria de passar. A alternativa é um patch na imagem;
    - projeções de longa distância para o eucalipto (os parâmetros `&SPOTTING`).
 2. **O fogo da noite anterior** (focos das 23:25 às 03:56 dentro do perímetro oficial): falta uma opção de partida que o inclua. O FireRenderer tem `--start night`, mas as pegadas de 1 km do MODIS fazem a área grande de mais.
-3. **Cabeceiras sem copas:** o LiDAR da zona já está descarregado (210 + 210 tiles, ~510 MB, voos de 09/2024 e 07/2025), fora do repositório. Falta o `canopy.npz` e a escada com ele:
-   ```bash
-   hindcast/.venv/bin/python -I hindcast/dgt_tiles.py CabeceirasdeBasto_06092016 --out <pasta fora do repo>
-   hindcast/.venv/bin/python -I hindcast/canopy.py CabeceirasdeBasto_06092016 --dgt <pasta fora do repo>
-   SEEDS=10 JOBS=1 hindcast/ladder.sh CabeceirasdeBasto_06092016
-   ```
-   Os passos 2 em diante mudam, e entram os 5f, 6f e 8f. A tabela de agora, sem copas, fica no README para comparar.
+3. **Cabeceiras: a configuração de Vieira não transfere.** Com as copas do LiDAR, os combustíveis portugueses e as vivas de seca ainda queimam de mais (passo 5: 2226 ha no fim, contra 1334). Nenhuma corrida apanha o lóbulo que o fogo real fez para norte até às 13:30. Ensaios por fazer:
+   - **outro modelo de matos** (`--shrub`): metade da área ardida são matos, e o V-MAa foi escolhido a pensar nos montes de Vieira. É no passo 4, quando entram os combustíveis portugueses, que a área final sobe de 1269 para 1715 ha;
+   - **as vivas de seca:** os 30 % e 70 % são os mesmos nos dois fogos. Falta ver se a ficha do SGIF de Cabeceiras (DC e BUI) os justifica;
+   - **o vento das primeiras horas:** o vetor médio tem 1,2 km/h, e nem o ERA5, nem o CERRA, nem o TopoWind empurram o fogo para norte.
 4. **Integrar no motor e na API:** passar `fuel_models`, `layers.adj`, `spotting` e `seed` para `engines/elmfire/adapter.py` e para `engines/CONTRACT.md`, e os combustíveis portugueses e as cicatrizes para o cenário da API.
 5. **O artefacto dos troços na API:** recomeçar a partir das horas de chegada já calculadas (o `phi` do ELMFIRE), e não de uma máscara.
 6. **Linhas melhores precisam de dados que não são abertos:**

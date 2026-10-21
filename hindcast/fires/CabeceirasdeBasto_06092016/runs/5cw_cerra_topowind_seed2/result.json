@@ -36,13 +36,14 @@
  },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 5.3,
- "wall_s": 13.8,
+ "runtime_s": 4.7,
+ "wall_s": 12.7,
  "notes": [
-  "cicatrizes: 504 ha"
+  "cicatrizes: 504 ha",
+  "copas do LiDAR"
  ],
  "stats": {
-  "burned_ha": 2698.3,
+  "burned_ha": 2377.9,
   "by_hour": [
    {
     "h": 0.0,
@@ -52,95 +53,95 @@
    {
     "h": 3,
     "observed_ha": 29,
-    "run_ha": 128
+    "run_ha": 89
    },
    {
     "h": 6,
     "observed_ha": 89,
-    "run_ha": 257
+    "run_ha": 209
    },
    {
     "h": 9,
     "observed_ha": 487,
-    "run_ha": 358
+    "run_ha": 348
    },
    {
     "h": 9.5,
     "observed_ha": 594,
-    "run_ha": 383
+    "run_ha": 374
    },
    {
     "h": 12,
     "observed_ha": 599,
-    "run_ha": 715
+    "run_ha": 642
    },
    {
     "h": 15,
     "observed_ha": 618,
-    "run_ha": 1029
+    "run_ha": 948
    },
    {
     "h": 18,
     "observed_ha": 696,
-    "run_ha": 1261
+    "run_ha": 1122
    },
    {
     "h": 20.5,
     "observed_ha": 1243,
-    "run_ha": 1445
+    "run_ha": 1262
    },
    {
     "h": 21,
     "observed_ha": 1243,
-    "run_ha": 1486
+    "run_ha": 1299
    },
    {
     "h": 24,
     "observed_ha": 1264,
-    "run_ha": 1784
+    "run_ha": 1561
    },
    {
     "h": 27,
     "observed_ha": 1289,
-    "run_ha": 2110
+    "run_ha": 1846
    },
    {
     "h": 30,
     "observed_ha": 1315,
-    "run_ha": 2403
+    "run_ha": 2102
    },
    {
     "h": 32.5,
     "observed_ha": 1334,
-    "run_ha": 2698
+    "run_ha": 2378
    },
    {
     "h": 33,
     "observed_ha": 1334,
-    "run_ha": 2698
+    "run_ha": 2378
    }
   ],
-  "sorensen_last_step": 0.559,
+  "sorensen_last_step": 0.597,
   "sorensen_by_step": [
    {
     "step": 1,
     "h": 9.5,
-    "sorensen": 0.521
+    "sorensen": 0.529
    },
    {
     "step": 2,
     "h": 20.5,
-    "sorensen": 0.656
+    "sorensen": 0.67
    },
    {
     "step": 3,
     "h": 32.5,
-    "sorensen": 0.559
+    "sorensen": 0.597
    }
   ],
   "official_ha": 1392.3,
-  "sorensen_official": 0.588,
-  "outside_official_ha": 1495.9,
+  "sorensen_official": 0.628,
+  "outside_official_ha": 1194.5,
   "satellite": {
    "passes": [
     {
@@ -153,7 +154,7 @@
      "time_utc": "2016-09-06T12:33:00+00:00",
      "h": 9.55,
      "n": 29,
-     "reached": 0.62
+     "reached": 0.55
     },
     {
      "time_utc": "2016-09-06T13:23:00+00:00",
@@ -165,7 +166,7 @@
      "time_utc": "2016-09-06T14:13:00+00:00",
      "h": 11.22,
      "n": 45,
-     "reached": 0.73
+     "reached": 0.67
     },
     {
      "time_utc": "2016-09-06T22:49:00+00:00",
@@ -177,7 +178,7 @@
      "time_utc": "2016-09-07T02:31:00+00:00",
      "h": 23.52,
      "n": 55,
-     "reached": 0.8
+     "reached": 0.75
     },
     {
      "time_utc": "2016-09-07T03:00:00+00:00",
@@ -186,7 +187,7 @@
      "reached": 1.0
     }
    ],
-   "mean_reached": 0.77
+   "mean_reached": 0.74
   }
  }
 }

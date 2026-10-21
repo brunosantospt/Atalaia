@@ -36,11 +36,13 @@
  },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 4.4,
- "wall_s": 5.9,
- "notes": [],
+ "runtime_s": 3.5,
+ "wall_s": 4.6,
+ "notes": [
+  "copas do LiDAR"
+ ],
  "stats": {
-  "burned_ha": 1743.0,
+  "burned_ha": 1684.5,
   "by_hour": [
    {
     "h": 0.0,
@@ -50,72 +52,72 @@
    {
     "h": 3,
     "observed_ha": 29,
-    "run_ha": 73
+    "run_ha": 51
    },
    {
     "h": 6,
     "observed_ha": 89,
-    "run_ha": 175
+    "run_ha": 136
    },
    {
     "h": 9,
     "observed_ha": 487,
-    "run_ha": 267
+    "run_ha": 218
    },
    {
     "h": 9.5,
     "observed_ha": 594,
-    "run_ha": 285
+    "run_ha": 237
    },
    {
     "h": 12,
     "observed_ha": 599,
-    "run_ha": 521
+    "run_ha": 445
    },
    {
     "h": 15,
     "observed_ha": 618,
-    "run_ha": 793
+    "run_ha": 706
    },
    {
     "h": 18,
     "observed_ha": 696,
-    "run_ha": 973
+    "run_ha": 893
    },
    {
     "h": 20.5,
     "observed_ha": 1243,
-    "run_ha": 1105
+    "run_ha": 1026
    },
    {
     "h": 21,
     "observed_ha": 1243,
-    "run_ha": 1129
+    "run_ha": 1050
    },
    {
     "h": 24,
     "observed_ha": 1264,
-    "run_ha": 1264
+    "run_ha": 1179
    },
    {
     "h": 27,
     "observed_ha": 1289,
-    "run_ha": 1411
+    "run_ha": 1326
    },
    {
     "h": 30,
     "observed_ha": 1315,
-    "run_ha": 1549
+    "run_ha": 1461
    },
    {
     "h": 32.5,
     "observed_ha": 1334,
-    "run_ha": 1743
+    "run_ha": 1685
    },
    {
     "h": 33,
     "observed_ha": 1334,
-    "run_ha": 1743
+    "run_ha": 1685
    }
   ],
   "sorensen_last_step": 0.696,
@@ -123,12 +125,12 @@
    {
     "step": 1,
     "h": 9.5,
-    "sorensen": 0.563
+    "sorensen": 0.51
    },
    {
     "step": 2,
     "h": 20.5,
-    "sorensen": 0.693
+    "sorensen": 0.674
    },
    {
     "step": 3,
@@ -137,21 +139,21 @@
    }
   ],
   "official_ha": 1392.3,
-  "sorensen_official": 0.728,
-  "outside_official_ha": 602.1,
+  "sorensen_official": 0.724,
+  "outside_official_ha": 570.2,
   "satellite": {
    "passes": [
     {
      "time_utc": "2016-09-06T11:43:00+00:00",
      "h": 8.72,
      "n": 10,
-     "reached": 0.7
+     "reached": 0.6
     },
     {
      "time_utc": "2016-09-06T12:33:00+00:00",
      "h": 9.55,
      "n": 29,
-     "reached": 0.55
+     "reached": 0.52
     },
     {
      "time_utc": "2016-09-06T13:23:00+00:00",
@@ -163,7 +165,7 @@
      "time_utc": "2016-09-06T14:13:00+00:00",
      "h": 11.22,
      "n": 45,
-     "reached": 0.8
+     "reached": 0.67
     },
     {
      "time_utc": "2016-09-06T22:49:00+00:00",
@@ -181,7 +183,7 @@
      "time_utc": "2016-09-07T03:00:00+00:00",
      "h": 24.0,
      "n": 4,
-     "reached": 0.75
+     "reached": 1.0
     }
    ],
    "mean_reached": 0.75
