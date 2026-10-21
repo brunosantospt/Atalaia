@@ -111,17 +111,9 @@ const TEMPLATE = `
   </section>
   <section>
     <h3>Adicionar</h3>
-    <div class="tactical-flame-card" data-ref="flameCard">
-      <div class="flame-header">
-        <span class="flame-badge" data-ref="flameBadge">ANÁLISE DE COMBATE</span>
-        <span class="flame-height" data-ref="flameHeight">-- m</span>
-      </div>
-      <p class="flame-msg" data-ref="flameMsg">A analisar intensidade da frente de fogo...</p>
-      <button type="button" class="btn-dispatch-air" data-ref="quickAirBtn" hidden>✈️ Mobilizar Apoio Aéreo Imediato</button>
-    </div>
     <div class="palette">
-      <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
       <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
+      <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
       <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
         <option value="direct">ataque direto</option>
         <option value="protect">proteção</option>
@@ -264,7 +256,6 @@ export class Editor {
   private currentCapacityText = ''
   private activeTipAnchor: HTMLElement | null = null
   private currentFlameM = 0
-  private currentIntensityKW = 2000
 
   constructor(
     private readonly viewer: Viewer,
@@ -346,13 +337,6 @@ export class Editor {
       }
     })
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
-    this.refs.quickAirBtn?.addEventListener('click', () => {
-      const chosenUnit: UnitId = this.currentFlameM >= 3.4 ? 'avbp' : 'hebl'
-      this.setUnit(chosenUnit)
-      this.setTool('drops')
-      this.refs.hint.classList.remove('danger')
-      this.refs.hint.textContent = `Apoio aéreo selecionado (${chosenUnit.toUpperCase()}). Clica no mapa para posicionar ou desenha linha aérea de descargas.`
-    })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
     this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
@@ -469,51 +453,33 @@ export class Editor {
     this.setCount(this.count)
 
     const intensity = intensityKWPerM ?? fire.periods[0]?.intensityKWPerM ?? 2000
-    this.currentIntensityKW = intensity
     this.currentFlameM = flameLengthM(this.sup, intensity)
-    this.updateFlameRecommendation()
 
     this.render()
   }
 
-  private updateFlameRecommendation() {
-    if (!this.refs.flameCard) return
-    const flame = this.currentFlameM
-    const intensity = this.currentIntensityKW
-    const card = this.refs.flameCard
-    const badge = this.refs.flameBadge
-    const height = this.refs.flameHeight
-    const msg = this.refs.flameMsg
-    const airBtn = this.refs.quickAirBtn
-
-    card.classList.remove('emergency', 'safe')
-    if (height) height.textContent = `${flame.toFixed(1)} m · ${Math.round(intensity)} kW/m`
-
-    if (flame < 1.2) {
-      card.classList.add('safe')
-      if (badge) badge.textContent = '✓ ATAQUE DIRETO APEADO VIÁVEL'
-      if (msg) msg.textContent = `Chama estimada em ${flame.toFixed(1)} m. Ferramentas manuais apeadas e veículos operam na frente de combate com segurança.`
-      if (airBtn) airBtn.hidden = true
-    } else if (flame < 2.4) {
-      if (badge) badge.textContent = '⚡ EXIGE VEÍCULOS FLORESTAIS'
-      if (msg) msg.textContent = `Chama estimada em ${flame.toFixed(1)} m. Ferramentas manuais apeadas ineficazes na frente principal. Recomendado ataque motorizado (VFCI) ou ataque apeado indireto/flancos.`
-      if (airBtn) airBtn.hidden = true
-    } else if (flame < 3.4) {
-      if (badge) badge.textContent = '⚠️ ALERTA TÁTICO · MEIOS AÉREOS RECOMENDADOS'
-      if (msg) msg.textContent = `Chama frontal de ${flame.toFixed(1)} m excede o limiar de supressão terrestre frontal (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
-      if (airBtn) {
-        airBtn.hidden = false
-        airBtn.textContent = '🚁 Mobilizar Apoio Aéreo (HEBL/AVBP)'
-      }
-    } else {
-      card.classList.add('emergency')
-      if (badge) badge.textContent = '🚨 ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO'
-      if (msg) msg.textContent = `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e linhas de defesa recuadas.`
-      if (airBtn) {
-        airBtn.hidden = false
-        airBtn.textContent = '✈️ Mobilizar Avião Anfíbio Pesado (AVBP)'
+  /** Opens the editor, selects the appropriate aerial unit (HEBL/AVBP) and the closest CMA base with stock. */
+  mobilizeAerial(flameM?: number) {
+    this.toggle(true)
+    const flame = flameM ?? this.currentFlameM
+    const chosenUnit: UnitId = flame >= 3.4 ? 'avbp' : 'hebl'
+    this.setUnit(chosenUnit)
+    const bases = airBasesForUnit(chosenUnit)
+    const ignition = this.loaded?.scenario.ignition
+    if (ignition) {
+      const sorted = [...bases].sort((a, b) => distanceM(a, ignition) - distanceM(b, ignition))
+      const available = sorted.find((b) => this.available(chosenUnit, b.id) > 0) ?? sorted[0]
+      if (available) {
+        this.fromId = available.id
+        const fromSelect = this.refs.from as HTMLSelectElement
+        if (fromSelect) fromSelect.value = this.fromId
+        this.setCount(1)
       }
     }
+    this.setTool('drops')
+    const baseObj = findAirBase(this.fromId)
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica e arrasta no mapa para criar linha aérea de descargas ou clica no mapa.`
   }
 
   /** The runs of Livre, A and B, and their reports when the fire has OSM context. */
@@ -1092,7 +1058,11 @@ export class Editor {
     if (!task) return
     task.innerHTML = ''
 
-    if (this.unit === 'vttu') {
+    if (isAerial(this.sup.units[this.unit])) {
+      task.innerHTML = `
+        <option value="direct">ataque direto (descargas)</option>
+      `
+    } else if (this.unit === 'vttu') {
       task.innerHTML = `
         <option value="shuttle">abastecimento (cisterna móvel)</option>
         <option value="protect">proteção de estruturas</option>
@@ -1110,7 +1080,6 @@ export class Editor {
     } else {
       task.innerHTML = `
         <option value="direct">ataque direto</option>
-        <option value="protect">proteção</option>
       `
     }
 
@@ -1123,7 +1092,6 @@ export class Editor {
   private render() {
     this.updateStationDropdown()
     this.updateTaskDropdown()
-    this.updateFlameRecommendation()
     const d = this.decisions[this.active]
     this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]').forEach((tab, i) => {
       tab.classList.toggle('on', i === this.active)

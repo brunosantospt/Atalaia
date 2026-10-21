@@ -22,7 +22,7 @@ export interface HudActions {
   roleChanged?(role: AgencyRole): void
   resetNorth?(): void
   flyToIgnition?(): void
-  openEditor?(): void
+  mobilizeAerial?(flameM: number): void
 }
 
 /** The free run of the fast model behind the simulated shots, as the HUD reads it. */
@@ -90,6 +90,8 @@ const TEMPLATE = `
     <div><label>Hdg</label><span data-ref="hdg"></span></div>
     <div><label>Pitch</label><span data-ref="pitch"></span></div>
     <div><label>Rng</label><span data-ref="rng"></span></div>
+    <div><label>Coord</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS. Clica para copiar."></span></div>
+    <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas decimais GPS. Clica para copiar."></span></div>
   </section>
   <div class="nav-controls">
     <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (visão base)">
@@ -101,10 +103,20 @@ const TEMPLATE = `
       <span class="nav-label">Ignição</span>
     </button>
   </div>
-  <div class="hud-tactical-alert" data-ref="tacticalAlert" hidden>
-    <span class="alert-icon">⚠️</span>
-    <span class="alert-text" data-ref="tacticalAlertText"></span>
-    <button type="button" class="alert-action-btn" data-ref="tacticalAlertAction">Mobilizar Meios</button>
+  <div class="hud-alert-container" data-ref="alertContainer" hidden>
+    <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático de Supressão - Clica para ver detalhes e recomendação">
+      <span class="hazard-icon" data-ref="alertIcon">⚠️</span>
+      <span class="hazard-label" data-ref="alertBadgeLabel">Meios Aéreos Recomendados</span>
+    </button>
+    <div class="hud-alert-popover" data-ref="alertPopover" hidden>
+      <header>
+        <span class="popover-title" data-ref="popoverTitle">⚠️ RECOMENDAÇÃO TÁTICA</span>
+        <button type="button" class="btn-close-popover" data-ref="closeAlertPopover" title="Minimizar">✕</button>
+      </header>
+      <div class="popover-stat" data-ref="popoverStat">Chama: -- m · Intensidade: -- kW/m</div>
+      <p class="popover-desc" data-ref="popoverDesc">Chama estimada excede a capacidade de combate frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos.</p>
+      <button type="button" class="popover-dispatch-btn" data-ref="alertDispatchBtn">🚁 Mobilizar Meios Aéreos</button>
+    </div>
   </div>
   <section class="bottom">
     <div class="card">
@@ -125,11 +137,12 @@ const TEMPLATE = `
 
 type Refs = Record<
   | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
-  | 'hdg' | 'pitch' | 'rng' | 'cardHead' | 'cardTitle' | 'cardBody'
+  | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
   | 'btnNorth' | 'compassNeedle' | 'btnIgnition'
-  | 'tacticalAlert' | 'tacticalAlertText' | 'tacticalAlertAction',
+  | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertBadgeLabel' | 'alertPopover'
+  | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
 >
 
@@ -143,6 +156,14 @@ export class Hud {
   private ticks: HTMLElement[] = []
   private shown = new Map<string, string>()
   private director = false
+
+  currentRole: AgencyRole = 'cmd'
+  private lastDispatch?: MultiAgencyDispatch
+  private currentFlameM = 0
+  private lastCoordsFull = ''
+  private lastCoordsDMS = ''
+  private lastCoordsDec = ''
+  private cursorCoords: (LonLat & { h?: number }) | undefined = undefined
 
   constructor(
     readonly root: HTMLElement,
@@ -183,11 +204,28 @@ export class Hud {
 
     this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
-    this.refs.tacticalAlertAction?.addEventListener('click', () => this.actions.openEditor?.())
-  }
 
-  currentRole: AgencyRole = 'cmd'
-  private lastDispatch?: MultiAgencyDispatch
+    this.refs.alertBadge?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.refs.alertPopover.hidden = !this.refs.alertPopover.hidden
+    })
+    this.refs.closeAlertPopover?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.refs.alertPopover.hidden = true
+    })
+    this.refs.alertDispatchBtn?.addEventListener('click', () => {
+      this.refs.alertPopover.hidden = true
+      this.actions.mobilizeAerial?.(this.currentFlameM)
+    })
+
+    const copyText = (val: string) => {
+      if (!val) return
+      navigator.clipboard.writeText(val).then(() => this.toast(`📋 ${val} copiado!`))
+    }
+    this.refs.coords?.addEventListener('click', () => copyText(this.lastCoordsFull || this.refs.coords.textContent || ''))
+    this.refs.coordDMS?.addEventListener('click', () => copyText(this.lastCoordsDMS))
+    this.refs.coordDec?.addEventListener('click', () => copyText(this.lastCoordsDec))
+  }
 
   setRole(role: AgencyRole) {
     this.currentRole = role
@@ -253,21 +291,53 @@ export class Hud {
     this.settings.setFire(fire.id)
     this.setShots(shots)
 
-    if (sim && this.refs.tacticalAlert && this.refs.tacticalAlertText) {
+    if (sim && this.refs.alertContainer) {
       const flame = 0.0775 * Math.pow(Math.max(sim.intensityKWPerM, 0), 0.46)
-      if (flame >= 3.4) {
-        this.refs.tacticalAlert.hidden = false
-        this.refs.tacticalAlert.classList.add('emergency')
-        this.refs.tacticalAlertText.textContent = `🚨 ALERTA CRÍTICO: Chama de ${flame.toFixed(1)}m excede combate direto. Meios Aéreos urgentes!`
-      } else if (flame >= 2.4) {
-        this.refs.tacticalAlert.hidden = false
-        this.refs.tacticalAlert.classList.remove('emergency')
-        this.refs.tacticalAlertText.textContent = `⚠️ ALERTA TÁTICO: Chama de ${flame.toFixed(1)}m frontal — Recomendado envio de Meios Aéreos (HEBL/AVBP).`
+      this.currentFlameM = flame
+      if (flame >= 2.4) {
+        this.refs.alertContainer.hidden = false
+        const emergency = flame >= 3.4
+        this.refs.alertContainer.classList.toggle('emergency', emergency)
+        this.refs.alertBadge.classList.toggle('emergency', emergency)
+        this.refs.alertBadge.classList.add('pulsing')
+        this.refs.alertIcon.textContent = emergency ? '🚨' : '⚠️'
+        this.refs.alertBadgeLabel.textContent = emergency
+          ? `Alerta Crítico: Chama ${flame.toFixed(1)}m (Extremo)`
+          : `Apoio Aéreo Recomendado (Chama ${flame.toFixed(1)}m)`
+
+        this.refs.popoverTitle.textContent = emergency
+          ? '🚨 ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO'
+          : '⚠️ RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+        this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(sim.intensityKWPerM)} kW/m`
+        this.refs.popoverDesc.textContent = emergency
+          ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
+          : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
+        this.refs.alertDispatchBtn.textContent = emergency
+          ? '✈️ Mobilizar Avião Anfíbio Pesado (AVBP)'
+          : '🚁 Mobilizar Helicóptero Bombardeiro (HEBL)'
       } else {
-        this.refs.tacticalAlert.hidden = true
+        this.refs.alertContainer.hidden = true
+        this.refs.alertPopover.hidden = true
       }
-    } else if (this.refs.tacticalAlert) {
-      this.refs.tacticalAlert.hidden = true
+    } else if (this.refs.alertContainer) {
+      this.refs.alertContainer.hidden = true
+      this.refs.alertPopover.hidden = true
+    }
+  }
+
+  /** Live mouse cursor coordinates over terrain. */
+  updateCursorCoords(coords: (LonLat & { h?: number }) | undefined) {
+    this.cursorCoords = coords
+    if (coords) {
+      const dms = formatDMS(coords)
+      const dec = `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}`
+      const alt = coords.h !== undefined ? ` · ${Math.round(coords.h)}m` : ''
+      this.lastCoordsDMS = dms
+      this.lastCoordsDec = dec
+      this.lastCoordsFull = `${dms} (${dec})`
+      this.set('coords', `📍 ${dms} (${dec}${alt})`)
+      this.set('coordDMS', dms)
+      this.set('coordDec', dec)
     }
   }
 
@@ -342,7 +412,20 @@ export class Hud {
 
     this.set('word', shot.word)
     this.set('place', [fire.parish, fire.name].filter(Boolean).join(' · '))
-    this.set('coords', formatDMS(shot.place))
+
+    if (!this.cursorCoords) {
+      const pos = camera.centre ?? shot.place
+      const dms = formatDMS(pos)
+      const dec = `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}`
+      const alt = (pos as any).h !== undefined ? ` · ${Math.round((pos as any).h)}m` : ''
+      this.lastCoordsDMS = dms
+      this.lastCoordsDec = dec
+      this.lastCoordsFull = `${dms} (${dec})`
+      this.set('coords', `📍 ${dms} (${dec}${alt})`)
+      this.set('coordDMS', dms)
+      this.set('coordDec', dec)
+    }
+
     this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? (this.director ? 'Realizador' : 'Replay') : 'Pausa')
     this.set('source', sim ? (split ? 'decisões' : 'simulado') : 'observado')
     this.root.classList.toggle('paused', !frame.playing)

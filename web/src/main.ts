@@ -2,7 +2,9 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
+  Cartesian2,
   Cartesian3,
+  Cartographic,
   Credit,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -146,7 +148,7 @@ async function main() {
     },
     resetNorth,
     flyToIgnition,
-    openEditor: () => editor.toggle(true),
+    mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
   })
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
@@ -163,6 +165,26 @@ async function main() {
       }
     },
   })
+
+  const mouseMovePixel = new Cartesian2()
+  scene.canvas.addEventListener('mousemove', (e) => {
+    mouseMovePixel.x = e.clientX
+    mouseMovePixel.y = e.clientY
+    const ray = viewer.camera.getPickRay(mouseMovePixel)
+    if (!ray) return
+    const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
+    if (cartesian) {
+      const c = Cartographic.fromCartesian(cartesian)
+      hud.updateCursorCoords({
+        lon: CesiumMath.toDegrees(c.longitude),
+        lat: CesiumMath.toDegrees(c.latitude),
+        h: c.height,
+      })
+    } else {
+      hud.updateCursorCoords(undefined)
+    }
+  })
+  scene.canvas.addEventListener('mouseleave', () => hud.updateCursorCoords(undefined))
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
