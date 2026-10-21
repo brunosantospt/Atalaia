@@ -16,7 +16,7 @@
 //   future work).
 
 import { findAirBase } from './airBases'
-import { simulate, type Run, type Scenario } from './fastModel'
+import { freeArrival, simulate, type Run, type Scenario } from './fastModel'
 import { distanceM, toPTTM06, type LonLat } from './geo'
 import { cellHa, cellOf, lonLatAt } from './grid'
 import type { Context } from './osm'
@@ -184,7 +184,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
   }
 
   // Where units can stand: A's points, the roads, and for aircraft a lattice over the free run.
-  const free = simulate(scenario, null).arrival // no plan gets the fire anywhere sooner
+  const free = freeArrival(scenario) // no plan gets the fire anywhere sooner
   const at = (arrival: Float32Array, s: number) => (spots[s].cell < 0 ? Infinity : arrival[spots[s].cell])
   for (const p of ground.access) if (cellOf(grid, p) >= 0) spot(p, { road: true, air: true })
   if (seeds.some((u) => u.aerial))

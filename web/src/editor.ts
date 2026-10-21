@@ -1,9 +1,9 @@
-// The decision editor: a drawer on the left where A and B are composed on the map. A unit
-// is picked in the palette, then a click puts it on the nearest road (a point of attack), or
-// clicks draw a crew line or an aerial water line. Each assignment shows when it gets there
-// and what it can do; the lines show how much of them is built before the fire arrives.
-// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Decisions
-// are kept per fire in this browser; the 6 h report compares Livre, A and B.
+// The decision editor: a drawer on the left where A and B are composed on the map. A unit's
+// button arms the map, then each click puts it on the nearest road (a point of attack, where it
+// lays its wet line), or, with a line task, clicks draw a crew line or an aerial water line.
+// Each assignment shows when it gets there and what it lays: the barriers the engines get.
+// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Every
+// fire opens with nothing on the ground; the 6 h report compares Livre, A and B.
 
 import {
   Cartesian2,
@@ -20,10 +20,10 @@ import {
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
-import { lineSchedule, type Run, type Scenario } from './fastModel'
-import { cellOf, lonLatAt, type Grid } from './grid'
+import { freeArrival, type Run, type Scenario } from './fastModel'
+import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
+import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, groundOf, ILS_NAME, type Change, type Progress, type Result, type Score } from './optimize'
@@ -53,16 +53,12 @@ import {
   ICON_SHIELD,
   ICON_BOLT,
 } from './icons'
+import { arrivals, stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
   aerialFrontM,
-  arrivalMin,
-  attackMPerH,
   dropCycleMin,
-  dutyCycle,
   flameLengthM,
   isAerial,
-  refillMin,
-  workMin,
   type Assignment,
   type Decision,
   type Suppression,
@@ -83,7 +79,6 @@ export interface EditorActions {
   editing(open: boolean): void
 }
 
-const STORAGE_PREFIX = 'atalaia.decisions.'
 const SNAP_M = 400 // a click further than this from any road stays where it is
 const ACCESS_SHOWN_M = 2500 // access dots are shown this far from the ignition while a point tool is on
 const TASK_NAME: Record<Task, string> = {
@@ -100,6 +95,7 @@ const GROUPS = [
   { kind: 'foot', name: 'Equipas apeadas' },
 ] as const
 type Kind = (typeof GROUPS)[number]['kind']
+const UNIT_COLOR: Record<UnitId, string> = { vfci: '#dc2626', crew: '#f59e0b', vttu: '#0284c7', hebl: '#0d9488', avbp: '#4f46e5' }
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
 const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
 const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
@@ -107,6 +103,9 @@ const ILS_AFTER_MS = 800 // A has to be still this long before B is searched aga
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
+const WET = Color.fromCssColorString('#7dd3fc') // the barriers the engines get: wet lines and dug lines, light blue
+const ROUTE = Color.fromCssColorString('#1e3a8a') // means' road routes: dark blue
+const ROUTE_HALO = Color.fromCssColorString('#e2e8f0').withAlpha(0.45)
 
 const TEMPLATE = `
   <header>
@@ -128,14 +127,10 @@ const TEMPLATE = `
   </section>
   <section>
     <h3>Adicionar</h3>
+    <div class="units" data-ref="units" role="group" aria-label="Meio a colocar no mapa"></div>
     <div class="palette">
-      <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
       <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
-      <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
-        <option value="direct">ataque direto</option>
-        <option value="protect">proteção</option>
-        <option value="shuttle">abastecimento</option>
-      </select></div>
+      <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa"></select></div>
       <div class="field"><label>Quantos</label><div class="count">
         <button type="button" data-ref="less" title="Menos">−</button>
         <span data-ref="count">1</span>
@@ -144,12 +139,6 @@ const TEMPLATE = `
       </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
-    <div class="tools">
-      <button type="button" data-ref="quickAdd" class="primary-btn" title="Posiciona este meio automaticamente no acesso seguro mais próximo da frente de fogo">+ Colocar Meio</button>
-      <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
-      <button type="button" data-tool="line" title="Desenha uma linha apeada no mapa">Linha apeada</button>
-      <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
-    </div>
     <div class="line-actions" data-ref="lineActions" hidden>
       <button type="button" class="finish-line-btn" data-ref="finishLine" disabled title="Concluir e registar esta linha nos meios no terreno">✓ Concluir Linha</button>
       <button type="button" class="cancel-line-btn" data-ref="cancelLine" title="Cancelar traçado da linha">✕ Cancelar</button>
@@ -362,15 +351,23 @@ export class Editor {
       }
     }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
-    const unit = this.refs.unit as HTMLSelectElement
+    // One button per kind of means: it arms the map, and each click there places it (a line task draws).
     for (const [id, spec] of Object.entries(sup.units)) {
-      const option = document.createElement('option')
-      option.value = id
-      option.textContent = `${spec.short} · ${spec.name}`
-      unit.append(option)
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.dataset.unit = id
+      button.title = `${spec.name}: escolhe e clica no mapa`
+      button.setAttribute('aria-pressed', 'false')
+      const icon = document.createElement('img')
+      icon.alt = ''
+      icon.src = getUnitTacticalCanvas(id as UnitId).toDataURL()
+      const label = document.createElement('span')
+      label.textContent = id === 'crew' ? 'Brigada' : spec.short
+      button.append(icon, label)
+      button.addEventListener('click', () => this.arm(id as UnitId))
+      this.refs.units.append(button)
     }
-    unit.value = this.unit
-    unit.addEventListener('change', () => this.setUnit(unit.value as UnitId))
+    this.renderUnits()
     const from = this.refs.from as HTMLSelectElement
     from.addEventListener('change', () => {
       this.fromId = from.value
@@ -379,7 +376,10 @@ export class Editor {
     const hour = this.refs.hour as HTMLInputElement
     hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
     const task = this.refs.task as HTMLSelectElement
-    task.addEventListener('change', () => (this.task = task.value as Task))
+    task.addEventListener('change', () => {
+      this.task = task.value as Task
+      if (this.tool && this.tool !== 'pma') this.setTool(this.toolFor())
+    })
     this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
@@ -406,11 +406,9 @@ export class Editor {
         this.hideTip()
       }
     })
-    this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.ils.addEventListener('click', () => {
       if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
       this.stopIls(true)
-      this.remember()
     })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
@@ -439,19 +437,6 @@ export class Editor {
         this.cancel()
         this.render()
       })
-    for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.addEventListener('click', () => {
-        const next = button.dataset.tool as Tool
-        if (this.tool === next) {
-          if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
-            this.finishLine()
-            return
-          }
-          this.setTool(null)
-          return
-        }
-        this.setTool(next)
-      })
     this.renderPalette()
     this.toggle(false)
   }
@@ -466,6 +451,24 @@ export class Editor {
     this.active = i
     this.cancel()
     this.render()
+  }
+
+  /** Decision `i`'s barriers, as the scenario's `decision.barriers` sends them to the engines (docs/contracts.md). */
+  barriers(i: number): Barrier[] {
+    return this.wetLinesOf(this.decisions[i]).map((w) => w.barrier)
+  }
+
+  /** A decision's barriers with what laid each one (wetLine.ts), the same the fast model applies. */
+  private wetLinesOf(d: Decision): WetLine[] {
+    if (!this.loaded) return []
+    const { scenario } = this.loaded
+    return wetLines(scenario, d, freeArrival(scenario))
+  }
+
+  /** "10:25 (T+25 min)": the wall clock and the minute of the run a barrier holds from. */
+  private holdsFrom(minute: number): string {
+    const start = this.loaded?.fire.start
+    return `${start ? `${fmtTime(wallClock(start, minute / 60))} ` : ''}(T+${Math.round(minute)} min)`
   }
 
   /** Hours after the ignition the drawer stands at. */
@@ -516,8 +519,8 @@ export class Editor {
     this.actions.editing(open)
   }
 
-  /** A fire opened: its decisions come back from this browser, or A starts from the example, on the
-   *  roads. B comes back with them while it is still the search's plan for that A, or is searched again. */
+  /** A fire opened: A starts empty, with nothing on the ground ("Repor exemplo" brings the example
+   *  back, on the roads), and B with it. Decisions are not kept across visits. */
   setFire(
     fireId: string,
     fire: Fire,
@@ -534,19 +537,8 @@ export class Editor {
     this.stopIls()
     this.ilsDone = undefined
     this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
-    const stored = load(fireId)
-    const a = this.fit(stored?.decisions[0] ?? clone(this.loaded.example))
-    const b = stored && this.fit(stored.decisions[1])
-    this.decisions = [a, b ?? named(a)]
-    const ils = stored?.ils
-    if (b && ils?.a === planKey(a) && (planKey(b) !== ils.b || ils.done)) {
-      this.ilsFor = ils.a
-      this.ilsB = ils.b
-      if (planKey(b) === ils.b && ils.done) {
-        const { stopped, ...score } = ils.done
-        this.ilsDone = { result: { ...score, decision: b }, changes: diffDecisions(a, b), stopped }
-      }
-    } else this.proposeB()
+    this.decisions = [empty('A'), empty('B')]
+    this.proposeB()
     this.runs = this.reports = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
@@ -580,10 +572,12 @@ export class Editor {
         this.setCount(1)
       }
     }
+    this.task = 'drops'
+    ;(this.refs.task as HTMLSelectElement).value = 'drops'
     this.setTool('drops')
     const baseObj = findAirBase(this.fromId)
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica e arrasta no mapa para criar linha aérea de descargas ou clica no mapa.`
+    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica no mapa para os vértices da linha aérea de descargas (duplo clique ou Enter conclui).`
   }
 
   /** The runs of Livre, A and B, and their reports when the fire has OSM context. */
@@ -672,17 +666,44 @@ export class Editor {
     this.tool = tool
     this.drawing = []
     this.viewer.scene.canvas.style.cursor = tool ? 'crosshair' : ''
-    for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.classList.toggle('on', button.dataset.tool === tool)
+    this.renderUnits()
     this.refs.hint.classList.remove('danger')
     this.updateLineActionsUI()
     if (!tool) {
       this.refs.hint.textContent = ''
     } else if (tool === 'point') {
-      this.refs.hint.textContent = 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
+      this.refs.hint.textContent = isAerial(unit)
+        ? `Clica no mapa onde o ${unit.short} descarrega. Escolhe outra vez o meio para parar.`
+        : `Clica no mapa: o ${unit.short} fica no ponto de acesso mais próximo (estrada, caminho ou trilho) e faz a sua linha molhada. Escolhe outra vez o meio para parar.`
     }
     this.drawAccess()
     this.draw()
+  }
+
+  /** A unit's button: the first press arms the map with it, the next one (or Escape) stops. */
+  private arm(unit: UnitId) {
+    if (this.tool && this.tool !== 'pma' && this.unit === unit) {
+      if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) return this.finishLine()
+      return this.setTool(null)
+    }
+    this.setUnit(unit)
+    this.setTool(this.toolFor())
+  }
+
+  /** What a click on the map does with the palette's task: a point, or the next vertex of a line. */
+  private toolFor(): Tool {
+    return this.task === 'line' ? 'line' : this.task === 'drops' ? 'drops' : 'point'
+  }
+
+  /** The unit buttons: the palette's unit, pressed while it is armed on the map. */
+  private renderUnits() {
+    for (const button of this.refs.units.querySelectorAll<HTMLButtonElement>('[data-unit]')) {
+      const mine = button.dataset.unit === this.unit
+      const armed = mine && this.tool !== null && this.tool !== 'pma'
+      button.classList.toggle('sel', mine)
+      button.classList.toggle('on', armed)
+      button.setAttribute('aria-pressed', String(armed))
+    }
   }
 
   private updateLineActionsUI() {
@@ -839,10 +860,7 @@ export class Editor {
       assignment: Assignment
       point: LonLat
       allUnits: Assignment[]
-      radiusM?: number
-      growMPerH?: number
-      arrived?: boolean
-      earliestArrival?: number
+      lines?: WetLine[]
     },
   ) {
     if (!this.cutTooltip) {
@@ -869,6 +887,22 @@ export class Editor {
         ? `${spec.people * a.count} operacionais apeados (ferramentas manuais)`
         : `${a.count} veículo${a.count > 1 ? 's' : ''} (${spec.short}) · ${spec.people * a.count} bombeiros · ${(spec.waterL ?? 0) * a.count} L de água`
 
+    // The barriers this point or line puts in the scenario: what the engines get.
+    const lines = unitInfo.lines ?? []
+    const wet = lines.filter((w) => w.kind === 'wet')
+    const dug = lines.filter((w) => w.kind === 'line')
+    const lineText = (w: WetLine) =>
+      `${this.sup.units[this.decisions[this.active].assignments[w.slot]?.unit ?? a.unit].short}: ${fmtNumber(w.lengthM)} m × ${fmtNumber(w.barrier.width_m)} m, segura a partir das ${this.holdsFrom(w.barrier.from_min)}${this.minutes >= w.barrier.from_min ? '' : ' · a caminho'}`
+    const barrierRows = [
+      ...wet.map((w) => `Linha molhada ${lineText(w)}`),
+      ...(dug.length
+        ? [`Linha apeada: ${dug.length} troço${dug.length > 1 ? 's' : ''}, ${fmtNumber(dug.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(dug[0].barrier.width_m)} m, feita até às ${this.holdsFrom(Math.max(...dug.map((w) => w.barrier.from_min)))}`]
+        : []),
+    ]
+    const aerialRow = unitInfo.allUnits.some((u) => isAerial(this.sup.units[u.unit]))
+      ? `<div class="tooltip-detail" style="color:#5eead4;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Descargas: abrandam o fogo enquanto frescas (não são barreira no ELMFIRE)</div>`
+      : ''
+
     this.cutTooltip.className = 'road-cut-tooltip unit'
     this.cutTooltip.style.left = `${position.x}px`
     this.cutTooltip.style.top = `${position.y}px`
@@ -885,8 +919,8 @@ export class Editor {
       </div>
       <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
-      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
-      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
+      ${barrierRows.map((t) => `<div class="tooltip-detail" style="color:#7dd3fc;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> ${t}</div>`).join('')}
+      ${aerialRow}
       <div class="tooltip-action" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_CHECK}</span> Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
@@ -937,123 +971,6 @@ export class Editor {
       this.dangerTimer = undefined
       this.setTool(this.tool)
     }, 4500)
-  }
-
-  private quickAdd() {
-    if (!this.loaded) return
-    const count = this.placeable()
-    if (!count) return
-    const { context, stations, scenario } = this.loaded
-    const d = this.decisions[this.active]
-    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
-    const aerial = isAerial(this.sup.units[this.unit])
-
-    let targetPoint: LonLat | undefined
-
-    if (aerial) {
-      // Find advancing head of the fire front
-      let headPoint: LonLat = scenario.ignition
-      if (activeRun) {
-        const frontCells: number[] = []
-        const step = Math.max(1, Math.floor(activeRun.arrival.length / 5000))
-        for (let i = 0; i < activeRun.arrival.length; i += step) {
-          const t = activeRun.arrival[i]
-          if (t <= this.minutes && t >= Math.max(0, this.minutes - 45)) {
-            frontCells.push(i)
-          }
-        }
-        if (frontCells.length > 0) {
-          const chosen = frontCells[frontCells.length - 1]
-          const col = chosen % scenario.grid.cols
-          const row = (chosen - col) / scenario.grid.cols
-          headPoint = lonLatAt(scenario.grid, col, row)
-        }
-      }
-      const existing = Object.values(d.points)
-      const angle = (existing.length * 60 * Math.PI) / 180
-      targetPoint = {
-        lon: headPoint.lon + Math.cos(angle) * 0.005,
-        lat: headPoint.lat + Math.sin(angle) * 0.005,
-      }
-    } else if (context && context.access.length > 0) {
-      const existing = Object.values(d.points)
-      const station = stations.find((s) => s.id === this.fromId) ?? stations[0]
-
-      // 1. Collect points along the active fire perimeter
-      const frontPoints: LonLat[] = []
-      if (activeRun) {
-        const step = Math.max(1, Math.floor(activeRun.arrival.length / 3000))
-        for (let i = 0; i < activeRun.arrival.length; i += step) {
-          const t = activeRun.arrival[i]
-          if (t <= this.minutes && t >= Math.max(0, this.minutes - 60)) {
-            const col = i % scenario.grid.cols
-            const row = (i - col) / scenario.grid.cols
-            frontPoints.push(lonLatAt(scenario.grid, col, row))
-          }
-        }
-      }
-      if (frontPoints.length === 0) {
-        frontPoints.push(scenario.ignition)
-      }
-
-      // 2. Filter candidates: must be strictly UNBURNED with >= 15 min buffer, and not occupied
-      const candidates = context.access.filter((a) => {
-        const cell = cellOf(scenario.grid, a)
-        if (cell < 0) return false
-        if (activeRun && activeRun.arrival[cell] <= this.minutes + 15) return false
-        if (existing.some((p) => distanceM(p, a) < 220)) return false
-        return true
-      })
-
-      // 3. Score candidates by proximity to active front and confirmed safe road route from station
-      const scored: { pt: LonLat; distToFront: number; hasRoute: boolean }[] = []
-      for (const a of candidates) {
-        let minDist = Infinity
-        for (const fp of frontPoints) {
-          const dist = distanceM(a, fp)
-          if (dist < minDist) minDist = dist
-        }
-        if (minDist > 3000) continue
-        const route = station ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, a) : undefined
-        scored.push({ pt: a, distToFront: minDist, hasRoute: !!route })
-      }
-
-      scored.sort((a, b) => {
-        if (a.hasRoute !== b.hasRoute) return a.hasRoute ? -1 : 1
-        return a.distToFront - b.distToFront
-      })
-
-      if (scored.length > 0) {
-        targetPoint = scored[0].pt
-      } else if (candidates.length > 0) {
-        candidates.sort((a, b) => distanceM(a, frontPoints[0]) - distanceM(b, frontPoints[0]))
-        targetPoint = candidates[0]
-      }
-    }
-
-    if (!targetPoint) {
-      this.refs.hint.classList.add('danger')
-      this.refs.hint.textContent = 'Não foi encontrado um acesso rodoviário seguro fora do fogo para este quartel. Clica no mapa no local pretendido.'
-      return
-    }
-
-    const id = nextId(d.points, 'p')
-    const fromId = this.from(stations)
-    const base = aerial ? findAirBase(fromId) : undefined
-    d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
-    d.assignments.push({
-      unit: this.unit,
-      count,
-      from: fromId,
-      target: id,
-      task: aerial ? 'direct' : this.task,
-    })
-
-    this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
-      : `✓ Meio colocado no acesso seguro mais próximo da frente! Rota rodoviária calculada no mapa.`
-    this.commit()
   }
 
   private click(position: Cartesian2) {
@@ -1157,7 +1074,7 @@ export class Editor {
     this.commit()
   }
 
-  /** The decisions changed: remember them, show them and have them simulated again. By hand, a new
+  /** The decisions changed: show them and have them simulated again. By hand, a new
    *  A has B searched again; B changed by hand ends its search, and is no longer what it proposed. */
   private commit(byIls = false) {
     if (!byIls) {
@@ -1167,16 +1084,8 @@ export class Editor {
         this.ilsDone = undefined
       }
     }
-    this.remember()
     this.render()
     this.actions.changed()
-  }
-
-  /** The decisions in this browser, with what the search left of B. */
-  private remember() {
-    if (!this.loaded) return
-    const done = this.ilsDone && { ...scoreOf(this.ilsDone.result), stopped: this.ilsDone.stopped }
-    save(this.loaded.fireId, this.decisions, { a: this.ilsFor, b: this.ilsB, done })
   }
 
   /** B as the search starts it: A's own plan. */
@@ -1291,7 +1200,9 @@ export class Editor {
           ? 'O B foi mudado à mão e já não é a proposta do ILS: "Procurar B de novo", ou mudar o A, volta a propô-lo.'
           : canMove
             ? 'Procura parada: o B ainda é igual ao A.'
-            : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
+            : !this.decisions[0].assignments.length
+              ? 'O A ainda não tem meios: põe meios no mapa e o B é procurado com os mesmos.'
+              : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
       return
     }
     const { result, changes } = done
@@ -1409,7 +1320,8 @@ export class Editor {
 
     if (isAerial(this.sup.units[this.unit])) {
       task.innerHTML = `
-        <option value="direct">ataque direto (descargas)</option>
+        <option value="direct">descargas num ponto</option>
+        <option value="drops">linha aérea (desenha no mapa)</option>
       `
     } else if (this.unit === 'vttu') {
       task.innerHTML = `
@@ -1420,6 +1332,7 @@ export class Editor {
       task.innerHTML = `
         <option value="direct">ataque direto (ferramentas)</option>
         <option value="protect">proteção de aldeia/estruturas</option>
+        <option value="line">linha apeada (desenha no mapa)</option>
       `
     } else if (this.unit === 'vfci') {
       task.innerHTML = `
@@ -1457,7 +1370,7 @@ export class Editor {
   /** The palette's unit changed. */
   private setUnit(unit: UnitId) {
     this.unit = unit
-    ;(this.refs.unit as HTMLSelectElement).value = unit
+    this.renderUnits()
     this.updateStationDropdown()
     this.updateTaskDropdown()
     this.setCount(this.count)
@@ -1487,7 +1400,8 @@ export class Editor {
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
-    const eta = target ? this.eta(a, target) : undefined
+    // The minute the model has it at work, the one its barrier holds from (wetLine.ts arrivals).
+    const eta = target && this.loaded ? arrivals(this.loaded.scenario, d)[k] : undefined
     const isGround = !isAerial(unit)
     const base = isAerial(unit) ? findAirBase(a.from) : undefined
     const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
@@ -1547,66 +1461,34 @@ export class Editor {
     this.refs.capacityInfo?.classList.remove('active')
   }
 
-  /** Minutes until an assignment is at work, from its station or CMA / air base. */
-  private eta(a: Assignment, target: LonLat): number {
-    const unit = this.sup.units[a.unit]
-    const base = isAerial(unit) ? findAirBase(a.from) : undefined
-    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
-    let km = isAerial(unit)
-      ? (base ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm)
-      : (station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm)
-
-    // For ground units, use real safe driving route along OSM road network
-    if (!isAerial(unit) && station && this.loaded?.context) {
-      const d = this.decisions[this.active]
-      const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
-      const route = findSafeRoute(this.loaded.scenario.grid, this.loaded.context.osm.roads, activeRun?.arrival, this.minutes, station, target)
-      if (route) km = route.distanceKm
-    }
-
-    return arrivalMin(this.sup, unit, km, a.unit === 'crew')
-  }
-
-  /** What the assignment can do, in one line: the front it holds and how it grows, line built, drops, water. */
+  /** What the assignment does, in one line: the barrier it lays (the engines' input), the drops, the water. */
   private whatText(a: Assignment): string {
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const { waterPointKm } = this.sup.dispatch
-    if (a.task === 'line' && this.loaded) {
-      const schedule = lineSchedule(this.loaded.scenario, d, a)
+    const slot = d.assignments.indexOf(a)
+    const mine = this.wetLinesOf(d).filter((w) => w.slot === slot)
+    if (a.task === 'line') {
+      const total = lineLengthM(d.lines[a.target] ?? [])
       const run = this.runs?.[d.id as 'A' | 'B']
-      if (schedule && run) {
-        const built = builtCells(schedule, run)
-        const m = this.loaded.scenario.grid.cellsize
-        return `${fmtNumber(built * m)} de ${fmtNumber(schedule.cells.length * m)} m feitos antes do fogo`
-      }
-      return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m de linha`
+      if (!this.loaded || !run) return `${fmtNumber(total)} m de linha`
+      const { grid } = this.loaded.scenario
+      // A piece is done in time if the fire reaches none of its cells before it is finished.
+      const inTime = mine.filter((w) => stripCells(grid, w.barrier).every((c) => run.arrival[c] >= w.barrier.from_min))
+      return `${fmtNumber(inTime.reduce((m, w) => m + w.lengthM, 0))} de ${fmtNumber(total)} m feitos antes do fogo, em troços de 30 min de trabalho`
     }
     if (a.task === 'drops' && unit.holdMin && unit.dropM) {
       const every = dropCycleMin(unit, waterPointKm) / a.count
       const stretches = Math.max(1, Math.floor(unit.holdMin / every))
       return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m · descarga a cada ~${fmtNumber(every)} min onde o fogo toca · ${stretches} troços de ${unit.dropM[0]} m seguros ${unit.holdMin} min`
     }
-    if (a.task === 'shuttle') return `abastece os meios neste ponto: recarga de ${fmtNumber(refillMin(this.sup.units.vfci, 0))} min sem ir ao ponto de água a ${waterPointKm} km`
-    if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · segura ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
-    // Ground units at a point: the front they hold from the access point and how fast it grows.
-    const shuttled = d.assignments.some((s) => s.task === 'shuttle' && s.target === a.target)
-    const waterKm = shuttled ? 0 : waterPointKm
-    const fuelClass = this.fuelClassAt(d.points[a.target])
-    const refill = refillMin(unit, waterKm)
-    const relay = a.count > 1 || refill === 0
-    const grow = attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)
-    const front = `frente de ${fmtNumber(unit.radiusM * Math.sqrt(a.count))} m à chegada, +${fmtNumber(grow)} m/h até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`
-    const water = !unit.waterL ? '' : relay ? ` · ${a.count} em revezamento na recarga` : ` · ${fmtNumber(workMin(unit))} min de água, ~${fmtNumber(refill)} min a recarregar`
-    return `${front}${water} · chama até ${unit.holdFlameM} m`
-  }
-
-  /** Fuel class under a point of the decision (shrubland when the grid is not loaded). */
-  private fuelClassAt(p: LonLat | undefined): number {
-    const grid = this.loaded?.scenario.grid
-    if (!grid || !p) return 2
-    const i = cellOf(grid, p)
-    return i >= 0 && i < grid.fuelClass.length ? grid.fuelClass[i] : 2
+    if (a.task === 'shuttle')
+      return `abastece os veículos neste ponto: a linha molhada deles cresce ${fmtNumber((unit.wetLineLengthM ?? 0) * a.count)} m com a água do tanque`
+    if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · abranda ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
+    // Ground units at a point: the wet line across the spread, from their arrival.
+    const w = mine[0]
+    if (!w) return 'chega depois do fim da simulação: não faz linha'
+    return `linha molhada de ${fmtNumber(w.lengthM)} × ${fmtNumber(w.barrier.width_m)} m atravessada ao fogo, segura a partir das ${this.holdsFrom(w.barrier.from_min)}`
   }
 
   private renderPalette() {
@@ -1622,22 +1504,18 @@ export class Editor {
         `descola em ${unit.turnoutMin} min`,
       )
     } else {
-      const relay = this.count > 1
-      const grow = attackMPerH(unit, 2) * this.count * (relay ? dutyCycle(unit, waterPointKm) : 1)
       parts.push(`${unit.people * this.count} pessoas`)
-      parts.push(`frente de ${fmtNumber(unit.radiusM * Math.sqrt(this.count))} m à chegada, +${fmtNumber(grow)} m/h em mato até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`)
-      if (unit.waterL)
-        parts.push(
-          `${unit.waterL} L · ${fmtNumber(workMin(unit))} min de água, depois ~${fmtNumber(refillMin(unit, waterPointKm))} min a reabastecer a ${waterPointKm} km${relay ? ' (revezam-se)' : ''}`,
-        )
-      if (unit.lineMPerH) parts.push(`linha: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
-      parts.push(`segura chama até ${unit.holdFlameM} m`)
+      if (unit.wetLineLengthM) {
+        const length = Math.min(unit.wetLineLengthM * this.count, unit.reachM ? 2 * unit.reachM : Infinity)
+        parts.push(`num ponto, linha molhada de ${fmtNumber(length)} × ${fmtNumber(unit.wetLineWidthM ?? 0)} m atravessada ao fogo, a partir da chegada`)
+      }
+      if (unit.waterL) parts.push(`${unit.waterL} L${this.unit === 'vttu' ? ' (em abastecimento, a linha dos veículos do ponto cresce com eles)' : ''}`)
+      if (unit.lineMPerH) parts.push(`linha apeada: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
     }
     this.currentCapacityText = parts.join(' · ')
     if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
       this.showTip(this.refs.capacityInfo, this.currentCapacityText)
     }
-    this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
     this.refs.from.closest<HTMLElement>('.field')!.hidden = false
     // What the station or CMA still has of this unit for the active decision.
     const from = this.from(this.loaded?.stations ?? [])
@@ -1666,11 +1544,6 @@ export class Editor {
         ` · ${source}`
       this.refs.stock.classList.toggle('out', left === 0)
     }
-    for (const button of this.el.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
-      const tool = button.dataset.tool as Tool
-      button.disabled = left === 0 || (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))
-    }
-    ;(this.refs.quickAdd as HTMLButtonElement).disabled = left === 0
     if (left === 0 && this.tool && this.tool !== 'pma') this.setTool(null)
     if (this.tool && (this.tool === 'line' ? !unit.lineMPerH : this.tool === 'drops' ? !isAerial(unit) : false)) this.setTool(null)
   }
@@ -1730,7 +1603,7 @@ export class Editor {
     const { context, scenario, stations } = this.loaded ?? {}
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
 
-    // 1. Draw blue road routes connecting stations to ground attack points
+    // 1. Draw dark blue road routes connecting stations to ground attack points
     if (context && scenario && stations) {
       for (const [id, p] of Object.entries(d.points)) {
         const units = d.assignments.filter((a) => a.target === id)
@@ -1744,78 +1617,57 @@ export class Editor {
 
           const route = findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, p)
           if (route && route.path.length >= 2) {
-            // Vibrant neon blue safe driving route avoiding active fire front
-            this.routes.entities.add({
-              polyline: {
-                positions: route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
-                width: 4,
-                clampToGround: true,
-                material: Color.fromCssColorString('#00d2ff'),
-              },
-            })
+            // Dark blue safe driving route, on a pale halo so it reads on dark imagery (light blue is the wet line).
+            const positions = route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat))
+            this.routes.entities.add({ polyline: { positions, width: 7, clampToGround: true, material: ROUTE_HALO } })
+            this.routes.entities.add({ polyline: { positions, width: 4, clampToGround: true, material: ROUTE } })
           }
         }
       }
     }
 
-    // 2. Draw attack points with operational combat perimeter and tactical badge icon
+    // 2. The barriers of the decision, exactly as the engines get them: light-blue strips, true width up
+    // close and a few pixels far off; dim and dashed until they hold.
+    const lines = this.wetLinesOf(d)
+    const unitInfo = (a: Assignment, point: LonLat, allUnits: Assignment[]) => ({
+      assignment: a,
+      point,
+      allUnits,
+      lines: lines.filter((w) => allUnits.includes(d.assignments[w.slot])),
+    })
+    // Under them, each crew line as drawn, dashed grey: what is left of it is not finished within the run.
+    for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, DIM, true)
+    for (const w of lines) {
+      const a = d.assignments[w.slot]
+      const positions = w.barrier.path.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
+      const holds = this.minutes >= w.barrier.from_min
+      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? 0.6 : 0.25) } })
+      const strip = entities.add({
+        polyline: {
+          positions,
+          width: 3,
+          clampToGround: true,
+          material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
+        },
+      })
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+    }
+
+    // 3. Points of attack: the units' badge; aircraft over a point also show the front their drops slow
+    // (a dashed ring in their colour: it slows the fire for a while, it is not a barrier).
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       if (!units.length) continue
       const mainUnit = units[0]
-
-      // 2.1 Calculate operational suppression perimeter based on Matos 2025 doctrine & fastModel
-      const cell = this.loaded ? cellOf(this.loaded.scenario.grid, p) : -1
-      const fuelClass = cell >= 0 && this.loaded ? this.loaded.scenario.grid.fuelClass[cell] : 2
-      let totalR0 = 0
-      let totalGrowMPerH = 0
-      let maxReachM = 0
-      let earliestArrival = Infinity
-
       for (const a of units) {
         const spec = this.sup.units[a.unit]
-        const arriveMin = this.eta(a, p) ?? 0
-        earliestArrival = Math.min(earliestArrival, arriveMin)
-        const r0 = isAerial(spec)
-          ? aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
-          : spec.radiusM * Math.sqrt(a.count)
-        totalR0 = Math.max(totalR0, r0)
-
-        const grow = a.task === 'protect' ? 0 : attackMPerH(spec, fuelClass) * a.count
-        totalGrowMPerH += grow
-        maxReachM = Math.max(maxReachM, spec.reachM ?? r0)
+        if (!isAerial(spec)) continue
+        const r = aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
+        if (r <= 0) continue
+        const ring = Array.from({ length: 49 }, (_, k) => destination(p, (k * 360) / 48, r))
+        this.polyline(ring, Color.fromCssColorString(UNIT_COLOR[a.unit]), true)
       }
-
-      const activeMin = Math.max(0, this.minutes - earliestArrival)
-      const currentRadiusM = Math.max(
-        25,
-        Math.min(maxReachM || 1000, totalR0 + (totalGrowMPerH * activeMin) / 60),
-      )
-      const arrived = this.minutes >= earliestArrival
-
-      const unitColorMap: Record<UnitId, Color> = {
-        vfci: Color.fromCssColorString('#dc2626'),
-        crew: Color.fromCssColorString('#f59e0b'),
-        vttu: Color.fromCssColorString('#0284c7'),
-        hebl: Color.fromCssColorString('#0d9488'),
-        avbp: Color.fromCssColorString('#4f46e5'),
-      }
-      const unitColor = unitColorMap[mainUnit.unit] ?? AMBER
-
-      // Active suppression perimeter circle clamped to ground
-      entities.add({
-        position: Cartesian3.fromDegrees(p.lon, p.lat),
-        ellipse: {
-          semiMajorAxis: currentRadiusM,
-          semiMinorAxis: currentRadiusM,
-          material: unitColor.withAlpha(arrived ? 0.20 : 0.08),
-          outline: true,
-          outlineColor: arrived ? unitColor : DIM,
-          outlineWidth: 2,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-        },
-      })
-
       const pointEntity = entities.add({
         position: Cartesian3.fromDegrees(p.lon, p.lat),
         billboard: {
@@ -1838,55 +1690,16 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(pointEntity as any)._unitInfo = {
-        assignment: mainUnit,
-        point: p,
-        allUnits: units,
-        radiusM: currentRadiusM,
-        growMPerH: totalGrowMPerH,
-        arrived,
-        earliestArrival,
-      }
+      ;(pointEntity as any)._unitInfo = unitInfo(mainUnit, p, units)
     }
 
-    // 3. Draw lines
+    // 4. Drawn lines: aerial drops (white, dashed), crew lines (dashed grey where no piece of it is
+    // finished within the run; its pieces are the barriers above).
     for (const [id, line] of Object.entries(d.lines)) {
       const a = d.assignments.find((x) => x.target === id)
       if (!a) continue
-      if (a.task === 'drops') {
-        this.polyline(line, INK, true)
-        const dropEntity = entities.add({
-          position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
-          billboard: {
-            image: getUnitTacticalCanvas(a.unit),
-            width: 20,
-            height: 20,
-            verticalOrigin: VerticalOrigin.CENTER,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Infinity,
-          },
-          label: {
-            text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
-            font: 'bold 10px ui-monospace, Menlo, monospace',
-            fillColor: INK,
-            outlineColor: Color.BLACK,
-            outlineWidth: 3,
-            style: 2,
-            pixelOffset: new Cartesian2(0, 16),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Infinity,
-          },
-        })
-        ;(dropEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
-        continue
-      }
-      const schedule = this.loaded && lineSchedule(this.loaded.scenario, d, a)
-      const run = this.runs?.[d.id as 'A' | 'B']
-      const fraction = schedule && run ? builtCells(schedule, run) / schedule.cells.length : 1
-      const [built, late] = splitLine(line, fraction)
-      if (built.length > 1) this.polyline(built, AMBER, false)
-      if (late.length > 1) this.polyline(late, DIM, true)
-
+      const drops = a.task === 'drops'
+      if (drops) this.polyline(line, INK, true)
       const lineEntity = entities.add({
         position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
         billboard: {
@@ -1900,7 +1713,7 @@ export class Editor {
         label: {
           text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
           font: 'bold 10px ui-monospace, Menlo, monospace',
-          fillColor: AMBER,
+          fillColor: drops ? INK : WET,
           outlineColor: Color.BLACK,
           outlineWidth: 3,
           style: 2,
@@ -1909,10 +1722,10 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(lineEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
+      ;(lineEntity as any)._unitInfo = unitInfo(a, line[0], [a])
     }
 
-    // 4. Line being drawn
+    // 5. Line being drawn
     if (this.drawing.length) {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
       for (let i = 0; i < this.drawing.length; i++) {
@@ -1942,7 +1755,7 @@ export class Editor {
       }
     }
 
-    // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
+    // 6. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
     this.agency.entities.removeAll()
     if (context && scenario && activeRun) {
       // Draw cut roads strictly inside the fire perimeter as the fire advances
@@ -2166,7 +1979,6 @@ const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
 /** Whether the search has anything of A to move: units at a point. */
 const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points)
-const scoreOf = ({ improved, best, a, plans, elapsedMs }: Result) => ({ improved, best, a, plans, elapsedMs })
 
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
@@ -2188,52 +2000,3 @@ function lineLengthM(line: LonLat[]): number {
   return m
 }
 
-/** How many cells of a crew line, from its start, are built before the fire gets to them. */
-function builtCells(schedule: { cells: number[]; at: number[] }, run: Run): number {
-  let k = 0
-  while (k < schedule.cells.length && schedule.at[k] <= run.arrival[schedule.cells[k]]) k++
-  return k
-}
-
-/** A polyline cut at a fraction of its length: the part before, the part after. */
-function splitLine(line: LonLat[], fraction: number): [LonLat[], LonLat[]] {
-  if (fraction >= 1) return [line, []]
-  if (fraction <= 0) return [[], line]
-  let left = lineLengthM(line) * fraction
-  const before: LonLat[] = [line[0]]
-  for (let i = 1; i < line.length; i++) {
-    const seg = distanceM(line[i - 1], line[i])
-    if (seg > left) {
-      const cut = lerpLonLat(line[i - 1], line[i], left / seg)
-      before.push(cut)
-      return [before, [cut, ...line.slice(i)]]
-    }
-    left -= seg
-    before.push(line[i])
-  }
-  return [before, []]
-}
-
-/** What the search left of B: the A it was for and B as it left it (planKey), and how it ended. Older entries have none. */
-interface StoredIls {
-  a: string
-  b: string
-  done?: ReturnType<typeof scoreOf> & { stopped?: boolean }
-}
-
-function load(fireId: string): { decisions: [Decision, Decision]; ils?: StoredIls } | undefined {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_PREFIX + fireId) ?? 'null') as { v: number; decisions: [Decision, Decision]; ils?: StoredIls } | null
-    return raw?.v === 1 && raw.decisions?.length === 2 ? raw : undefined
-  } catch {
-    return undefined
-  }
-}
-
-function save(fireId: string, decisions: [Decision, Decision], ils: StoredIls) {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + fireId, JSON.stringify({ v: 1, decisions, ils }))
-  } catch {
-    // Not remembered beyond this visit.
-  }
-}
