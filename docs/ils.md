@@ -232,10 +232,12 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 | Incêndio | A | B | Planos |
 |---|---|---|---|
 | Vieira do Minho 2016 | 3 lugares · 871,9 ha | 0 lugares · 138,4 ha | ~2000 |
-| Cabeceiras de Basto | 4 lugares · 429,6 ha | 3 lugares · 346,4 ha (salva Asnela) | ~2100 (node) |
+| Cabeceiras de Basto 2016 | 5 lugares · 449,0 ha | 3 lugares · 428,2 ha | ~2400 |
 
-- **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m), sempre ≥ 10 min antes do fogo livre.
+- **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m). Os terrestres ficam sempre ≥ 10 min antes do fogo livre; os aéreos só têm de chegar antes dele, contando o voo desde a sua base.
+- **Cabeceiras:** os meios do A mudam 275 m–2 km (VFCI 524 m, as ECIN 1030 m e 2045 m, os HEBL 275 m e 1560 m).
+- **Com poucos planos o B sai pior:** numa procura curta (~250 planos, CPU ocupado), o B de Cabeceiras salvou 2 lugares mas ardeu ~570 ha, mais do que o A. Os lugares contam primeiro.
 - **Onde está o ganho:**
   - a maior parte aparece na construção, nos primeiros 0,5 s (A 871,9 → 172,7 ha);
   - a pesquisa local e a perturbação afinam no fim (→ 149,6 ha aos 8 s, → 138,4 ha aos 8,3 s).
-- **Cada plano custa ~5 ms** (`simulate()` + lugares + ha), por isso cabem ~1600–2100 planos em 10 s.
+- **Cada plano custa ~5 ms** (`simulate()` + lugares + ha), por isso cabem ~2000–2400 planos em 10 s.
