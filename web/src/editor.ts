@@ -206,6 +206,67 @@ function getNoEntrySignCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HT
   return canvas
 }
 
+const UNIT_CANVASES = new Map<string, HTMLCanvasElement>()
+
+function getUnitTacticalCanvas(unitId: UnitId): HTMLCanvasElement {
+  const cached = UNIT_CANVASES.get(unitId)
+  if (cached) return cached
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 48
+  canvas.height = 48
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+
+  const cx = 24
+  const cy = 24
+  const r = 20
+
+  const config: Record<UnitId, { bg: string; border: string; emoji: string }> = {
+    vfci: { bg: 'rgba(220, 38, 38, 0.95)', border: '#fca5a5', emoji: '🚒' },
+    vttu: { bg: 'rgba(2, 132, 199, 0.95)', border: '#7dd3fc', emoji: '💧' },
+    crew: { bg: 'rgba(217, 119, 6, 0.95)', border: '#fde047', emoji: '🥾' },
+    hebl: { bg: 'rgba(13, 148, 136, 0.95)', border: '#5eead4', emoji: '🚁' },
+    avbp: { bg: 'rgba(79, 70, 229, 0.95)', border: '#c7d2fe', emoji: '✈️' },
+  }
+
+  const { bg, border, emoji } = config[unitId] ?? config.vfci
+
+  // Drop shadow
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
+  ctx.shadowBlur = 4
+  ctx.shadowOffsetY = 1.5
+
+  // Dark outline
+  ctx.beginPath()
+  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
+  ctx.fillStyle = '#0f172a'
+  ctx.fill()
+
+  // Outer border ring
+  ctx.shadowBlur = 0
+  ctx.shadowOffsetY = 0
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.fillStyle = border
+  ctx.fill()
+
+  // Inner circular badge
+  ctx.beginPath()
+  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
+  ctx.fillStyle = bg
+  ctx.fill()
+
+  // Crisp centered tactical icon
+  ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(emoji, cx, cy + 1)
+
+  UNIT_CANVASES.set(unitId, canvas)
+  return canvas
+}
+
 interface Loaded {
   fireId: string
   fire: Fire
@@ -461,10 +522,11 @@ export class Editor {
 
   /** Interactive cursor feedback and tooltips for road cuts, PMA, and active fire perimeter */
   private hover(position: Cartesian2) {
-    // 1. Check if hovering over any road cut or PMA entity
+    // 1. Check if hovering over any road cut, PMA, or deployed firefighting unit
     const picked = this.viewer.scene.pick(position)
     const cut: RoadCutItem | undefined = (picked?.id as any)?._roadCut
     const pma: MedicalPointItem | undefined = (picked?.id as any)?._pma
+    const unitInfo = (picked?.id as any)?._unitInfo
 
     if (cut) {
       this.showCutTooltip(position, cut)
@@ -472,6 +534,10 @@ export class Editor {
       return
     } else if (pma) {
       this.showPmaTooltip(position, pma)
+      this.viewer.scene.canvas.style.cursor = 'pointer'
+      return
+    } else if (unitInfo) {
+      this.showUnitTooltip(position, unitInfo)
       this.viewer.scene.canvas.style.cursor = 'pointer'
       return
     } else {
@@ -547,6 +613,49 @@ export class Editor {
       </div>
       <div class="tooltip-detail">Hospital Destino: ${pma.hospitalDestination ?? 'Hospital de Braga'} (${pma.routeKm ? `${pma.routeKm.toFixed(1)} km · ETA ${Math.round(pma.etaMin ?? 0)} min` : 'Rota Ativa'})</div>
       <div class="tooltip-action" style="color:#86efac;">🚑 <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
+    `
+    this.cutTooltip.hidden = false
+  }
+
+  private showUnitTooltip(position: Cartesian2, unitInfo: { assignment: Assignment; point: LonLat; allUnits: Assignment[] }) {
+    if (!this.cutTooltip) {
+      this.cutTooltip = document.createElement('div')
+      this.cutTooltip.className = 'road-cut-tooltip'
+      this.root.append(this.cutTooltip)
+    }
+
+    const { assignment: a } = unitInfo
+    const spec = this.sup.units[a.unit]
+    const station = this.loaded?.stations.find((s) => s.id === a.from)
+    const taskLabel = TASK_NAME[a.task] ?? a.task
+
+    const isTanker = a.unit === 'vttu'
+    const isCrew = a.unit === 'crew'
+    const isAerialUnit = isAerial(spec)
+
+    const resourceDetail = isAerialUnit
+      ? `${spec.waterL} L de água/retardante · Apoio Aéreo`
+      : isCrew
+        ? `${spec.people * a.count} operacionais apeados (ferramentas manuais)`
+        : `${a.count} veículo${a.count > 1 ? 's' : ''} (${spec.short}) · ${spec.people * a.count} bombeiros · ${(spec.waterL ?? 0) * a.count} L de água`
+
+    this.cutTooltip.className = 'road-cut-tooltip unit'
+    this.cutTooltip.style.left = `${position.x}px`
+    this.cutTooltip.style.top = `${position.y}px`
+    this.cutTooltip.innerHTML = `
+      <div class="tooltip-header">
+        <span class="icon">${isAerialUnit ? '✈️' : isTanker ? '💧' : isCrew ? '🥾' : '🚒'}</span>
+        <span class="title" style="color:#60a5fa;">MEIO NO TERRENO · SIOPS</span>
+      </div>
+      <div class="tooltip-road">${spec.short} (${a.count > 1 ? `${a.count} veículos` : spec.name})</div>
+      <div class="tooltip-status">
+        <span class="status-badge" style="background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.5);">
+          🎯 Tarefa: ${taskLabel.toUpperCase()}
+        </span>
+      </div>
+      <div class="tooltip-detail">Origem: ${station?.name ?? 'Base Aérea'}</div>
+      <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
+      <div class="tooltip-action" style="color:#93c5fd;">✅ Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
   }
@@ -1060,25 +1169,35 @@ export class Editor {
       }
     }
 
-    // 2. Draw attack points
+    // 2. Draw attack points with discreet tactical badge icon and clean label
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
-      const aerial = units.some((a) => isAerial(this.sup.units[a.unit]))
-      entities.add({
+      if (!units.length) continue
+      const mainUnit = units[0]
+
+      const pointEntity = entities.add({
         position: Cartesian3.fromDegrees(p.lon, p.lat),
-        point: { pixelSize: 9, color: aerial ? INK : AMBER, outlineColor: Color.BLACK.withAlpha(0.6), outlineWidth: 2, heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity },
+        billboard: {
+          image: getUnitTacticalCanvas(mainUnit.unit),
+          width: 22,
+          height: 22,
+          verticalOrigin: VerticalOrigin.CENTER,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Infinity,
+        },
         label: {
-          text: units.map((a) => `${this.sup.units[a.unit].short}×${a.count}`).join(' '),
-          font: '11px ui-monospace, Menlo, monospace',
+          text: units.map((a) => `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''}`).join(' '),
+          font: 'bold 10px ui-monospace, Menlo, monospace',
           fillColor: INK,
           outlineColor: Color.BLACK,
           outlineWidth: 3,
           style: 2, // FILL_AND_OUTLINE
-          pixelOffset: new Cartesian2(0, -16),
+          pixelOffset: new Cartesian2(0, 16),
           heightReference: HeightReference.CLAMP_TO_GROUND,
           disableDepthTestDistance: Infinity,
         },
       })
+      ;(pointEntity as any)._unitInfo = { assignment: mainUnit, point: p, allUnits: units }
     }
 
     // 3. Draw lines
