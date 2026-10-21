@@ -20,10 +20,10 @@ import {
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
-import { lineSchedule, type Run, type Scenario } from './fastModel'
+import { freeArrival, type Run, type Scenario } from './fastModel'
 import { cellOf, lonLatAt, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
+import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, groundOf, ILS_NAME, type Change, type Progress, type Result, type Score } from './optimize'
@@ -53,16 +53,13 @@ import {
   ICON_SHIELD,
   ICON_BOLT,
 } from './icons'
+import { stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
   aerialFrontM,
   arrivalMin,
-  attackMPerH,
   dropCycleMin,
-  dutyCycle,
   flameLengthM,
   isAerial,
-  refillMin,
-  workMin,
   type Assignment,
   type Decision,
   type Suppression,
@@ -99,6 +96,7 @@ const GROUPS = [
   { kind: 'foot', name: 'Equipas apeadas' },
 ] as const
 type Kind = (typeof GROUPS)[number]['kind']
+const UNIT_COLOR: Record<UnitId, string> = { vfci: '#dc2626', crew: '#f59e0b', vttu: '#0284c7', hebl: '#0d9488', avbp: '#4f46e5' }
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
 const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
 const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
@@ -106,6 +104,7 @@ const ILS_AFTER_MS = 800 // A has to be still this long before B is searched aga
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
+const WET = Color.fromCssColorString('#7dd3fc') // the barriers the engines get: wet lines and dug lines, light blue
 const ROUTE = Color.fromCssColorString('#1e3a8a') // means' road routes: dark blue
 const ROUTE_HALO = Color.fromCssColorString('#e2e8f0').withAlpha(0.45)
 
@@ -468,6 +467,24 @@ export class Editor {
     this.render()
   }
 
+  /** Decision `i`'s barriers, as the scenario's `decision.barriers` sends them to the engines (docs/contracts.md). */
+  barriers(i: number): Barrier[] {
+    return this.wetLinesOf(this.decisions[i]).map((w) => w.barrier)
+  }
+
+  /** A decision's barriers with what laid each one (wetLine.ts), the same the fast model applies. */
+  private wetLinesOf(d: Decision): WetLine[] {
+    if (!this.loaded) return []
+    const { scenario } = this.loaded
+    return wetLines(scenario, d, freeArrival(scenario))
+  }
+
+  /** "10:25 (T+25 min)": the wall clock and the minute of the run a barrier holds from. */
+  private holdsFrom(minute: number): string {
+    const start = this.loaded?.fire.start
+    return `${start ? `${fmtTime(wallClock(start, minute / 60))} ` : ''}(T+${Math.round(minute)} min)`
+  }
+
   /** Hours after the ignition the drawer stands at. */
   get hours(): number {
     return this.minutes / 60
@@ -828,10 +845,7 @@ export class Editor {
       assignment: Assignment
       point: LonLat
       allUnits: Assignment[]
-      radiusM?: number
-      growMPerH?: number
-      arrived?: boolean
-      earliestArrival?: number
+      lines?: WetLine[]
     },
   ) {
     if (!this.cutTooltip) {
@@ -858,6 +872,22 @@ export class Editor {
         ? `${spec.people * a.count} operacionais apeados (ferramentas manuais)`
         : `${a.count} veículo${a.count > 1 ? 's' : ''} (${spec.short}) · ${spec.people * a.count} bombeiros · ${(spec.waterL ?? 0) * a.count} L de água`
 
+    // The barriers this point or line puts in the scenario: what the engines get.
+    const lines = unitInfo.lines ?? []
+    const wet = lines.filter((w) => w.kind === 'wet')
+    const dug = lines.filter((w) => w.kind === 'line')
+    const lineText = (w: WetLine) =>
+      `${this.sup.units[this.decisions[this.active].assignments[w.slot]?.unit ?? a.unit].short}: ${fmtNumber(w.lengthM)} m × ${fmtNumber(w.barrier.width_m)} m, segura a partir das ${this.holdsFrom(w.barrier.from_min)}${this.minutes >= w.barrier.from_min ? '' : ' · a caminho'}`
+    const barrierRows = [
+      ...wet.map((w) => `Linha molhada ${lineText(w)}`),
+      ...(dug.length
+        ? [`Linha apeada: ${dug.length} troço${dug.length > 1 ? 's' : ''}, ${fmtNumber(dug.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(dug[0].barrier.width_m)} m, feita até às ${this.holdsFrom(Math.max(...dug.map((w) => w.barrier.from_min)))}`]
+        : []),
+    ]
+    const aerialRow = unitInfo.allUnits.some((u) => isAerial(this.sup.units[u.unit]))
+      ? `<div class="tooltip-detail" style="color:#5eead4;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Descargas: abrandam o fogo enquanto frescas (não são barreira no ELMFIRE)</div>`
+      : ''
+
     this.cutTooltip.className = 'road-cut-tooltip unit'
     this.cutTooltip.style.left = `${position.x}px`
     this.cutTooltip.style.top = `${position.y}px`
@@ -874,8 +904,8 @@ export class Editor {
       </div>
       <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
-      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
-      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
+      ${barrierRows.map((t) => `<div class="tooltip-detail" style="color:#7dd3fc;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> ${t}</div>`).join('')}
+      ${aerialRow}
       <div class="tooltip-action" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_CHECK}</span> Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
@@ -1550,46 +1580,34 @@ export class Editor {
     return arrivalMin(this.sup, unit, km, a.unit === 'crew')
   }
 
-  /** What the assignment can do, in one line: the front it holds and how it grows, line built, drops, water. */
+  /** What the assignment does, in one line: the barrier it lays (the engines' input), the drops, the water. */
   private whatText(a: Assignment): string {
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const { waterPointKm } = this.sup.dispatch
-    if (a.task === 'line' && this.loaded) {
-      const schedule = lineSchedule(this.loaded.scenario, d, a)
+    const slot = d.assignments.indexOf(a)
+    const mine = this.wetLinesOf(d).filter((w) => w.slot === slot)
+    if (a.task === 'line') {
+      const total = lineLengthM(d.lines[a.target] ?? [])
       const run = this.runs?.[d.id as 'A' | 'B']
-      if (schedule && run) {
-        const built = builtCells(schedule, run)
-        const m = this.loaded.scenario.grid.cellsize
-        return `${fmtNumber(built * m)} de ${fmtNumber(schedule.cells.length * m)} m feitos antes do fogo`
-      }
-      return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m de linha`
+      if (!this.loaded || !run) return `${fmtNumber(total)} m de linha`
+      const { grid } = this.loaded.scenario
+      // A piece is done in time if the fire reaches none of its cells before it is finished.
+      const inTime = mine.filter((w) => stripCells(grid, w.barrier).every((c) => run.arrival[c] >= w.barrier.from_min))
+      return `${fmtNumber(inTime.reduce((m, w) => m + w.lengthM, 0))} de ${fmtNumber(total)} m feitos antes do fogo, em troços de 30 min de trabalho`
     }
     if (a.task === 'drops' && unit.holdMin && unit.dropM) {
       const every = dropCycleMin(unit, waterPointKm) / a.count
       const stretches = Math.max(1, Math.floor(unit.holdMin / every))
       return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m · descarga a cada ~${fmtNumber(every)} min onde o fogo toca · ${stretches} troços de ${unit.dropM[0]} m seguros ${unit.holdMin} min`
     }
-    if (a.task === 'shuttle') return `abastece os meios neste ponto: recarga de ${fmtNumber(refillMin(this.sup.units.vfci, 0))} min sem ir ao ponto de água a ${waterPointKm} km`
-    if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · segura ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
-    // Ground units at a point: the front they hold from the access point and how fast it grows.
-    const shuttled = d.assignments.some((s) => s.task === 'shuttle' && s.target === a.target)
-    const waterKm = shuttled ? 0 : waterPointKm
-    const fuelClass = this.fuelClassAt(d.points[a.target])
-    const refill = refillMin(unit, waterKm)
-    const relay = a.count > 1 || refill === 0
-    const grow = attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)
-    const front = `frente de ${fmtNumber(unit.radiusM * Math.sqrt(a.count))} m à chegada, +${fmtNumber(grow)} m/h até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`
-    const water = !unit.waterL ? '' : relay ? ` · ${a.count} em revezamento na recarga` : ` · ${fmtNumber(workMin(unit))} min de água, ~${fmtNumber(refill)} min a recarregar`
-    return `${front}${water} · chama até ${unit.holdFlameM} m`
-  }
-
-  /** Fuel class under a point of the decision (shrubland when the grid is not loaded). */
-  private fuelClassAt(p: LonLat | undefined): number {
-    const grid = this.loaded?.scenario.grid
-    if (!grid || !p) return 2
-    const i = cellOf(grid, p)
-    return i >= 0 && i < grid.fuelClass.length ? grid.fuelClass[i] : 2
+    if (a.task === 'shuttle')
+      return `abastece os veículos neste ponto: a linha molhada deles cresce ${fmtNumber((unit.wetLineLengthM ?? 0) * a.count)} m com a água do tanque`
+    if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · abranda ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
+    // Ground units at a point: the wet line across the spread, from their arrival.
+    const w = mine[0]
+    if (!w) return 'chega depois do fim da simulação: não faz linha'
+    return `linha molhada de ${fmtNumber(w.lengthM)} × ${fmtNumber(w.barrier.width_m)} m atravessada ao fogo, segura a partir das ${this.holdsFrom(w.barrier.from_min)}`
   }
 
   private renderPalette() {
@@ -1605,16 +1623,13 @@ export class Editor {
         `descola em ${unit.turnoutMin} min`,
       )
     } else {
-      const relay = this.count > 1
-      const grow = attackMPerH(unit, 2) * this.count * (relay ? dutyCycle(unit, waterPointKm) : 1)
       parts.push(`${unit.people * this.count} pessoas`)
-      parts.push(`frente de ${fmtNumber(unit.radiusM * Math.sqrt(this.count))} m à chegada, +${fmtNumber(grow)} m/h em mato até ${fmtNumber(unit.reachM ?? unit.radiusM)} m`)
-      if (unit.waterL)
-        parts.push(
-          `${unit.waterL} L · ${fmtNumber(workMin(unit))} min de água, depois ~${fmtNumber(refillMin(unit, waterPointKm))} min a reabastecer a ${waterPointKm} km${relay ? ' (revezam-se)' : ''}`,
-        )
-      if (unit.lineMPerH) parts.push(`linha: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
-      parts.push(`segura chama até ${unit.holdFlameM} m`)
+      if (unit.wetLineLengthM) {
+        const length = Math.min(unit.wetLineLengthM * this.count, unit.reachM ? 2 * unit.reachM : Infinity)
+        parts.push(`num ponto, linha molhada de ${fmtNumber(length)} × ${fmtNumber(unit.wetLineWidthM ?? 0)} m atravessada ao fogo, a partir da chegada`)
+      }
+      if (unit.waterL) parts.push(`${unit.waterL} L${this.unit === 'vttu' ? ' (em abastecimento, a linha dos veículos do ponto cresce com eles)' : ''}`)
+      if (unit.lineMPerH) parts.push(`linha apeada: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
     }
     this.currentCapacityText = parts.join(' · ')
     if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
@@ -1736,64 +1751,48 @@ export class Editor {
       }
     }
 
-    // 2. Draw attack points with operational combat perimeter and tactical badge icon
+    // 2. The barriers of the decision, exactly as the engines get them: light-blue strips, true width up
+    // close and a few pixels far off; dim and dashed until they hold.
+    const lines = this.wetLinesOf(d)
+    const unitInfo = (a: Assignment, point: LonLat, allUnits: Assignment[]) => ({
+      assignment: a,
+      point,
+      allUnits,
+      lines: lines.filter((w) => allUnits.includes(d.assignments[w.slot])),
+    })
+    // Under them, each crew line as drawn, dashed grey: what is left of it is not finished within the run.
+    for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, DIM, true)
+    for (const w of lines) {
+      const a = d.assignments[w.slot]
+      const positions = w.barrier.path.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
+      const holds = this.minutes >= w.barrier.from_min
+      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? 0.6 : 0.25) } })
+      const strip = entities.add({
+        polyline: {
+          positions,
+          width: 3,
+          clampToGround: true,
+          material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
+        },
+      })
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+    }
+
+    // 3. Points of attack: the units' badge; aircraft over a point also show the front their drops slow
+    // (a dashed ring in their colour: it slows the fire for a while, it is not a barrier).
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       if (!units.length) continue
       const mainUnit = units[0]
-
-      // 2.1 Calculate operational suppression perimeter based on Matos 2025 doctrine & fastModel
-      const cell = this.loaded ? cellOf(this.loaded.scenario.grid, p) : -1
-      const fuelClass = cell >= 0 && this.loaded ? this.loaded.scenario.grid.fuelClass[cell] : 2
-      let totalR0 = 0
-      let totalGrowMPerH = 0
-      let maxReachM = 0
-      let earliestArrival = Infinity
-
       for (const a of units) {
         const spec = this.sup.units[a.unit]
-        const arriveMin = this.eta(a, p) ?? 0
-        earliestArrival = Math.min(earliestArrival, arriveMin)
-        const r0 = isAerial(spec)
-          ? aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
-          : spec.radiusM * Math.sqrt(a.count)
-        totalR0 = Math.max(totalR0, r0)
-
-        const grow = a.task === 'protect' ? 0 : attackMPerH(spec, fuelClass) * a.count
-        totalGrowMPerH += grow
-        maxReachM = Math.max(maxReachM, spec.reachM ?? r0)
+        if (!isAerial(spec)) continue
+        const r = aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
+        if (r <= 0) continue
+        const ring = Array.from({ length: 49 }, (_, k) => destination(p, (k * 360) / 48, r))
+        this.polyline(ring, Color.fromCssColorString(UNIT_COLOR[a.unit]), true)
       }
-
-      const activeMin = Math.max(0, this.minutes - earliestArrival)
-      const currentRadiusM = Math.max(
-        25,
-        Math.min(maxReachM || 1000, totalR0 + (totalGrowMPerH * activeMin) / 60),
-      )
-      const arrived = this.minutes >= earliestArrival
-
-      const unitColorMap: Record<UnitId, Color> = {
-        vfci: Color.fromCssColorString('#dc2626'),
-        crew: Color.fromCssColorString('#f59e0b'),
-        vttu: Color.fromCssColorString('#0284c7'),
-        hebl: Color.fromCssColorString('#0d9488'),
-        avbp: Color.fromCssColorString('#4f46e5'),
-      }
-      const unitColor = unitColorMap[mainUnit.unit] ?? AMBER
-
-      // Active suppression perimeter circle clamped to ground
-      entities.add({
-        position: Cartesian3.fromDegrees(p.lon, p.lat),
-        ellipse: {
-          semiMajorAxis: currentRadiusM,
-          semiMinorAxis: currentRadiusM,
-          material: unitColor.withAlpha(arrived ? 0.20 : 0.08),
-          outline: true,
-          outlineColor: arrived ? unitColor : DIM,
-          outlineWidth: 2,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-        },
-      })
-
       const pointEntity = entities.add({
         position: Cartesian3.fromDegrees(p.lon, p.lat),
         billboard: {
@@ -1816,55 +1815,16 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(pointEntity as any)._unitInfo = {
-        assignment: mainUnit,
-        point: p,
-        allUnits: units,
-        radiusM: currentRadiusM,
-        growMPerH: totalGrowMPerH,
-        arrived,
-        earliestArrival,
-      }
+      ;(pointEntity as any)._unitInfo = unitInfo(mainUnit, p, units)
     }
 
-    // 3. Draw lines
+    // 4. Drawn lines: aerial drops (white, dashed), crew lines (dashed grey where no piece of it is
+    // finished within the run; its pieces are the barriers above).
     for (const [id, line] of Object.entries(d.lines)) {
       const a = d.assignments.find((x) => x.target === id)
       if (!a) continue
-      if (a.task === 'drops') {
-        this.polyline(line, INK, true)
-        const dropEntity = entities.add({
-          position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
-          billboard: {
-            image: getUnitTacticalCanvas(a.unit),
-            width: 20,
-            height: 20,
-            verticalOrigin: VerticalOrigin.CENTER,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Infinity,
-          },
-          label: {
-            text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
-            font: 'bold 10px ui-monospace, Menlo, monospace',
-            fillColor: INK,
-            outlineColor: Color.BLACK,
-            outlineWidth: 3,
-            style: 2,
-            pixelOffset: new Cartesian2(0, 16),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Infinity,
-          },
-        })
-        ;(dropEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
-        continue
-      }
-      const schedule = this.loaded && lineSchedule(this.loaded.scenario, d, a)
-      const run = this.runs?.[d.id as 'A' | 'B']
-      const fraction = schedule && run ? builtCells(schedule, run) / schedule.cells.length : 1
-      const [built, late] = splitLine(line, fraction)
-      if (built.length > 1) this.polyline(built, AMBER, false)
-      if (late.length > 1) this.polyline(late, DIM, true)
-
+      const drops = a.task === 'drops'
+      if (drops) this.polyline(line, INK, true)
       const lineEntity = entities.add({
         position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
         billboard: {
@@ -1878,7 +1838,7 @@ export class Editor {
         label: {
           text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
           font: 'bold 10px ui-monospace, Menlo, monospace',
-          fillColor: AMBER,
+          fillColor: drops ? INK : WET,
           outlineColor: Color.BLACK,
           outlineWidth: 3,
           style: 2,
@@ -1887,10 +1847,10 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(lineEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
+      ;(lineEntity as any)._unitInfo = unitInfo(a, line[0], [a])
     }
 
-    // 4. Line being drawn
+    // 5. Line being drawn
     if (this.drawing.length) {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
       for (let i = 0; i < this.drawing.length; i++) {
@@ -1920,7 +1880,7 @@ export class Editor {
       }
     }
 
-    // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
+    // 6. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
     this.agency.entities.removeAll()
     if (context && scenario && activeRun) {
       // Draw cut roads strictly inside the fire perimeter as the fire advances
@@ -2165,28 +2125,3 @@ function lineLengthM(line: LonLat[]): number {
   return m
 }
 
-/** How many cells of a crew line, from its start, are built before the fire gets to them. */
-function builtCells(schedule: { cells: number[]; at: number[] }, run: Run): number {
-  let k = 0
-  while (k < schedule.cells.length && schedule.at[k] <= run.arrival[schedule.cells[k]]) k++
-  return k
-}
-
-/** A polyline cut at a fraction of its length: the part before, the part after. */
-function splitLine(line: LonLat[], fraction: number): [LonLat[], LonLat[]] {
-  if (fraction >= 1) return [line, []]
-  if (fraction <= 0) return [[], line]
-  let left = lineLengthM(line) * fraction
-  const before: LonLat[] = [line[0]]
-  for (let i = 1; i < line.length; i++) {
-    const seg = distanceM(line[i - 1], line[i])
-    if (seg > left) {
-      const cut = lerpLonLat(line[i - 1], line[i], left / seg)
-      before.push(cut)
-      return [before, [cut, ...line.slice(i)]]
-    }
-    left -= seg
-    before.push(line[i])
-  }
-  return [before, []]
-}

@@ -18,6 +18,8 @@ export interface UnitSpec {
   radiusM: number // front held from the access point on arrival, per unit
   attackMPerH?: number // ground, with water: front put out per hour of work, per unit (a crew uses lineMPerH)
   reachM?: number // ground: how far from the access point the unit can work (track and hose)
+  wetLineLengthM?: number // ground: line laid across the spread at a point, per unit (wetLine.ts)
+  wetLineWidthM?: number // ground: its width; a crew's dug line too
   speedKmh: number // by road, or in the air
   waterL?: number
   flowLPerMin?: number

@@ -1,29 +1,16 @@
 // The fast spread model, in the browser: the minute the fire reaches each cell of the 30 m grid
 // is the shortest path from the ignition (Dijkstra), with the rate of spread from the fuel, the
 // slope along each step and the wind as an ellipse. Not Rothermel: an answer in ~100 ms so the
-// decisions A and B are compared live, each one slowing the fire where its units work
+// decisions A and B are compared live: the barriers of each one (wetLine.ts, the same input the
+// engines get) hold from their minute, and aerial drops slow the fire where they fall
 // (suppression.ts). The engines (engines/CONTRACT.md) remain the reference.
 
 import type { Station, Weather } from './data'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
-import { distanceM, toPTTM06, type LonLat } from './geo'
-import { findAirBase } from './airBases'
+import { toPTTM06, type LonLat } from './geo'
 import { cellHa, cellOf, cellOfXY, centerXY, type Grid } from './grid'
-import {
-  aerialFrontM,
-  arrivalMin,
-  attackMPerH,
-  dropCycleMin,
-  dutyCycle,
-  flameLengthM,
-  intensityKWPerM,
-  isAerial,
-  refillMin,
-  workMin,
-  type Assignment,
-  type Decision,
-  type Suppression,
-} from './suppression'
+import { aerialFrontM, dropCycleMin, flameLengthM, intensityKWPerM, isAerial, type Decision, type Suppression } from './suppression'
+import { arrivals, barriers, stripCells, type Barrier } from './wetLine'
 
 /**
  * Rate of spread with no wind on flat ground (m/min) and fine fuel load (kg/m²), by Scott & Burgan
@@ -70,6 +57,10 @@ const OFFSETS = [
 ]
 const K = OFFSETS.length
 // Bearing of each step, degrees clockwise from north: columns go east, rows go south.
+// A knight move passes through two cells on its way: a barrier in either stops it, as it would the engines.
+const MID = OFFSETS.map(([dx, dy]) =>
+  Math.abs(dx) === 2 ? [[Math.sign(dx), 0], [Math.sign(dx), dy]] : Math.abs(dy) === 2 ? [[0, Math.sign(dy)], [dx, Math.sign(dy)]] : [],
+)
 const BEARING = OFFSETS.map(([dx, dy]) => ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360)
 const STEP = OFFSETS.map(([dx, dy]) => Math.hypot(dx, dy))
 
@@ -157,11 +148,12 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
   for (let a = 0; a < 360; a++)
     for (let k = 0; k < K; k++) cosUp[a * K + k] = Math.cos(((BEARING[k] - a - 180) * Math.PI) / 180)
 
-  // What the decision does to the ground: cells slowed by units at a point, cells held by a line.
-  // A cell can be in two zones (a point and a line, two points): the one holding with the lowest factor counts.
+  // What the decision does to the ground: cells held by its barriers from their minute, cells slowed by
+  // aerial drops. A cell can be in two zones (a point and a line, two points): the one holding with the lowest factor counts.
   const zoneOf = [new Int16Array(n).fill(-1), new Int16Array(n).fill(-1)]
   const lineAt = new Float32Array(n).fill(Infinity)
   const zones: Zone[] = decision ? apply(scenario, decision, zoneOf, lineAt) : []
+  const lines = decision ? lineAt.some((t) => t < Infinity) : false
   const [zoneA, zoneB] = zoneOf
 
   const arrival = new Float32Array(n).fill(Infinity)
@@ -202,7 +194,7 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
       const up = slope[j] * cosUp[aspect[j] * K + k]
       ros *= windFactor[m + k] * Math.min(slopeMax, Math.max(slopeMin, Math.exp((up >= 0 ? upPerDeg : -downPerDeg) * up)))
       let tj = t + (STEP[k] * cellsize) / ros
-      if (lineAt[j] <= tj) continue // the line is built before the fire gets there
+      if (lineAt[j] <= tj) continue // the barrier holds before the fire gets there
       if (zoneA[j] >= 0) {
         // The front arrives in j with the speed it has in i, scaled to j's fuel; at the ignition, the step's.
         const front = grad > 0 ? (frontRos * ros0[code]) / rosHere : ros
@@ -214,6 +206,12 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
           ros *= factor
           tj = t + (STEP[k] * cellsize) / ros
         }
+      }
+      if (lines) {
+        if (lineAt[j] <= tj) continue
+        let jumped = false
+        for (const [mx, my] of MID[k]) if (lineAt[(row + my) * cols + col + mx] <= tj) jumped = true
+        if (jumped) continue
       }
       if (tj < arrival[j]) {
         arrival[j] = tj
@@ -270,9 +268,24 @@ function held(grid: Grid, zone: Zone, i: number, t: number): boolean {
 
 const NO_CENTRE = { x: 0, y: 0, r0: Infinity, grow: 0, reach: Infinity }
 
-/** Turns the assignments into zones (units at a point, with their work and refill cycles) and held lines. */
+/** The free run (no decision) of a scenario, simulated once: the barriers stand across its spread. */
+const freeRuns = new WeakMap<Scenario, Float32Array>()
+export function freeArrival(scenario: Scenario): Float32Array {
+  let free = freeRuns.get(scenario)
+  if (!free) freeRuns.set(scenario, (free = simulate(scenario, null).arrival))
+  return free
+}
+
+/** The decision's barriers, exactly as the scenario's `decision.barriers` (docs/contracts.md) takes them. */
+export function decisionBarriers(scenario: Scenario, decision: Decision): Barrier[] {
+  return barriers(scenario, decision, freeArrival(scenario))
+}
+
+/** Turns the decision into held cells (its barriers, from their minute) and zones (aerial drops, with their windows). */
 function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lineAt: Float32Array): Zone[] {
-  const { grid, stations, suppression: sup, durationMin } = scenario
+  const { grid, suppression: sup, durationMin } = scenario
+  for (const b of decisionBarriers(scenario, decision)) for (const cell of stripCells(grid, b)) lineAt[cell] = Math.min(lineAt[cell], b.from_min)
+
   const zones: Zone[] = []
   /** Puts cell `i` in zone `z`: a free slot, or the slot of a zone with a higher factor than this one. */
   const join = (i: number, z: number) => {
@@ -284,95 +297,46 @@ function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lin
       if (zones[worst[i]].factor > zones[z].factor) worst[i] = z
     }
   }
-  const ecinUsed = new Set<string>() // the first ground crew of a station is its ECIN, out in 2 min
-  // A tanker shuttling water to a point spares the units there the trip to the water point.
-  const shuttled = new Set(decision.assignments.filter((a) => a.task === 'shuttle').map((a) => a.target))
+  const eta = arrivals(scenario, decision)
 
-  for (const a of decision.assignments) {
+  decision.assignments.forEach((a, slot) => {
     const unit = sup.units[a.unit]
-    const station = stations.find((s) => s.id === a.from)
-    const ground = unit.turnoutMin === undefined
-    const ecin = ground && !ecinUsed.has(a.from)
-    if (ground) ecinUsed.add(a.from)
-    if (a.task === 'shuttle') continue
-
-    if (a.task === 'line') {
-      const schedule = lineSchedule(scenario, decision, a, ecin)
-      if (!schedule) continue
-      schedule.cells.forEach((cell, k) => (lineAt[cell] = Math.min(lineAt[cell], schedule.at[k])))
-      continue
-    }
+    if (!isAerial(unit)) return // ground units are barriers (wetLine.ts)
 
     if (a.task === 'drops') {
       const line = decision.lines[a.target]
-      if (!line?.length || !isAerial(unit) || !unit.dropM || !unit.holdMin) continue
+      if (!line?.length || !unit.dropM || !unit.holdMin) return
       // Drops go along the line in order, one every cycle per aircraft, and start over at the end:
       // each stretch of the line is a zone that holds while a drop is fresh on it.
       const cells = rasterise(grid, line)
       const perDrop = Math.max(1, Math.round(unit.dropM[0] / grid.cellsize))
       const stretches: number[][] = []
       for (let k = 0; k < cells.length; k += perDrop) stretches.push(cells.slice(k, k + perDrop))
-      const zoneIds = stretches.map(
-        (stretch) => {
-          const zone = zones.push({ factor: unit.rosFactor, holdFlameM: unit.holdFlameM, windows: [], ...NO_CENTRE }) - 1
-          for (const i of stretch) join(i, zone)
-          return zone
-        },
-      )
-      const base = findAirBase(a.from)
-      const airKm = base && line?.length ? distanceM(base, line[0]) / 1000 : sup.dispatch.airBaseKm
+      const zoneIds = stretches.map((stretch) => {
+        const zone = zones.push({ factor: unit.rosFactor, holdFlameM: unit.holdFlameM, windows: [], ...NO_CENTRE }) - 1
+        for (const i of stretch) join(i, zone)
+        return zone
+      })
       const interval = dropCycleMin(unit, sup.dispatch.waterPointKm) / Math.max(1, a.count)
       const drops: Drops = {
-        from: arrivalMin(sup, unit, airKm, false),
+        from: eta[slot],
         holdMin: unit.holdMin,
         capacity: Math.max(1, Math.floor(unit.holdMin / interval)),
         zones: zoneIds.map((z) => zones[z]),
       }
       for (const zone of drops.zones) zone.drops = drops
-      continue
+      return
     }
 
-    // Units at a point: a front held from the access point, growing while they work.
+    // Aircraft over a point: the drops keep a stretch of the front slowed for as long as they cycle to the water.
     const point = decision.points[a.target]
-    if (!point) continue
+    if (!point) return
     const { x, y } = toPTTM06(point)
     const centre = cellOfXY(grid, x, y)
-    if (centre.col < 0 || centre.row < 0 || centre.col >= grid.cols || centre.row >= grid.rows) continue
-    const base = isAerial(unit) ? findAirBase(a.from) : undefined
-    const km = isAerial(unit)
-      ? (base ? distanceM(base, point) / 1000 : sup.dispatch.airBaseKm)
-      : (station ? distanceM(station, point) / 1000 : sup.dispatch.airBaseKm)
-    const arrive = arrivalMin(sup, unit, km, ecin)
-    const waterKm = shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm
-    const windows: number[] = []
-    let r0: number
-    let grow: number
-    let reach: number
-    if (isAerial(unit)) {
-      // The drops keep a stretch of the front slowed for as long as the aircraft cycles to the water.
-      r0 = aerialFrontM(unit, a.count, sup.dispatch.waterPointKm) / 2
-      grow = 0
-      reach = r0
-      windows.push(arrive, durationMin)
-    } else {
-      const work = workMin(unit)
-      const refill = refillMin(unit, waterKm)
-      const relay = a.count > 1 || refill === 0 // two or more take turns to refill, so the front stays manned
-      if (relay) windows.push(arrive, durationMin)
-      else for (let t = arrive; t < durationMin; t += work + refill) windows.push(t, Math.min(t + work, durationMin))
-      r0 = unit.radiusM * Math.sqrt(a.count)
-      const fuelClass = grid.fuelClass[centre.row * grid.cols + centre.col]
-      // In 'protect' task, units hold a stationary defensive perimeter around structures/villages (grow = 0, reach = r0)
-      // In 'direct' attack, units advance offensively along the fireline into the brush (grow = attackMPerH, reach = reachM)
-      grow =
-        a.task === 'protect'
-          ? 0
-          : (attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)) / 60
-      reach = a.task === 'protect' ? r0 : (unit.reachM ?? r0)
-    }
-    if (windows.length === 0 || r0 <= 0) continue
-    const zone = zones.push({ factor: unit.rosFactor, holdFlameM: unit.holdFlameM, windows, x, y, r0, grow, reach }) - 1
-
+    if (centre.col < 0 || centre.row < 0 || centre.col >= grid.cols || centre.row >= grid.rows) return
+    const reach = aerialFrontM(unit, a.count, sup.dispatch.waterPointKm) / 2
+    if (reach <= 0 || eta[slot] >= durationMin) return
+    const zone = zones.push({ factor: unit.rosFactor, holdFlameM: unit.holdFlameM, windows: [eta[slot], durationMin], x, y, r0: reach, grow: 0, reach }) - 1
     const span = Math.ceil(reach / grid.cellsize)
     for (let r = centre.row - span; r <= centre.row + span; r++)
       for (let c = centre.col - span; c <= centre.col + span; c++) {
@@ -382,33 +346,8 @@ function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lin
         if (Math.hypot(at.x - x, at.y - y) > reach) continue
         join(i, zone)
       }
-  }
-  return zones
-}
-
-/** A line crew's schedule: the cells of its line in order and the minute each is built, from its arrival. */
-export function lineSchedule(
-  scenario: Scenario,
-  decision: Decision,
-  a: Assignment,
-  ecin = false,
-): { cells: number[]; at: number[] } | undefined {
-  const { grid, stations, suppression: sup } = scenario
-  const unit = sup.units[a.unit]
-  const line = decision.lines[a.target]
-  if (!line?.length || !unit.lineMPerH) return undefined
-  const base = isAerial(unit) ? findAirBase(a.from) : undefined
-  const station = !base ? stations.find((s) => s.id === a.from) : undefined
-  const km = base ? distanceM(base, line[0]) / 1000 : station ? distanceM(station, line[0]) / 1000 : sup.dispatch.airBaseKm
-  let t = arrivalMin(sup, unit, km, ecin)
-  const cells = rasterise(grid, line)
-  const at = cells.map((cell) => {
-    const rate = (unit.lineMPerH![grid.fuelClass[cell]] * a.count) / 60 // m/min
-    if (rate > 0) t += grid.cellsize / rate
-    else t = Infinity
-    return t
   })
-  return { cells, at }
+  return zones
 }
 
 /** Cells under a polyline, in order along it, each once. */
