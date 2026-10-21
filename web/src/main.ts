@@ -21,7 +21,7 @@ import {
   type Fire,
   type NearStation,
 } from './data'
-import { demoDecisions } from './decisions'
+import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
 import { CUT, decisionShots } from './director'
 import { Editor, type Reports, type Runs } from './editor'
@@ -264,7 +264,7 @@ async function main() {
       shotShown: undefined,
     }
     hud.setDirector(replay.director)
-    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near), reach.intensityKWPerM)
+    editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {

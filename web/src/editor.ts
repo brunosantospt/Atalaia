@@ -2,7 +2,8 @@
 // is picked in the palette, then a click puts it on the nearest road (a point of attack), or
 // clicks draw a crew line or an aerial water line. Each assignment shows when it gets there
 // and what it can do; the lines show how much of them is built before the fire arrives.
-// Decisions are kept per fire in this browser; the 6 h report compares Livre, A and B.
+// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Decisions
+// are kept per fire in this browser; the 6 h report compares Livre, A and B.
 
 import {
   Cartesian2,
@@ -25,7 +26,7 @@ import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './forma
 import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
-import { diffDecisions, groundOf, type Change, type Progress, type Result, type Score } from './optimize'
+import { diffDecisions, groundOf, ILS_NAME, type Change, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
@@ -102,6 +103,7 @@ type Kind = (typeof GROUPS)[number]['kind']
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
 const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
 const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
+const ILS_AFTER_MS = 800 // A has to be still this long before B is searched again
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
@@ -156,7 +158,7 @@ const TEMPLATE = `
   </section>
   <section class="ils">
     <h3>Proposta B</h3>
-    <button type="button" data-ref="ils" class="primary-btn" title="Procura durante 10 s onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023). Substitui a decisão B."></button>
+    <button type="button" data-ref="ils" class="primary-btn" title="O B é procurado sozinho ao abrir o incêndio e sempre que o A muda: 10 s à procura de onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023). Este botão repete a procura."></button>
     <p class="note" data-ref="ilsNote"></p>
     <ul class="assignments changes" data-ref="ilsChanges"></ul>
   </section>
@@ -172,7 +174,7 @@ const TEMPLATE = `
   </section>
   <footer>
     <button type="button" data-ref="clear">Limpar esta decisão</button>
-    <button type="button" data-ref="reset">Repor exemplos</button>
+    <button type="button" data-ref="reset" title="Volta o A ao exemplo e procura o B de novo">Repor exemplo</button>
   </footer>
 `
 
@@ -243,7 +245,7 @@ interface Loaded {
   stations: NearStation[]
   context: Context | undefined
   scenario: Scenario
-  examples: [Decision, Decision]
+  example: Decision // A as it starts
 }
 
 /** Clips road coordinates to only the contiguous segments engulfed by the active fire perimeter. */
@@ -306,9 +308,14 @@ export class Editor {
   private readonly agency = new CustomDataSource('agency')
   private dangerTimer?: number
   /** The search for B while it runs: what it says, its last word, its best plan on the map and the better one not yet there. */
-  private ils: { worker: Worker; shownAt: number; note: string; last?: Progress; shown?: Progress; pending?: Progress } | undefined
+  private ils: { worker: Worker; byHand: boolean; shownAt: number; note: string; last?: Progress; shown?: Progress; pending?: Progress } | undefined
   /** The last search's B and how it differs from A, while B is still that plan; stopped when ended by hand. */
   private ilsDone: { result: Result; changes: Change[]; stopped?: boolean } | undefined
+  /** The timer of the search that starts once A has been still for ILS_AFTER_MS. */
+  private ilsDue: number | undefined
+  /** The A that B was searched for, and B as the search left it (planKey): B changed by hand differs. */
+  private ilsFor = ''
+  private ilsB = ''
   private readonly dispatchModal = new DispatchModal()
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
@@ -400,7 +407,11 @@ export class Editor {
       }
     })
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
-    this.refs.ils.addEventListener('click', () => (this.ils ? this.stopIls(true) : this.runIls()))
+    this.refs.ils.addEventListener('click', () => {
+      if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
+      this.stopIls(true)
+      this.remember()
+    })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
     this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
@@ -411,7 +422,8 @@ export class Editor {
     })
     this.refs.reset.addEventListener('click', () => {
       if (!this.loaded) return
-      this.decisions = this.loaded.examples.map(clone) as [Decision, Decision]
+      this.decisions[0] = clone(this.loaded.example)
+      this.ilsFor = '' // B is searched again even when A already was the example
       this.commit()
     })
     const name = this.refs.name as HTMLInputElement
@@ -504,27 +516,37 @@ export class Editor {
     this.actions.editing(open)
   }
 
-  /** A fire opened: its decisions come back from this browser, or start from the examples, on the roads. */
+  /** A fire opened: its decisions come back from this browser, or A starts from the example, on the
+   *  roads. B comes back with them while it is still the search's plan for that A, or is searched again. */
   setFire(
     fireId: string,
     fire: Fire,
     stations: NearStation[],
     context: Context | undefined,
     scenario: Scenario,
-    examples: [Decision, Decision],
+    example: Decision,
     intensityKWPerM?: number,
   ) {
-    const snapped = examples.map((d) => {
-      const points = Object.fromEntries(
-        Object.entries(d.points).map(([id, p]) => [id, context ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
-      )
-      return { ...clone(d), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
-    }) as [Decision, Decision]
-    const fitted = snapped.map((d) => this.fit(d)) as [Decision, Decision]
+    const points = Object.fromEntries(
+      Object.entries(example.points).map(([id, p]) => [id, context ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
+    )
+    const snapped = { ...clone(example), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
     this.stopIls()
     this.ilsDone = undefined
-    this.loaded = { fireId, fire, stations, context, scenario, examples: fitted }
-    this.decisions = (load(fireId) ?? fitted.map(clone)).map((d) => this.fit(d)) as [Decision, Decision]
+    this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
+    const stored = load(fireId)
+    const a = this.fit(stored?.decisions[0] ?? clone(this.loaded.example))
+    const b = stored && this.fit(stored.decisions[1])
+    this.decisions = [a, b ?? named(a)]
+    const ils = stored?.ils
+    if (b && ils?.a === planKey(a) && (planKey(b) !== ils.b || ils.done)) {
+      this.ilsFor = ils.a
+      this.ilsB = ils.b
+      if (planKey(b) === ils.b && ils.done) {
+        const { stopped, ...score } = ils.done
+        this.ilsDone = { result: { ...score, decision: b }, changes: diffDecisions(a, b), stopped }
+      }
+    } else this.proposeB()
     this.runs = this.reports = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
@@ -1135,25 +1157,59 @@ export class Editor {
     this.commit()
   }
 
-  /** The decisions changed: remember them, show them and have them simulated again. A change by
-   *  hand ends the search for B, and B is no longer what it proposed. */
+  /** The decisions changed: remember them, show them and have them simulated again. By hand, a new
+   *  A has B searched again; B changed by hand ends its search, and is no longer what it proposed. */
   private commit(byIls = false) {
     if (!byIls) {
-      this.stopIls()
-      this.ilsDone = undefined
+      if (planKey(this.decisions[0]) !== this.ilsFor) this.proposeB()
+      else if (planKey(this.decisions[1]) !== this.ilsB) {
+        this.stopIls()
+        this.ilsDone = undefined
+      }
     }
-    if (this.loaded) save(this.loaded.fireId, this.decisions)
+    this.remember()
     this.render()
     this.actions.changed()
   }
 
-  /** Search B with A's means (optimize.ts) in a worker: B follows its best plan, and shows what moved. */
-  private runIls() {
+  /** The decisions in this browser, with what the search left of B. */
+  private remember() {
+    if (!this.loaded) return
+    const done = this.ilsDone && { ...scoreOf(this.ilsDone.result), stopped: this.ilsDone.stopped }
+    save(this.loaded.fireId, this.decisions, { a: this.ilsFor, b: this.ilsB, done })
+  }
+
+  /** B as the search starts it: A's own plan. */
+  private setB(d: Decision) {
+    this.decisions[1] = d
+    this.ilsB = planKey(d)
+  }
+
+  /** A is new: B starts again as A, and is searched once A has been still for a moment. */
+  private proposeB() {
+    this.stopIls()
+    this.ilsDone = undefined
+    this.ilsFor = planKey(this.decisions[0])
+    this.setB(named(this.decisions[0]))
+    if (this.loaded?.context && movable(this.decisions[0])) this.ilsDue = window.setTimeout(() => this.runIls(), ILS_AFTER_MS)
+    this.renderIls()
+  }
+
+  /** Search B with A's means (optimize.ts) in a worker: B follows its best plan, and shows what moved.
+   *  By the button, B starts again from A and its tab opens at the end. */
+  private runIls(byHand = false) {
+    window.clearTimeout(this.ilsDue)
+    this.ilsDue = undefined
     const loaded = this.loaded
     if (!loaded?.context || this.ils) return
     const worker = new Worker(new URL('./optimize.worker.ts', import.meta.url), { type: 'module' })
-    this.ils = { worker, shownAt: -Infinity, note: 'A preparar os pontos de acesso…' }
+    this.ils = { worker, byHand, shownAt: -Infinity, note: 'A preparar os pontos de acesso…' }
     this.ilsDone = undefined
+    this.ilsFor = planKey(this.decisions[0])
+    if (byHand) {
+      this.setB(named(this.decisions[0]))
+      this.commit(true)
+    }
     worker.onmessage = ({ data }: MessageEvent<IlsReply>) => {
       const ils = this.ils
       if (ils?.worker !== worker) return
@@ -1166,9 +1222,11 @@ export class Editor {
         this.stopIls()
         const { result } = data
         this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision) }
-        this.decisions[1] = result.decision
-        this.active = 1
-        this.cancel()
+        this.setB(result.decision)
+        if (ils.byHand) {
+          this.active = 1
+          this.cancel()
+        }
         this.commit(true)
         return
       }
@@ -1178,7 +1236,7 @@ export class Editor {
       if (progress.decision) ils.pending = progress
       if (ils.pending?.decision && performance.now() - ils.shownAt >= ILS_SHOW_MS) {
         ils.shownAt = performance.now()
-        this.decisions[1] = ils.pending.decision
+        this.setB(ils.pending.decision)
         ils.shown = ils.pending
         ils.pending = undefined
         this.commit(true)
@@ -1193,49 +1251,54 @@ export class Editor {
     this.renderIls()
   }
 
-  /** Ends the search; by the button, B keeps the best plan it had shown, and says what it saves. */
+  /** Ends the search, or the one due; by the button, B keeps the best plan it had shown, and says what it saves. */
   private stopIls(byHand = false) {
-    if (!this.ils) return
-    const shown = byHand ? this.ils.shown : undefined
-    const last = this.ils.last ?? shown
-    this.ils.worker.terminate()
+    window.clearTimeout(this.ilsDue)
+    this.ilsDue = undefined
+    const ils = this.ils
     this.ils = undefined
-    if (shown?.decision && last) {
-      const result = { decision: shown.decision, improved: true, best: shown.best, a: shown.a, plans: last.plans, elapsedMs: last.elapsedMs }
-      this.ilsDone = { result, changes: diffDecisions(this.decisions[0], shown.decision), stopped: true }
+    ils?.worker.terminate()
+    const last = byHand ? ils?.last : undefined
+    if (last) {
+      const shown = ils?.shown
+      const result = shown?.decision
+        ? { decision: shown.decision, improved: true, best: shown.best, a: shown.a, plans: last.plans, elapsedMs: last.elapsedMs }
+        : { decision: this.decisions[1], improved: false, best: last.a, a: last.a, plans: last.plans, elapsedMs: last.elapsedMs }
+      this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision), stopped: true }
     }
     this.renderIls()
-    if (byHand && !shown) this.refs.ilsNote.textContent = 'Procura parada antes de bater o A: B fica como estava.'
   }
 
   /** The search's button, its progress, and once done what B saves and where each of A's means went. */
   private renderIls() {
     const button = this.refs.ils as HTMLButtonElement
-    const a = this.decisions[0]
-    const movable = a.assignments.some((x) => x.target in a.points)
-    button.textContent = this.ils ? 'Parar' : 'Propor B com os meios do A'
-    button.disabled = !this.ils && (!this.loaded?.context || !movable)
+    const canMove = movable(this.decisions[0])
+    const busy = this.ils !== undefined || this.ilsDue !== undefined
+    button.textContent = busy ? 'Parar' : 'Procurar B de novo'
+    button.disabled = !busy && (!this.loaded?.context || !canMove)
     const note = this.refs.ilsNote
     const list = this.refs.ilsChanges
     list.replaceChildren()
-    if (this.ils) {
-      note.textContent = this.ils.note
+    if (busy) {
+      note.textContent = this.ils?.note ?? 'O A mudou: o B vai ser procurado com os mesmos meios.'
       return
     }
     const done = this.ilsDone
     if (!done) {
       note.textContent = !this.loaded?.context
-        ? 'Sem dados OSM para este incêndio: sem acessos onde pôr os meios.'
-        : movable
-          ? 'Os mesmos meios do A, noutros acessos: procura 10 s o plano em que o fogo atinge menos lugares e arde menos.'
-          : 'O A não tem meios em pontos para mudar de sítio.'
+        ? 'Sem dados OSM para este incêndio: sem acessos onde pôr os meios, o B fica igual ao A.'
+        : planKey(this.decisions[1]) !== this.ilsB
+          ? 'O B foi mudado à mão e já não é a proposta do ILS: "Procurar B de novo", ou mudar o A, volta a propô-lo.'
+          : canMove
+            ? 'Procura parada: o B ainda é igual ao A.'
+            : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
       return
     }
     const { result, changes } = done
     const hours = fmtNumber((this.loaded?.scenario.durationMin ?? 360) / 60)
     const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
     if (!result.improved) {
-      note.textContent = `Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
+      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
       return
     }
     const saved = [
@@ -2097,6 +2160,13 @@ export class Editor {
 
 const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' : 'Decisão B', points: {}, lines: {}, assignments: [] })
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
+/** B before the search has moved anything: A's own plan. */
+const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME })
+/** A plan without its name: what the search reads from A, and what it leaves in B. */
+const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
+/** Whether the search has anything of A to move: units at a point. */
+const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points)
+const scoreOf = ({ improved, best, a, plans, elapsedMs }: Result) => ({ improved, best, a, plans, elapsedMs })
 
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
@@ -2144,18 +2214,25 @@ function splitLine(line: LonLat[], fraction: number): [LonLat[], LonLat[]] {
   return [before, []]
 }
 
-function load(fireId: string): [Decision, Decision] | undefined {
+/** What the search left of B: the A it was for and B as it left it (planKey), and how it ended. Older entries have none. */
+interface StoredIls {
+  a: string
+  b: string
+  done?: ReturnType<typeof scoreOf> & { stopped?: boolean }
+}
+
+function load(fireId: string): { decisions: [Decision, Decision]; ils?: StoredIls } | undefined {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_PREFIX + fireId) ?? 'null') as { v: number; decisions: [Decision, Decision] } | null
-    return raw?.v === 1 && raw.decisions?.length === 2 ? raw.decisions : undefined
+    const raw = JSON.parse(localStorage.getItem(STORAGE_PREFIX + fireId) ?? 'null') as { v: number; decisions: [Decision, Decision]; ils?: StoredIls } | null
+    return raw?.v === 1 && raw.decisions?.length === 2 ? raw : undefined
   } catch {
     return undefined
   }
 }
 
-function save(fireId: string, decisions: [Decision, Decision]) {
+function save(fireId: string, decisions: [Decision, Decision], ils: StoredIls) {
   try {
-    localStorage.setItem(STORAGE_PREFIX + fireId, JSON.stringify({ v: 1, decisions }))
+    localStorage.setItem(STORAGE_PREFIX + fireId, JSON.stringify({ v: 1, decisions, ils }))
   } catch {
     // Not remembered beyond this visit.
   }

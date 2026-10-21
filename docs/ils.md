@@ -194,14 +194,21 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 - **Código:**
   - `web/src/optimize.ts` tem o ILS, sem DOM, e corre no browser e em node;
   - `web/src/optimize.worker.ts` corre-o num Web Worker;
-  - no editor, a secção **Proposta B** tem o botão "Propor B com os meios do A".
+  - no editor, a secção **Proposta B** mostra a procura e tem o botão "Procurar B de novo".
+- **O B é sempre a proposta do ILS (21 out):** já não há um B de exemplo desenhado à mão.
+  - A procura corre sozinha ao abrir o incêndio e sempre que o A muda (0,8 s depois da última mudança). Enquanto corre, o B começa igual ao A.
+  - Mudar só o nome do A não conta.
+  - O botão repete a procura: o B volta a ser o A, e no fim a aba B ativa-se.
+  - "Repor exemplo" volta o A ao exemplo (tudo na cabeça) e procura o B de novo.
+  - Mexer no B à mão é permitido: a nota diz que já não é a proposta do ILS, até o A mudar ou o botão ser usado.
+  - O B e o resultado da procura ficam guardados no browser com o A para que foram procurados: ao recarregar, voltam sem procurar de novo. Se o A guardado for outro, ou a procura tiver ficado a meio, procura-se outra vez.
 - **Orçamento:** 10 s. O botão passa a "Parar" e a nota mostra os planos testados, o tempo e o melhor plano contra o A. O B no mapa segue o melhor plano no máximo de 1,5 em 1,5 s.
 - **No fim:**
-  - o B fica com o melhor plano e a aba B ativa-se;
+  - o B fica com o melhor plano;
   - a nota diz o que o B poupa (lugares, ha às 6 h, meios que ficam no quartel);
   - a lista diz onde foi cada meio do A, por exemplo "VFCI ×2 · 210 m para O · caminho de terra";
   - parar à mão deixa o B com o último plano mostrado, com a mesma nota e a mesma lista;
-  - mexer no A ou mudar de incêndio cancela a procura e apaga a nota.
+  - mudar de incêndio cancela a procura.
 
 **Adaptações ao artigo:**
 
