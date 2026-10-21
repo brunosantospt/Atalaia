@@ -529,7 +529,7 @@ export class Hud {
 
     this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? (this.director ? 'Realizador' : 'Replay') : 'Pausa')
     this.updateTacticalAlert(frame.hours)
-    this.set('source', sim ? (split ? 'decisões' : 'simulado') : 'observado')
+    this.set('source', sim ? (split ? 'decisões' : 'simulado') : this.fire?.simulated ? 'simulado' : 'observado')
     this.root.classList.toggle('paused', !frame.playing)
     this.root.classList.toggle('simulated', !!sim)
     this.set('time', fmtTime(clock))

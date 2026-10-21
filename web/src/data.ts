@@ -41,6 +41,20 @@ export interface Period {
   intensityKWPerM: number | null
 }
 
+/** The synthetic wind shift of a hypothetical fire (fire.json); pairs are [before, after]. */
+export interface WindShift {
+  time: string // "YYYY-MM-DDTHH:MM"
+  minutes: number // after the ignition, when the shift is announced
+  window: { from: string; to: string; minutes: [number, number] } // over which the wind turns
+  fromDeg: [number, number] // where the wind comes from
+  kmh: [number, number]
+  gustKmh: [number, number]
+  headTowardDeg: [number, number] // where the head goes
+  decisionAxisDeg: number
+  note: string
+  alert: string // ready-made text for the commander
+}
+
 export interface Fire {
   id: string
   name: string
@@ -49,6 +63,8 @@ export interface Fire {
   timeZone: string
   start: string
   end: string
+  simulated?: boolean // hypothetical fire: the steps are a simulation, not an observation
+  windShift?: WindShift
   ignition: LonLat
   ignitions: Ignition[]
   bbox: BBox

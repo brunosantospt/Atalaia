@@ -1257,3 +1257,118 @@
   background: rgba(255, 255, 255, 0.1);
   text-decoration: underline;
 }
+/* ---------- wind shift (windShift.ts): a modal over the paused replay ---------- */
+
+.wind-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 6, 8, 0.55);
+  backdrop-filter: blur(3px);
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+.wind-modal {
+  width: min(460px, 100%);
+  padding: 16px 20px 18px;
+  color: var(--ink);
+  background: rgba(14, 16, 20, 0.94);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  border-top: 3px solid #f87171;
+  border-radius: 6px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.wind-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f87171;
+  letter-spacing: 0.22em;
+  font-size: 10px;
+}
+.wind-eyebrow i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f87171;
+  animation: blink 1.2s steps(2, start) infinite;
+}
+.wind-modal h2 {
+  margin: 8px 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.wind-compasses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+.wind-compasses figure {
+  margin: 0;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+.wind-arrow {
+  color: var(--ink-dim);
+  font-size: 18px;
+}
+.wind-line {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--amber);
+  font-size: 13px;
+  font-weight: 600;
+}
+.wind-text,
+.wind-means {
+  margin: 0 0 8px;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 12px;
+}
+.wind-means {
+  color: var(--ink-dim);
+}
+.wind-modal footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.wind-modal button {
+  all: unset;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+}
+.wind-modal button:hover,
+.wind-modal button:focus-visible {
+  border-color: var(--ink);
+}
+.wind-modal .wind-review {
+  background: #f0a33a;
+  border-color: #f0a33a;
+  color: #14100a;
+  font-weight: 600;
+}
+.wind-modal .wind-review:hover,
+.wind-modal .wind-review:focus-visible {
+  background: #f7b659;
+  border-color: #f7b659;
+}

@@ -1,0 +1,192 @@
+// The abrupt wind shift of a simulated fire (fire.json windShift): when the fire clock crosses it
+// while playing, the player pauses and a modal asks the commander for a new strategy. Also the
+// 'wind' alert of the stack: a warning before the shift, critical after it. The clock is the
+// player's, in hours, as main passes it each frame.
+
+import type { Alert } from './alerts'
+import type { Fire, WindShift } from './data'
+import type { Run } from './fastModel'
+import { fmtNumber, fmtTime, wallClock } from './format'
+import { compass, type LonLat } from './geo'
+import { cellOf, lonLatAt, type Grid } from './grid'
+
+const WARN_MIN = 30 // the warning stands this long before the shift
+const AFTER_MIN = 60 // the critical alert stands this long after it
+const EPS_MIN = 1e-6
+
+/** What main gives the controller: the player's controls and the drawer. */
+export interface WindShiftHost {
+  pause(): void
+  resume(): void
+  seek(hours: number): void // pins the fire clock
+  openEditor(): void
+}
+
+/** "E 23 km/h → NNO 36 km/h (rajadas 63)" */
+export function windLine(w: WindShift): string {
+  const side = (i: 0 | 1) => `${compass(w.fromDeg[i])} ${fmtNumber(w.kmh[i])} km/h`
+  return `${side(0)} → ${side(1)} (rajadas ${fmtNumber(w.gustKmh[1])})`
+}
+
+const headLine = (w: WindShift) => `A cabeça do incêndio roda de ${compass(w.headTowardDeg[0])} para ${compass(w.headTowardDeg[1])}.`
+
+/** A small compass: the arrow where the wind blows to, dim before the shift and amber after it. */
+function compassSvg(fromDeg: number, after: boolean): string {
+  const colour = after ? '#f0a33a' : '#8b9096'
+  return (
+    `<svg viewBox="-30 -30 60 60" width="64" height="64" aria-hidden="true">` +
+    `<circle r="26" fill="none" stroke="rgba(220,224,228,0.28)"/>` +
+    `<path d="M0-26v-4" stroke="rgba(220,224,228,0.5)"/>` +
+    `<text y="-17" font-size="7" text-anchor="middle" fill="#8b9096" style="font-family:inherit">N</text>` +
+    `<g transform="rotate(${(fromDeg + 180) % 360})" stroke="${colour}" fill="${colour}" stroke-width="2.4" stroke-linecap="round">` +
+    `<path d="M0 17V-12"/><path d="M-6-5 0-14 6-5Z" stroke-linejoin="round"/></g></svg>`
+  )
+}
+
+export class WindShiftWatch {
+  private shift: WindShift | undefined
+  private start = ''
+  private head: LonLat | undefined
+  private armed = true
+  private prev = 0 // minutes at the last frame
+  private modal: HTMLElement | undefined
+  private cache: { base: Alert[]; key: string; out: Alert[] } | undefined
+
+  constructor(private readonly host: WindShiftHost) {
+    // While the modal stands the page's keys (space, arrows, R) must not move the player behind it.
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (!this.modal) return
+        if (e.key === 'Escape') this.resume()
+        if (e.key !== 'Tab') e.stopImmediatePropagation()
+      },
+      true,
+    )
+  }
+
+  /** A fire opened: its shift (if any) and where its head stands at the shift in the free run. */
+  setFire(fire: Fire, grid: Grid, free: Run) {
+    this.close()
+    this.shift = fire.windShift
+    this.start = fire.start
+    this.armed = true
+    this.prev = 0
+    this.cache = undefined
+    this.head = this.shift ? headAt(grid, fire.ignition, free, this.shift.minutes) : undefined
+  }
+
+  /** Once per frame, with the fire clock (hours) and whether the player is playing. */
+  update(hours: number, playing: boolean) {
+    const w = this.shift
+    if (!w) return
+    const m = hours * 60
+    const crossed = this.prev < w.minutes - EPS_MIN && m >= w.minutes - EPS_MIN
+    this.prev = m
+    if (m < w.minutes - EPS_MIN) this.armed = true // before the shift again (restart, slider, back)
+    else if (crossed && this.armed && playing) {
+      this.armed = false
+      this.host.pause()
+      this.host.seek(w.minutes / 60) // a shot still moving must not carry the clock on
+      this.show(w)
+    } else if (crossed) this.armed = false // jumped over it while paused
+  }
+
+  /** The stack's alerts with the wind's at the clock: a warning before the shift, critical after it. */
+  alerts(base: Alert[]): Alert[] {
+    const w = this.shift
+    if (!w) return base
+    const m = this.prev
+    let alert: Alert | undefined
+    if (m >= w.minutes - WARN_MIN && m < w.minutes - EPS_MIN) {
+      alert = this.alert(w, 'warning', `Vento vai rodar em ${Math.ceil(w.minutes - m - EPS_MIN)} min`)
+    } else if (m >= w.minutes - EPS_MIN && m < w.minutes + AFTER_MIN) {
+      alert = this.alert(w, 'critical', 'Vento rodou')
+    }
+    if (!alert) return base
+    const key = `${alert.level}|${alert.title}`
+    if (this.cache?.base !== base || this.cache.key !== key) this.cache = { base, key, out: [...base, alert] }
+    return this.cache.out
+  }
+
+  private alert(w: WindShift, level: Alert['level'], title: string): Alert {
+    return {
+      id: 'wind',
+      kind: 'wind',
+      level,
+      title,
+      detail: `${windLine(w)} · ${headLine(w)}`,
+      source: `${w.note}\n\n${w.alert}`,
+      at: this.head,
+    }
+  }
+
+  private resume() {
+    this.close()
+    this.host.resume()
+  }
+
+  private review() {
+    this.close()
+    this.host.openEditor() // pauses the player and shows the split
+    if (this.shift) this.host.seek(this.shift.minutes / 60)
+  }
+
+  private close() {
+    this.modal?.remove()
+    this.modal = undefined
+  }
+
+  private show(w: WindShift) {
+    this.close()
+    const clock = fmtTime(wallClock(this.start, w.minutes / 60))
+    const el = document.createElement('div')
+    el.className = 'wind-modal-backdrop'
+    el.innerHTML = `
+      <div class="wind-modal" role="alertdialog" aria-modal="true" aria-labelledby="wind-title">
+        <div class="wind-eyebrow"><i></i>Alerta crítico · ${clock}</div>
+        <h2 id="wind-title">Mudança brusca de vento</h2>
+        <div class="wind-compasses">
+          <figure>${compassSvg(w.fromDeg[0], false)}<figcaption>antes</figcaption></figure>
+          <span class="wind-arrow">→</span>
+          <figure>${compassSvg(w.fromDeg[1], true)}<figcaption>depois</figcaption></figure>
+          <p class="wind-line"></p>
+        </div>
+        <p class="wind-text"></p>
+        <p class="wind-means"></p>
+        <footer>
+          <button type="button" class="wind-review">Rever estratégia</button>
+          <button type="button" class="wind-continue">Continuar sem alterar</button>
+        </footer>
+      </div>`
+    el.querySelector('.wind-line')!.textContent = windLine(w)
+    el.querySelector('.wind-text')!.textContent = w.alert
+    el.querySelector('.wind-means')!.textContent = `${headLine(w)} A estratégia pensada para o vento anterior pode já não servir: reveja onde coloca os meios.`
+    el.querySelector('.wind-review')!.addEventListener('click', () => this.review())
+    el.querySelector('.wind-continue')!.addEventListener('click', () => this.resume())
+    document.body.append(el)
+    this.modal = el
+    el.querySelector<HTMLButtonElement>('.wind-review')!.focus()
+  }
+}
+
+/** The farthest cell the free run has burned from the ignition by `minutes`: where the head is. */
+function headAt(grid: Grid, ignition: LonLat, run: Run, minutes: number): LonLat | undefined {
+  const start = cellOf(grid, ignition)
+  if (start < 0) return undefined
+  const { cols } = grid
+  const c0 = start % cols
+  const r0 = (start - c0) / cols
+  let best = -1
+  let far = -1
+  const { arrival } = run
+  for (let i = 0; i < arrival.length; i++) {
+    if (!(arrival[i] <= minutes)) continue
+    const c = i % cols
+    const d = Math.hypot(c - c0, (i - c) / cols - r0)
+    if (d > far) (far = d), (best = i)
+  }
+  if (best < 0) return undefined
+  const col = best % cols
+  return lonLatAt(grid, col + 0.5, (best - col) / cols + 0.5)
+}

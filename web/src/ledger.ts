@@ -108,7 +108,9 @@ export class Ledger {
             ? ['wait', `só deteta o fogo às ${clock(detection.satelliteMin)}`]
             : ['on', `detetou o fogo às ${clock(detection.satelliteMin)} · ${fmtHa(satHa)}`],
       },
-      { layer: 'Perímetros', source: 'PT-FireSprd', at: () => ['retro', 'só em retrospetiva'] },
+      fire.simulated
+        ? { layer: 'Perímetros', source: 'ELMFIRE (simulado)', at: () => ['retro', 'referência simulada, só em retrospetiva'] }
+        : { layer: 'Perímetros', source: 'PT-FireSprd', at: () => ['retro', 'só em retrospetiva'] },
     ]
     const table = this.el.querySelector('table')!
     table.replaceChildren()
