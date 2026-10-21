@@ -95,11 +95,29 @@ const TEMPLATE = `
   </section>
   <div class="nav-controls">
     <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (visão base)">
-      <span class="nav-icon" data-ref="compassNeedle">▲</span>
+      <span class="nav-icon" data-ref="compassNeedle">
+        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <circle cx="12" cy="12" r="10.5" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2" fill="none"/>
+          <polygon points="12,3.5 15,12 12,10" fill="#f8fafc" />
+          <polygon points="12,3.5 9,12 12,10" fill="#94a3b8" />
+          <polygon points="12,20.5 15,12 12,10" fill="#475569" />
+          <polygon points="12,20.5 9,12 12,10" fill="#334155" />
+          <circle cx="12" cy="12" r="1.5" fill="#0f172a" />
+        </svg>
+      </span>
       <span class="nav-label">Norte</span>
     </button>
     <button type="button" class="nav-btn ignition-btn" data-ref="btnIgnition" title="Centrar câmara no Ponto de Ignição inicial">
-      <span class="nav-icon">📍</span>
+      <span class="nav-icon">
+        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <circle cx="12" cy="12" r="7.5" stroke="#94a3b8" stroke-width="1.3" />
+          <circle cx="12" cy="12" r="2" fill="#f8fafc" />
+          <line x1="12" y1="2" x2="12" y2="6.5" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="12" y1="17.5" x2="12" y2="22" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="2" y1="12" x2="6.5" y2="12" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" />
+          <line x1="17.5" y1="12" x2="22" y2="12" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+      </span>
       <span class="nav-label">Ignição</span>
     </button>
   </div>

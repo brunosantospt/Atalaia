@@ -31,7 +31,6 @@ import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
   buildMultiAgencyDispatch,
-  detectThreatenedRoads,
   evaluateMedicalPointSafety,
   type AgencyRole,
   type MedicalPointItem,
@@ -440,6 +439,22 @@ export class Editor {
     this.setMinutes(Math.round((Math.min(Math.max(hours, 0), max / 60) * 60) / 5) * 5)
   }
 
+  /** Synchronizes simulation hour with active playback or timeline, updating road cuts and tactical perimeters dynamically. */
+  syncTime(hours: number) {
+    const targetMin = Math.round(Math.max(0, hours) * 60)
+    if (this.minutes !== targetMin) {
+      this.minutes = targetMin
+      const hour = this.refs.hour as HTMLInputElement
+      if (hour && document.activeElement !== hour) hour.value = String(targetMin)
+      const start = this.loaded?.fire.start
+      if (this.refs.hourText) {
+        this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
+      }
+      this.renderReport()
+      this.draw()
+    }
+  }
+
   private setMinutes(minutes: number) {
     this.minutes = minutes
     const hour = this.refs.hour as HTMLInputElement
@@ -486,7 +501,7 @@ export class Editor {
     this.fromId = stations[0]?.id ?? 'none'
     this.updateStationDropdown()
     ;(this.refs.hour as HTMLInputElement).max = String(scenario.durationMin)
-    this.setMinutes(scenario.durationMin)
+    this.setMinutes(0)
     this.cancel()
     this.setCount(this.count)
 
@@ -1705,27 +1720,48 @@ export class Editor {
     // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
     this.agency.entities.removeAll()
     if (context && scenario && activeRun) {
-      const threatened = detectThreatenedRoads(scenario.grid, context, activeRun, this.minutes)
-
-      // Draw cut roads strictly inside the fire perimeter (no straight lines to stations, no extensions outside fire)
+      // Draw cut roads strictly inside the fire perimeter as the fire advances
       if (this.role === 'psp' || this.role === 'cmd') {
-        for (const cut of threatened) {
-          if (cut.urgency === 'cortado' && cut.pts && cut.pts.length >= 2) {
-            const burnedSegments = clipRoadToFire(cut.pts, scenario.grid, activeRun.arrival, this.minutes)
-            for (const seg of burnedSegments) {
-              const lineEntity = this.agency.entities.add({
-                polyline: {
-                  positions: seg.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
-                  width: 4,
-                  clampToGround: true,
-                  material: new PolylineDashMaterialProperty({
-                    color: Color.fromCssColorString('#e63946'),
-                    dashLength: 10,
-                  }),
-                },
-              })
-              ;(lineEntity as any)._roadCut = cut
+        for (const { road, cells } of context.roadCells) {
+          let hasBurned = false
+          let minArrival = Infinity
+          for (let k = 0; k < cells.length; k++) {
+            const t = activeRun.arrival[cells[k]]
+            if (t <= this.minutes) {
+              hasBurned = true
+              if (t < minArrival) minArrival = t
             }
+          }
+          if (!hasBurned) continue
+
+          const r = context.osm.roads[road]
+          if (!r || !r.pts || r.pts.length < 2) continue
+
+          const burnedSegments = clipRoadToFire(r.pts, scenario.grid, activeRun.arrival, this.minutes)
+          for (const seg of burnedSegments) {
+            const lineEntity = this.agency.entities.add({
+              polyline: {
+                positions: seg.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
+                width: 4,
+                clampToGround: true,
+                material: new PolylineDashMaterialProperty({
+                  color: Color.fromCssColorString('#e63946'),
+                  dashLength: 10,
+                }),
+              },
+            })
+            const roadItem: RoadCutItem = {
+              id: road,
+              label: r.name || r.ref || (r.cls === 'paved' ? 'Estrada Secundária' : 'Caminho Rural'),
+              cls: r.cls,
+              firstArrivalMin: minArrival,
+              minutesToImpact: 0,
+              urgency: 'cortado',
+              coord: { lon: seg[0][0], lat: seg[0][1] },
+              pts: r.pts,
+              isPaved: r.cls === 'paved' || !!r.name || !!r.ref,
+            }
+            ;(lineEntity as any)._roadCut = roadItem
           }
         }
       }

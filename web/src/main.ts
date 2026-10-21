@@ -364,6 +364,10 @@ async function main() {
     free.set(frame.hours)
     split?.show(splitOn)
     split?.set(frame.hours)
+    // Synchronize editor overlays (cut roads strictly inside the fire, tactical perimeters) with simulation clock
+    if (!editor.open || player.playing) {
+      editor.syncTime(frame.hours)
+    }
     // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
     // the comparison starts with the split in the middle.
     if (frame.shot !== replay.shotShown) {
