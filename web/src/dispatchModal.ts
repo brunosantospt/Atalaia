@@ -1,4 +1,12 @@
 import type { MultiAgencyDispatch } from './reporting'
+import {
+  ICON_PROTECAO_CIVIL,
+  ICON_PSP,
+  ICON_INEM,
+  ICON_CLIPBOARD,
+  ICON_CHECK,
+  ICON_PMA,
+} from './icons'
 import './dispatchModal.css'
 
 export class DispatchModal {
@@ -14,20 +22,20 @@ export class DispatchModal {
     backdrop.innerHTML = `
       <div class="dispatch-modal">
         <header class="dispatch-header">
-          <h2><span>📢</span> Despacho Multi-Agência · SIOPS <span class="badge-live">Em Direto · T+${dispatch.currentMin} min</span></h2>
+          <h2><span class="header-icon">${ICON_PROTECAO_CIVIL}</span> Despacho Operacional Multi-Forças · SIOPS <span class="badge-live">Em Direto · T+${dispatch.currentMin} min</span></h2>
           <button type="button" class="close-btn" title="Fechar (Esc)">✕</button>
         </header>
         <nav class="dispatch-tabs">
-          <button type="button" class="dispatch-tab active" data-tab="psp">👮 PSP / GNR (Trânsito & Vias)</button>
-          <button type="button" class="dispatch-tab" data-tab="inem">🚑 INEM (Saúde & Socorro)</button>
-          <button type="button" class="dispatch-tab" data-tab="cmd">🛡️ Síntese do Comando</button>
+          <button type="button" class="dispatch-tab active" data-tab="psp"><span class="tab-svg">${ICON_PSP}</span> PSP / GNR (Trânsito & Vias)</button>
+          <button type="button" class="dispatch-tab" data-tab="inem"><span class="tab-svg">${ICON_INEM}</span> INEM (Saúde & Socorro)</button>
+          <button type="button" class="dispatch-tab" data-tab="cmd"><span class="tab-svg">${ICON_PROTECAO_CIVIL}</span> Síntese do Comando</button>
         </nav>
         <div class="dispatch-body"></div>
         <footer class="dispatch-footer">
-          <button type="button" class="btn-copy">📋 Copiar Despacho Formatado</button>
+          <button type="button" class="btn-copy">${ICON_CLIPBOARD} Copiar Despacho Formatado</button>
           <div style="display:flex;gap:8px;">
             <button type="button" class="close-btn">Fechar</button>
-            <button type="button" class="btn-emit">✅ Emitir Ordens às Forças no Terreno</button>
+            <button type="button" class="btn-emit">${ICON_CHECK} Emitir Ordens às Forças no Terreno</button>
           </div>
         </footer>
       </div>
@@ -100,7 +108,7 @@ export class DispatchModal {
                 <div class="road-cut-card preventivo">
                   <div class="road-name">
                     <span class="road-badge preventivo">PMA</span>
-                    <span>🏥 ${p.name}</span>
+                    <span><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_PMA}</span> ${p.name}</span>
                     <span style="color:#8b9096;font-size:10px;">(Margem: ${p.safeBufferMin > 180 ? '>3h' : `${p.safeBufferMin} min`})</span>
                   </div>
                   <div style="color:#4ade80;">
@@ -163,12 +171,12 @@ export class DispatchModal {
       if (this.currentTab === 'cmd') text = dispatch.cmd.message
 
       navigator.clipboard.writeText(text).then(() => {
-        showToast('📋 Despacho copiado para a área de transferência!')
+        showToast('Despacho copiado para a área de transferência!')
       })
     })
 
     emitBtn.addEventListener('click', () => {
-      showToast('✅ Despacho transmitido com sucesso ao PCO / Forças no Terreno!')
+      showToast('Despacho transmitido com sucesso ao PCO / Forças no Terreno!')
       if (onEmit) onEmit()
       setTimeout(close, 700)
     })

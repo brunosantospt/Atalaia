@@ -11,6 +11,13 @@ import type { Frame } from './player'
 import { SettingsPanel } from './settings'
 import type { Shot } from './shots'
 import type { AgencyRole, MultiAgencyDispatch } from './reporting'
+import {
+  ICON_HAZARD,
+  ICON_PROTECAO_CIVIL,
+  ICON_PSP,
+  ICON_INEM,
+  ICON_CLIPBOARD,
+} from './icons'
 import './hud.css'
 
 export interface HudActions {
@@ -55,27 +62,27 @@ const TEMPLATE = `
   <nav class="role-selector">
     <div class="role-pill">
       <button type="button" class="role-btn active" data-role="cmd" title="Visão de Comando Completo (Proteção Civil & Bombeiros)">
-        <span>🛡️</span> <span>Proteção Civil</span>
+        <span class="role-svg">${ICON_PROTECAO_CIVIL}</span> <span class="role-text">Proteção Civil</span>
       </button>
       <button type="button" class="role-btn" data-role="psp" title="Visão Forças de Segurança: Cortes de Via e Trânsito">
-        <span>👮</span> <span>PSP / GNR</span>
+        <span class="role-svg">${ICON_PSP}</span> <span class="role-text">PSP / GNR</span>
       </button>
       <button type="button" class="role-btn" data-role="inem" title="Visão Saúde: Posto Médico Avançado e Evacuação Segura">
-        <span>🚑</span> <span>INEM</span>
+        <span class="role-svg">${ICON_INEM}</span> <span class="role-text">INEM</span>
       </button>
     </div>
   </nav>
   <section class="panel agency-briefing psp-briefing" data-ref="pspBriefing" hidden>
     <header>
-      <div class="agency-badge psp">👮 PSP / GNR · CORTES DE TRÂNSITO</div>
-      <button type="button" class="btn-mini-copy" data-ref="copyPspMini" title="Copiar despacho para WhatsApp/Rádio">📋 Copiar</button>
+      <div class="agency-badge psp"><span class="badge-svg">${ICON_PSP}</span> PSP / GNR · CORTES DE TRÂNSITO</div>
+      <button type="button" class="btn-mini-copy" data-ref="copyPspMini" title="Copiar despacho para WhatsApp/Rádio">${ICON_CLIPBOARD} <span>Copiar</span></button>
     </header>
     <div class="briefing-body" data-ref="pspBriefingBody"></div>
   </section>
   <section class="panel agency-briefing inem-briefing" data-ref="inemBriefing" hidden>
     <header>
-      <div class="agency-badge inem">🚑 INEM · POSTO MÉDICO & EVACUAÇÃO</div>
-      <button type="button" class="btn-mini-copy" data-ref="copyInemMini" title="Copiar despacho para o CODU">📋 Copiar</button>
+      <div class="agency-badge inem"><span class="badge-svg">${ICON_INEM}</span> INEM · POSTO MÉDICO & EVACUAÇÃO</div>
+      <button type="button" class="btn-mini-copy" data-ref="copyInemMini" title="Copiar despacho para o CODU">${ICON_CLIPBOARD} <span>Copiar</span></button>
     </header>
     <div class="briefing-body" data-ref="inemBriefingBody"></div>
   </section>
@@ -123,16 +130,16 @@ const TEMPLATE = `
   </div>
   <div class="hud-alert-container" data-ref="alertContainer" hidden>
     <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático: Clica para ver recomendação de Meios Aéreos">
-      <span class="hazard-icon" data-ref="alertIcon">⚠️</span>
+      <span class="hazard-icon" data-ref="alertIcon">${ICON_HAZARD}</span>
     </button>
     <div class="hud-alert-popover" data-ref="alertPopover" hidden>
       <header>
-        <span class="popover-title" data-ref="popoverTitle">⚠️ RECOMENDAÇÃO TÁTICA</span>
+        <span class="popover-title" data-ref="popoverTitle"><span class="title-svg">${ICON_HAZARD}</span> RECOMENDAÇÃO TÁTICA</span>
         <button type="button" class="btn-close-popover" data-ref="closeAlertPopover" title="Fechar">✕</button>
       </header>
       <div class="popover-stat" data-ref="popoverStat">Chama: -- m · Intensidade: -- kW/m</div>
       <p class="popover-desc" data-ref="popoverDesc">Chama estimada excede a capacidade de combate frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos.</p>
-      <button type="button" class="popover-dispatch-btn" data-ref="alertDispatchBtn">🚁 Mobilizar Meios Aéreos</button>
+      <button type="button" class="popover-dispatch-btn" data-ref="alertDispatchBtn">Mobilizar Meios Aéreos</button>
     </div>
   </div>
   <section class="bottom">
@@ -335,21 +342,21 @@ export class Hud {
       this.refs.alertContainer.classList.toggle('emergency', emergency)
       this.refs.alertBadge.classList.toggle('emergency', emergency)
       this.refs.alertBadge.classList.add('pulsing')
-      this.refs.alertIcon.textContent = emergency ? '🚨' : '⚠️'
+      this.refs.alertIcon.innerHTML = ICON_HAZARD
       this.refs.alertBadge.title = emergency
         ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · Clica para ver recomendação`
         : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · Clica para ver recomendação`
 
-      this.refs.popoverTitle.textContent = emergency
-        ? '🚨 ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO'
-        : '⚠️ RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+      this.refs.popoverTitle.innerHTML = `<span class="title-svg">${ICON_HAZARD}</span> ${
+        emergency ? 'ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO' : 'RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+      }`
       this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
       this.refs.popoverDesc.textContent = emergency
         ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
         : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
       this.refs.alertDispatchBtn.textContent = emergency
-        ? '✈️ Mobilizar Avião Anfíbio Pesado (AVBP)'
-        : '🚁 Mobilizar Helicóptero Bombardeiro (HEBL)'
+        ? 'Mobilizar Avião Anfíbio Pesado (AVBP)'
+        : 'Mobilizar Helicóptero Bombardeiro (HEBL)'
     } else {
       this.refs.alertContainer.hidden = true
       this.refs.alertPopover.hidden = true

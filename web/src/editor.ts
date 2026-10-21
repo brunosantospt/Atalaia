@@ -39,6 +39,18 @@ import {
 } from './reporting'
 import { DispatchModal } from './dispatchModal'
 import {
+  ICON_HAZARD,
+  ICON_PROTECAO_CIVIL,
+  ICON_PSP,
+  ICON_INEM,
+  ICON_CLIPBOARD,
+  ICON_ROAD_CUT,
+  ICON_PMA,
+  ICON_CHECK,
+  ICON_SHIELD,
+  ICON_BOLT,
+} from './icons'
+import {
   aerialFrontM,
   arrivalMin,
   attackMPerH,
@@ -144,8 +156,8 @@ const TEMPLATE = `
     <p class="note verdict" data-ref="verdict"></p>
     <p class="note" data-ref="detail"></p>
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,224,228,0.15);display:flex;flex-direction:column;gap:6px;">
-      <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">📢 Reportar às Entidades (PSP/INEM)</button>
-      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">➕ Ponto Socorro (PMA)</button>
+      <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">${ICON_CLIPBOARD} Reportar às Entidades (PSP / INEM)</button>
+      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">${ICON_PMA} Ponto Socorro (PMA)</button>
     </div>
   </section>
   <footer>
@@ -734,23 +746,23 @@ export class Editor {
 
     const urgencyBadge =
       cut.urgency === 'cortado'
-        ? '<span class="status-badge red">🚨 CORTE ATIVO · INTERDITADO</span>'
+        ? `<span class="status-badge red"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE ATIVO · INTERDITADO</span>`
         : cut.urgency === 'urgente'
-          ? `<span class="status-badge orange">⚠️ CORTE IMINENTE · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
-          : `<span class="status-badge yellow">🚧 CORTE PREVENTIVO · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+          ? `<span class="status-badge orange"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE IMINENTE · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
+          : `<span class="status-badge yellow"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_HAZARD}</span> CORTE PREVENTIVO · IMPACTO EM ${cut.minutesToImpact} MIN</span>`
 
     this.cutTooltip.className = `road-cut-tooltip ${cut.urgency}`
     this.cutTooltip.style.left = `${position.x}px`
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">⛔</span>
+        <span class="icon">${ICON_ROAD_CUT}</span>
         <span class="title">ESTRADA CORTADA</span>
       </div>
       <div class="tooltip-road">${cut.label}</div>
       <div class="tooltip-status">${urgencyBadge}</div>
       <div class="tooltip-detail">Tipo: ${cut.isPaved ? 'Via Pavimentada / Asfaltada' : 'Acesso Rural / Florestal'}</div>
-      <div class="tooltip-action">👮 <b>Ação PSP/GNR:</b> Colocar barreira física e desviar tráfego</div>
+      <div class="tooltip-action"><span class="badge-svg" style="display:inline-flex;vertical-align:middle;margin-right:5px;">${ICON_PSP}</span> <b>Ação PSP / GNR:</b> Colocar barreira física e desviar tráfego</div>
     `
     this.cutTooltip.hidden = false
   }
@@ -767,17 +779,17 @@ export class Editor {
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">🚑</span>
-        <span class="title" style="color:#4ade80;">INEM · POSTO MÉDICO AVANÇADO</span>
+        <span class="icon">${ICON_PMA}</span>
+        <span class="title" style="color:#6ee7b7;">INEM · POSTO MÉDICO AVANÇADO</span>
       </div>
       <div class="tooltip-road">${pma.name}</div>
       <div class="tooltip-status">
-        <span class="status-badge" style="background:rgba(34,197,94,0.2);color:#86efac;border:1px solid rgba(34,197,94,0.5);">
-          🛡️ Margem Segura: ${Math.round(pma.safeBufferMin)} min
+        <span class="status-badge" style="background:rgba(15,23,42,0.65);color:#6ee7b7;border:1px solid rgba(52,211,153,0.35);">
+          <span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Margem Segura: ${Math.round(pma.safeBufferMin)} min
         </span>
       </div>
       <div class="tooltip-detail">Hospital Destino: ${pma.hospitalDestination ?? 'Hospital de Braga'} (${pma.routeKm ? `${pma.routeKm.toFixed(1)} km · ETA ${Math.round(pma.etaMin ?? 0)} min` : 'Rota Ativa'})</div>
-      <div class="tooltip-action" style="color:#86efac;">🚑 <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
+      <div class="tooltip-action" style="color:#6ee7b7;"><span class="badge-svg" style="display:inline-flex;vertical-align:middle;margin-right:5px;">${ICON_INEM}</span> <b>Corredor Verde:</b> Via segura e desimpedida para evacuação médica</div>
     `
     this.cutTooltip.hidden = false
   }
@@ -806,8 +818,6 @@ export class Editor {
     const base = isAerialUnit ? findAirBase(a.from) : undefined
     const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
     const taskLabel = TASK_NAME[a.task] ?? a.task
-
-    const isTanker = a.unit === 'vttu'
     const isCrew = a.unit === 'crew'
 
     const originDetail = isAerialUnit
@@ -825,20 +835,20 @@ export class Editor {
     this.cutTooltip.style.top = `${position.y}px`
     this.cutTooltip.innerHTML = `
       <div class="tooltip-header">
-        <span class="icon">${isAerialUnit ? '✈️' : isTanker ? '💧' : isCrew ? '🥾' : '🚒'}</span>
+        <span class="icon">${ICON_PROTECAO_CIVIL}</span>
         <span class="title" style="color:#60a5fa;">MEIO NO TERRENO · SIOPS</span>
       </div>
       <div class="tooltip-road">${spec.short} (${a.count > 1 ? `${a.count} veículos` : spec.name})</div>
       <div class="tooltip-status">
         <span class="status-badge" style="background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.5);">
-          🎯 Tarefa: ${taskLabel.toUpperCase()}
+          Tarefa: ${taskLabel.toUpperCase()}
         </span>
       </div>
       <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
-      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;">🛡️ Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
-      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;">⚡ Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
-      <div class="tooltip-action" style="color:#93c5fd;">✅ Meio alocado e ativo no cenário</div>
+      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_SHIELD}</span> Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
+      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
+      <div class="tooltip-action" style="color:#93c5fd;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_CHECK}</span> Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
   }
