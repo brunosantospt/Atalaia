@@ -494,3 +494,40 @@
   background: #f7b355;
   border-color: #f7b355;
 }
+
+/* Discreet white edge toggle button on the left */
+.editor-edge-toggle {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 54px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f8fafc;
+  cursor: pointer;
+  padding: 0;
+  z-index: 20;
+  pointer-events: auto;
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.45);
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, width 0.18s ease;
+}
+.editor-edge-toggle:hover {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  width: 26px;
+}
+.editor-edge-toggle .toggle-icon-svg {
+  transition: transform 0.25s ease;
+}
+.hud .editor.open .editor-edge-toggle .toggle-icon-svg {
+  transform: rotate(180deg);
+}

@@ -128,6 +128,28 @@ const TEMPLATE = `
       <span class="nav-label">Ignição</span>
     </button>
   </div>
+
+  <div class="bottom-compass" data-ref="bottomCompass" title="Bússola Tática: Aponta para o Norte Geográfico. Clica para reorientar a 0°">
+    <div class="compass-dial" data-ref="compassDial">
+      <svg class="compass-svg" viewBox="0 0 56 56" width="52" height="52" fill="none">
+        <circle cx="28" cy="28" r="25.5" stroke="rgba(241, 245, 249, 0.4)" stroke-width="1.3" fill="none"/>
+        <circle cx="28" cy="28" r="21.5" stroke="rgba(148, 163, 184, 0.25)" stroke-width="0.8" fill="none"/>
+        <line x1="28" y1="3" x2="28" y2="7.5" stroke="#ffffff" stroke-width="1.8"/>
+        <line x1="28" y1="48.5" x2="28" y2="53" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+        <line x1="3" y1="28" x2="7.5" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+        <line x1="48.5" y1="28" x2="53" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+        <text x="28" y="14.5" font-size="8.5" font-weight="800" font-family="ui-monospace, monospace" fill="#ffffff" text-anchor="middle">N</text>
+        <text x="28" y="47" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">S</text>
+        <text x="44.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">E</text>
+        <text x="11.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">W</text>
+        <polygon points="28,15.5 31.5,28 28,26" fill="#f8fafc"/>
+        <polygon points="28,15.5 24.5,28 28,26" fill="#cbd5e1"/>
+        <polygon points="28,40.5 31.5,28 28,26" fill="#475569"/>
+        <polygon points="28,40.5 24.5,28 28,26" fill="#334155"/>
+        <circle cx="28" cy="28" r="2.5" fill="#0f172a" stroke="#f8fafc" stroke-width="1"/>
+      </svg>
+    </div>
+  </div>
   <div class="hud-alert-container" data-ref="alertContainer" hidden>
     <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático: Clica para ver recomendação de Meios Aéreos">
       <span class="hazard-icon" data-ref="alertIcon">${ICON_HAZARD}</span>
@@ -164,7 +186,7 @@ type Refs = Record<
   | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
-  | 'btnNorth' | 'compassNeedle' | 'btnIgnition'
+  | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
@@ -184,6 +206,8 @@ export class Hud {
   currentRole: AgencyRole = 'cmd'
   private lastDispatch?: MultiAgencyDispatch
   private currentFlameM = 0
+  private isAlertPopoverOpen = false
+  private lastAlertEmergency: boolean | undefined = undefined
   private lastCoordsFull = ''
   private lastCoordsDMS = ''
   private lastCoordsDec = ''
@@ -227,17 +251,21 @@ export class Hud {
     })
 
     this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
+    this.refs.bottomCompass?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
 
     this.refs.alertBadge?.addEventListener('click', (e) => {
       e.stopPropagation()
-      this.refs.alertPopover.hidden = !this.refs.alertPopover.hidden
+      this.isAlertPopoverOpen = !this.isAlertPopoverOpen
+      this.refs.alertPopover.hidden = !this.isAlertPopoverOpen
     })
     this.refs.closeAlertPopover?.addEventListener('click', (e) => {
       e.stopPropagation()
+      this.isAlertPopoverOpen = false
       this.refs.alertPopover.hidden = true
     })
     this.refs.alertDispatchBtn?.addEventListener('click', () => {
+      this.isAlertPopoverOpen = false
       this.refs.alertPopover.hidden = true
       this.actions.mobilizeAerial?.(this.currentFlameM)
     })
@@ -245,6 +273,7 @@ export class Hud {
     document.addEventListener('click', (e) => {
       if (this.refs.alertPopover && !this.refs.alertPopover.hidden) {
         if (!this.refs.alertContainer?.contains(e.target as Node)) {
+          this.isAlertPopoverOpen = false
           this.refs.alertPopover.hidden = true
         }
       }
@@ -252,7 +281,27 @@ export class Hud {
 
     const copyText = (val: string) => {
       if (!val) return
-      navigator.clipboard.writeText(val).then(() => this.toast(`📋 ${val} copiado!`))
+      const cleanVal = val.trim()
+      const finishToast = () => this.toast(`Coordenadas ${cleanVal} copiadas!`)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cleanVal).then(finishToast).catch(() => {
+          const ta = document.createElement('textarea')
+          ta.value = cleanVal
+          document.body.appendChild(ta)
+          ta.select()
+          document.execCommand('copy')
+          ta.remove()
+          finishToast()
+        })
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = cleanVal
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        ta.remove()
+        finishToast()
+      }
     }
     this.refs.coords?.addEventListener('click', () => copyText(this.lastCoordsFull || this.refs.coords.textContent || ''))
     this.refs.coordDMS?.addEventListener('click', () => copyText(this.lastCoordsDMS))
@@ -339,27 +388,33 @@ export class Hud {
     if (flame >= 2.4) {
       this.refs.alertContainer.hidden = false
       const emergency = flame >= 3.4
-      this.refs.alertContainer.classList.toggle('emergency', emergency)
-      this.refs.alertBadge.classList.toggle('emergency', emergency)
-      this.refs.alertBadge.classList.add('pulsing')
-      this.refs.alertIcon.innerHTML = ICON_HAZARD
-      this.refs.alertBadge.title = emergency
-        ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · Clica para ver recomendação`
-        : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · Clica para ver recomendação`
 
-      this.refs.popoverTitle.innerHTML = `<span class="title-svg">${ICON_HAZARD}</span> ${
-        emergency ? 'ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO' : 'RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
-      }`
+      if (this.lastAlertEmergency !== emergency) {
+        this.lastAlertEmergency = emergency
+        this.refs.alertContainer.classList.toggle('emergency', emergency)
+        this.refs.alertBadge.classList.toggle('emergency', emergency)
+        this.refs.alertBadge.classList.add('pulsing')
+        this.refs.alertBadge.title = emergency
+          ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · Clica para ver recomendação`
+          : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · Clica para ver recomendação`
+
+        this.refs.popoverTitle.innerHTML = `<span class="title-svg">${ICON_HAZARD}</span> ${
+          emergency ? 'ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO' : 'RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+        }`
+        this.refs.popoverDesc.textContent = emergency
+          ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
+          : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
+        this.refs.alertDispatchBtn.textContent = emergency
+          ? 'Mobilizar Avião Anfíbio Pesado (AVBP)'
+          : 'Mobilizar Helicóptero Bombardeiro (HEBL)'
+      }
+
       this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
-      this.refs.popoverDesc.textContent = emergency
-        ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
-        : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
-      this.refs.alertDispatchBtn.textContent = emergency
-        ? 'Mobilizar Avião Anfíbio Pesado (AVBP)'
-        : 'Mobilizar Helicóptero Bombardeiro (HEBL)'
     } else {
+      this.lastAlertEmergency = undefined
       this.refs.alertContainer.hidden = true
       this.refs.alertPopover.hidden = true
+      this.isAlertPopoverOpen = false
     }
   }
 
@@ -489,6 +544,9 @@ export class Hud {
 
     if (this.refs.compassNeedle) {
       this.refs.compassNeedle.style.transform = `rotate(${-camera.heading}deg)`
+    }
+    if (this.refs.compassDial) {
+      this.refs.compassDial.style.transform = `rotate(${-camera.heading}deg)`
     }
 
     this.set('cardHead', `Plano ${pad2(frame.index + 1)}/${pad2(n)} · ${shot.word}`)

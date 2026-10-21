@@ -984,3 +984,71 @@
     font-size: 24px;
   }
 }
+
+/* ---------- bottom-right precision compass ---------- */
+
+.bottom-compass {
+  position: absolute;
+  right: 34px;
+  bottom: calc(var(--credits-h, 20px) + 14px);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(241, 245, 249, 0.32);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+.bottom-compass:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.65);
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+.bottom-compass .compass-dial {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  transition: transform 0.08s linear;
+}
+.bottom-compass .compass-svg {
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+
+.hud .rail {
+  pointer-events: auto;
+}
+.hud .rail span[data-ref^="coord"] {
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: all;
+  transition: all 0.15s ease;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.hud .rail span[data-ref^="coord"]:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: underline;
+}
+.hud .line[data-ref="coords"] {
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: all;
+}
+.hud .line[data-ref="coords"]:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
