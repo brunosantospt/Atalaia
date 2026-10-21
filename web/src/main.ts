@@ -456,7 +456,15 @@ async function main() {
         if (editor.searching) {
           editor.setEngine({ state: 'waiting', name })
           await Promise.all([ask(requests.free), ask(requests.A)])
-          return // B is asked when the search is over: it shows its plan then, and that runs again
+          // B is asked when the search is over. A search that ends with B's plan reruns by itself; one that fails or
+          // is stopped may not, so the flag is watched until it is down.
+          const watch = () => {
+            if (gen !== engineGen) return
+            if (editor.searching) engineTimer = window.setTimeout(watch, 500)
+            else rerun()
+          }
+          watch()
+          return
         }
         const [free, A, B] = await Promise.all([ask(requests.free), ask(requests.A), ask(requests.B)])
         if (gen !== engineGen || replay?.scenario !== scenario) return
