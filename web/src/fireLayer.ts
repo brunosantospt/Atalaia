@@ -1,4 +1,4 @@
-// The observed fire on the ground: the area each step added, the perimeter of the latest
+﻿// The observed fire on the ground: the area each step added, the perimeter of the latest
 // step, and at the end the area PT-FireSprd could not date. Built once per fire as two
 // ground primitives; showing a step only changes per-instance colours.
 
@@ -18,10 +18,10 @@ import {
 } from 'cesium'
 import type { Progression, Ring } from './data'
 
-export const FIRE_AMBER = Color.fromCssColorString('#f0a33a')
-const FRONT = FIRE_AMBER.withAlpha(0.58) // what the latest step added
-const SCAR = Color.fromCssColorString('#7a3f1c').withAlpha(0.62) // burned in earlier steps
-const UNTIMED = Color.fromCssColorString('#8c7a6b').withAlpha(0.42) // burned, time unknown
+export const FIRE_AMBER = Color.fromCssColorString('#f59e0b')
+const FRONT = FIRE_AMBER.withAlpha(0.92) // what the latest step added: vibrant active flame
+const SCAR = Color.fromCssColorString('#12100e').withAlpha(0.85) // burned in earlier steps: charred black ash
+const UNTIMED = Color.fromCssColorString('#262220').withAlpha(0.75) // burned, time unknown: dark soot
 const OUTLINE = FIRE_AMBER.withAlpha(0.95)
 
 export interface FireState {

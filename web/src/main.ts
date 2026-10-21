@@ -1,4 +1,4 @@
-import 'cesium/Build/Cesium/Widgets/widgets.css'
+﻿import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
@@ -255,7 +255,7 @@ async function main() {
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,
-      free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], DECISION_MIN),
+      free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], DECISION_MIN, scenario.weather),
       reach: new ReachLayer(viewer, fire.ignition, reach),
       context,
       story,
@@ -332,6 +332,7 @@ async function main() {
       grid,
       [{ name: label(a), arrival: runs.A.arrival }, { name: label(b), arrival: runs.B.arrival }],
       DECISION_MIN,
+      scenario.weather,
     )
     if (position !== undefined) replay.split.setPosition(position)
     replay.split.set(replay.player.update(0).hours)
