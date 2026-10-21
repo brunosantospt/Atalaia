@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 2,
   "weather": "era5",
@@ -22,19 +23,27 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": "hindcast/fires/VieiradoMinho_10082016/attack_lines.json",
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": false
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 33,
  "stretches": 9,
- "runtime_s": 22.4,
- "wall_s": 28.2,
+ "runtime_s": 11.7,
+ "wall_s": 19.7,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"
  ],
  "stats": {
-  "burned_ha": 1918.3,
+  "burned_ha": 1949.6,
   "by_hour": [
    {
     "h": 0.0,
@@ -59,40 +68,40 @@
    {
     "h": 9,
     "observed_ha": 839,
-    "run_ha": 913
+    "run_ha": 935
    },
    {
     "h": 12,
     "observed_ha": 971,
-    "run_ha": 1209
+    "run_ha": 1245
    },
    {
     "h": 15,
     "observed_ha": 1188,
-    "run_ha": 1447
+    "run_ha": 1459
    },
    {
     "h": 17.5,
     "observed_ha": 1573,
-    "run_ha": 1577
+    "run_ha": 1584
    },
    {
     "h": 18,
     "observed_ha": 1573,
-    "run_ha": 1607
+    "run_ha": 1617
    },
    {
     "h": 21,
     "observed_ha": 1598,
-    "run_ha": 1805
+    "run_ha": 1842
    },
    {
     "h": 22.5,
     "observed_ha": 1621,
-    "run_ha": 1918
+    "run_ha": 1950
    }
   ],
-  "sorensen_last_step": 0.825,
+  "sorensen_last_step": 0.83,
   "sorensen_by_step": [
    {
     "step": 1,
@@ -102,17 +111,17 @@
    {
     "step": 2,
     "h": 17.5,
-    "sorensen": 0.812
+    "sorensen": 0.813
    },
    {
     "step": 3,
     "h": 22.5,
-    "sorensen": 0.825
+    "sorensen": 0.83
    }
   ],
   "official_ha": 1840.0,
-  "sorensen_official": 0.883,
-  "outside_official_ha": 258.4,
+  "sorensen_official": 0.888,
+  "outside_official_ha": 266.7,
   "satellite": {
    "passes": [
     {
@@ -149,10 +158,10 @@
      "time_utc": "2016-08-11T02:37:00+00:00",
      "h": 17.62,
      "n": 28,
-     "reached": 0.68
+     "reached": 0.71
     }
    ],
-   "mean_reached": 0.66
+   "mean_reached": 0.67
   }
  }
 }

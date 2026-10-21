@@ -13,7 +13,8 @@
   "step": 60.0,
   "width": 20.0,
   "timing": "run",
-  "run": "5_projecoes_seed2"
+  "run": "5_projecoes_seed2",
+  "preview": false
  },
  "official_boundary_km": 34.05,
  "boundary_along_scars_km": 3.01,
@@ -23,7 +24,7 @@
   {
    "label": "road 1",
    "tier": "road",
-   "source": "road along the official perimeter, 350 m of a 350 m held line (unclassified); time: nearest modelled (5_projecoes_seed2) cell, 480 m away",
+   "source": "road along the official perimeter, 350 m of a 350 m held line (unclassified); time: nearest modelled (5_projecoes_seed2) cell, 612 m away",
    "path": [
     [
      -8.196781,

@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 1,
   "weather": "era5",
@@ -22,13 +23,21 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": null,
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": true
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 3.1,
- "wall_s": 4.1,
+ "runtime_s": 3.6,
+ "wall_s": 5.0,
  "notes": [
   "cicatrizes: 504 ha"
  ],

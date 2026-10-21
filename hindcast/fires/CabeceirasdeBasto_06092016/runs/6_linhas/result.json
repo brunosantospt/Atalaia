@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 1,
   "weather": "era5",
@@ -22,13 +23,21 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": "hindcast/fires/CabeceirasdeBasto_06092016/attack_lines.json",
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": true
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 44,
  "stretches": 8,
- "runtime_s": 10.7,
- "wall_s": 16.0,
+ "runtime_s": 12.7,
+ "wall_s": 21.9,
  "notes": [
   "cicatrizes: 504 ha"
  ],

@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 1,
   "weather": "era5",
@@ -22,19 +23,27 @@
   "adj": 1.5,
   "wind_mult": 1.0,
   "barriers": null,
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": true
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 4.3,
- "wall_s": 5.0,
+ "runtime_s": 3.5,
+ "wall_s": 4.5,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"
  ],
  "stats": {
-  "burned_ha": 4005.3,
+  "burned_ha": 3978.4,
   "by_hour": [
    {
     "h": 0.0,
@@ -59,7 +68,7 @@
    {
     "h": 9,
     "observed_ha": 839,
-    "run_ha": 1682
+    "run_ha": 1683
    },
    {
     "h": 12,
@@ -69,30 +78,30 @@
    {
     "h": 15,
     "observed_ha": 1188,
-    "run_ha": 2547
+    "run_ha": 2549
    },
    {
     "h": 17.5,
     "observed_ha": 1573,
-    "run_ha": 2929
+    "run_ha": 2939
    },
    {
     "h": 18,
     "observed_ha": 1573,
-    "run_ha": 3009
+    "run_ha": 3025
    },
    {
     "h": 21,
     "observed_ha": 1598,
-    "run_ha": 3683
+    "run_ha": 3687
    },
    {
     "h": 22.5,
     "observed_ha": 1621,
-    "run_ha": 4005
+    "run_ha": 3978
    }
   ],
-  "sorensen_last_step": 0.57,
+  "sorensen_last_step": 0.573,
   "sorensen_by_step": [
    {
     "step": 1,
@@ -102,17 +111,17 @@
    {
     "step": 2,
     "h": 17.5,
-    "sorensen": 0.692
+    "sorensen": 0.691
    },
    {
     "step": 3,
     "h": 22.5,
-    "sorensen": 0.57
+    "sorensen": 0.573
    }
   ],
   "official_ha": 1840.0,
-  "sorensen_official": 0.623,
-  "outside_official_ha": 2183.7,
+  "sorensen_official": 0.626,
+  "outside_official_ha": 2156.8,
   "satellite": {
    "passes": [
     {

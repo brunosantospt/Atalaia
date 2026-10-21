@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 3,
   "weather": "cerra",
@@ -22,19 +23,27 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": null,
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": false
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 7.0,
- "wall_s": 11.5,
+ "runtime_s": 6.3,
+ "wall_s": 12.2,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"
  ],
  "stats": {
-  "burned_ha": 1984.2,
+  "burned_ha": 1984.0,
   "by_hour": [
    {
     "h": 0.0,
@@ -112,7 +121,7 @@
   ],
   "official_ha": 1840.0,
   "sorensen_official": 0.779,
-  "outside_official_ha": 494.0,
+  "outside_official_ha": 493.8,
   "satellite": {
    "passes": [
     {

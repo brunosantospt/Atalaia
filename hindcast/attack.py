@@ -29,7 +29,7 @@ inferred: OpenStreetMap maps few houses in these parishes.
 The location of every line comes from the final perimeter, so a run with them matches that perimeter better by
 construction. Judge them by the satellite hotspots and the burned area over time (run.py scores both).
 
-Writes hindcast/fires/<id>/attack_lines.json and attack_lines.png.
+Writes hindcast/fires/<id>/attack_lines.json and attack_lines.png (--no-preview leaves the picture out).
 """
 
 import argparse
@@ -67,6 +67,7 @@ def main(argv=None):
                    help="time each line by the observed fire, or by a run's own fire (--run): crews in place before "
                         "the modelled front, so a line fails only if the model's fire beats it there")
     p.add_argument("--run", help="with --timing run: the run.py run whose arrival times the lines (a free run)")
+    p.add_argument("--preview", action=argparse.BooleanOptionalAction, default=True, help="write the .png")
     args = p.parse_args(argv)
 
     fire = fires.Fire(args.fire)
@@ -203,6 +204,10 @@ def main(argv=None):
           f"{doc['boundary_along_scars_km']} km junto a cicatrizes, {doc['boundary_covered_km']} km com linhas; "
           f"{len(crossing)} estradas que o fogo atravessou ficam de fora ({doc['crossings_left_out_km']} km)")
     print("  começam a segurar às", sorted({round(b['from_min'] / 60, 1) for b in out}), "h")
+    if not args.preview:
+        (d / f"{name}.png").unlink(missing_ok=True)
+        print(f"-> {d}/{name}.json")
+        return
 
     z = 2
     top = fire.grid["ymin"] + fire.rows * fire.cellsize

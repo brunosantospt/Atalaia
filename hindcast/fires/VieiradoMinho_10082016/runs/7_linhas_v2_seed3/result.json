@@ -15,6 +15,7 @@
   "live_herb": 30.0,
   "live_woody": 70.0,
   "canopy": true,
+  "canopy_fill": false,
   "spotting": true,
   "seed": 3,
   "weather": "era5",
@@ -22,19 +23,27 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": "hindcast/fires/VieiradoMinho_10082016/attack_lines_5_projecoes_seed3.json",
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": false
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 33,
  "stretches": 9,
- "runtime_s": 24.0,
- "wall_s": 29.6,
+ "runtime_s": 12.4,
+ "wall_s": 20.0,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"
  ],
  "stats": {
-  "burned_ha": 2044.9,
+  "burned_ha": 2047.9,
   "by_hour": [
    {
     "h": 0.0,
@@ -84,15 +93,15 @@
    {
     "h": 21,
     "observed_ha": 1598,
-    "run_ha": 1970
+    "run_ha": 1969
    },
    {
     "h": 22.5,
     "observed_ha": 1621,
-    "run_ha": 2045
+    "run_ha": 2048
    }
   ],
-  "sorensen_last_step": 0.852,
+  "sorensen_last_step": 0.851,
   "sorensen_by_step": [
    {
     "step": 1,
@@ -107,12 +116,12 @@
    {
     "step": 3,
     "h": 22.5,
-    "sorensen": 0.852
+    "sorensen": 0.851
    }
   ],
   "official_ha": 1840.0,
-  "sorensen_official": 0.904,
-  "outside_official_ha": 289.6,
+  "sorensen_official": 0.903,
+  "outside_official_ha": 292.2,
   "satellite": {
    "passes": [
     {

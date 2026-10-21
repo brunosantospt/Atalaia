@@ -13,7 +13,8 @@
   "step": 60.0,
   "width": 20.0,
   "timing": "run",
-  "run": "5_projecoes"
+  "run": "5_projecoes",
+  "preview": true
  },
  "official_boundary_km": 34.05,
  "boundary_along_scars_km": 3.01,

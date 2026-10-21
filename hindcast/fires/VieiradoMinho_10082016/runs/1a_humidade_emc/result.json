@@ -15,6 +15,7 @@
   "live_herb": 60.0,
   "live_woody": 90.0,
   "canopy": false,
+  "canopy_fill": false,
   "spotting": false,
   "seed": 1,
   "weather": "era5",
@@ -22,16 +23,24 @@
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": null,
-  "engine": "hindcast/engine/run.sh"
+  "engine": "hindcast/engine/run.sh",
+  "preview": true
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 4.0,
- "wall_s": 4.6,
+ "runtime_s": 2.4,
+ "wall_s": 3.2,
  "notes": [],
  "stats": {
-  "burned_ha": 1700.5,
+  "burned_ha": 1700.8,
   "by_hour": [
    {
     "h": 0.0,
@@ -61,7 +70,7 @@
    {
     "h": 12,
     "observed_ha": 971,
-    "run_ha": 834
+    "run_ha": 835
    },
    {
     "h": 15,
@@ -81,7 +90,7 @@
    {
     "h": 21,
     "observed_ha": 1598,
-    "run_ha": 1603
+    "run_ha": 1602
    },
    {
     "h": 22.5,
@@ -109,7 +118,7 @@
   ],
   "official_ha": 1840.0,
   "sorensen_official": 0.752,
-  "outside_official_ha": 368.9,
+  "outside_official_ha": 369.0,
   "satellite": {
    "passes": [
     {
