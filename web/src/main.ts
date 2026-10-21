@@ -34,6 +34,7 @@ import { loadInventory } from './inventory'
 import { MarkerLayer } from './markers'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
+import { WindShiftWatch } from './windShift'
 import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
 import { makeReport, recommend } from './report'
@@ -208,6 +209,14 @@ async function main() {
   // The drawer's hour slider moves the fire clock (the editor has taken the new hour by now); the replay goes on from there.
   editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => replay?.player.seek(editor.hours))
 
+  // The wind shift of a simulated fire: pauses the replay and asks for a new strategy (windShift.ts).
+  const windShift = new WindShiftWatch({
+    pause: () => replay && (replay.player.playing = false),
+    resume: () => replay && !replay.player.playing && replay.player.toggle(),
+    seek: (h) => replay?.player.seek(h),
+    openEditor: () => editor.toggle(true),
+  })
+
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
     loading = id
@@ -269,6 +278,7 @@ async function main() {
     if (switched) replay.player.goTo(0)
     hud.setDirector(replay.director)
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
+    windShift.setFire(fire, grid, free)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
@@ -424,7 +434,8 @@ async function main() {
     hud.update(frame, readout, splitOn)
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
-    if (alerts) hud.setAlerts(computeAlerts(alerts, frame.hours * 60, side))
+    windShift.update(frame.hours, frame.playing)
+    if (alerts) hud.setAlerts(windShift.alerts(computeAlerts(alerts, frame.hours * 60, side)))
     if (frameNo % 60 === 0) {
       const dispatch = editor.getMultiAgencyDispatch()
       if (dispatch) hud.updateBriefings(dispatch)

@@ -56,7 +56,7 @@ export function computeReach(
   // when it has one, else a shrub fire under moderate wind (Byram, ~2 000 kW/m).
   const observed = fire.periods[0]?.intensityKWPerM
   const intensityKWPerM = observed ?? 2000
-  const intensitySource = observed ? 'PT-FireSprd, período 1' : 'valor por defeito'
+  const intensitySource = observed ? 'PT-FireSprd, período 1' : 'valor de referência'
 
   const moment = (minutes: number): Moment => {
     const t = Math.min(Math.max(Math.round(minutes), 0), run.durationMin)

@@ -80,6 +80,7 @@ export function buildStory(
     range,
   })
   const clock = (hours: number) => wallClock(fire.start, hours)
+  const sim = !!fire.simulated
   const steps = fire.steps
   const last = steps.at(-1)!
 
@@ -158,7 +159,7 @@ export function buildStory(
     kind: 'ignition',
     word: 'Ignição',
     title: `Ignição · ${fmtTime(clock(0))}`,
-    caption: `Primeiro polígono mapeado: ${fmtHa(steps[0].areaHa)}. A câmara olha para onde o fogo foi, para ${compass(headings[0])}.`,
+    caption: `${sim ? 'Primeiro polígono simulado' : 'Primeiro polígono mapeado'}: ${fmtHa(steps[0].areaHa)}. A câmara olha para onde o fogo foi, para ${compass(headings[0])}.`,
     place: ignition,
     simulated: false,
     step: 0,
@@ -186,7 +187,7 @@ export function buildStory(
       title: `Deteção pelo drone · ${fmtTime(clock(detection.droneMin / 60))} · ${minutes(detection.droneMin)}`,
       caption:
         `Ponto de ignição, meteo da hora, combustível, relevo e quartéis: tudo o que há para decidir. ` +
-        `O satélite só deteta o fogo às ${satClock}. Os perímetros observados só existem em retrospetiva.`,
+        `O satélite só deteta o fogo às ${satClock}. ${sim ? 'Os perímetros da referência simulada (ELMFIRE)' : 'Os perímetros observados'} só existem em retrospetiva.`,
       place: ignition,
       simulated: true,
       step: -1,
@@ -272,8 +273,36 @@ export function buildStory(
     })
   }
 
-  // ---- one shot per observed step ----
+  // ---- one shot per step (observed, or the simulated reference) ----
+  // The wind shift of a simulated fire has its own shot, so the timeline has a tick there.
+  const shift = fire.windShift
+  let shiftShot = !shift
+  const pushShift = () => {
+    shiftShot = true
+    const at = steps.filter((s) => s.hours <= shift!.minutes / 60).at(-1) ?? steps[0]
+    const r = bboxRadiusM(at.bbox)
+    shots.push({
+      kind: 'spread',
+      word: 'Vento roda',
+      title: `Vento roda · ${fmtTime(clock(shift!.minutes / 60))}`,
+      caption: shift!.alert,
+      place: at.center,
+      simulated: false,
+      step: at.step,
+      hours: shift!.minutes / 60,
+      areaHa: at.areaHa,
+      untimed: false,
+      path: [pose(bboxCenter(at.bbox), headings[at.step], -40, fit(r, MARGIN_STEP))],
+      driftDeg: 6,
+      spot: SPOT * r,
+      moveS: 4,
+      holdS: 4.5,
+      reveal: [],
+      conceal: [],
+    })
+  }
   for (const s of steps.slice(1)) {
+    if (!shiftShot && s.hours > shift!.minutes / 60) pushShift()
     const prev = steps[s.step - 1]
     const period = fire.periods.find((p) => p.period === s.period)
     const dt = s.hours - prev.hours
@@ -319,6 +348,8 @@ export function buildStory(
     })
   }
 
+  if (!shiftShot) pushShift()
+
   // ---- along the spread axis: from the ignition to the step that got furthest from it ----
   const far = steps.reduce((a, b) => (distanceM(ignition, b.center) > distanceM(ignition, a.center) ? b : a))
   const axisM = distanceM(ignition, far.center)
@@ -353,8 +384,10 @@ export function buildStory(
   shots.push({
     kind: 'balance',
     word: 'Balanço',
-    title: `Balanço · ${fmtHa(total.total)} · ${fmtHours(last.hours)} observadas`,
-    caption: `${fmtHa(total.timed)} com hora · ${fmtHa(total.untimed)} sem hora (a cinzento), que o PT-FireSprd não consegue datar.`,
+    title: `Balanço · ${fmtHa(total.total)} · ${fmtHours(last.hours)} ${sim ? 'simuladas' : 'observadas'}`,
+    caption: sim
+      ? `${fmtHa(total.timed)} na referência simulada (ELMFIRE), todos com hora${total.untimed > 0 ? ` · ${fmtHa(total.untimed)} sem hora (a cinzento)` : ''}.`
+      : `${fmtHa(total.timed)} com hora · ${fmtHa(total.untimed)} sem hora (a cinzento), que o PT-FireSprd não consegue datar.`,
     place: bboxCenter(fire.bbox),
     simulated: false,
     step: last.step,
