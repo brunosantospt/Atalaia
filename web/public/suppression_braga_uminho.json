@@ -3,6 +3,7 @@
   "source": {
     "author": "Marina Araújo de Matos",
     "thesis": "Minimizing the Impact of Forest Fires",
+    "degree": "PhD, Doctoral Program in Industrial and Systems Engineering",
     "institution": "Universidade do Minho, Escola de Engenharia",
     "date": "2025-09",
     "advisors": [
@@ -10,25 +11,29 @@
       "Filipe Pereira Pinto Cunha Alvelos"
     ],
     "project": "FCT PCIF/GRF/0141/2019 (O3F - An Optimization Framework to Reduce Forest Fire)",
+    "url": "https://hdl.handle.net/1822/97938",
+    "licence": "CC BY-NC-SA 4.0",
     "table_reference": "Table 41: Firefighting resources available at each fire station (p. 75)"
   },
+  "category_note": "A tese só dá a capacidade (L); a categoria é inferida dela: até 1000 L VLCI, até 6000 L VFCI, acima VTTU",
   "district": "Braga",
   "totals": {
     "fire_stations": 21,
     "vehicles": 113,
-    "total_water_liters": 240700,
+    "total_water_liters": 240400,
     "operational_water_points": 139
   },
   "operational_rules": {
     "initial_attack_threshold_min": 90,
-    "fire_station_turnout_time_min": 10,
+    "response_time_min": 10,
     "water_tank_refill_duration_min": 10,
     "liters_water_per_meter_fireline": 10.0,
-    "byram_flame_holding_limits_m": {
-      "crew_handline": 1.2,
-      "vfci_fire_engine": 2.4,
-      "aerial_drop_threshold": 2.4
-    }
+    "extinction_time": "3.3 * sqrt(TBA)",
+    "resources_available_pct": [
+      25,
+      50,
+      100
+    ]
   },
   "stations": [
     {
@@ -39,27 +44,27 @@
         {
           "id": "A",
           "capacity_l": 400,
-          "category": "VFCI-L (Veículo Ligeiro de Combate a Incêndios)"
+          "category": "VLCI"
         },
         {
           "id": "B",
           "capacity_l": 400,
-          "category": "VFCI-L (Veículo Ligeiro de Combate a Incêndios)"
+          "category": "VLCI"
         },
         {
           "id": "C",
           "capacity_l": 2000,
-          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+          "category": "VFCI"
         },
         {
           "id": "D",
           "capacity_l": 3200,
-          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+          "category": "VFCI"
         },
         {
           "id": "E",
           "capacity_l": 3500,
-          "category": "VFCI (Veículo Florestal de Combate a Incêndios)"
+          "category": "VFCI"
         }
       ]
     },
@@ -71,42 +76,42 @@
         {
           "id": "K",
           "capacity_l": 500,
-          "category": "VFCI-L (Veículo Ligeiro)"
+          "category": "VLCI"
         },
         {
           "id": "L",
           "capacity_l": 500,
-          "category": "VFCI-L (Veículo Ligeiro)"
+          "category": "VLCI"
         },
         {
           "id": "M",
           "capacity_l": 600,
-          "category": "VFCI-L (Veículo Ligeiro)"
+          "category": "VLCI"
         },
         {
           "id": "F",
           "capacity_l": 3500,
-          "category": "VFCI (Veículo Florestal de Combate)"
+          "category": "VFCI"
         },
         {
           "id": "G",
           "capacity_l": 4000,
-          "category": "VFCI (Veículo Florestal de Combate)"
+          "category": "VFCI"
         },
         {
           "id": "H",
           "capacity_l": 4500,
-          "category": "VFCI (Veículo Florestal de Combate)"
+          "category": "VFCI"
         },
         {
           "id": "I",
           "capacity_l": 4500,
-          "category": "VFCI (Veículo Florestal de Combate)"
+          "category": "VFCI"
         },
         {
           "id": "J",
           "capacity_l": 400,
-          "category": "VCOT (Comando / Reconhecimento)"
+          "category": "VLCI"
         }
       ]
     },
@@ -117,18 +122,18 @@
       "vehicles": [
         {
           "id": "R",
-          "capacity_l": 500,
-          "category": "VFCI-L"
+          "capacity_l": 400,
+          "category": "VLCI"
         },
         {
           "id": "S",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "T",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "U",
@@ -164,8 +169,8 @@
       "vehicles": [
         {
           "id": "V",
-          "capacity_l": 500,
-          "category": "VFCI-L"
+          "capacity_l": 400,
+          "category": "VLCI"
         },
         {
           "id": "X",
@@ -187,17 +192,17 @@
         {
           "id": "Y",
           "capacity_l": 400,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "Z",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AA",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AB",
@@ -219,7 +224,7 @@
         {
           "id": "AD",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AE",
@@ -251,7 +256,7 @@
         {
           "id": "AK",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AI",
@@ -273,17 +278,17 @@
         {
           "id": "AL",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AM",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AN",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AQ",
@@ -315,12 +320,12 @@
         {
           "id": "AV",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AW",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AS",
@@ -347,7 +352,7 @@
         {
           "id": "AY",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AX",
@@ -364,22 +369,22 @@
         {
           "id": "BC",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BD",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BE",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BF",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "AZ",
@@ -394,7 +399,7 @@
         {
           "id": "BB",
           "capacity_l": 9000,
-          "category": "VTTU (Veículo Tanque Tático Urbano/Florestal)"
+          "category": "VTTU"
         }
       ]
     },
@@ -405,28 +410,28 @@
       "vehicles": [
         {
           "id": "BN",
-          "capacity_l": 400,
-          "category": "VFCI-L"
+          "capacity_l": 300,
+          "category": "VLCI"
         },
         {
           "id": "BJ",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BK",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BL",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BM",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BG",
@@ -453,7 +458,7 @@
         {
           "id": "BO",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BQ",
@@ -475,17 +480,17 @@
         {
           "id": "BV",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BW",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BX",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BT",
@@ -505,7 +510,7 @@
         {
           "id": "BU",
           "capacity_l": 9000,
-          "category": "VTTU (Veículo Tanque Tático Urbano/Florestal)"
+          "category": "VTTU"
         }
       ]
     },
@@ -517,27 +522,27 @@
         {
           "id": "CD",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CE",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "BY",
           "capacity_l": 1000,
-          "category": "VFCI"
+          "category": "VLCI"
         },
         {
           "id": "BZ",
           "capacity_l": 1000,
-          "category": "VFCI"
+          "category": "VLCI"
         },
         {
           "id": "CA",
           "capacity_l": 1000,
-          "category": "VFCI"
+          "category": "VLCI"
         },
         {
           "id": "CB",
@@ -559,12 +564,12 @@
         {
           "id": "CF",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CG",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CH",
@@ -591,7 +596,7 @@
         {
           "id": "CM",
           "capacity_l": 400,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CK",
@@ -613,7 +618,7 @@
         {
           "id": "CP",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CO",
@@ -635,7 +640,7 @@
         {
           "id": "CU",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CQ",
@@ -667,17 +672,17 @@
         {
           "id": "CX",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CY",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CZ",
           "capacity_l": 600,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "CW",
@@ -699,22 +704,22 @@
         {
           "id": "DF",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "DG",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "DH",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "DI",
           "capacity_l": 500,
-          "category": "VFCI-L"
+          "category": "VLCI"
         },
         {
           "id": "DB",
@@ -739,7 +744,7 @@
         {
           "id": "DE",
           "capacity_l": 7000,
-          "category": "VTTU (Veículo Tanque Tático)"
+          "category": "VTTU"
         }
       ]
     }
