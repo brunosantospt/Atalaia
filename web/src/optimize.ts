@@ -62,6 +62,7 @@ export interface Result {
 
 export interface Options {
   budgetMs?: number
+  maxPlans?: number // and at most this many distinct plans: the same B on any machine (scripts/ils-check.ts)
   seed?: number
   onProgress?: (p: Progress) => void
 }
@@ -127,7 +128,8 @@ const named = (a: Decision): Decision => ({ ...(JSON.parse(JSON.stringify(a)) as
 export function optimize(scenario: Scenario, ground: Ground, a: Decision, options: Options = {}): Result {
   const t0 = performance.now()
   const budget = options.budgetMs ?? 10_000
-  const timeUp = () => performance.now() - t0 >= budget
+  const maxPlans = options.maxPlans ?? Infinity
+  const timeUp = () => performance.now() - t0 >= budget || memo.size >= maxPlans
   const random = mulberry32(options.seed ?? 1)
   const pick = <T>(list: T[]): T => list[Math.floor(random() * list.length)]
   const { grid, stations, suppression: sup, durationMin } = scenario
@@ -430,7 +432,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     return pos
   }
   let s0: State = best!
-  for (let i = 0; i < NCH && performance.now() - t0 < budget * CONSTRUCT_SHARE; i++) {
+  for (let i = 0; i < NCH && performance.now() - t0 < budget * CONSTRUCT_SHARE && memo.size < maxPlans; i++) {
     const pos = construct()
     const e = evaluate(pos)
     if (better(e.score, s0.score)) offer((s0 = state(pos, e.score, e.run)))
