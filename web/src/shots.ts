@@ -1,8 +1,8 @@
 // The replay as a list of camera shots, derived from fire.json, the nearest stations and the
 // free run of the fast model: overview with the stations, ignition, what is known at the
-// detection, how far the fire gets before each means arrives, the satellite's checkpoint, one
-// shot per observed step, a pass along the spread axis and the final balance. Each shot frames
-// the area in play and says what to reveal.
+// detection, the best case (the fire when the first means arrives), the satellite's detection,
+// one shot per observed step, a pass along the spread axis and the final balance. Each shot
+// frames the area in play and says what to reveal.
 
 import { Cartographic, sampleTerrainMostDetailed, type TerrainProvider } from 'cesium'
 import type { Pose } from './camera'
@@ -38,7 +38,7 @@ export interface Shot {
   area?: (hours: number) => string // the HUD's area line, when it is not the free run's
 }
 
-export type MarkerKind = 'ignition' | 'step' | 'station' | 'eta' | 'tsat'
+export type MarkerKind = 'ignition' | 'step' | 'station' | 'best' | 'tsat'
 
 export interface MarkerSpec extends LonLat {
   id: string
@@ -47,7 +47,7 @@ export interface MarkerSpec extends LonLat {
   badge: string
   label: string
   detail: string
-  ringM: number // 0 for no ring (the reach layer draws the outline)
+  ringM: number // 0 for no ring
 }
 
 export interface Story {
@@ -150,7 +150,7 @@ export function buildStory(
       badge: i === 0 ? 'I' : `I${i + 1}`,
       label: `${i === 0 ? 'Ignição' : 'Novo foco'} · ${fmtTime(clock(ign.hours))}`,
       detail: i === 0 ? fmtDate(clock(ign.hours)) : `+${fmtHa(ign.areaHa)}`,
-      ringM: 140,
+      ringM: 0, // a ring here read as a radius around the ignition
     }),
   )
   const ignitionRange = 2600
@@ -174,9 +174,9 @@ export function buildStory(
     conceal: [],
   })
 
-  // ---- the decision's instant: what is known, how far the fire gets before help arrives, T_sat ----
+  // ---- the decision's instant: what is known, the best case, the satellite's detection ----
   if (reach) {
-    const { detection, etas, tsat } = reach
+    const { detection, best, tsat } = reach
     const minutes = (m: number) => `T+${m} min`
     const satClock = fmtTime(clock(detection.satelliteMin / 60))
 
@@ -186,7 +186,7 @@ export function buildStory(
       title: `Deteção pelo drone · ${fmtTime(clock(detection.droneMin / 60))} · ${minutes(detection.droneMin)}`,
       caption:
         `Ponto de ignição, meteo da hora, combustível, relevo e quartéis: tudo o que há para decidir. ` +
-        `Satélite: sem passagem até ${satClock}. Os perímetros observados só existem em retrospetiva.`,
+        `O satélite só deteta o fogo às ${satClock}. Os perímetros observados só existem em retrospetiva.`,
       place: ignition,
       simulated: true,
       step: -1,
@@ -202,41 +202,38 @@ export function buildStory(
       conceal: [],
     })
 
-    // The tag has its own id: the outline stays on the ground after the tags are gone.
-    for (const eta of etas)
-      markers.push({
-        id: `tag:${eta.id}`,
-        kind: 'eta',
-        lon: eta.head.lon,
-        lat: eta.head.lat,
-        h: 0,
-        badge: eta.unit,
-        label: `${eta.from} · ${minutes(eta.minutes)}`,
-        detail: `${fmtHa(eta.areaHa)} · POC ${fmtPct(eta.poc)}`,
-        ringM: 0,
-      })
-    const first = etas[0]
-    const lastEta = etas.at(-1)!
-    const reachR = Math.max(lastEta.radiusM * 1.5, 1500)
+    // The best case: the drone's detection and the first means on time. Line and tag stay to the end.
+    markers.push({
+      id: 'best',
+      kind: 'best',
+      lon: best.head.lon,
+      lat: best.head.lat,
+      h: 0,
+      badge: best.unit,
+      label: `Melhor caso · ${fmtHa(best.areaHa)}`,
+      detail: `${best.from} · ${minutes(best.minutes)} · POC ${fmtPct(best.poc)}`,
+      ringM: 0,
+    })
+    const bestR = Math.max(best.radiusM * 2, 600)
     shots.push({
       kind: 'reach',
-      word: 'Alcance',
-      title: `Até à chegada · ${minutes(first.minutes)} a ${minutes(lastEta.minutes)}`,
+      word: 'Melhor caso',
+      title: `Melhor caso · ${fmtHa(best.areaHa)} · ${minutes(best.minutes)}`,
       caption:
-        `Contorno do fogo livre à chegada de cada meio. ${first.unit} de ${first.from}: ${fmtHa(first.areaHa)}, POC ${fmtPct(first.poc)}. ` +
-        `${lastEta.unit}: ${fmtHa(lastEta.areaHa)}, POC ${fmtPct(lastEta.poc)}. Anéis a 1, 2 e 5 km.`,
-      place: lastEta.center,
+        `Se tudo corresse bem, com a deteção pelo drone e o primeiro meio a tempo (${best.unit} de ${best.from}, ${minutes(best.minutes)}), ` +
+        `arderiam no máximo ${fmtHa(best.areaHa)}: a linha verde. POC ${fmtPct(best.poc)}.`,
+      place: best.center,
       simulated: true,
       step: -1,
-      hours: lastEta.minutes / 60,
-      areaHa: lastEta.areaHa,
+      hours: best.minutes / 60,
+      areaHa: best.areaHa,
       untimed: false,
-      path: [pose(lastEta.center, headings[0], -45, fit(reachR))],
+      path: [pose(best.center, headings[0], -45, fit(bestR))],
       driftDeg: 5,
-      spot: SPOT * reachR,
+      spot: SPOT * bestR,
       moveS: 4,
       holdS: 7,
-      reveal: ['scale', ...etas.flatMap((e) => [e.id, `tag:${e.id}`])],
+      reveal: ['best'],
       conceal: [],
     })
 
@@ -247,18 +244,18 @@ export function buildStory(
       lat: tsat.head.lat,
       h: 0,
       badge: 'SAT',
-      label: `Satélite · ${satClock}`,
-      detail: `${fmtHa(tsat.areaHa)} · POC ${fmtPct(tsat.poc)}`,
+      label: `Satélite deteta o fogo · ${satClock}`,
+      detail: `sem drone · ${fmtHa(tsat.areaHa)} · POC ${fmtPct(tsat.poc)}`,
       ringM: 0,
     })
     const satR = Math.max(tsat.radiusM * 1.4, 1500)
     shots.push({
       kind: 'checkpoint',
       word: 'Satélite',
-      title: `T_sat · ${satClock} · ${minutes(detection.satelliteMin)}`,
+      title: `Satélite deteta o fogo · ${satClock} · ${minutes(detection.satelliteMin)}`,
       caption:
         `Sem o drone, o satélite só detetaria o fogo agora: ${fmtHa(tsat.areaHa)} livres, POC ${fmtPct(tsat.poc)}. ` +
-        `O tracejado fica como fantasma até ao fim.`,
+        `O tracejado fica como fantasma até ao fim; a linha verde é o melhor caso.`,
       place: tsat.center,
       simulated: true,
       step: -1,
@@ -271,7 +268,7 @@ export function buildStory(
       moveS: 4,
       holdS: 6,
       reveal: ['tsat'],
-      conceal: etas.map((e) => `tag:${e.id}`),
+      conceal: [],
     })
   }
 

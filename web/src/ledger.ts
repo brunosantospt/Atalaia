@@ -1,7 +1,7 @@
 // The ledger of the instant: what is known at the fire clock's T, each layer with its source and
 // its hour, and what is only known in hindsight. Lines light up as the clock passes the moment
-// the data would arrive; the satellite stays dim until T_sat. A click on the title folds the
-// table away (key L too); the choice is kept in this browser.
+// the data would arrive; the satellite stays dim until it would detect the fire. A click on the
+// title folds the table away (key L too); the choice is kept in this browser.
 
 import type { Fire, NearStation, Weather } from './data'
 import type { Detection } from './detection'
@@ -105,8 +105,8 @@ export class Ledger {
         source: 'MODIS · VIIRS',
         at: (h) =>
           h * 60 < detection.satelliteMin
-            ? ['wait', `sem passagem até ${clock(detection.satelliteMin)}`]
-            : ['on', `deteção ${clock(detection.satelliteMin)} · ${fmtHa(satHa)}`],
+            ? ['wait', `só deteta o fogo às ${clock(detection.satelliteMin)}`]
+            : ['on', `detetou o fogo às ${clock(detection.satelliteMin)} · ${fmtHa(satHa)}`],
       },
       { layer: 'Perímetros', source: 'PT-FireSprd', at: () => ['retro', 'só em retrospetiva'] },
     ]
