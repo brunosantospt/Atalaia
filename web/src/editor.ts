@@ -106,6 +106,8 @@ const ILS_AFTER_MS = 800 // A has to be still this long before B is searched aga
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
+const ROUTE = Color.fromCssColorString('#1e3a8a') // means' road routes: dark blue
+const ROUTE_HALO = Color.fromCssColorString('#e2e8f0').withAlpha(0.45)
 
 const TEMPLATE = `
   <header>
@@ -1711,7 +1713,7 @@ export class Editor {
     const { context, scenario, stations } = this.loaded ?? {}
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
 
-    // 1. Draw blue road routes connecting stations to ground attack points
+    // 1. Draw dark blue road routes connecting stations to ground attack points
     if (context && scenario && stations) {
       for (const [id, p] of Object.entries(d.points)) {
         const units = d.assignments.filter((a) => a.target === id)
@@ -1725,15 +1727,10 @@ export class Editor {
 
           const route = findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, p)
           if (route && route.path.length >= 2) {
-            // Vibrant neon blue safe driving route avoiding active fire front
-            this.routes.entities.add({
-              polyline: {
-                positions: route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
-                width: 4,
-                clampToGround: true,
-                material: Color.fromCssColorString('#00d2ff'),
-              },
-            })
+            // Dark blue safe driving route, on a pale halo so it reads on dark imagery (light blue is the wet line).
+            const positions = route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat))
+            this.routes.entities.add({ polyline: { positions, width: 7, clampToGround: true, material: ROUTE_HALO } })
+            this.routes.entities.add({ polyline: { positions, width: 4, clampToGround: true, material: ROUTE } })
           }
         }
       }
