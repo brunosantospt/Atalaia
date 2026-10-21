@@ -2,6 +2,7 @@
 // the transport bar (bottom left) and the settings drawer (fire and engine).
 // Data credits are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
 
+import { rank, type Alert } from './alerts'
 import type { Fire, FireIndexEntry } from './data'
 import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
@@ -31,6 +32,7 @@ export interface HudActions {
   resetNorth?(): void
   flyToIgnition?(): void
   mobilizeAerial?(flameM: number): void
+  flyTo?(at: LonLat): void // a click on an alert of the stack
 }
 
 /** The free run of the fast model behind the simulated shots, as the HUD reads it. */
@@ -200,6 +202,7 @@ export class Hud {
   readonly settings: SettingsPanel
   private readonly refs: Refs
   private readonly ledger: Ledger
+  private readonly alerts: AlertStack
   private fire: Fire | undefined
   private sim: Simulated | undefined
   private shots: Shot[] = []
@@ -228,6 +231,7 @@ export class Hud {
     ) as unknown as Refs
 
     this.ledger = new Ledger(root)
+    this.alerts = new AlertStack(root, (at) => actions.flyTo?.(at))
     this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
@@ -421,6 +425,11 @@ export class Hud {
     }
   }
 
+  /** The special alerts at the clock (alerts.ts), top right under the clock; any producer's, concatenated. */
+  setAlerts(alerts: Alert[]) {
+    this.alerts.set(alerts)
+  }
+
   /** Live mouse cursor coordinates over terrain. */
   updateCursorCoords(coords: (LonLat & { h?: number }) | undefined) {
     this.cursorCoords = coords
@@ -488,7 +497,7 @@ export class Hud {
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: rect('.bottom').top - pad,
-      avoid: ledger.height ? [ledger] : [],
+      avoid: [ledger, this.alerts.el.getBoundingClientRect()].filter((r) => r.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
@@ -564,6 +573,85 @@ export class Hud {
     if (this.shown.get(ref) === text) return
     this.shown.set(ref, text)
     this.refs[ref].textContent = text
+  }
+}
+
+const ALERT_ICONS: Record<Alert['kind'], string> = {
+  homes: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h12V10"/><path d="M10 19.5v-5h4v5"/></svg>',
+  water: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5s-6 6.6-6 10.6a6 6 0 0 0 12 0c0-4-6-10.6-6-10.6Z"/><path d="M8.5 14.5h7" stroke-linecap="round"/></svg>',
+  ros: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 6 6 6-6 6"/><path d="m12 6 6 6-6 6"/></svg>',
+  wind: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8"/></svg>',
+}
+
+/**
+ * The stack of special alerts: critical first, then the newest. The list is rebuilt only when the
+ * set of ids or levels changes; otherwise the texts are written in place, so nothing blinks.
+ */
+class AlertStack {
+  readonly el: HTMLElement
+  private readonly head: HTMLButtonElement
+  private readonly list: HTMLElement
+  private last: Alert[] | undefined
+  private key = ''
+  private seq = 0
+  private readonly seen = new Map<string, number>() // id → when it appeared, for newest first
+  private items = new Map<string, { alert: Alert; li: HTMLElement; title: HTMLElement; detail: HTMLElement }>()
+
+  constructor(root: HTMLElement, private readonly flyTo: (at: LonLat) => void) {
+    this.el = document.createElement('section')
+    this.el.className = 'panel alerts'
+    this.el.hidden = true
+    this.el.setAttribute('aria-label', 'Alertas')
+    this.el.innerHTML = `<button type="button" class="alerts-head" title="Dobrar / abrir os alertas"><i></i><span>Alertas</span><b></b><em>▾</em></button><ol class="alerts-list"></ol>`
+    this.head = this.el.querySelector('.alerts-head')!
+    this.list = this.el.querySelector('.alerts-list')!
+    this.head.addEventListener('click', () => this.el.classList.toggle('folded'))
+    root.append(this.el)
+  }
+
+  set(alerts: Alert[]) {
+    if (alerts === this.last) return
+    this.last = alerts
+    for (const a of alerts) if (!this.seen.has(a.id)) this.seen.set(a.id, ++this.seq)
+    for (const id of this.seen.keys()) if (!alerts.some((a) => a.id === id)) this.seen.delete(id)
+    const sorted = [...alerts].sort((x, y) => rank(y.level) - rank(x.level) || this.seen.get(y.id)! - this.seen.get(x.id)!)
+    const key = sorted.map((a) => `${a.id}:${a.level}`).join('|')
+    if (key !== this.key) {
+      this.key = key
+      this.build(sorted)
+    } else for (const a of sorted) this.write(a)
+  }
+
+  private build(alerts: Alert[]) {
+    this.el.hidden = alerts.length === 0
+    const critical = alerts.filter((a) => a.level === 'critical').length
+    this.el.classList.toggle('critical', critical > 0)
+    this.head.querySelector('b')!.textContent = critical ? `${alerts.length} · ${critical} crítico${critical > 1 ? 's' : ''}` : String(alerts.length)
+    this.items = new Map()
+    this.list.replaceChildren(
+      ...alerts.map((alert) => {
+        const li = document.createElement('li')
+        li.className = `alert ${alert.level} kind-${alert.kind}`
+        li.innerHTML = `<button type="button"><span class="alert-icon">${ALERT_ICONS[alert.kind] ?? ICON_HAZARD}</span><span class="alert-text"><b></b><small></small></span></button>`
+        const item = { alert, li, title: li.querySelector('b')!, detail: li.querySelector('small')! }
+        li.querySelector('button')!.addEventListener('click', () => item.alert.at && this.flyTo(item.alert.at))
+        this.items.set(alert.id, item)
+        this.write(alert)
+        return li
+      }),
+    )
+  }
+
+  /** Texts in place, only when they changed. */
+  private write(alert: Alert) {
+    const item = this.items.get(alert.id)
+    if (!item) return
+    item.alert = alert
+    if (item.title.textContent !== alert.title) item.title.textContent = alert.title
+    if (item.detail.textContent !== alert.detail) item.detail.textContent = alert.detail
+    const tip = [alert.detail, alert.source, alert.at ? 'Clica para centrar a câmara.' : ''].filter(Boolean).join('\n\n')
+    if (item.li.title !== tip) item.li.title = tip
+    item.li.classList.toggle('located', !!alert.at)
   }
 }
 
