@@ -140,15 +140,16 @@ const TEMPLATE = `
   </footer>
 `
 
-const BARRICADE_CANVASES = new Map<string, HTMLCanvasElement>()
+const NO_ENTRY_CANVASES = new Map<string, HTMLCanvasElement>()
 
-function getBarricadeCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTMLCanvasElement {
-  const cached = BARRICADE_CANVASES.get(urgency)
+function getNoEntrySignCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTMLCanvasElement {
+  const cached = NO_ENTRY_CANVASES.get(urgency)
   if (cached) return cached
 
+  // High-DPI canvas (48x48) rendered sharp and discreet at 18x18 on the 3D map
   const canvas = document.createElement('canvas')
-  canvas.width = 72
-  canvas.height = 72
+  canvas.width = 48
+  canvas.height = 48
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
 
@@ -159,95 +160,49 @@ function getBarricadeCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTML
         ? '#ea580c'
         : '#d97706'
 
-  // Shadow
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.75)'
-  ctx.shadowBlur = 6
-  ctx.shadowOffsetY = 3
+  const cx = 24
+  const cy = 24
+  const r = 20
 
-  // Legs / A-frame (Dark metal)
-  ctx.strokeStyle = '#1e293b'
-  ctx.lineWidth = 4.5
-  ctx.lineCap = 'round'
+  // Drop shadow for contrast on any 3D terrain
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
+  ctx.shadowBlur = 4
+  ctx.shadowOffsetY = 1.5
 
-  // Left leg
+  // Dark outline ring
   ctx.beginPath()
-  ctx.moveTo(14, 66)
-  ctx.lineTo(26, 30)
-  ctx.stroke()
+  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
+  ctx.fillStyle = '#0f172a'
+  ctx.fill()
 
-  // Right leg
+  // White border
+  ctx.shadowBlur = 0
+  ctx.shadowOffsetY = 0
   ctx.beginPath()
-  ctx.moveTo(58, 66)
-  ctx.lineTo(46, 30)
-  ctx.stroke()
-
-  // Cross brace
-  ctx.lineWidth = 3
-  ctx.strokeStyle = '#334155'
-  ctx.beginPath()
-  ctx.moveTo(17, 54)
-  ctx.lineTo(55, 54)
-  ctx.stroke()
-
-  // Barricade Beam (horizontal bar with diagonal hazard stripes)
-  ctx.shadowBlur = 5
-  ctx.shadowOffsetY = 2
-  const bx = 4, by = 28, bw = 64, bh = 20, r = 4
-
-  ctx.save()
-  ctx.beginPath()
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(bx, by, bw, bh, r)
-  } else {
-    ctx.rect(bx, by, bw, bh)
-  }
-  ctx.clip()
-
-  // White base
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(bx, by, bw, bh)
+  ctx.fill()
 
-  // Diagonal warning stripes
-  ctx.fillStyle = color
-  const stripeW = 14
-  for (let x = bx - 28; x < bx + bw + 28; x += stripeW * 2) {
-    ctx.beginPath()
-    ctx.moveTo(x, by + bh)
-    ctx.lineTo(x + stripeW, by + bh)
-    ctx.lineTo(x + stripeW + bh, by)
-    ctx.lineTo(x + bh, by)
-    ctx.closePath()
-    ctx.fill()
-  }
-
-  // Beam outline
-  ctx.strokeStyle = '#0f172a'
-  ctx.lineWidth = 2
-  ctx.strokeRect(bx, by, bw, bh)
-  ctx.restore()
-
-  // Top Warning Badge: Red/Amber circular "No Entry" / "Trânsito Proibido" sign ⛔
-  ctx.shadowBlur = 6
-  ctx.shadowOffsetY = 2
+  // Inner colored circle (Red or Amber)
   ctx.beginPath()
-  ctx.arc(36, 15, 13, 0, Math.PI * 2)
+  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
   ctx.fillStyle = color
   ctx.fill()
-  ctx.lineWidth = 2.5
-  ctx.strokeStyle = '#ffffff'
-  ctx.stroke()
 
-  // White horizontal minus bar inside the circle (International No Entry sign ⛔)
+  // White horizontal prohibition bar (No Entry ⛔)
   ctx.fillStyle = '#ffffff'
+  const barW = 24
+  const barH = 6
+  const barR = 2
   ctx.beginPath()
   if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(26, 12.5, 20, 5, 2)
+    ctx.roundRect(cx - barW / 2, cy - barH / 2, barW, barH, barR)
   } else {
-    ctx.rect(26, 12.5, 20, 5)
+    ctx.rect(cx - barW / 2, cy - barH / 2, barW, barH)
   }
   ctx.fill()
 
-  BARRICADE_CANVASES.set(urgency, canvas)
+  NO_ENTRY_CANVASES.set(urgency, canvas)
   return canvas
 }
 
@@ -1174,14 +1129,14 @@ export class Editor {
             })
             ;(lineEntity as any)._roadCut = cut
 
-            // Cut barricade pin with distinct barrier icon (clean map: no text label, hover tooltip provides details)
+            // Cut pin with discreet small No-Entry circular sign (⛔)
             const cutEntity = this.agency.entities.add({
               position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
               billboard: {
-                image: getBarricadeCanvas(cut.urgency),
-                width: 44,
-                height: 44,
-                verticalOrigin: VerticalOrigin.BOTTOM,
+                image: getNoEntrySignCanvas(cut.urgency),
+                width: 18,
+                height: 18,
+                verticalOrigin: VerticalOrigin.CENTER,
                 heightReference: HeightReference.CLAMP_TO_GROUND,
                 disableDepthTestDistance: Infinity,
               },
