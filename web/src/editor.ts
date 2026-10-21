@@ -163,72 +163,6 @@ const TEMPLATE = `
   </footer>
 `
 
-const NO_ENTRY_CANVASES = new Map<string, HTMLCanvasElement>()
-
-function getNoEntrySignCanvas(urgency: 'cortado' | 'urgente' | 'preventivo'): HTMLCanvasElement {
-  const cached = NO_ENTRY_CANVASES.get(urgency)
-  if (cached) return cached
-
-  // High-DPI canvas (48x48) rendered sharp and discreet at 18x18 on the 3D map
-  const canvas = document.createElement('canvas')
-  canvas.width = 48
-  canvas.height = 48
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-
-  const color =
-    urgency === 'cortado'
-      ? '#dc2626'
-      : urgency === 'urgente'
-        ? '#ea580c'
-        : '#d97706'
-
-  const cx = 24
-  const cy = 24
-  const r = 20
-
-  // Drop shadow for contrast on any 3D terrain
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
-  ctx.shadowBlur = 4
-  ctx.shadowOffsetY = 1.5
-
-  // Dark outline ring
-  ctx.beginPath()
-  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
-  ctx.fillStyle = '#0f172a'
-  ctx.fill()
-
-  // White border
-  ctx.shadowBlur = 0
-  ctx.shadowOffsetY = 0
-  ctx.beginPath()
-  ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  ctx.fillStyle = '#ffffff'
-  ctx.fill()
-
-  // Inner colored circle (Red or Amber)
-  ctx.beginPath()
-  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
-  ctx.fillStyle = color
-  ctx.fill()
-
-  // White horizontal prohibition bar (No Entry ⛔)
-  ctx.fillStyle = '#ffffff'
-  const barW = 24
-  const barH = 6
-  const barR = 2
-  ctx.beginPath()
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(cx - barW / 2, cy - barH / 2, barW, barH, barR)
-  } else {
-    ctx.rect(cx - barW / 2, cy - barH / 2, barW, barH)
-  }
-  ctx.fill()
-
-  NO_ENTRY_CANVASES.set(urgency, canvas)
-  return canvas
-}
-
 const UNIT_CANVASES = new Map<string, HTMLCanvasElement>()
 
 function getUnitTacticalCanvas(unitId: UnitId): HTMLCanvasElement {
@@ -1645,8 +1579,8 @@ export class Editor {
     if (context && scenario && activeRun) {
       const threatened = detectThreatenedRoads(scenario.grid, context, activeRun, this.minutes)
 
-      // Draw threatened roads for PSP & Command
-      if (this.role === 'psp' || this.role === 'cmd') {
+      // Draw threatened roads only for PSP (traffic & safety role), without billboard icon clutter
+      if (this.role === 'psp') {
         for (const cut of threatened) {
           if (cut.pts && cut.pts.length >= 2) {
             const cutColor =
@@ -1659,26 +1593,12 @@ export class Editor {
             const lineEntity = this.agency.entities.add({
               polyline: {
                 positions: cut.pts.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
-                width: this.role === 'psp' ? 5 : 3,
+                width: 4,
                 clampToGround: true,
                 material: new PolylineDashMaterialProperty({ color: cutColor, dashLength: 10 }),
               },
             })
             ;(lineEntity as any)._roadCut = cut
-
-            // Cut pin with discreet small No-Entry circular sign (⛔)
-            const cutEntity = this.agency.entities.add({
-              position: Cartesian3.fromDegrees(cut.coord.lon, cut.coord.lat),
-              billboard: {
-                image: getNoEntrySignCanvas(cut.urgency),
-                width: 18,
-                height: 18,
-                verticalOrigin: VerticalOrigin.CENTER,
-                heightReference: HeightReference.CLAMP_TO_GROUND,
-                disableDepthTestDistance: Infinity,
-              },
-            })
-            ;(cutEntity as any)._roadCut = cut
           }
         }
       }
