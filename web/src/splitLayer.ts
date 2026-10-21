@@ -1,29 +1,23 @@
-// High-resolution simulated fire on the terrain:
-// 1. Anti-pixelated 2x supersampled drape with smooth bilinear arrival field and linear texture filtering
-// 2. Active flaming front in vibrant incandescent amber/gold
-// 3. Already burned area in deep charred charcoal black/ash
-// 4. Lightweight pool of 3D animated flame billboards flickering along the active front
-// 5. Smoke plumes drifting with the wind over the fire
+// High-resolution realistic wildfire simulation on the terrain:
+// 1. Continuous, unbroken 3D flame ribbon along the active front (multi-tongued wildfire billboards)
+// 2. Dense, billowing dark volumetric smoke cloud layer rising over the burned basin and drifting with the wind
+// 3. Deep charred pitch-black earth and ash scar behind the active front
+// 4. Supersampled bilinear anti-pixelated ground drape with linear texture filtering
 
 import {
   Billboard,
   BillboardCollection,
-  Cartesian2,
   Cartesian3,
   Cartographic,
   Color,
-  ConeEmitter,
   type ImageryLayer,
   Math as CesiumMath,
-  Matrix4,
   NearFarScalar,
-  ParticleSystem,
   Rectangle,
   SingleTileImageryProvider,
   SplitDirection,
   TextureMagnificationFilter,
   TextureMinificationFilter,
-  Transforms,
   VerticalOrigin,
   type Viewer,
 } from 'cesium'
@@ -32,11 +26,10 @@ import { lonLatAt, type Grid } from './grid'
 import './split.css'
 
 const KEY = 0.5
-const FRONT_MIN = 25 // active flame window in minutes; older cells turn to black ash
-const MAX_FLAMES = 120 // pool size of 3D flame billboards along the active front
-const SMOKE_PLUMES = 3
-const SMOKE_RISE_MS = 4.5
-const SMOKE_RELAX_S = 18
+const FLAME_WINDOW_MIN = 18 // minutes a cell actively carries tall flames
+const SMOKE_WINDOW_MIN = 65 // minutes a cell emits rising billowing smoke
+const MAX_FLAMES = 260 // dense pool of flame billboards forming a continuous fire ribbon
+const MAX_SMOKE = 150 // volumetric smoke puffs forming the dark billowing smoke blanket
 
 export interface Side {
   name: string
@@ -49,10 +42,10 @@ interface Look {
   saturation?: number
 }
 
-// Active front: vibrant, incandescent golden-orange
-const FRONT: Look = { alpha: 0.94, brightness: 1.25, saturation: 1.3 }
-// Burned scar: deep charred charcoal black ash
-const SCAR: Look = { alpha: 0.88, brightness: 0.15, saturation: 0.0 }
+// Active front: incandescent, vibrant fire glow on the ground
+const FRONT: Look = { alpha: 0.95, brightness: 1.35, saturation: 1.35 }
+// Burned scar: deep charred pitch-black earth and ash
+const SCAR: Look = { alpha: 0.92, brightness: 0.04, saturation: 0.0 }
 
 export class SplitLayer {
   private readonly layers: ImageryLayer[] = []
@@ -60,13 +53,12 @@ export class SplitLayer {
   position = 0.5
   private visible = true
 
-  // 3D Flames & Smoke
+  // 3D Flames & Volumetric Smoke
   private readonly flames: BillboardCollection
   private readonly flamePool: Billboard[] = []
+  private readonly smoke: BillboardCollection
+  private readonly smokePool: Billboard[] = []
   private frame = 0
-  private readonly smoke: (ParticleSystem | undefined)[] = new Array(SMOKE_PLUMES).fill(undefined)
-  private readonly smokeDrift = Array.from({ length: SMOKE_PLUMES }, () => new Cartesian3())
-  private lastSmokeMin = -Infinity
   private readonly flameImage: string
   private readonly smokeImage: string
 
@@ -95,32 +87,49 @@ export class SplitLayer {
       )
     })
 
-    // 2. 3D Flame Billboard pool (without HeightReference to avoid asynchronous clamping errors)
+    // 2. Dense 3D Flame Ribbon pool
     this.flameImage = makeFlameSprite()
-    this.smokeImage = makeSmokeSprite()
     this.flames = viewer.scene.primitives.add(new BillboardCollection())
     const initPos = Cartesian3.fromDegrees(
       (this.grid.rect.west + this.grid.rect.east) / 2,
       (this.grid.rect.south + this.grid.rect.north) / 2,
+      200,
     )
     for (let i = 0; i < MAX_FLAMES; i++) {
       const bb = this.flames.add({
         position: initPos,
         image: this.flameImage,
         sizeInMeters: true,
-        width: 18 * 0.55,
-        height: 18,
+        width: 48,
+        height: 38,
         verticalOrigin: VerticalOrigin.BOTTOM,
-        scaleByDistance: new NearFarScalar(600, 1.0, 15_000, 2.5),
+        scaleByDistance: new NearFarScalar(800, 1.0, 18_000, 2.6),
         show: false,
       })
       this.flamePool.push(bb)
     }
 
+    // 3. Volumetric Billowing Smoke Blanket pool
+    this.smokeImage = makeSmokeSprite()
+    this.smoke = viewer.scene.primitives.add(new BillboardCollection())
+    for (let i = 0; i < MAX_SMOKE; i++) {
+      const bb = this.smoke.add({
+        position: initPos,
+        image: this.smokeImage,
+        sizeInMeters: true,
+        width: 140,
+        height: 140,
+        verticalOrigin: VerticalOrigin.CENTER,
+        scaleByDistance: new NearFarScalar(800, 1.0, 22_000, 2.2),
+        show: false,
+      })
+      this.smokePool.push(bb)
+    }
+
     this.set(0)
     if (!split) return
 
-    // 3. Split compare slider (when both A and B are present)
+    // 4. Split compare slider (when both A and B are present)
     this.root = document.createElement('div')
     this.root.className = 'split'
     this.root.innerHTML = `
@@ -155,9 +164,7 @@ export class SplitLayer {
     this.visible = on
     for (const layer of this.layers) layer.show = on
     this.flames.show = on
-    for (const s of this.smoke) {
-      if (s) s.show = on
-    }
+    this.smoke.show = on
     if (this.root) this.root.hidden = !on
   }
 
@@ -165,9 +172,9 @@ export class SplitLayer {
   set(hours: number) {
     const t = Math.min(Math.max(hours * 60, 0), this.durationMin)
     const front = 1 - (KEY * t) / this.durationMin
-    const scar = 1 - (KEY * Math.max(t - FRONT_MIN, 0)) / this.durationMin
+    const scar = 1 - (KEY * Math.max(t - FLAME_WINDOW_MIN, 0)) / this.durationMin
 
-    // 1. Update drape imagery thresholds
+    // 1. Update drape imagery thresholds (active flame vs black charred scar)
     for (let i = 0; i < this.layers.length; i += 2) {
       this.layers[i].colorToAlphaThreshold = front
       this.layers[i + 1].colorToAlphaThreshold = scar
@@ -175,154 +182,109 @@ export class SplitLayer {
 
     if (!this.visible || t <= 0) {
       this.flames.show = false
+      this.smoke.show = false
       for (let i = 0; i < this.flamePool.length; i++) this.flamePool[i].show = false
-      for (let p = 0; p < SMOKE_PLUMES; p++) this.removePlume(p)
+      for (let i = 0; i < this.smokePool.length; i++) this.smokePool[i].show = false
       return
     }
 
-    // 2. Find currently burning cells on the active front [t - FRONT_MIN, t]
     const { cols } = this.grid
     const isSplit = this.sides.length > 1
-    const activeFront: { lon: number; lat: number; age: number; k: number }[] = []
+    const frame = ++this.frame
 
-    // Collect active cells from the primary (or both) sides
+    // Wind direction and speed from weather
+    const hourIdx = Math.min(Math.floor(hours), (this.weather?.windFromDeg.length ?? 1) - 1)
+    const windFrom = this.weather?.windFromDeg[hourIdx] ?? 315
+    const windToRad = CesiumMath.toRadians(windFrom + 180) // direction wind is blowing towards
+    const windSin = Math.sin(windToRad)
+    const windCos = Math.cos(windToRad)
+
+    // 2. Identify active front cells for the continuous flame ribbon [t - FLAME_WINDOW_MIN, t]
+    // and smoke cells for the billowing smoke cloud [t - SMOKE_WINDOW_MIN, t]
+    const flameCells: { lon: number; lat: number; age: number; k: number }[] = []
+    const smokeCells: { lon: number; lat: number; age: number; k: number }[] = []
+
     for (let sIdx = 0; sIdx < this.sides.length; sIdx++) {
       const arr = this.sides[sIdx].arrival
       for (let k = 0; k < arr.length; k++) {
         const arrivalMin = arr[k]
         const age = t - arrivalMin
-        if (age >= 0 && age <= FRONT_MIN) {
-          const col = k % cols
-          const row = (k - col) / cols
-          const pos = lonLatAt(this.grid, col + 0.5, row + 0.5)
+        if (age < 0 || age > SMOKE_WINDOW_MIN) continue
 
-          if (isSplit) {
-            const normLon = (pos.lon - this.grid.rect.west) / (this.grid.rect.east - this.grid.rect.west)
-            if (sIdx === 0 && normLon > this.position) continue
-            if (sIdx === 1 && normLon < this.position) continue
-          }
+        const col = k % cols
+        const row = (k - col) / cols
+        const pos = lonLatAt(this.grid, col + 0.5, row + 0.5)
 
-          activeFront.push({ lon: pos.lon, lat: pos.lat, age, k })
+        if (isSplit) {
+          const normLon = (pos.lon - this.grid.rect.west) / (this.grid.rect.east - this.grid.rect.west)
+          if (sIdx === 0 && normLon > this.position) continue
+          if (sIdx === 1 && normLon < this.position) continue
         }
+
+        if (age <= FLAME_WINDOW_MIN) {
+          flameCells.push({ lon: pos.lon, lat: pos.lat, age, k })
+        }
+        smokeCells.push({ lon: pos.lon, lat: pos.lat, age, k })
       }
     }
 
-    // 3. Update flame billboards from pool
-    const frame = ++this.frame
-    const numActive = activeFront.length
-    const step = numActive > MAX_FLAMES ? Math.ceil(numActive / MAX_FLAMES) : 1
+    // 3. Update continuous 3D Flame Ribbon
+    const numFlames = flameCells.length
+    const flameStep = numFlames > MAX_FLAMES ? Math.ceil(numFlames / MAX_FLAMES) : 1
     let usedFlames = 0
 
-    for (let i = 0; i < numActive && usedFlames < MAX_FLAMES; i += step) {
-      const cell = activeFront[i]
+    for (let i = 0; i < numFlames && usedFlames < MAX_FLAMES; i += flameStep) {
+      const cell = flameCells[i]
       const bb = this.flamePool[usedFlames]
       const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
-      bb.position = Cartesian3.fromDegrees(cell.lon, cell.lat, h)
 
-      const life = Math.min(1, cell.age / 0.8) * Math.max(0, 1 - Math.pow(cell.age / FRONT_MIN, 2.2))
-      const flicker = 0.82 + 0.18 * Math.sin(frame * 0.35 + cell.k * 13.7)
+      // Jitter slightly along normal to create natural irregular fiery teeth
+      const jitterLon = (Math.sin(cell.k * 53.3) * 0.15 * (this.grid.rect.east - this.grid.rect.west)) / cols
+      const jitterLat = (Math.cos(cell.k * 67.7) * 0.15 * (this.grid.rect.north - this.grid.rect.south)) / this.grid.rows
+      bb.position = Cartesian3.fromDegrees(cell.lon + jitterLon, cell.lat + jitterLat, h - 0.5)
+
+      const life = Math.min(1, cell.age / 0.5) * Math.max(0, 1 - Math.pow(cell.age / FLAME_WINDOW_MIN, 2.5))
+      const flicker = 0.84 + 0.16 * Math.sin(frame * 0.45 + cell.k * 17.1)
       bb.scale = life * flicker
-      bb.show = life > 0.03
+      bb.show = life > 0.02
       usedFlames++
     }
-
-    // Hide remaining billboards in pool
-    for (let i = usedFlames; i < MAX_FLAMES; i++) {
-      this.flamePool[i].show = false
-    }
+    for (let i = usedFlames; i < MAX_FLAMES; i++) this.flamePool[i].show = false
     this.flames.show = true
 
-    // 4. Update smoke plumes periodically
-    if (Math.abs(t - this.lastSmokeMin) >= 1.5 || (this.lastSmokeMin === -Infinity && t > 0)) {
-      this.lastSmokeMin = t
-      this.updateSmoke(hours, activeFront)
-    }
-  }
+    // 4. Update dense, billowing volumetric Smoke Blanket
+    const numSmoke = smokeCells.length
+    const smokeStep = numSmoke > MAX_SMOKE ? Math.ceil(numSmoke / MAX_SMOKE) : 1
+    let usedSmoke = 0
 
-  /** Position smoke plumes over active burning areas and orient with the wind */
-  private updateSmoke(hours: number, activeCells: { lon: number; lat: number }[]) {
-    if (activeCells.length === 0) {
-      for (let p = 0; p < SMOKE_PLUMES; p++) this.removePlume(p)
-      return
-    }
-
-    // Space plumes apart
-    const picked: { lon: number; lat: number }[] = []
-    for (const cell of activeCells) {
-      if (picked.length >= SMOKE_PLUMES) break
-      const farEnough = picked.every((q) => {
-        const dLon = (q.lon - cell.lon) * 111_000
-        const dLat = (q.lat - cell.lat) * 111_000
-        return Math.hypot(dLon, dLat) > 400
-      })
-      if (farEnough) picked.push(cell)
-    }
-
-    // Wind direction and speed from weather
-    const hourIdx = Math.min(Math.floor(hours), (this.weather?.windFromDeg.length ?? 1) - 1)
-    const windFrom = this.weather?.windFromDeg[hourIdx] ?? 315
-    const windKmh = this.weather?.windKmh[hourIdx] ?? 18
-    const windTo = CesiumMath.toRadians(windFrom + 180)
-    const windMs = windKmh / 3.6
-    const driftEnu = new Cartesian3(Math.sin(windTo) * windMs, Math.cos(windTo) * windMs, SMOKE_RISE_MS)
-
-    for (let p = 0; p < SMOKE_PLUMES; p++) {
-      const cell = picked[p]
-      if (!cell) {
-        this.removePlume(p)
-        continue
-      }
+    for (let i = 0; i < numSmoke && usedSmoke < MAX_SMOKE; i += smokeStep) {
+      const cell = smokeCells[i]
+      const bb = this.smokePool[usedSmoke]
       const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
-      const origin = Cartesian3.fromDegrees(cell.lon, cell.lat, h + 5)
-      const enu = Transforms.eastNorthUpToFixedFrame(origin)
-      Matrix4.multiplyByPointAsVector(enu, driftEnu, this.smokeDrift[p])
 
-      if (!this.smoke[p]) {
-        this.smoke[p] = this.makePlume(p)
-      }
-      this.smoke[p]!.modelMatrix = enu
-      this.smoke[p]!.show = this.visible
+      // As smoke ages, it rises vertically and drifts downwind
+      const driftM = Math.min(500, cell.age * 9.0)
+      const dLon = (windSin * driftM) / 111_000
+      const dLat = (windCos * driftM) / 111_000
+      const riseM = 22 + Math.min(180, cell.age * 2.8)
+
+      bb.position = Cartesian3.fromDegrees(cell.lon + dLon, cell.lat + dLat, h + riseM)
+
+      // Smoke billow scale & opacity curve: blooms rapidly, hangs dense, then disperses
+      const smokeLife = Math.min(1, cell.age / 2.0) * Math.max(0, 1 - Math.pow(cell.age / SMOKE_WINDOW_MIN, 2.0))
+      const billow = 0.92 + 0.08 * Math.sin(frame * 0.18 + cell.k * 11.3)
+      bb.scale = smokeLife * billow
+      bb.show = smokeLife > 0.03
+      usedSmoke++
     }
-  }
-
-  private makePlume(p: number): ParticleSystem {
-    const drift = this.smokeDrift[p]
-    const pull = new Cartesian3()
-
-    return this.viewer.scene.primitives.add(
-      new ParticleSystem({
-        image: this.smokeImage,
-        sizeInMeters: true,
-        imageSize: new Cartesian2(36, 36),
-        startScale: 1.0,
-        endScale: 7.5,
-        startColor: new Color(0.18, 0.16, 0.15, 0.4),
-        endColor: new Color(0.65, 0.65, 0.68, 0.0),
-        emissionRate: 1.4,
-        minimumParticleLife: 10,
-        maximumParticleLife: 20,
-        minimumSpeed: 3,
-        maximumSpeed: 7,
-        emitter: new ConeEmitter(CesiumMath.toRadians(16)),
-        updateCallback: (particle, dt) => {
-          Cartesian3.subtract(drift, particle.velocity, pull)
-          Cartesian3.multiplyByScalar(pull, Math.min(1, dt / SMOKE_RELAX_S), pull)
-          Cartesian3.add(particle.velocity, pull, particle.velocity)
-        },
-      }),
-    ) as ParticleSystem
-  }
-
-  private removePlume(p: number) {
-    const sys = this.smoke[p]
-    if (sys) this.viewer.scene.primitives.remove(sys)
-    this.smoke[p] = undefined
+    for (let i = usedSmoke; i < MAX_SMOKE; i++) this.smokePool[i].show = false
+    this.smoke.show = true
   }
 
   destroy() {
     for (const layer of this.layers) this.viewer.imageryLayers.remove(layer, true)
     this.viewer.scene.primitives.remove(this.flames)
-    for (let p = 0; p < SMOKE_PLUMES; p++) this.removePlume(p)
+    this.viewer.scene.primitives.remove(this.smoke)
     if (!this.root) return
     this.root.remove()
     this.viewer.scene.splitPosition = 0
@@ -432,39 +394,74 @@ function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, s
   return canvas.toDataURL('image/png')
 }
 
-/** Procedural flame sprite with bright core and hot amber/red body */
+/** Procedural multi-tongued wildfire flame sprite forming a continuous fiery wall */
 function makeFlameSprite(): string {
   const canvas = document.createElement('canvas')
-  canvas.width = 64
+  canvas.width = 128
   canvas.height = 128
   const g = canvas.getContext('2d')!
-  const grad = g.createRadialGradient(32, 104, 2, 32, 90, 60)
-  grad.addColorStop(0, 'rgba(255, 255, 220, 1)')
-  grad.addColorStop(0.2, 'rgba(255, 205, 55, 0.95)')
-  grad.addColorStop(0.5, 'rgba(255, 95, 10, 0.8)')
-  grad.addColorStop(0.85, 'rgba(200, 30, 0, 0.4)')
-  grad.addColorStop(1, 'rgba(160, 20, 0, 0)')
-  g.fillStyle = grad
+
+  // Broad incandescent glowing base
+  const baseGrad = g.createRadialGradient(64, 115, 4, 64, 100, 58)
+  baseGrad.addColorStop(0, 'rgba(255, 255, 230, 1.0)')
+  baseGrad.addColorStop(0.35, 'rgba(255, 205, 45, 0.95)')
+  baseGrad.addColorStop(0.7, 'rgba(255, 85, 12, 0.82)')
+  baseGrad.addColorStop(1, 'rgba(180, 20, 0, 0)')
+  g.fillStyle = baseGrad
   g.beginPath()
-  g.moveTo(32, 0)
-  g.bezierCurveTo(52, 40, 64, 80, 54, 112)
-  g.quadraticCurveTo(32, 132, 10, 112)
-  g.bezierCurveTo(0, 80, 12, 40, 32, 0)
+  g.ellipse(64, 115, 60, 20, 0, 0, Math.PI * 2)
   g.fill()
+
+  const drawTongue = (cx: number, cy: number, w: number, h: number, curve: number) => {
+    const grad = g.createRadialGradient(cx, cy + h * 0.4, 2, cx, cy, h * 0.72)
+    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)')
+    grad.addColorStop(0.28, 'rgba(255, 215, 55, 0.96)')
+    grad.addColorStop(0.62, 'rgba(255, 95, 12, 0.88)')
+    grad.addColorStop(0.85, 'rgba(210, 35, 5, 0.55)')
+    grad.addColorStop(1, 'rgba(120, 10, 0, 0)')
+    g.fillStyle = grad
+    g.beginPath()
+    g.moveTo(cx, cy - h)
+    g.bezierCurveTo(cx + w + curve, cy - h * 0.3, cx + w, cy + h * 0.4, cx, cy + h * 0.5)
+    g.bezierCurveTo(cx - w, cy + h * 0.4, cx - w + curve, cy - h * 0.3, cx, cy - h)
+    g.fill()
+  }
+
+  // 5 overlapping fire tongues forming a thick wall of flame
+  drawTongue(64, 60, 28, 56, 4)
+  drawTongue(42, 68, 24, 46, -3)
+  drawTongue(86, 68, 24, 46, 3)
+  drawTongue(22, 82, 19, 34, -5)
+  drawTongue(106, 82, 19, 34, 5)
+
   return canvas.toDataURL('image/png')
 }
 
-/** Soft circular radial smoke sprite as a data URL */
+/** Volumetric multi-lobed dark billowing smoke cloud puff */
 function makeSmokeSprite(): string {
   const canvas = document.createElement('canvas')
-  canvas.width = 64
-  canvas.height = 64
+  canvas.width = 128
+  canvas.height = 128
   const g = canvas.getContext('2d')!
-  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 30)
-  grad.addColorStop(0, 'rgba(255, 255, 255, 0.85)')
-  grad.addColorStop(0.5, 'rgba(220, 220, 225, 0.4)')
-  grad.addColorStop(1, 'rgba(200, 200, 210, 0)')
-  g.fillStyle = grad
-  g.fillRect(0, 0, 64, 64)
+
+  const drawPuff = (cx: number, cy: number, r: number, alpha: number) => {
+    const grad = g.createRadialGradient(cx, cy, r * 0.08, cx, cy, r)
+    grad.addColorStop(0, `rgba(22, 19, 18, ${alpha})`)
+    grad.addColorStop(0.48, `rgba(32, 28, 26, ${alpha * 0.72})`)
+    grad.addColorStop(0.82, `rgba(45, 40, 38, ${alpha * 0.28})`)
+    grad.addColorStop(1, 'rgba(50, 45, 42, 0)')
+    g.fillStyle = grad
+    g.beginPath()
+    g.arc(cx, cy, r, 0, Math.PI * 2)
+    g.fill()
+  }
+
+  // Overlapping soft organic lobes
+  drawPuff(64, 64, 58, 0.72)
+  drawPuff(46, 50, 46, 0.62)
+  drawPuff(82, 52, 46, 0.62)
+  drawPuff(54, 82, 42, 0.58)
+  drawPuff(76, 78, 42, 0.58)
+
   return canvas.toDataURL('image/png')
 }
