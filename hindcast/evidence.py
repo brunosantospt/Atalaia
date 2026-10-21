@@ -211,7 +211,8 @@ def main(argv=None):
 
     t0 = fires.parse_time(fire.steps[0]["time"]).replace(tzinfo=LOCAL)
     first = t0 - dt.timedelta(days=args.days_before)
-    months = sorted({(first.year, first.month), (t0.year, t0.month)})
+    # every month from `first` to t0, the ones in between too (Cabeceiras: July, August and September)
+    months = [(first.year + k // 12, k % 12 + 1) for k in range(first.month - 1, (t0.year - first.year) * 12 + t0.month)]
     recs = [d for y, m in months for d in sgif_month(y, m, cache)]
     me = next((d for d in recs if d.get("NCCO") == ncco), None)
     if me is None:

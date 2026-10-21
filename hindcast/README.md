@@ -220,7 +220,11 @@ web/public/fires/<id>/  (scripts/build_*.py: grid, fuel, terreno, ERA5, progress
 - **Horas:** alerta às 06:09, mais de 2 h depois das 04:00 do PT-FireSprd; 1.ª intervenção às 06:30; extinto a 7/09 às 23:24.
 - **Área:** 1555 ha no SGIF; o perímetro da GNR tem 1392 ha.
 - **Perigo no local:** DC 729 e BUI 193, uma seca ainda mais funda que a de Vieira.
-- **Cicatriz ao lado:** 254 ha em Rio Douro, a 2/09.
+- **Cicatrizes:** 11 incêndios nos 40 dias antes, 870 ha no SGIF, 504 ha dentro da grade. Os maiores:
+  - **Cavez:** 404 ha, a 29/08.
+  - **Rio Douro:** 254 ha e 47 ha a 2/09, e 59 ha a 25/08.
+  - **Abadim:** 95 ha, a 5/09, na véspera.
+  - Os outros 6 têm menos de 3 ha.
 
 ## 2. Combustíveis portugueses (`fuels.py`)
 
@@ -261,7 +265,7 @@ Por isso as linhas são **inferidas**, e cada uma diz como (`tier`, `source`).
 - **Vieira:** 33 linhas, 13,6 km, ao longo de 11,5 dos 34 km do perímetro. Outros 3 km do perímetro correm junto a cicatrizes, e ficam de fora 30 estradas atravessadas.
   - Os flancos sul e leste seguram a partir das 2–3 h.
   - O flanco norte segura sobretudo a partir das 11 h (21:00).
-- **Cabeceiras:** 46 linhas, 15,0 km.
+- **Cabeceiras:** 44 linhas, 14,7 km, ao longo de 12,6 dos 29 km do perímetro. Outro 1 km corre junto a cicatrizes.
 - **Não se infere a defesa das aldeias:** o OSM tem poucas casas nestas freguesias, e as aldeias evacuadas nem lá estão.
 
 **Atenção: as linhas estão onde o perímetro final está.** Uma corrida com elas aproxima-se desse perímetro por construção. Por isso olha-se também para o satélite, que elas não conseguem melhorar (só podem tirar área), e para a área ao longo do tempo.
@@ -286,7 +290,7 @@ Por isso as linhas são **inferidas**, e cada uma diz como (`tier`, `source`).
 - **Área por passo e Sørensen:** contra o observado, por passo e no último passo.
 - **Perímetro oficial:** o Sørensen contra o perímetro oficial (GNR) e a área ardida fora dele.
 - **Satélite:** em cada passagem com pelo menos 3 focos neste incêndio, fora das cicatrizes, a fração de focos cuja pegada (375 m ou 1 km) o fogo simulado já tinha alcançado até 30 min depois da passagem. Não depende dos perímetros.
-  - **Lê-se sempre com "Fora do oficial".** Só conta focos alcançados, por isso queimar de mais não custa nada: em Cabeceiras a corrida como a API tem 0,81 queimando 990 ha fora do perímetro oficial, e as corridas com velocidade × 1,5 chegam a 1,00.
+  - **Lê-se sempre com "Fora do oficial".** Só conta focos alcançados, por isso queimar de mais não custa nada: em Cabeceiras a corrida como a API tem 0,80 queimando 988 ha fora do perímetro oficial, e as corridas com velocidade × 1,5 chegam a 1,00.
 
 ## Resultados
 
@@ -347,13 +351,13 @@ Fazem-se com `grid.py`.
 | Corrida | 13:30 (9,5 h) | 00:30 (20,5 h) | 12:30 (32,5 h) | Sørensen último passo | Sørensen oficial | Fora do oficial | Satélite |
 |---|---|---|---|---|---|---|---|
 | Observado (PT-FireSprd) | 594 ha | 1243 ha | 1334 ha | | | | |
-| 0. Como a API | 298 | 1153 | 2157 | 0,63 | 0,66 | 990 ha | 0,81 |
-| 5. Configuração de Vieira, sem linhas | 439 | 1897 | 3214 | 0,53 | 0,56 | 1935 | 0,86 |
-| 6. Configuração de Vieira, com linhas | 373 | 1752 | 2902 | 0,55 | 0,57 | 1671 | 0,85 |
+| 0. Como a API | 298 | 1152 | 2154 | 0,63 | 0,66 | 988 ha | 0,80 |
+| 5. Configuração de Vieira, sem linhas | 437 | 1686 | 2699 | 0,58 | 0,61 | 1449 | 0,82 |
+| 6. Configuração de Vieira, com linhas | 369 | 1578 | 2534 | 0,59 | 0,62 | 1324 | 0,82 |
 
 - **A configuração de Vieira não transfere sem copas:** queima de mais. Em Vieira, sem copas, a mesma configuração também chegava a 3000 ha. A proteção do vento debaixo das árvores é o que trava o ELMFIRE na floresta.
 - **Falta o LiDAR:** com as copas do LiDAR da DGT (precisa de login) este teste fica justo.
-- **As linhas ajudam também aqui:** −312 ha.
+- **As linhas ajudam também aqui:** −165 ha, dos quais −125 ha fora do oficial.
 
 ## Histórico de decisões e erros corrigidos (20–21/10/2026)
 
@@ -373,6 +377,7 @@ Fazem-se com `grid.py`.
 7. **O adapter estendido** dá exatamente o mesmo que o de origem quando o pedido não usa os campos novos (testado célula a célula).
 8. **O vento do Carlos** (CERRA e TopoWind) foi testado primeiro com as linhas, o que não isolava o efeito, e depois sem elas. Fica dentro do ruído das sementes (TopoWind) ou abranda a corrida principal (CERRA).
 9. **Linhas v2:** as mesmas estradas, com a hora do fogo do modelo. É a melhor configuração atual (passo 8).
+10. **Os meses do SGIF:** o `evidence.py` só pedia o mês do alerta e o mês 40 dias antes, e saltava os do meio. Em Cabeceiras (alerta a 6/09) faltava agosto inteiro: 6 cicatrizes em vez de 11, com Cavez (404 ha) de fora. Agora pede todos os meses. Vieira não muda; os números de Cabeceiras acima já são os corrigidos.
 
 ## Ramos e projetos relacionados
 

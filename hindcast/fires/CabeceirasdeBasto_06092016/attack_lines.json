@@ -11,11 +11,13 @@
   "lead": 60.0,
   "earliest": 30.0,
   "step": 60.0,
-  "width": 20.0
+  "width": 20.0,
+  "timing": "observed",
+  "run": null
  },
  "official_boundary_km": 29.0,
- "boundary_along_scars_km": 0.37,
- "boundary_covered_km": 12.86,
+ "boundary_along_scars_km": 1.04,
+ "boundary_covered_km": 12.55,
  "crossings_left_out_km": 2.97,
  "barriers": [
   {
@@ -1083,58 +1085,6 @@
   {
    "label": "road 36",
    "tier": "road",
-   "source": "road along the official perimeter, 151 m of a 345 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -7.929131,
-     41.559289
-    ],
-    [
-     -7.9287,
-     41.55912
-    ],
-    [
-     -7.92853,
-     41.5592
-    ],
-    [
-     -7.92807,
-     41.5597
-    ],
-    [
-     -7.928084,
-     41.559926
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 300.0,
-   "length_m": 150
-  },
-  {
-   "label": "road 37",
-   "tier": "road",
-   "source": "road along the official perimeter, 194 m of a 345 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -7.92862,
-     41.55916
-    ],
-    [
-     -7.92852,
-     41.55874
-    ],
-    [
-     -7.928889,
-     41.557461
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 300.0,
-   "length_m": 193
-  },
-  {
-   "label": "road 38",
-   "tier": "road",
    "source": "road along the official perimeter, 175 m of a 740 m held line (tertiary, track); time: observed arrival within reach",
    "path": [
     [
@@ -1155,7 +1105,7 @@
    "length_m": 175
   },
   {
-   "label": "road 39",
+   "label": "road 37",
    "tier": "road",
    "source": "road along the official perimeter, 204 m of a 740 m held line (tertiary, track); time: observed arrival within reach",
    "path": [
@@ -1173,7 +1123,7 @@
    "length_m": 202
   },
   {
-   "label": "road 40",
+   "label": "road 38",
    "tier": "road",
    "source": "road along the official perimeter, 57 m of a 740 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1191,7 +1141,7 @@
    "length_m": 57
   },
   {
-   "label": "road 41",
+   "label": "road 39",
    "tier": "road",
    "source": "road along the official perimeter, 304 m of a 740 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1221,7 +1171,7 @@
    "length_m": 299
   },
   {
-   "label": "road 42",
+   "label": "road 40",
    "tier": "road",
    "source": "road along the official perimeter, 374 m of a 931 m held line (residential, track, unclassified); time: observed arrival within reach",
    "path": [
@@ -1255,7 +1205,7 @@
    "length_m": 369
   },
   {
-   "label": "road 43",
+   "label": "road 41",
    "tier": "road",
    "source": "road along the official perimeter, 188 m of a 931 m held line (track, unclassified); time: observed arrival within reach",
    "path": [
@@ -1277,7 +1227,7 @@
    "length_m": 187
   },
   {
-   "label": "road 44",
+   "label": "road 42",
    "tier": "road",
    "source": "road along the official perimeter, 79 m of a 931 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1295,7 +1245,7 @@
    "length_m": 77
   },
   {
-   "label": "road 45",
+   "label": "road 43",
    "tier": "road",
    "source": "road along the official perimeter, 125 m of a 931 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1313,7 +1263,7 @@
    "length_m": 125
   },
   {
-   "label": "road 46",
+   "label": "road 44",
    "tier": "road",
    "source": "road along the official perimeter, 165 m of a 931 m held line (track); time: observed arrival within reach",
    "path": [

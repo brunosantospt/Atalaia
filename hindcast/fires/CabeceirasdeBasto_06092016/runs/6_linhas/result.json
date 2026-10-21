@@ -17,21 +17,23 @@
   "canopy": true,
   "spotting": true,
   "seed": 1,
+  "weather": "era5",
+  "topowind": false,
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": "hindcast/fires/CabeceirasdeBasto_06092016/attack_lines.json",
   "engine": "hindcast/engine/run.sh"
  },
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
- "barriers": 46,
- "stretches": 9,
- "runtime_s": 19.3,
- "wall_s": 24.4,
+ "barriers": 44,
+ "stretches": 8,
+ "runtime_s": 10.7,
+ "wall_s": 16.0,
  "notes": [
-  "cicatrizes: 397 ha"
+  "cicatrizes: 504 ha"
  ],
  "stats": {
-  "burned_ha": 2902.0,
+  "burned_ha": 2533.6,
   "by_hour": [
    {
     "h": 0.0,
@@ -46,70 +48,70 @@
    {
     "h": 6,
     "observed_ha": 89,
-    "run_ha": 250
+    "run_ha": 249
    },
    {
     "h": 9,
     "observed_ha": 487,
-    "run_ha": 350
+    "run_ha": 348
    },
    {
     "h": 9.5,
     "observed_ha": 594,
-    "run_ha": 373
+    "run_ha": 369
    },
    {
     "h": 12,
     "observed_ha": 599,
-    "run_ha": 702
+    "run_ha": 681
    },
    {
     "h": 15,
     "observed_ha": 618,
-    "run_ha": 1216
+    "run_ha": 1123
    },
    {
     "h": 18,
     "observed_ha": 696,
-    "run_ha": 1526
+    "run_ha": 1394
    },
    {
     "h": 20.5,
     "observed_ha": 1243,
-    "run_ha": 1752
+    "run_ha": 1578
    },
    {
     "h": 21,
     "observed_ha": 1243,
-    "run_ha": 1796
+    "run_ha": 1615
    },
    {
     "h": 24,
     "observed_ha": 1264,
-    "run_ha": 2060
+    "run_ha": 1824
    },
    {
     "h": 27,
     "observed_ha": 1289,
-    "run_ha": 2309
+    "run_ha": 2021
    },
    {
     "h": 30,
     "observed_ha": 1315,
-    "run_ha": 2591
+    "run_ha": 2249
    },
    {
     "h": 32.5,
     "observed_ha": 1334,
-    "run_ha": 2902
+    "run_ha": 2534
    },
    {
     "h": 33,
     "observed_ha": 1334,
-    "run_ha": 2902
+    "run_ha": 2534
    }
   ],
-  "sorensen_last_step": 0.545,
+  "sorensen_last_step": 0.587,
   "sorensen_by_step": [
    {
     "step": 1,
@@ -119,30 +121,30 @@
    {
     "step": 2,
     "h": 20.5,
-    "sorensen": 0.646
+    "sorensen": 0.679
    },
    {
     "step": 3,
     "h": 32.5,
-    "sorensen": 0.545
+    "sorensen": 0.587
    }
   ],
   "official_ha": 1392.3,
-  "sorensen_official": 0.573,
-  "outside_official_ha": 1671.0,
+  "sorensen_official": 0.616,
+  "outside_official_ha": 1324.3,
   "satellite": {
    "passes": [
     {
      "time_utc": "2016-09-06T11:43:00+00:00",
      "h": 8.72,
-     "n": 12,
-     "reached": 0.75
+     "n": 10,
+     "reached": 0.7
     },
     {
      "time_utc": "2016-09-06T12:33:00+00:00",
      "h": 9.55,
-     "n": 31,
-     "reached": 0.65
+     "n": 29,
+     "reached": 0.59
     },
     {
      "time_utc": "2016-09-06T13:23:00+00:00",
@@ -160,13 +162,13 @@
      "time_utc": "2016-09-06T22:49:00+00:00",
      "h": 19.82,
      "n": 8,
-     "reached": 0.88
+     "reached": 0.75
     },
     {
      "time_utc": "2016-09-07T02:31:00+00:00",
      "h": 23.52,
-     "n": 56,
-     "reached": 0.88
+     "n": 55,
+     "reached": 0.85
     },
     {
      "time_utc": "2016-09-07T03:00:00+00:00",
@@ -175,7 +177,7 @@
      "reached": 1.0
     }
    ],
-   "mean_reached": 0.85
+   "mean_reached": 0.82
   }
  }
 }
