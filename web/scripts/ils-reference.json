@@ -1,0 +1,31 @@
+{
+  "measured": "2026-10-21 · 2000 plans · seed 1 · commit a03d232",
+  "fires": [
+    {
+      "id": "VieiradoMinho_10082016",
+      "name": "Vieira do Minho 2016",
+      "a": {
+        "places": 3,
+        "ha": 871.9
+      },
+      "b": {
+        "places": 0,
+        "ha": 138.4
+      },
+      "foundAt": 1623
+    },
+    {
+      "id": "CabeceirasdeBasto_06092016",
+      "name": "Cabeceiras de Basto 2016",
+      "a": {
+        "places": 5,
+        "ha": 449
+      },
+      "b": {
+        "places": 3,
+        "ha": 428.2
+      },
+      "foundAt": 1696
+    }
+  ]
+}

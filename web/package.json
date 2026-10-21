@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ils:check": "node scripts/run.mjs scripts/ils-check.ts"
   },
   "dependencies": {
     "cesium": "^1.146.0"
