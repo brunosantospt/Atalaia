@@ -15,6 +15,7 @@
 //   roads around the places the fire reaches (the protection of values the article leaves for
 //   future work).
 
+import { findAirBase } from './airBases'
 import { simulate, type Run, type Scenario } from './fastModel'
 import { distanceM, toPTTM06, type LonLat } from './geo'
 import { cellHa, cellOf, lonLatAt } from './grid'
@@ -132,6 +133,11 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
   const { grid, stations, suppression: sup, durationMin } = scenario
   const ha = cellHa(grid)
   const ecinGain = sup.dispatch.volunteerTurnoutMin - sup.dispatch.ecinTurnoutMin
+  /** Km from where a unit leaves to p, as fastModel.ts counts them: an aircraft from its air base, the rest by road from the station. */
+  const kmFrom = (unit: UnitId, from: string) => {
+    const origin = isAerial(sup.units[unit]) ? findAirBase(from) : stations.find((s) => s.id === from)
+    return (p: LonLat) => (origin ? distanceM(origin, p) / 1000 : sup.dispatch.airBaseKm)
+  }
 
   const reached = (run: Run): number[] => {
     const out: number[] = []
@@ -164,9 +170,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     if (!aerial) ecinSeen.add(x.from)
     const home = homeOf.get(x.target)
     if (x.task === 'line' || x.task === 'drops' || home === undefined) return void fixed.push({ x, slot })
-    const station = stations.find((s) => s.id === x.from)
-    const km = station ? distanceM(station, scenario.ignition) / 1000 : sup.dispatch.airBaseKm
-    const etaIgnition = arrivalMin(sup, spec, km, ecin)
+    const etaIgnition = arrivalMin(sup, spec, kmFrom(x.unit, x.from)(scenario.ignition), ecin)
     for (let c = 0; c < x.count; c++)
       seeds.push({ unit: x.unit, from: x.from, task: x.task, slot, ecin, aerial, water: !aerial && !!spec.waterL, home, etaIgnition })
   })
@@ -195,8 +199,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     let eta = etaCache.get(key)
     if (!eta) {
       const spec = sup.units[u.unit]
-      const station = stations.find((s) => s.id === u.from)
-      const km = (p: LonLat) => (station ? distanceM(station, p) / 1000 : sup.dispatch.airBaseKm)
+      const km = kmFrom(u.unit, u.from)
       etaCache.set(key, (eta = Float32Array.from(spots, (p) => arrivalMin(sup, spec, km(p), false))))
     }
     return { ...u, eta }
