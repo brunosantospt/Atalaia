@@ -53,10 +53,9 @@ import {
   ICON_SHIELD,
   ICON_BOLT,
 } from './icons'
-import { stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
+import { arrivals, stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
   aerialFrontM,
-  arrivalMin,
   dropCycleMin,
   flameLengthM,
   isAerial,
@@ -1401,7 +1400,8 @@ export class Editor {
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
-    const eta = target ? this.eta(a, target) : undefined
+    // The minute the model has it at work, the one its barrier holds from (wetLine.ts arrivals).
+    const eta = target && this.loaded ? arrivals(this.loaded.scenario, d)[k] : undefined
     const isGround = !isAerial(unit)
     const base = isAerial(unit) ? findAirBase(a.from) : undefined
     const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
@@ -1459,26 +1459,6 @@ export class Editor {
     this.tip.hidden = true
     this.activeTipAnchor = null
     this.refs.capacityInfo?.classList.remove('active')
-  }
-
-  /** Minutes until an assignment is at work, from its station or CMA / air base. */
-  private eta(a: Assignment, target: LonLat): number {
-    const unit = this.sup.units[a.unit]
-    const base = isAerial(unit) ? findAirBase(a.from) : undefined
-    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
-    let km = isAerial(unit)
-      ? (base ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm)
-      : (station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm)
-
-    // For ground units, use real safe driving route along OSM road network
-    if (!isAerial(unit) && station && this.loaded?.context) {
-      const d = this.decisions[this.active]
-      const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
-      const route = findSafeRoute(this.loaded.scenario.grid, this.loaded.context.osm.roads, activeRun?.arrival, this.minutes, station, target)
-      if (route) km = route.distanceKm
-    }
-
-    return arrivalMin(this.sup, unit, km, a.unit === 'crew')
   }
 
   /** What the assignment does, in one line: the barrier it lays (the engines' input), the drops, the water. */
