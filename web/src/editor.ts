@@ -1,7 +1,7 @@
-// The decision editor: a drawer on the left where A and B are composed on the map. A unit
-// is picked in the palette, then a click puts it on the nearest road (a point of attack), or
-// clicks draw a crew line or an aerial water line. Each assignment shows when it gets there
-// and what it can do; the lines show how much of them is built before the fire arrives.
+// The decision editor: a drawer on the left where A and B are composed on the map. A unit's
+// button arms the map, then each click puts it on the nearest road (a point of attack, where it
+// lays its wet line), or, with a line task, clicks draw a crew line or an aerial water line.
+// Each assignment shows when it gets there and what it lays: the barriers the engines get.
 // B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Every
 // fire opens with nothing on the ground; the 6 h report compares Livre, A and B.
 
@@ -21,7 +21,7 @@ import {
 } from 'cesium'
 import type { Fire, NearStation } from './data'
 import { freeArrival, type Run, type Scenario } from './fastModel'
-import { cellOf, lonLatAt, type Grid } from './grid'
+import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
@@ -128,14 +128,10 @@ const TEMPLATE = `
   </section>
   <section>
     <h3>Adicionar</h3>
+    <div class="units" data-ref="units" role="group" aria-label="Meio a colocar no mapa"></div>
     <div class="palette">
-      <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
       <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
-      <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
-        <option value="direct">ataque direto</option>
-        <option value="protect">proteção</option>
-        <option value="shuttle">abastecimento</option>
-      </select></div>
+      <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa"></select></div>
       <div class="field"><label>Quantos</label><div class="count">
         <button type="button" data-ref="less" title="Menos">−</button>
         <span data-ref="count">1</span>
@@ -144,12 +140,6 @@ const TEMPLATE = `
       </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
-    <div class="tools">
-      <button type="button" data-ref="quickAdd" class="primary-btn" title="Posiciona este meio automaticamente no acesso seguro mais próximo da frente de fogo">+ Colocar Meio</button>
-      <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
-      <button type="button" data-tool="line" title="Desenha uma linha apeada no mapa">Linha apeada</button>
-      <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
-    </div>
     <div class="line-actions" data-ref="lineActions" hidden>
       <button type="button" class="finish-line-btn" data-ref="finishLine" disabled title="Concluir e registar esta linha nos meios no terreno">✓ Concluir Linha</button>
       <button type="button" class="cancel-line-btn" data-ref="cancelLine" title="Cancelar traçado da linha">✕ Cancelar</button>
@@ -362,15 +352,23 @@ export class Editor {
       }
     }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
-    const unit = this.refs.unit as HTMLSelectElement
+    // One button per kind of means: it arms the map, and each click there places it (a line task draws).
     for (const [id, spec] of Object.entries(sup.units)) {
-      const option = document.createElement('option')
-      option.value = id
-      option.textContent = `${spec.short} · ${spec.name}`
-      unit.append(option)
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.dataset.unit = id
+      button.title = `${spec.name}: escolhe e clica no mapa`
+      button.setAttribute('aria-pressed', 'false')
+      const icon = document.createElement('img')
+      icon.alt = ''
+      icon.src = getUnitTacticalCanvas(id as UnitId).toDataURL()
+      const label = document.createElement('span')
+      label.textContent = id === 'crew' ? 'Brigada' : spec.short
+      button.append(icon, label)
+      button.addEventListener('click', () => this.arm(id as UnitId))
+      this.refs.units.append(button)
     }
-    unit.value = this.unit
-    unit.addEventListener('change', () => this.setUnit(unit.value as UnitId))
+    this.renderUnits()
     const from = this.refs.from as HTMLSelectElement
     from.addEventListener('change', () => {
       this.fromId = from.value
@@ -379,7 +377,10 @@ export class Editor {
     const hour = this.refs.hour as HTMLInputElement
     hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
     const task = this.refs.task as HTMLSelectElement
-    task.addEventListener('change', () => (this.task = task.value as Task))
+    task.addEventListener('change', () => {
+      this.task = task.value as Task
+      if (this.tool && this.tool !== 'pma') this.setTool(this.toolFor())
+    })
     this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
@@ -406,7 +407,6 @@ export class Editor {
         this.hideTip()
       }
     })
-    this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.ils.addEventListener('click', () => {
       if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
       this.stopIls(true)
@@ -437,19 +437,6 @@ export class Editor {
         this.active = Number(tab.dataset.tab)
         this.cancel()
         this.render()
-      })
-    for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.addEventListener('click', () => {
-        const next = button.dataset.tool as Tool
-        if (this.tool === next) {
-          if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
-            this.finishLine()
-            return
-          }
-          this.setTool(null)
-          return
-        }
-        this.setTool(next)
       })
     this.renderPalette()
     this.toggle(false)
@@ -586,10 +573,12 @@ export class Editor {
         this.setCount(1)
       }
     }
+    this.task = 'drops'
+    ;(this.refs.task as HTMLSelectElement).value = 'drops'
     this.setTool('drops')
     const baseObj = findAirBase(this.fromId)
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica e arrasta no mapa para criar linha aérea de descargas ou clica no mapa.`
+    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica no mapa para os vértices da linha aérea de descargas (duplo clique ou Enter conclui).`
   }
 
   /** The runs of Livre, A and B, and their reports when the fire has OSM context. */
@@ -678,17 +667,44 @@ export class Editor {
     this.tool = tool
     this.drawing = []
     this.viewer.scene.canvas.style.cursor = tool ? 'crosshair' : ''
-    for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.classList.toggle('on', button.dataset.tool === tool)
+    this.renderUnits()
     this.refs.hint.classList.remove('danger')
     this.updateLineActionsUI()
     if (!tool) {
       this.refs.hint.textContent = ''
     } else if (tool === 'point') {
-      this.refs.hint.textContent = 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
+      this.refs.hint.textContent = isAerial(unit)
+        ? `Clica no mapa onde o ${unit.short} descarrega. Escolhe outra vez o meio para parar.`
+        : `Clica no mapa: o ${unit.short} fica no ponto de acesso mais próximo (estrada, caminho ou trilho) e faz a sua linha molhada. Escolhe outra vez o meio para parar.`
     }
     this.drawAccess()
     this.draw()
+  }
+
+  /** A unit's button: the first press arms the map with it, the next one (or Escape) stops. */
+  private arm(unit: UnitId) {
+    if (this.tool && this.tool !== 'pma' && this.unit === unit) {
+      if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) return this.finishLine()
+      return this.setTool(null)
+    }
+    this.setUnit(unit)
+    this.setTool(this.toolFor())
+  }
+
+  /** What a click on the map does with the palette's task: a point, or the next vertex of a line. */
+  private toolFor(): Tool {
+    return this.task === 'line' ? 'line' : this.task === 'drops' ? 'drops' : 'point'
+  }
+
+  /** The unit buttons: the palette's unit, pressed while it is armed on the map. */
+  private renderUnits() {
+    for (const button of this.refs.units.querySelectorAll<HTMLButtonElement>('[data-unit]')) {
+      const mine = button.dataset.unit === this.unit
+      const armed = mine && this.tool !== null && this.tool !== 'pma'
+      button.classList.toggle('sel', mine)
+      button.classList.toggle('on', armed)
+      button.setAttribute('aria-pressed', String(armed))
+    }
   }
 
   private updateLineActionsUI() {
@@ -956,123 +972,6 @@ export class Editor {
       this.dangerTimer = undefined
       this.setTool(this.tool)
     }, 4500)
-  }
-
-  private quickAdd() {
-    if (!this.loaded) return
-    const count = this.placeable()
-    if (!count) return
-    const { context, stations, scenario } = this.loaded
-    const d = this.decisions[this.active]
-    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
-    const aerial = isAerial(this.sup.units[this.unit])
-
-    let targetPoint: LonLat | undefined
-
-    if (aerial) {
-      // Find advancing head of the fire front
-      let headPoint: LonLat = scenario.ignition
-      if (activeRun) {
-        const frontCells: number[] = []
-        const step = Math.max(1, Math.floor(activeRun.arrival.length / 5000))
-        for (let i = 0; i < activeRun.arrival.length; i += step) {
-          const t = activeRun.arrival[i]
-          if (t <= this.minutes && t >= Math.max(0, this.minutes - 45)) {
-            frontCells.push(i)
-          }
-        }
-        if (frontCells.length > 0) {
-          const chosen = frontCells[frontCells.length - 1]
-          const col = chosen % scenario.grid.cols
-          const row = (chosen - col) / scenario.grid.cols
-          headPoint = lonLatAt(scenario.grid, col, row)
-        }
-      }
-      const existing = Object.values(d.points)
-      const angle = (existing.length * 60 * Math.PI) / 180
-      targetPoint = {
-        lon: headPoint.lon + Math.cos(angle) * 0.005,
-        lat: headPoint.lat + Math.sin(angle) * 0.005,
-      }
-    } else if (context && context.access.length > 0) {
-      const existing = Object.values(d.points)
-      const station = stations.find((s) => s.id === this.fromId) ?? stations[0]
-
-      // 1. Collect points along the active fire perimeter
-      const frontPoints: LonLat[] = []
-      if (activeRun) {
-        const step = Math.max(1, Math.floor(activeRun.arrival.length / 3000))
-        for (let i = 0; i < activeRun.arrival.length; i += step) {
-          const t = activeRun.arrival[i]
-          if (t <= this.minutes && t >= Math.max(0, this.minutes - 60)) {
-            const col = i % scenario.grid.cols
-            const row = (i - col) / scenario.grid.cols
-            frontPoints.push(lonLatAt(scenario.grid, col, row))
-          }
-        }
-      }
-      if (frontPoints.length === 0) {
-        frontPoints.push(scenario.ignition)
-      }
-
-      // 2. Filter candidates: must be strictly UNBURNED with >= 15 min buffer, and not occupied
-      const candidates = context.access.filter((a) => {
-        const cell = cellOf(scenario.grid, a)
-        if (cell < 0) return false
-        if (activeRun && activeRun.arrival[cell] <= this.minutes + 15) return false
-        if (existing.some((p) => distanceM(p, a) < 220)) return false
-        return true
-      })
-
-      // 3. Score candidates by proximity to active front and confirmed safe road route from station
-      const scored: { pt: LonLat; distToFront: number; hasRoute: boolean }[] = []
-      for (const a of candidates) {
-        let minDist = Infinity
-        for (const fp of frontPoints) {
-          const dist = distanceM(a, fp)
-          if (dist < minDist) minDist = dist
-        }
-        if (minDist > 3000) continue
-        const route = station ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, a) : undefined
-        scored.push({ pt: a, distToFront: minDist, hasRoute: !!route })
-      }
-
-      scored.sort((a, b) => {
-        if (a.hasRoute !== b.hasRoute) return a.hasRoute ? -1 : 1
-        return a.distToFront - b.distToFront
-      })
-
-      if (scored.length > 0) {
-        targetPoint = scored[0].pt
-      } else if (candidates.length > 0) {
-        candidates.sort((a, b) => distanceM(a, frontPoints[0]) - distanceM(b, frontPoints[0]))
-        targetPoint = candidates[0]
-      }
-    }
-
-    if (!targetPoint) {
-      this.refs.hint.classList.add('danger')
-      this.refs.hint.textContent = 'Não foi encontrado um acesso rodoviário seguro fora do fogo para este quartel. Clica no mapa no local pretendido.'
-      return
-    }
-
-    const id = nextId(d.points, 'p')
-    const fromId = this.from(stations)
-    const base = aerial ? findAirBase(fromId) : undefined
-    d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
-    d.assignments.push({
-      unit: this.unit,
-      count,
-      from: fromId,
-      target: id,
-      task: aerial ? 'direct' : this.task,
-    })
-
-    this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
-      : `✓ Meio colocado no acesso seguro mais próximo da frente! Rota rodoviária calculada no mapa.`
-    this.commit()
   }
 
   private click(position: Cartesian2) {
@@ -1422,7 +1321,8 @@ export class Editor {
 
     if (isAerial(this.sup.units[this.unit])) {
       task.innerHTML = `
-        <option value="direct">ataque direto (descargas)</option>
+        <option value="direct">descargas num ponto</option>
+        <option value="drops">linha aérea (desenha no mapa)</option>
       `
     } else if (this.unit === 'vttu') {
       task.innerHTML = `
@@ -1433,6 +1333,7 @@ export class Editor {
       task.innerHTML = `
         <option value="direct">ataque direto (ferramentas)</option>
         <option value="protect">proteção de aldeia/estruturas</option>
+        <option value="line">linha apeada (desenha no mapa)</option>
       `
     } else if (this.unit === 'vfci') {
       task.innerHTML = `
@@ -1470,7 +1371,7 @@ export class Editor {
   /** The palette's unit changed. */
   private setUnit(unit: UnitId) {
     this.unit = unit
-    ;(this.refs.unit as HTMLSelectElement).value = unit
+    this.renderUnits()
     this.updateStationDropdown()
     this.updateTaskDropdown()
     this.setCount(this.count)
@@ -1635,7 +1536,6 @@ export class Editor {
     if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
       this.showTip(this.refs.capacityInfo, this.currentCapacityText)
     }
-    this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
     this.refs.from.closest<HTMLElement>('.field')!.hidden = false
     // What the station or CMA still has of this unit for the active decision.
     const from = this.from(this.loaded?.stations ?? [])
@@ -1664,11 +1564,6 @@ export class Editor {
         ` · ${source}`
       this.refs.stock.classList.toggle('out', left === 0)
     }
-    for (const button of this.el.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
-      const tool = button.dataset.tool as Tool
-      button.disabled = left === 0 || (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))
-    }
-    ;(this.refs.quickAdd as HTMLButtonElement).disabled = left === 0
     if (left === 0 && this.tool && this.tool !== 'pma') this.setTool(null)
     if (this.tool && (this.tool === 'line' ? !unit.lineMPerH : this.tool === 'drops' ? !isAerial(unit) : false)) this.setTool(null)
   }
