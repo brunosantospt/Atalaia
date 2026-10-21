@@ -214,7 +214,8 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 
 | Artigo | `optimize.ts` |
 |---|---|
-| meios `r` | os meios do A, unidade a unidade e com a tarefa do A (`direct`, `protect`, `shuttle`); as linhas e as descargas do A ficam como estão |
+| meios `r` | os meios do A, unidade a unidade e com a tarefa do A (`direct`, `protect`, `shuttle`); as brigadas e os aéreos das linhas do A também podem ir para ataque direto num ponto, voltar, ou passar para outra linha do A do mesmo tipo |
+| linhas | o B não cria linhas: só mexe nas do A, sempre com a forma do A (ver abaixo) |
 | células candidatas | os pontos do A + `context.access` (um a cada 80 m de estrada); os meios aéreos também numa malha de 5 em 5 células (150 m) |
 | `t_i ≥ b_k` | um ponto está aberto a uma unidade se o fogo livre (sem ninguém, o mais cedo que o fogo pode lá estar) chega ≥ `SAFETY_MIN` = 10 min depois dela; a ECIN conta o ganho de saída (2 min em vez de 20) só se for a primeira do quartel; o ponto do A está sempre aberto |
 | construção: RCL das `L` próximas a arder | RCL de 6 pontos abertos a ≥ 200 m uns dos outros, por ordem de chegada do fogo livre; 100 construções ou 25% do orçamento |
@@ -223,6 +224,15 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 | paragem | 250 perturbações, 50 seguidas sem melhoria, ou fim do tempo |
 | `f` | lexicográfico: lugares atingidos → ha às 6 h → unidades no terreno |
 
+- **Linhas (22 out):** a forma de cada linha do A é mais um gene do plano. São 128 formas:
+  - deslocar 0/100/200/300 m para o lado que o fogo livre alcança mais tarde;
+  - encurtar 0/100/200/300 m em cada ponta, sem nunca ficar com menos de metade;
+  - construir (ou descarregar) a partir do outro extremo.
+  - A pesquisa local muda um passo de cada vez; a perturbação, com 30% de probabilidade, sorteia uma forma qualquer para uma das linhas com meios.
+  - Uma forma diferente da do A só é aceite se ≥ 80% das células ficam feitas antes de o fogo livre lá chegar (brigadas: pelo `lineSchedule`; aéreos: pela chegada desde a base). Os meios têm de chegar ao início da linha nas mesmas regras dos pontos.
+  - Sem linhas no A, a procura é exatamente a mesma de antes (mesma semente, mesmo B).
+  - Na lista aparecem linhas como "linha l1 · 200 m para NE · encurtada 100 m no início" ou "ECIN ×1 · da linha apeada l1 para ataque direto". No mapa do B, as linhas do A que o B mudou ou deixou ficam a tracejado ténue.
+  - Em Vieira, uma linha apeada à frente da cabeça perde sempre para o ataque direto: a brigada constrói 30–45 m/h no mato e o fogo livre passa antes. Por isso o B tira a brigada da linha.
 - **Memória:** os planos repetidos não se simulam outra vez. As unidades iguais são intercambiáveis na chave.
 - **Determinismo:** semente fixa (`mulberry32`). O mesmo A dá o mesmo B na mesma máquina, a menos do corte por tempo.
 - **Garantia:** se nenhum plano bater o A, o B é uma cópia do A e a nota di-lo.
