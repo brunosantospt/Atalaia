@@ -24,7 +24,7 @@ import { cellOf } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
-import type { Inventory } from './inventory'
+import { stockSource, type Inventory } from './inventory'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
 import {
@@ -52,6 +52,7 @@ import {
   type Suppression,
   type Task,
   type UnitId,
+  type UnitSpec,
 } from './suppression'
 import './editor.css'
 
@@ -76,6 +77,14 @@ const TASK_NAME: Record<Task, string> = {
   protect: 'proteção',
   shuttle: 'abastecimento',
 }
+/** How "Meios no terreno" is grouped, in this order. */
+const GROUPS = [
+  { kind: 'air', name: 'Meios aéreos' },
+  { kind: 'vehicle', name: 'Veículos terrestres' },
+  { kind: 'foot', name: 'Equipas apeadas' },
+] as const
+type Kind = (typeof GROUPS)[number]['kind']
+const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
@@ -97,11 +106,6 @@ const TEMPLATE = `
   <section>
     <h3>Meios no terreno</h3>
     <ul class="assignments" data-ref="list"></ul>
-  </section>
-  <section>
-    <h3>Quartéis <span data-ref="stationsFor"></span></h3>
-    <table class="stations" data-ref="stations"></table>
-    <p class="note">Disponível / estimado por quartel (INE 2024, tier). Chegada: um VFCI à ignição. Clica num quartel para o escolher.</p>
   </section>
   <section>
     <h3>Adicionar</h3>
@@ -306,6 +310,7 @@ export class Editor {
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
   private cutTooltip: HTMLElement | null = null
+  private readonly tip: HTMLElement
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
 
@@ -321,6 +326,12 @@ export class Editor {
     this.el.setAttribute('aria-label', 'Editor de decisões')
     this.el.innerHTML = TEMPLATE
     this.root.append(this.el)
+    // On the body: the drawer's blur would make it the box of a fixed child, and its scroll would clip it.
+    this.tip = document.createElement('div')
+    this.tip.className = 'editor-tip'
+    this.tip.hidden = true
+    document.body.append(this.tip)
+    this.el.addEventListener('scroll', () => this.hideTip(), { passive: true })
     this.refs = Object.fromEntries(
       [...this.el.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     )
@@ -346,7 +357,6 @@ export class Editor {
     from.addEventListener('change', () => {
       this.fromId = from.value
       this.setCount(this.count)
-      this.renderStations()
     })
     const hour = this.refs.hour as HTMLInputElement
     hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
@@ -425,6 +435,7 @@ export class Editor {
     if (!open) {
       this.setTool(null)
       this.hideCutTooltip()
+      this.hideTip()
     }
     this.actions.editing(open)
   }
@@ -437,8 +448,9 @@ export class Editor {
       )
       return { ...clone(d), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
     }) as [Decision, Decision]
-    this.loaded = { fireId, fire, stations, context, scenario, examples: snapped }
-    this.decisions = load(fireId) ?? (snapped.map(clone) as [Decision, Decision])
+    const fitted = snapped.map((d) => this.fit(d)) as [Decision, Decision]
+    this.loaded = { fireId, fire, stations, context, scenario, examples: fitted }
+    this.decisions = (load(fireId) ?? fitted.map(clone)).map((d) => this.fit(d)) as [Decision, Decision]
     this.runs = this.reports = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
@@ -481,12 +493,47 @@ export class Editor {
     return stock.units[unit]
   }
 
-  /** How many of a unit the station still has for the active decision, leaving out one assignment (the one being changed). */
-  private available(unit: UnitId, from: string, except = -1): number {
+  /** How many of a unit the station still has for the active decision. */
+  private available(unit: UnitId, from: string): number {
     const stock = this.stock(unit, from)
     if (stock === undefined) return 6
-    const used = this.decisions[this.active].assignments.reduce((n, a, k) => (k !== except && a.unit === unit && a.from === from ? n + a.count : n), 0)
+    const used = this.decisions[this.active].assignments.reduce((n, a) => (a.unit === unit && a.from === from ? n + a.count : n), 0)
     return Math.max(0, stock - used)
+  }
+
+  /** How many of the palette's unit go out now: the count, cut to what the station has left. Nothing
+   *  left gives 0 and says so: a station with 3 VFCI cannot send a 4th. */
+  private placeable(): number {
+    const from = this.from(this.loaded?.stations ?? [])
+    const left = this.available(this.unit, from)
+    if (left > 0) return Math.min(this.count, left)
+    const station = this.loaded?.stations.find((s) => s.id === from)
+    this.setTool(null)
+    this.refs.hint.classList.add('danger')
+    this.refs.hint.textContent = `${station?.short ?? from} já não tem ${this.sup.units[this.unit].short} disponíveis nesta decisão: retira um do terreno ou escolhe outro quartel.`
+    return 0
+  }
+
+  /** A decision within what the stations have (stored before the limit, or an example near a small
+   *  station): counts are cut to the stock in order, and an assignment left with none goes. */
+  private fit(d: Decision): Decision {
+    const used = new Map<string, number>()
+    const assignments: Assignment[] = []
+    const dropped = new Set<string>()
+    for (const a of d.assignments) {
+      const key = `${a.unit}|${a.from}`
+      const stock = this.stock(a.unit, a.from)
+      const count = stock === undefined ? a.count : Math.min(a.count, stock - (used.get(key) ?? 0))
+      if (count < 1) {
+        dropped.add(a.target)
+        continue
+      }
+      used.set(key, (used.get(key) ?? 0) + count)
+      assignments.push({ ...a, count })
+    }
+    for (const a of assignments) dropped.delete(a.target)
+    const keep = <T>(targets: Record<string, T>) => Object.fromEntries(Object.entries(targets).filter(([id]) => !dropped.has(id)))
+    return { ...d, assignments, points: keep(d.points), lines: keep(d.lines) }
   }
 
   private setTool(tool: Tool | null) {
@@ -710,6 +757,8 @@ export class Editor {
 
   private quickAdd() {
     if (!this.loaded) return
+    const count = this.placeable()
+    if (!count) return
     const { context, stations, scenario } = this.loaded
     const d = this.decisions[this.active]
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
@@ -749,7 +798,7 @@ export class Editor {
     d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
     d.assignments.push({
       unit: this.unit,
-      count: this.count,
+      count,
       from: this.from(stations),
       target: id,
       task: aerial ? 'direct' : this.task,
@@ -788,6 +837,8 @@ export class Editor {
       this.setTool(null)
       return
     }
+    const count = this.placeable()
+    if (!count) return
     if (this.tool !== 'point') {
       this.drawing.push(point)
       this.draw()
@@ -799,7 +850,7 @@ export class Editor {
     d.points[id] = point
     d.assignments.push({
       unit: this.unit,
-      count: this.count,
+      count,
       from: this.from(stations),
       target: id,
       task: aerial ? 'direct' : this.task,
@@ -816,10 +867,12 @@ export class Editor {
   private finishLine() {
     if (!this.loaded || (this.tool !== 'line' && this.tool !== 'drops')) return
     if (this.drawing.length < 2) return void (this.refs.hint.textContent = 'Uma linha precisa de dois cliques pelo menos.')
+    const count = this.placeable()
+    if (!count) return
     const d = this.decisions[this.active]
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing
-    d.assignments.push({ unit: this.unit, count: this.count, from: this.from(this.loaded.stations), target: id, task: this.tool })
+    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task: this.tool })
     this.drawing = []
     this.setTool(null)
     this.commit()
@@ -838,12 +891,6 @@ export class Editor {
       delete d.points[a.target]
       delete d.lines[a.target]
     }
-    this.commit()
-  }
-
-  private recount(k: number, by: number) {
-    const a = this.decisions[this.active].assignments[k]
-    a.count = Math.min(Math.max(a.count + by, 1), Math.max(1, this.available(a.unit, a.from, k)))
     this.commit()
   }
 
@@ -923,68 +970,38 @@ export class Editor {
       tab.querySelector('span')!.textContent = this.decisions[i].name
     })
     ;(this.refs.name as HTMLInputElement).value = d.name
-    this.refs.list.replaceChildren(...d.assignments.map((a, k) => this.row(a, k)))
-    if (!d.assignments.length) this.refs.list.innerHTML = '<li class="none">Nada no terreno: o fogo corre livre.</li>'
-    this.renderStations()
+    this.renderList(d)
+    this.setCount(this.count)
     this.renderReport()
     this.draw()
   }
 
-  /** The palette's unit changed (the select, or a click on a station or the air base). */
+  /** The palette's unit changed. */
   private setUnit(unit: UnitId) {
     this.unit = unit
     ;(this.refs.unit as HTMLSelectElement).value = unit
     this.updateStationDropdown()
     this.updateTaskDropdown()
     this.setCount(this.count)
-    this.renderStations()
   }
 
-  /** The stations within reach: what each still has for the active decision, and how soon a VFCI from it would arrive. */
-  private renderStations() {
-    const table = this.refs.stations
-    const stations = this.loaded?.stations ?? []
-    const d = this.decisions[this.active]
-    this.refs.stationsFor.textContent = `· disponível para ${d.id}`
-    table.innerHTML = '<tr><th>Quartel</th><th>km</th><th>VFCI</th><th>VTTU</th><th>ECIN</th><th>Chegada</th></tr>'
-    const from = this.from(stations)
-    const cell = (unit: UnitId, id: string) => {
-      const stock = this.stock(unit, id)
-      return stock === undefined ? '–' : `${this.available(unit, id)}/${stock}`
-    }
-    for (const s of stations) {
-      const tr = document.createElement('tr')
-      tr.classList.toggle('on', s.id === from)
-      const stock = this.inventory?.[s.id]
-      tr.innerHTML = '<th></th><td></td><td></td><td></td><td></td><td class="eta"></td>'
-      const [name, km, vfci, vttu, crew, eta] = tr.children as unknown as HTMLElement[]
-      name.textContent = s.short
-      name.title = stock ? `${s.name} · ${stock.personnel.onDuty} de serviço (estimado)` : s.name
-      km.textContent = fmtKm(s.km)
-      vfci.textContent = cell('vfci', s.id)
-      vttu.textContent = cell('vttu', s.id)
-      crew.textContent = cell('crew', s.id)
-      eta.textContent = `T+${Math.round(arrivalMin(this.sup, this.sup.units.vfci, s.km, false))}`
-      tr.addEventListener('click', () => {
-        this.fromId = s.id
-        ;(this.refs.from as HTMLSelectElement).value = s.id
-        this.setUnit(isAerial(this.sup.units[this.unit]) ? 'vfci' : this.unit)
-      })
-      table.append(tr)
-    }
-    const air = Object.entries(this.sup.units).find(([, u]) => isAerial(u))
-    if (air) {
-      const [id, unit] = air
-      const tr = document.createElement('tr')
-      tr.classList.toggle('on', from === 'air')
-      tr.innerHTML = '<th>Base aérea</th><td></td><td colspan="3" class="free"></td><td class="eta"></td>'
-      tr.children[1].textContent = fmtKm(this.sup.dispatch.airBaseKm)
-      tr.children[2].textContent = `${unit.short} sem limite`
-      tr.children[3].textContent = `T+${Math.round(arrivalMin(this.sup, unit, this.sup.dispatch.airBaseKm, false))}`
-      tr.addEventListener('click', () => this.setUnit(id as UnitId))
-      table.append(tr)
-    }
-    if (!stations.length) table.innerHTML += '<tr><td colspan="6" class="none">Sem quartel a menos de 20 km.</td></tr>'
+  /** "Meios no terreno", by kind of means: aerial, ground vehicles, crews on foot. */
+  private renderList(d: Decision) {
+    this.hideTip()
+    const rows = d.assignments.map((a, k) => ({ a, k, kind: kindOf(this.sup.units[a.unit]) }))
+    this.refs.list.replaceChildren(
+      ...GROUPS.flatMap(({ kind, name }) => {
+        const mine = rows.filter((r) => r.kind === kind)
+        if (!mine.length) return []
+        const head = document.createElement('li')
+        head.className = 'group'
+        head.innerHTML = '<span></span><b></b>'
+        head.querySelector('span')!.textContent = name
+        head.querySelector('b')!.textContent = String(mine.reduce((n, r) => n + r.a.count, 0))
+        return [head, ...mine.map(({ a, k }) => this.row(a, k))]
+      }),
+    )
+    if (!d.assignments.length) this.refs.list.innerHTML = '<li class="none">Nada no terreno: o fogo corre livre.</li>'
   }
 
   private row(a: Assignment, k: number): HTMLElement {
@@ -1007,21 +1024,38 @@ export class Editor {
 
     li.innerHTML = `
       <div class="who"><b></b><span class="n"></span><span class="task"></span>
-        <div class="ctl"><button type="button" title="Menos">−</button><button type="button" title="Mais">+</button><button type="button" class="x" title="Retirar">×</button></div>
+        <div class="ctl"><button type="button" class="info" aria-label="O que faz">i</button><button type="button" class="x" title="Retirar">×</button></div>
       </div>
-      <div class="meta"><span class="from"></span>${routeBadge}<em></em></div>
-      <div class="what"></div>`
+      <div class="meta"><span class="from"></span>${routeBadge}<em></em></div>`
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
     li.querySelector('.from')!.textContent = isAerial(unit) ? `Base aérea · ${this.sup.dispatch.airBaseKm} km` : (station?.short ?? '')
     li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
-    li.querySelector('.what')!.textContent = this.whatText(a)
-    const [less, more, x] = li.querySelectorAll('button')
-    less.addEventListener('click', () => this.recount(k, -1))
-    more.addEventListener('click', () => this.recount(k, 1))
+    const [info, x] = li.querySelectorAll('button')
+    const what = this.whatText(a)
+    info.addEventListener('mouseenter', () => this.showTip(info, what))
+    info.addEventListener('focus', () => this.showTip(info, what))
+    info.addEventListener('mouseleave', () => this.hideTip())
+    info.addEventListener('blur', () => this.hideTip())
     x.addEventListener('click', () => this.remove(k))
     return li
+  }
+
+  /** The balloon just outside the drawer, level with an (i): what the assignment can do, kept out of
+   *  the list so it reads clean. */
+  private showTip(anchor: HTMLElement, text: string) {
+    this.tip.textContent = text
+    this.tip.hidden = false
+    const r = anchor.getBoundingClientRect()
+    const { height } = this.tip.getBoundingClientRect()
+    this.tip.style.left = `${this.el.getBoundingClientRect().right + 10}px`
+    this.tip.style.top = `${Math.min(Math.max(r.top + r.height / 2 - height / 2, 8), innerHeight - height - 8)}px`
+    this.tip.style.setProperty('--arrow', `${r.top + r.height / 2 - parseFloat(this.tip.style.top)}px`)
+  }
+
+  private hideTip() {
+    this.tip.hidden = true
   }
 
   /** Minutes until an assignment is at work, from its station or the air base. */
@@ -1110,7 +1144,8 @@ export class Editor {
     this.refs.capacity.textContent = parts.join(' · ')
     this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
     this.refs.from.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
-    // What the station still has of this unit for the active decision (inventory.json: an estimate by tier).
+    // What the station still has of this unit for the active decision (inventory.json: Table 41 of
+    // Matos 2025 in the Braga district, an estimate by tier elsewhere).
     const from = this.from(this.loaded?.stations ?? [])
     const stock = this.stock(this.unit, from)
     const left = this.available(this.unit, from)
@@ -1122,19 +1157,21 @@ export class Editor {
       this.refs.stock.textContent = station ? `${station.short}: sem estimativa de meios` : 'sem quartel selecionado'
       this.refs.stock.classList.remove('out')
     } else {
-      const inReserve = left
       const deployed = stock - left
-      const statusText = deployed > 0
-        ? `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis (${inReserve} em reserva, ${deployed} empenhados nesta decisão)`
-        : `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis (${inReserve} em reserva)`
-      this.refs.stock.textContent = left === 0 ? `${statusText} · ESGOTADO` : statusText
+      const source = this.inventory?.[from] ? stockSource(this.inventory[from]) : ''
+      this.refs.stock.textContent =
+        `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis` +
+        (deployed > 0 ? `, ${deployed} já nesta decisão` : '') +
+        (left === 0 ? ' · ESGOTADO' : '') +
+        ` · ${source}`
       this.refs.stock.classList.toggle('out', left === 0)
     }
     for (const button of this.el.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
       const tool = button.dataset.tool as Tool
       button.disabled = left === 0 || (tool === 'line' && !unit.lineMPerH) || (tool === 'drops' && !isAerial(unit))
     }
-    if (left === 0) this.setTool(null)
+    ;(this.refs.quickAdd as HTMLButtonElement).disabled = left === 0
+    if (left === 0 && this.tool && this.tool !== 'pma') this.setTool(null)
     if (this.tool && (this.tool === 'line' ? !unit.lineMPerH : this.tool === 'drops' ? !isAerial(unit) : false)) this.setTool(null)
   }
 

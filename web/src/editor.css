@@ -74,6 +74,7 @@
 }
 .hud .editor .tabs button {
   display: flex;
+  height: auto;
   gap: 8px;
   align-items: flex-start;
   min-width: 0;
@@ -179,13 +180,6 @@
   font-style: normal;
   color: var(--amber);
 }
-.hud .editor .what {
-  font-size: 10px;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--ink-dim);
-}
 .hud .editor .ctl {
   display: flex;
   flex-shrink: 0;
@@ -196,6 +190,62 @@
   width: 22px;
   padding: 0;
   line-height: 18px;
+}
+.hud .editor .ctl .info {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0;
+  font-size: 10px;
+  font-style: italic;
+  line-height: 16px;
+  text-transform: none;
+  color: var(--ink-dim);
+  border-radius: 50%;
+}
+.hud .editor .ctl .info:hover,
+.hud .editor .ctl .info:focus-visible {
+  color: var(--ink);
+}
+/* "Meios no terreno" by kind: a small header over each group, the units it sends on the right. */
+.hud .editor .assignments li.group {
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 6px 0 0;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--ink-dim);
+  background: none;
+  border: 0;
+}
+.hud .editor .assignments li.group:first-child {
+  padding-top: 0;
+}
+.hud .editor .assignments li.group b {
+  font-weight: 400;
+  color: var(--amber);
+}
+/* The balloon of an (i), on the body beside the drawer (editor.ts showTip). */
+.editor-tip {
+  position: fixed;
+  z-index: 20;
+  box-sizing: border-box;
+  max-width: 260px;
+  padding: 8px 10px;
+  font: 10px/1.5 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: rgba(8, 9, 10, 0.95);
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+.editor-tip::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--arrow, 50%) - 5px);
+  left: -6px;
+  border: 5px solid transparent;
+  border-left: 0;
+  border-right-color: var(--line);
 }
 .hud .editor .palette {
   display: flex;
@@ -307,62 +357,11 @@
   text-overflow: ellipsis;
   color: var(--ink-dim);
 }
-/* The stations table: what each quartel still has for this decision, and when a VFCI from it arrives. */
+/* The count beside a heading (hour, report). */
 .hud .editor h3 span {
   margin-left: 6px;
   color: var(--amber);
   letter-spacing: 0.06em;
-}
-.hud .editor .stations {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
-.hud .editor .stations th,
-.hud .editor .stations td {
-  padding: 4px 2px;
-  text-align: right;
-  font-weight: 400;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--ink-faint);
-}
-.hud .editor .stations tr:first-child th {
-  padding-bottom: 5px;
-  color: var(--ink-dim);
-  letter-spacing: 0.12em;
-}
-.hud .editor .stations th:first-child {
-  max-width: 120px;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  color: var(--ink);
-}
-.hud .editor .stations tr:not(:first-child) {
-  cursor: pointer;
-}
-.hud .editor .stations tr:not(:first-child):hover {
-  background: rgba(220, 224, 228, 0.05);
-}
-.hud .editor .stations tr.on th:first-child {
-  color: var(--amber);
-}
-.hud .editor .stations tr.on td,
-.hud .editor .stations tr.on th {
-  background: rgba(240, 163, 58, 0.08);
-}
-.hud .editor .stations .eta {
-  color: var(--amber);
-}
-.hud .editor .stations .free {
-  text-align: center;
-  color: var(--ink-dim);
-}
-.hud .editor .stations .none {
-  text-align: left;
-  text-transform: none;
-  color: var(--ink-dim);
 }
 .hud .editor .stock.out {
   color: var(--amber);
