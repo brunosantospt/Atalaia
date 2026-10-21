@@ -323,6 +323,7 @@ export class Editor {
     unit.addEventListener('change', () => {
       this.unit = unit.value as UnitId
       this.updateStationDropdown()
+      this.updateTaskDropdown()
       this.setCount(this.count)
     })
     const from = this.refs.from as HTMLSelectElement
@@ -334,6 +335,7 @@ export class Editor {
     hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
     const task = this.refs.task as HTMLSelectElement
     task.addEventListener('change', () => (this.task = task.value as Task))
+    this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
@@ -791,8 +793,42 @@ export class Editor {
     }
   }
 
+  private updateTaskDropdown() {
+    const task = this.refs.task as HTMLSelectElement
+    if (!task) return
+    task.innerHTML = ''
+
+    if (this.unit === 'vttu') {
+      task.innerHTML = `
+        <option value="shuttle">abastecimento (cisterna móvel)</option>
+        <option value="protect">proteção de estruturas</option>
+      `
+    } else if (this.unit === 'crew') {
+      task.innerHTML = `
+        <option value="direct">ataque direto (ferramentas)</option>
+        <option value="protect">proteção de aldeia/estruturas</option>
+      `
+    } else if (this.unit === 'vfci') {
+      task.innerHTML = `
+        <option value="direct">ataque direto (linha de 25mm)</option>
+        <option value="protect">proteção de aldeia/estruturas</option>
+      `
+    } else {
+      task.innerHTML = `
+        <option value="direct">ataque direto</option>
+        <option value="protect">proteção</option>
+      `
+    }
+
+    if (![...task.options].some((o) => o.value === this.task)) {
+      this.task = (task.options[0]?.value as Task) ?? 'direct'
+    }
+    task.value = this.task
+  }
+
   private render() {
     this.updateStationDropdown()
+    this.updateTaskDropdown()
     const d = this.decisions[this.active]
     this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]').forEach((tab, i) => {
       tab.classList.toggle('on', i === this.active)
