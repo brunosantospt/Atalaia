@@ -22,49 +22,164 @@ Esta pasta junta o que os **registos oficiais** dizem de cada incêndio e corre 
 
 Nada fora desta pasta muda: a API, o contrato e o motor ficam como estão.
 
+## Em resumo (para quem chega agora, pessoa ou agente)
+
+- **O que é:** um banco de ensaio do ELMFIRE contra incêndios reais. Cada mudança nos dados de entrada é um passo, corrido com as mesmas regras da API e pontuado da mesma maneira. Assim vê-se o que ajuda e o que não ajuda.
+- **Estado em 21/10/2026:**
+  - **Vieira do Minho:** completo. São 14 configurações, 3 sementes nas que usam projeções (`ladder.sh` refaz tudo).
+  - **Cabeceiras de Basto:** registos, linhas e 3 corridas, mas sem copas.
+  - **Ramo:** `hindcast-registos`, ainda não integrado no `main`.
+- **Melhor configuração até agora:**
+  - combustíveis portugueses, cicatrizes, vivas de seca (30/70 %) e projeções;
+  - copas do LiDAR, que o `run.py` usa por si quando há `canopy.npz`;
+  - linhas de ataque com a hora do fogo do modelo (passo 8).
+
+  Em Vieira dá Sørensen 0,84–0,85 às 08:30, contra 0,73 da API, e alcança 71–77 % dos focos de satélite. Só com dados, sem linhas, fica em 0,76–0,79.
+- **O que ainda falha:** a corrida principal (10:00–15:00) fica 1,4 a 1,9 vezes lenta de mais: 380–490 ha às 15:00, contra 707. Nenhum dado nem calibração testados resolve isto sem queimar de mais depois (ver "Problemas em aberto").
+- **Regras da casa:**
+  - **Não se mexe no resto do repositório:** `api/`, `engines/` e os contratos ficam como estão. Tudo o que é novo vive nesta pasta.
+  - **Um passo de cada vez:** uma mudança nova entra como um passo novo da tabela.
+  - **Três sementes:** com projeções, corre-se com 3 sementes e reporta-se o intervalo. Uma semente só não prova nada.
+  - **O satélite nunca se lê sozinho:** lê-se sempre com "Fora do oficial", porque queimar de mais também alcança focos.
+  - **As linhas de ataque são inferidas** do perímetro final. Melhoram o Sørensen em parte por construção, por isso diz-se sempre que número é "só com dados" e qual é "com linhas".
+  - **Os descarregamentos e as grades de chegada** ficam em `data/hindcast/`, que não vai para o git. No git só ficam resultados pequenos: JSON e PNG.
+
 ## Ficheiros
 
 | Ficheiro | O quê |
 |---|---|
 | `evidence.py` | Registos de um incêndio → `fires/<id>/evidence.json`, `evidence.geojson`, `evidence.png` |
-| `attack.py` | Linhas de ataque inferidas → `fires/<id>/attack_lines.json`, `attack_lines.png` |
-| `run.py` | Uma corrida do ELMFIRE com opções → `fires/<id>/runs/<nome>/result.json`, `preview.png` (a grade de chegada vai para `data/hindcast/<id>/<nome>.npy`) |
-| `table.py` | As corridas de um incêndio numa tabela Markdown |
+| `attack.py` | Linhas de ataque inferidas → `fires/<id>/attack_lines.json` (hora do fogo observado) ou `attack_lines_<corrida>.json` (hora do fogo de uma corrida, `--timing run`) |
+| `run.py` | Uma corrida do ELMFIRE com opções → `fires/<id>/runs/<nome>/result.json`, `preview.png`; a grade de chegada vai para `data/hindcast/<id>/<nome>.npy` |
+| `canopy.py` | Camadas de copa do LiDAR da DGT → `fires/<id>/canopy.npz`, `canopy.json` |
 | `grid.py` | Grelha corridas × horas contra o observado → `fires/<id>/grid.png` |
-| `common.py` | Pacote do incêndio (via `api/fires.py`), chegada observada interpolada, pontuação |
+| `table.py` | As corridas de um incêndio numa tabela Markdown |
+| `ladder.sh` | Refaz todas as corridas da tabela de resultados de um incêndio, as grelhas e a tabela (~15 min em Vieira) |
+| `test.sh` | Teste ponta a ponta em Vieira (~20 s) |
+| `common.py` | Pacote do incêndio (via `api/fires.py` e `api/runs.py`), chegada observada interpolada, pontuação |
 | `fuels.py` | Modelos de combustível portugueses e a tradução da COS 2015 |
-| `engine/run.sh`, `engine/adapter.py` | O ELMFIRE de `engines/elmfire` (mesma imagem Docker, mesmo contrato) com quatro campos opcionais a mais no pedido |
-| `fires/<id>/canopy.npz` | Camadas de copa para o modelo de fogo de copas (só Vieira do Minho; ver `canopy.json`) |
-| `setup.sh`, `requirements.txt`, `test.sh` | Ambiente e teste |
-
-Os descarregamentos (SGIF, KML, FIRMS) ficam em `data/hindcast/`, fora do git, como os outros dados.
+| `engine/run.sh`, `engine/adapter.py` | O ELMFIRE de `engines/elmfire` (mesma imagem Docker, mesmo contrato), com quatro campos opcionais a mais no pedido |
+| `setup.sh`, `requirements.txt` | O ambiente `hindcast/.venv` |
+| `fires/<id>/` | O que as ferramentas escrevem por incêndio (versionado); ver "Formatos dos ficheiros" |
 
 ## Como correr
 
 ```bash
 hindcast/setup.sh                                   # uma vez: hindcast/.venv
-engines/elmfire/setup.sh                            # uma vez: a imagem Docker do ELMFIRE
+engines/elmfire/setup.sh                            # uma vez: a imagem Docker do ELMFIRE (e engines/elmfire/vendor/)
 hindcast/.venv/bin/python -I hindcast/evidence.py VieiradoMinho_10082016
 hindcast/.venv/bin/python -I hindcast/attack.py VieiradoMinho_10082016
-hindcast/.venv/bin/python -I hindcast/run.py VieiradoMinho_10082016 --name 6_linhas \
+hindcast/.venv/bin/python -I hindcast/run.py VieiradoMinho_10082016 --name 5_projecoes \
+    --fuels pt --scars --live-herb 30 --live-woody 70 --spotting
+hindcast/.venv/bin/python -I hindcast/attack.py VieiradoMinho_10082016 --timing run --run 5_projecoes
+hindcast/.venv/bin/python -I hindcast/run.py VieiradoMinho_10082016 --name 7_linhas_v2 \
     --fuels pt --scars --live-herb 30 --live-woody 70 --spotting \
-    --barriers hindcast/fires/VieiradoMinho_10082016/attack_lines.json
+    --barriers hindcast/fires/VieiradoMinho_10082016/attack_lines_5_projecoes.json
 hindcast/.venv/bin/python -I hindcast/table.py VieiradoMinho_10082016
+hindcast/ladder.sh                                  # tudo de uma vez, ~15 min
 hindcast/test.sh                                    # ponta a ponta em Vieira, ~20 s
 ```
 
-- **Tempo:** uma corrida de 22,5 h demora 10 a 40 s (mais quando as linhas a partem em troços).
-- **O que se escolhe:**
+- **Tempo:** uma corrida de 22,5 h demora 10 a 40 s; leva mais quando as linhas a partem em troços.
+- **O `run.py` escolhe:**
   - `--fuels sb|pt`, `--shrub`: os combustíveis;
   - `--scars`: as cicatrizes;
   - `--dead emc|fixed`, `--live-herb`, `--live-woody`: as humidades;
-  - `--no-canopy`: sem copas;
-  - `--spotting --seed n`: as projeções;
+  - `--no-canopy`: sem copas (por omissão usa o `canopy.npz`, se houver);
+  - `--spotting --seed n`: as projeções (semente 1 por omissão);
   - `--adj`, `--wind-mult`: os fatores de calibração;
-  - `--weather cerra`, `--topowind`: o vento do CERRA e o vento do relevo a 30 m (precisam dos ficheiros do ramo `feature/cerra-wind-engine`);
+  - `--weather cerra`, `--topowind`: o vento do CERRA e o vento do relevo a 30 m. Precisam de `web/public/fires/<id>/weather_cerra.json` e `scripts/build_wind_field.py`, do ramo `feature/cerra-wind-engine`;
   - `--barriers`: as linhas;
-  - `--start-step`, `--duration-min`: o início e a duração.
+  - `--start-step`, `--duration-min`: o início e a duração. Por omissão, do passo 0 ao último passo observado.
 - **A corrida igual à da API:** `--fuels sb --dead fixed --no-canopy` dá os mesmos dados de entrada que o `POST /api/run`.
+- **Copas:** `canopy.py <id> --dgt <pasta>`, com os tiles MDS-2m e MDT-2m do LiDAR da DGT (precisa de login em cdd.dgterritorio.gov.pt; os tiles não vão para o repositório). Só Vieira tem `canopy.npz`.
+- **`-I` (modo isolado do Python):** os scripts acrescentam a sua própria pasta ao `sys.path`, por isso correm assim de qualquer pasta.
+
+## Fluxo de dados
+
+```
+web/public/fires/<id>/  (scripts/build_*.py: grid, fuel, terreno, ERA5, progression, osm.json, fire.json com incidentId)
+   │
+   ├── evidence.py ── SGIF do ICNF, KML da GNR/GTF, NASA FIRMS ──► fires/<id>/evidence.json + evidence.geojson
+   │                                                                (perímetro oficial, cicatrizes, focos, imprensa)
+   ├── canopy.py ──── LiDAR DGT (MDS−MDT) ──────────────────────────► fires/<id>/canopy.npz
+   │
+   ├── attack.py ──── osm.json + perímetro oficial + hora (observada ou de uma corrida) ──► fires/<id>/attack_lines*.json
+   │
+   └── run.py ─────── pedido do motor (engines/CONTRACT.md + 4 campos) ──► engine/run.sh ──► ELMFIRE (Docker)
+          │             regras da API: runs.Scenario, runs.stretches, Fire.line
+          └──► common.score ──► fires/<id>/runs/<nome>/result.json + preview.png ; data/hindcast/<id>/<nome>.npy
+                                         │
+                                grid.py / table.py ──► fires/<id>/grid*.png, tabela Markdown
+```
+
+## Convenções
+
+- **Grade:** a do pacote: EPSG:3763 (PT-TM06), células de 30 m. `xmin`/`ymin` são o canto sudoeste e a linha 0 é a do norte, como no `engines/CONTRACT.md`.
+- **Relógios:** há vários, e confundi-los é o erro mais fácil.
+  - **Hora local:** o `fire.json`, o `weather.json` e o SGIF estão em hora local (Europe/Lisbon; WEST = UTC+1 no verão). Nos JSON escritos aqui, as horas levam o fuso (`+01:00`).
+  - **UTC:** as passagens dos satélites (`time_utc`).
+  - **`hours_after_alert`:** as horas desde o alerta do SGIF (Vieira: 09:46).
+  - **Minutos desde o início da corrida:** as grades `.npy` das corridas, os `from_min` das linhas e o `t_min` do motor. O início é o passo 0 do `fire.json` (Vieira: 10:00). Com `--start-step k` conta desde esse passo, mas a pontuação passa tudo para o relógio do passo 0.
+  - **Satélite no relógio do passo 0:** `common.alert_offset_min` faz a conversão (Vieira: −14 min).
+- **Nomes das corridas e passos da tabela:**
+
+  | Corrida (`runs/<nome>`) | Passo |
+  |---|---|
+  | `0_api` | 0 |
+  | `1a_humidade_emc` | 1 |
+  | `1_emc_copas` | 2 |
+  | `2_cicatrizes` | 3 |
+  | `3_combustiveis_pt` | 4 |
+  | `4_seca` | 5 |
+  | `5_projecoes` | 6 |
+  | `5w_topowind` | 6w |
+  | `5c_cerra` | 6c |
+  | `5cw_cerra_topowind` | 6cw |
+  | `x_adj1.5`, `x_vento_x2` | x1, x2 |
+  | `6_linhas` | 7 |
+  | `7_linhas_v2` | 8 |
+
+  Os nomes ficaram da ordem em que as corridas foram feitas. `_seed2`/`_seed3` são as outras sementes; sem sufixo é a semente 1. Nas linhas v2, a semente *s* usa as linhas `attack_lines_5_projecoes[_seeds].json`, cronometradas na corrida livre da mesma semente.
+- **Sementes:** com a mesma semente, a mesma configuração e o mesmo número de troços, o ELMFIRE dá exatamente o mesmo resultado (o `ladder.sh` refaz os `result.json` iguais). Muda o número de troços e mudam as tiragens das projeções.
+- **Língua:** documentação e mensagens em português; código, comentários e chaves dos JSON em inglês, como no resto do repositório.
+
+## Formatos dos ficheiros
+
+- **`evidence.json`:**
+  - `incident`: a ficha do SGIF.
+    - Identificação: `sgif_id`, `ncco`, `municipality`, `parish`, `place`, `lon`/`lat`.
+    - Horas: `alert`, `first_intervention`, `extinguished`, `duration_h`.
+    - Área e causa: `area_ha {stands, shrub, farmland, total}`, `cause`.
+    - Perigo no local: `weather_at_fire {temp_c, rh_pct, wind_kmh, wind_from_deg, ffmc, dmc, dc, isi, bui, fwi, dsr}`.
+    - Combustível e fonte: `fuel_model_at_ignition` (código Farsite), `source`.
+  - `news`: os factos da imprensa (`time`, `kind`, `fact`, `source`, `url`).
+  - `scars`: o mesmo que as propriedades das cicatrizes no GeoJSON.
+  - `satellite_passes`: por passagem e sensor (`time_utc`, `time_local`, `hours_after_alert`, `product`, `n`, `this_fire`, `near_fire_before_alert`).
+  - `sources`: de onde vem cada coisa.
+- **`evidence.geojson`:** lon/lat (WGS84), e a propriedade `kind` diz o que cada elemento é.
+  - `perimeter` (o oficial): `ncco`, `area_ha`, `source` (o KML usado).
+  - `scar`: `ncco`, `parish`, `municipality`, `alert`, `extinguished`, `area_ha`, `reported_ha`, `cause`, `source`.
+  - `hotspot`: `product` (`viirs-snpp` ou `modis`), `satellite`, `pixel_m`, `time_utc`, `hours_after_alert`, `frp_mw`, `confidence`, `daynight`, mais três marcas:
+    - `near_fire`: a menos de ~350 m do perímetro oficial;
+    - `in_scar`: numa cicatriz;
+    - `this_fire`: `near_fire` e depois do alerta.
+- **`attack_lines*.json`:**
+  - `barriers`: lista de linhas. Cada uma tem `path` (`[[lon, lat], …]`), `width_m` e `from_min`, que são os campos de `decision.barriers` da API; mais `label`, `tier` (`road` ou `connector`), `source` (como foi inferida) e `length_m`.
+  - `options`: com que opções foi feito.
+  - Resumo do perímetro, em km: `official_boundary_km`, `boundary_along_scars_km`, `boundary_covered_km`, `crossings_left_out_km`.
+  - **Para mandar à API:** passa-se só `path`/`width_m`/`from_min` de cada linha para `POST /api/run`.
+- **`runs/<nome>/result.json`:**
+  - `options`: todas as opções do `run.py`, com caminhos relativos ao repositório.
+  - A corrida: `start`, `duration_min`, `engine`, `barriers` (quantas), `stretches` (troços), `runtime_s`, `notes` (avisos).
+  - `stats`:
+    - `burned_ha`;
+    - `by_hour` (`h`, `observed_ha`, `run_ha`);
+    - `sorensen_last_step` e `sorensen_by_step`;
+    - `official_ha`, `sorensen_official`, `outside_official_ha`;
+    - `satellite` (`passes` com `reached`, e `mean_reached`).
+- **`data/hindcast/<id>/<nome>.npy`:** float32 linhas × colunas, os minutos desde o início em que o fogo chega a cada célula, NaN onde não chega.
+- **`canopy.npz`:** `cover_pct` (uint8, %), `height_dm` e `base_dm` (uint16, dm), `bulk_cg_m3` (uint8, centésimos de kg/m³). Linha 0 a norte. O método e a fonte estão no `canopy.json`.
 
 ## 1. Os registos (`evidence.py`)
 
@@ -142,6 +257,7 @@ Por isso as linhas são **inferidas**, e cada uma diz como (`tier`, `source`).
   - **Só o bordo exterior conta,** e não onde corre junto a uma cicatriz.
 - **`connector` (ligação):** o perímetro oficial entre as pontas de duas linhas de estrada a menos de 250 m uma da outra, sem estrada no OpenStreetMap entre elas. As equipas ligam os dois flancos com uma linha manual ou de máquina. Segura a partir da mais tardia das duas.
 - **Hora (`from_min`, minutos desde o passo 0):** quando o fogo observado chega a menos de 400 m da linha, menos 60 min (as equipas posicionam-se antes da frente). Arredonda-se para baixo à hora, porque cada `from_min` diferente parte a corrida.
+- **Hora do fogo do modelo (`--timing run --run <corrida>`, "linhas v2"):** a mesma regra, mas sobre a chegada do fogo de uma corrida sem linhas. Os registos dizem que as linhas seguraram, não quando foram feitas, e o fogo do modelo chega às estradas a outras horas que o real. Assim uma linha só falha se o fogo do modelo for mais rápido do que equipas postas 60 min à frente dele.
 - **Vieira:** 33 linhas, 13,6 km, ao longo de 11,5 dos 34 km do perímetro. Outros 3 km do perímetro correm junto a cicatrizes, e ficam de fora 30 estradas atravessadas.
   - Os flancos sul e leste seguram a partir das 2–3 h.
   - O flanco norte segura sobretudo a partir das 11 h (21:00).
@@ -197,7 +313,7 @@ Cada passo muda uma coisa nos dados de entrada do ELMFIRE. As corridas com proje
 | **8** | **6 + linhas de ataque, hora do fogo do modelo** | **423–492** | **1646–1782** | **1933–2058** | **0,84–0,85** | **0,89–0,90** | **246–315** | **0,71–0,77** |
 
 **Grelhas:**
-- `fires/VieiradoMinho_10082016/grid.png`: todos os passos lado a lado, com a semente 1 nas corridas com projeções.
+- `fires/VieiradoMinho_10082016/grid.png`: todos os passos lado a lado, com a semente 1 nas corridas com projeções. As linhas da grelha são as 2 h, cada passo observado e o meio entre os dois primeiros passos.
 - `grid_wind.png`: as quatro fontes de vento, sem linhas, nas três sementes.
 
 Cada célula mostra o fogo a uma hora:
@@ -239,12 +355,81 @@ Fazem-se com `grid.py`.
 - **Falta o LiDAR:** com as copas do LiDAR da DGT (precisa de login) este teste fica justo.
 - **As linhas ajudam também aqui:** −312 ha.
 
+## Histórico de decisões e erros corrigidos (20–21/10/2026)
+
+1. **O ponto de partida:** o ELMFIRE da API fazia 155 ha às 15:00, contra 707 observados (passo 0).
+2. **Juntar os registos:** primeiro a ficha do SGIF (FWI e DC mostram uma seca extrema) e o perímetro oficial.
+   - **As cicatrizes:** a de Sobradelo da Goma explica a divisão do fogo a oeste.
+   - **O FIRMS:** confirma a velocidade da corrida principal e revela um fogo na noite anterior que não está no SGIF.
+3. **Mudar os dados de entrada, um passo de cada vez:** combustíveis portugueses (a ficha dá M-PIN na ignição), vivas de seca e projeções.
+4. **Calibrar foi rejeitado.** A velocidade × 1,5 e o vento × 2 acertam nas 15:00 mas queimam de mais depois. Com × 2,5 o ELMFIRE queima 0 ha sem dar erro.
+5. **Linhas de ataque v1:** inferidas das estradas que o perímetro oficial segue. Numa revisão apareceu uma falha de 160 m no flanco sul, por onde o fogo fugia. A causa eram três erros na derivação, todos corrigidos:
+   - **Os 300 m mínimos aplicavam-se a cada pedaço entre cruzamentos.** Passaram a aplicar-se a cada troço ligado.
+   - **Contavam estradas que o fogo atravessou.** Entrou o teste do "ao longo do perímetro".
+   - **Faltavam ligações onde o OSM não tem estrada.** Entraram os `connector` até 250 m.
+
+   Também se verificou que o perímetro não tem buracos. Com as correções, a área fora do oficial caiu cerca de 35 % (na cadeia do FireRenderer, 337 → 214 ha).
+6. **O `test.sh` encontrou o artefacto dos troços:** partir a corrida acrescenta ~1 % de área. Por isso o teste compara com a mesma corrida partida.
+7. **O adapter estendido** dá exatamente o mesmo que o de origem quando o pedido não usa os campos novos (testado célula a célula).
+8. **O vento do Carlos** (CERRA e TopoWind) foi testado primeiro com as linhas, o que não isolava o efeito, e depois sem elas. Fica dentro do ruído das sementes (TopoWind) ou abranda a corrida principal (CERRA).
+9. **Linhas v2:** as mesmas estradas, com a hora do fogo do modelo. É a melhor configuração atual (passo 8).
+
+## Ramos e projetos relacionados
+
+- **`main` (Bruno):** a API (`api/`), os motores (`engines/`), os pacotes dos incêndios (`scripts/`, `web/public/fires/`), a web. Esta pasta usa `api/fires.py`, `api/runs.py`, `engines/elmfire/` e o `osm.json` de cada incêndio, sem os alterar.
+- **`feature/cerra-wind-engine` (Carlos):**
+  - `scripts/fetch_weather_cerra.py` e `build_weather_cerra.py` → `weather_cerra.json`;
+  - `scripts/build_wind_field.py` (TopoWind: aceleração e abrigo pelo declive e exposição, desvio de até 25°, brisa de encosta de dia);
+  - `scripts/build_fuel_moisture.py` (Simard) e o acoplamento do FWI.
+  - O `--weather cerra` e o `--topowind` daqui leem esses ficheiros.
+  - O `scripts/replicate_hindcast_comparison.py` desse ramo usa um modelo de propagação próprio, simples, e não o ELMFIRE. Os números dele não se comparam com os daqui.
+- **`cerra-wind-hindcast-integration` (Hugo):**
+  - o incêndio de Alijó, 2019 (`scripts/build_alijo_fire_package.py`, `hindcast/fires/Alijo_24072019/evidence.json` no formato do `evidence.py`);
+  - imagens de comparação feitas sobre os resultados desta pasta.
+- **`feature/multi-agency-reporting` (Carlos):** interface e relatórios; não toca nesta pasta.
+- **FireRenderer** (pastas irmãs `../FireRenderer`, `../FireRenderer_VieiraMinho`, fora deste repositório): os mesmos métodos noutra grade, para os vídeos em Unreal Engine.
+  - **As ferramentas de lá:** `tools/terrain/src/terrain/evidence.py`, `attack.py` e `elmfire.py` correm numa grade ortográfica de 20 m e partem do ponto de ignição, não do perímetro do passo 0. Por isso os números diferem um pouco.
+  - **O adapter de lá:** `tools/elmfire/adapter.py` é o mesmo ficheiro que `engine/adapter.py`. Depois de integrado, o daqui é o de referência.
+  - **O "cenário B" dos vídeos de Vieira:** é a configuração do passo 7 nessa cadeia (semente 1).
+
 ## Coisas a saber
 
+- **O ELMFIRE falha sem erro com fogos muito rápidos:** com vento × 2,5 ou velocidade × 2,5 queima 0 ha. O `run.py` avisa em `notes` quando o fogo não sai do ponto de partida.
 - **Cortar a corrida acrescenta área.** Cada troço recomeça a partir das células já ardidas, e a frente salta para as arestas delas. Em Vieira, partir 5 h em 3 troços acrescenta 1,2 % de área, com ou sem linhas; o `POST /api/run` faz o mesmo. O `test.sh` compara as linhas com a mesma corrida partida, sem linhas.
-- **As copas são as de hoje.** O `canopy.npz` vem do LiDAR da DGT de 2024–25, agregado às células de 30 m pelo FireRenderer. Dentro da cicatriz de 2016 o pinhal tem hoje cerca de 10 m, contra 18 m à volta. A altura da base e a densidade da copa são valores típicos por classe COS: são assumidas, não medidas (`canopy.json`).
-- **Ponto de partida:** as corridas partem do perímetro do passo 0, como a API. O FireRenderer parte do ponto de ignição; os números diferem um pouco por isso, e porque a grade de lá tem 20 m.
+- **Linhas que começam depois do fim** ficam de fora da corrida, com um aviso. A API recusa-as.
+- **As copas são as de hoje.** O `canopy.npz` vem do LiDAR da DGT de 2024–25. Dentro da cicatriz de 2016 o pinhal tem hoje cerca de 10 m, contra 18 m à volta. A altura da base e a densidade da copa são valores típicos por classe COS: são assumidas, não medidas (`canopy.json`).
+- **Debaixo das árvores** o ELMFIRE usa um vento abrigado de ~10–15 % do vento a 10 m. É o que mais trava o fogo na floresta, e é porque um vento melhor (CERRA, TopoWind) quase não muda nada.
+- **Ponto de partida:** as corridas partem do perímetro do passo 0, como a API.
 - **Sementes:** as projeções são aleatórias. Comparem-se sempre várias sementes antes de dizer que uma mudança ajuda.
+- **O `engine/run.sh` monta `engines/elmfire/vendor/elmfire/build/source/fuel_models.csv`.** O `vendor/` não está no git, mas existe sempre depois do `engines/elmfire/setup.sh`.
+- **Fontes na rede:**
+  - **ICNF:**
+    - `fogos.icnf.pt` só responde por HTTPS; por HTTP fica pendurado.
+    - As páginas `IncPrint.asp` dão erro 500. O `webserviceocorrencias.asp` funciona.
+    - Se o ICNF não responder, o espelho `github.com/cityxdev/icnf_fire_data` tem os mesmos campos em CSV por ano.
+  - **FIRMS:** os ficheiros anuais por país não pedem chave; a API do FIRMS pede.
+  - **Imprensa:** o JN recusa (403) clientes sem cabeçalho de browser.
+
+## Problemas em aberto e próximos passos
+
+1. **A corrida principal continua lenta.** A suspeita é o abrigo do vento debaixo das copas, combinado com projeções de curta distância. Ensaios por fazer:
+   - um fator de vento fixo debaixo dos povoamentos (por exemplo 0,3–0,4). O ELMFIRE calcula sempre o fator a partir da cobertura e da altura das copas (`CALC_WIND_ADJUSTMENT_FACTOR_EVERYWHERE`), e não o lê de nenhum raster. A única entrada é uma soma global para ensembles (`RASTER_TO_PERTURB = 'WAF'` no `&MONTE_CARLO`), que o `engine/adapter.py` teria de passar. A alternativa é um patch na imagem;
+   - projeções de longa distância para o eucalipto (os parâmetros `&SPOTTING`).
+2. **O fogo da noite anterior** (focos das 23:25 às 03:56 dentro do perímetro oficial): falta uma opção de partida que o inclua. O FireRenderer tem `--start night`, mas as pegadas de 1 km do MODIS fazem a área grande de mais.
+3. **Cabeceiras sem copas:** com os tiles da DGT dessa zona, o `canopy.py` faz o `canopy.npz` e o teste fica justo.
+4. **Integrar no motor e na API:** passar `fuel_models`, `layers.adj`, `spotting` e `seed` para `engines/elmfire/adapter.py` e para `engines/CONTRACT.md`, e os combustíveis portugueses e as cicatrizes para o cenário da API.
+5. **O artefacto dos troços na API:** recomeçar a partir das horas de chegada já calculadas (o `phi` do ELMFIRE), e não de uma máscara.
+6. **Linhas melhores precisam de dados que não são abertos:**
+   - para as linhas reais, os registos da ANEPC ou da GNR (pedido formal);
+   - para a defesa das aldeias, casas melhores do que as do OSM (BGRI do INE).
+
+## Como acrescentar um incêndio
+
+1. **O pacote:** em `web/public/fires/<id>/`, feito pelos `scripts/build_*.py` do `main`. Precisa do `incidentId` no `fire.json`, que é o n.º ANEPC e o `NCCO` no SGIF, e do `osm.json`.
+2. **Os registos:** `evidence.py <id>`. Confirma no `evidence.png` que o perímetro oficial bate com o PT-FireSprd.
+3. **As copas, se possível:** `canopy.py <id> --dgt <pasta>`.
+4. **As linhas:** `attack.py <id>`.
+5. **As corridas:** `ladder.sh <id>`. Depois acrescenta-se a tabela do incêndio em "Resultados".
 
 ## Fontes e créditos
 

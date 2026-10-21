@@ -27,8 +27,8 @@
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
  "barriers": 33,
  "stretches": 8,
- "runtime_s": 30.2,
- "wall_s": 36.7,
+ "runtime_s": 20.0,
+ "wall_s": 25.0,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"

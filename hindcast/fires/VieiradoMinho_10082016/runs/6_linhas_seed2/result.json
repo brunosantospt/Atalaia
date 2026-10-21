@@ -17,6 +17,8 @@
   "canopy": true,
   "spotting": true,
   "seed": 2,
+  "weather": "era5",
+  "topowind": false,
   "adj": 1.0,
   "wind_mult": 1.0,
   "barriers": "hindcast/fires/VieiradoMinho_10082016/attack_lines.json",
@@ -25,8 +27,8 @@
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
  "barriers": 33,
  "stretches": 9,
- "runtime_s": 18.4,
- "wall_s": 24.0,
+ "runtime_s": 22.4,
+ "wall_s": 28.2,
  "notes": [
   "cicatrizes: 627 ha",
   "copas do LiDAR"

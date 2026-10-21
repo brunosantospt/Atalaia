@@ -27,8 +27,8 @@
  "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
  "barriers": 0,
  "stretches": 1,
- "runtime_s": 11.1,
- "wall_s": 12.2,
+ "runtime_s": 4.0,
+ "wall_s": 4.6,
  "notes": [],
  "stats": {
   "burned_ha": 1700.5,
