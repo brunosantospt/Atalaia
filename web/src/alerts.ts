@@ -53,7 +53,8 @@ export const ROS_SOURCE =
 const WATER_SOURCE =
   'Tanque e caudal de suppression.json (VFCI 3000 L a 200 L/min, VTTU 12 000 L a 400 L/min). Chegada como no modelo ' +
   'rápido: saída do quartel e distância em linha reta × fator de estrada, sem o percurso OSM do editor. Dois ou mais ' +
-  'meios revezam-se no reabastecimento; um VTTU em abastecimento poupa a viagem ao ponto de água até esgotar o tanque.'
+  'meios revezam-se no reabastecimento; um VTTU em abastecimento poupa-lhes a viagem ao ponto de água e, com o ' +
+  'tanque gasto nessas recargas, vai reabastecer (contabilidade aproximada, que o modelo não usa).'
 
 const PLACES_SOURCE = 'Lugares do OpenStreetMap (aldeias, lugarejos), atingidos quando o fogo entra no círculo de 250 m à sua volta, como no relatório das 6 h.'
 
@@ -514,7 +515,7 @@ function shuttles(scenario: Scenario, decision: Decision, ecin: boolean[], water
     for (let m = Math.ceil(arrive); m <= durationMin; m++) {
       for (; d < draws.length && draws[d][0] <= m; d++) {
         const [t, litres] = draws[d]
-        if (t < arrive || t < back) continue // not there yet, or away: the unit goes to the water point
+        if (t < arrive || t < back) continue // not there yet, or away
         level -= litres
         if (level < drawL) (back = t + away), (level = capL)
       }
@@ -545,7 +546,7 @@ function shuttleAlert(shuttle: Shuttle, m: number, name: string): Alert | undefi
       kind: 'water',
       level: 'warning',
       title: `${shuttle.label} (abastecimento) foi reabastecer`,
-      detail: `volta em ~${Math.max(1, Math.ceil(back - m))} min · os meios do ponto vão ao ponto de água · ${name}`,
+      detail: `volta em ~${Math.max(1, Math.ceil(back - m))} min · ${name}`,
       source: WATER_SOURCE,
       at: shuttle.at,
     }
