@@ -20,6 +20,9 @@ export interface HudActions {
   goTo(i: number): void
   pickFire(id: string): void
   roleChanged?(role: AgencyRole): void
+  resetNorth?(): void
+  flyToIgnition?(): void
+  openEditor?(): void
 }
 
 /** The free run of the fast model behind the simulated shots, as the HUD reads it. */
@@ -88,6 +91,21 @@ const TEMPLATE = `
     <div><label>Pitch</label><span data-ref="pitch"></span></div>
     <div><label>Rng</label><span data-ref="rng"></span></div>
   </section>
+  <div class="nav-controls">
+    <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (visão base)">
+      <span class="nav-icon" data-ref="compassNeedle">▲</span>
+      <span class="nav-label">Norte</span>
+    </button>
+    <button type="button" class="nav-btn ignition-btn" data-ref="btnIgnition" title="Centrar câmara no Ponto de Ignição inicial">
+      <span class="nav-icon">📍</span>
+      <span class="nav-label">Ignição</span>
+    </button>
+  </div>
+  <div class="hud-tactical-alert" data-ref="tacticalAlert" hidden>
+    <span class="alert-icon">⚠️</span>
+    <span class="alert-text" data-ref="tacticalAlertText"></span>
+    <button type="button" class="alert-action-btn" data-ref="tacticalAlertAction">Mobilizar Meios</button>
+  </div>
   <section class="bottom">
     <div class="card">
       <div class="card-head" data-ref="cardHead"></div>
@@ -109,7 +127,9 @@ type Refs = Record<
   | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
   | 'hdg' | 'pitch' | 'rng' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
-  | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody',
+  | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
+  | 'btnNorth' | 'compassNeedle' | 'btnIgnition'
+  | 'tacticalAlert' | 'tacticalAlertText' | 'tacticalAlertAction',
   HTMLElement
 >
 
@@ -160,6 +180,10 @@ export class Hud {
         navigator.clipboard.writeText(this.lastDispatch.inem.message).then(() => this.toast('📋 Despacho INEM copiado!'))
       }
     })
+
+    this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
+    this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
+    this.refs.tacticalAlertAction?.addEventListener('click', () => this.actions.openEditor?.())
   }
 
   currentRole: AgencyRole = 'cmd'
@@ -228,6 +252,23 @@ export class Hud {
     if (sim) this.ledger.set(sim.known)
     this.settings.setFire(fire.id)
     this.setShots(shots)
+
+    if (sim && this.refs.tacticalAlert && this.refs.tacticalAlertText) {
+      const flame = 0.0775 * Math.pow(Math.max(sim.intensityKWPerM, 0), 0.46)
+      if (flame >= 3.4) {
+        this.refs.tacticalAlert.hidden = false
+        this.refs.tacticalAlert.classList.add('emergency')
+        this.refs.tacticalAlertText.textContent = `🚨 ALERTA CRÍTICO: Chama de ${flame.toFixed(1)}m excede combate direto. Meios Aéreos urgentes!`
+      } else if (flame >= 2.4) {
+        this.refs.tacticalAlert.hidden = false
+        this.refs.tacticalAlert.classList.remove('emergency')
+        this.refs.tacticalAlertText.textContent = `⚠️ ALERTA TÁTICO: Chama de ${flame.toFixed(1)}m frontal — Recomendado envio de Meios Aéreos (HEBL/AVBP).`
+      } else {
+        this.refs.tacticalAlert.hidden = true
+      }
+    } else if (this.refs.tacticalAlert) {
+      this.refs.tacticalAlert.hidden = true
+    }
   }
 
   /** The director's cut is on: the HUD says so instead of "Replay". */
@@ -323,6 +364,10 @@ export class Hud {
     this.set('hdg', `${pad3(Math.round(((camera.heading % 360) + 360) % 360))}° ${compass(camera.heading)}`)
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))
     this.set('rng', fmtRange(camera.range))
+
+    if (this.refs.compassNeedle) {
+      this.refs.compassNeedle.style.transform = `rotate(${-camera.heading}deg)`
+    }
 
     this.set('cardHead', `Plano ${pad2(frame.index + 1)}/${pad2(n)} · ${shot.word}`)
     this.set('cardTitle', shot.title)

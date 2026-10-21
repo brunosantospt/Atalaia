@@ -247,6 +247,78 @@
   border-left: 0;
   border-right-color: var(--line);
 }
+.hud .editor .tactical-flame-card {
+  margin: 8px 0 10px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.hud .editor .tactical-flame-card.emergency {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+.hud .editor .tactical-flame-card.safe {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.hud .editor .tactical-flame-card .flame-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hud .editor .tactical-flame-card .flame-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+.hud .editor .tactical-flame-card.emergency .flame-badge {
+  color: #f87171;
+}
+.hud .editor .tactical-flame-card.safe .flame-badge {
+  color: #34d399;
+}
+.hud .editor .tactical-flame-card .flame-height {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.hud .editor .tactical-flame-card .flame-msg {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.hud .editor .tactical-flame-card .btn-dispatch-air {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 4px;
+  background: #f59e0b;
+  color: #08090a;
+  border: 1px solid #f59e0b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 2px;
+}
+.hud .editor .tactical-flame-card.emergency .btn-dispatch-air {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+.hud .editor .tactical-flame-card .btn-dispatch-air:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
 .hud .editor .palette {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,13 @@
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
-import { Credit, type PerspectiveFrustum } from 'cesium'
+import {
+  BoundingSphere,
+  Cartesian3,
+  Credit,
+  HeadingPitchRange,
+  Math as CesiumMath,
+  type PerspectiveFrustum,
+} from 'cesium'
 import { applyPose, readPose, type Pose } from './camera'
 import {
   loadFire,
@@ -95,6 +102,37 @@ async function main() {
     })
   let loading: string | undefined
 
+  function resetNorth() {
+    const current = readPose(scene)
+    if (current) {
+      const target = Cartesian3.fromDegrees(current.lon, current.lat, current.h)
+      viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+        offset: new HeadingPitchRange(0, CesiumMath.toRadians(current.pitch), current.range),
+        duration: 0.8,
+      })
+    } else {
+      viewer.camera.flyTo({
+        destination: viewer.camera.position,
+        orientation: {
+          heading: 0,
+          pitch: viewer.camera.pitch,
+          roll: 0,
+        },
+        duration: 0.8,
+      })
+    }
+  }
+
+  function flyToIgnition() {
+    if (!replay) return
+    const { data: fire } = replay
+    const target = Cartesian3.fromDegrees(fire.ignition.lon, fire.ignition.lat, 0)
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 400), {
+      offset: new HeadingPitchRange(0, CesiumMath.toRadians(-35), 4500),
+      duration: 1.2,
+    })
+  }
+
   const hud = new Hud(document.getElementById('hud')!, index, {
     toggle: () => replay?.player.toggle(),
     prev: () => replay?.player.prev(),
@@ -106,6 +144,9 @@ async function main() {
       const dispatch = editor.getMultiAgencyDispatch()
       if (dispatch) hud.updateBriefings(dispatch)
     },
+    resetNorth,
+    flyToIgnition,
+    openEditor: () => editor.toggle(true),
   })
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
@@ -180,7 +221,7 @@ async function main() {
       shotShown: undefined,
     }
     hud.setDirector(replay.director)
-    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near))
+    editor.setFire(id, fire, regional, context, scenario, demoDecisions(fire, near), reach.intensityKWPerM)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
