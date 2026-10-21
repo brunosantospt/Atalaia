@@ -104,14 +104,13 @@ const TEMPLATE = `
     </button>
   </div>
   <div class="hud-alert-container" data-ref="alertContainer" hidden>
-    <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático de Supressão - Clica para ver detalhes e recomendação">
+    <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático: Clica para ver recomendação de Meios Aéreos">
       <span class="hazard-icon" data-ref="alertIcon">⚠️</span>
-      <span class="hazard-label" data-ref="alertBadgeLabel">Meios Aéreos Recomendados</span>
     </button>
     <div class="hud-alert-popover" data-ref="alertPopover" hidden>
       <header>
         <span class="popover-title" data-ref="popoverTitle">⚠️ RECOMENDAÇÃO TÁTICA</span>
-        <button type="button" class="btn-close-popover" data-ref="closeAlertPopover" title="Minimizar">✕</button>
+        <button type="button" class="btn-close-popover" data-ref="closeAlertPopover" title="Fechar">✕</button>
       </header>
       <div class="popover-stat" data-ref="popoverStat">Chama: -- m · Intensidade: -- kW/m</div>
       <p class="popover-desc" data-ref="popoverDesc">Chama estimada excede a capacidade de combate frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos.</p>
@@ -141,7 +140,7 @@ type Refs = Record<
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
   | 'btnNorth' | 'compassNeedle' | 'btnIgnition'
-  | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertBadgeLabel' | 'alertPopover'
+  | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
 >
@@ -218,6 +217,14 @@ export class Hud {
       this.actions.mobilizeAerial?.(this.currentFlameM)
     })
 
+    document.addEventListener('click', (e) => {
+      if (this.refs.alertPopover && !this.refs.alertPopover.hidden) {
+        if (!this.refs.alertContainer?.contains(e.target as Node)) {
+          this.refs.alertPopover.hidden = true
+        }
+      }
+    })
+
     const copyText = (val: string) => {
       if (!val) return
       navigator.clipboard.writeText(val).then(() => this.toast(`📋 ${val} copiado!`))
@@ -291,35 +298,41 @@ export class Hud {
     this.settings.setFire(fire.id)
     this.setShots(shots)
 
-    if (sim && this.refs.alertContainer) {
-      const flame = 0.0775 * Math.pow(Math.max(sim.intensityKWPerM, 0), 0.46)
-      this.currentFlameM = flame
-      if (flame >= 2.4) {
-        this.refs.alertContainer.hidden = false
-        const emergency = flame >= 3.4
-        this.refs.alertContainer.classList.toggle('emergency', emergency)
-        this.refs.alertBadge.classList.toggle('emergency', emergency)
-        this.refs.alertBadge.classList.add('pulsing')
-        this.refs.alertIcon.textContent = emergency ? '🚨' : '⚠️'
-        this.refs.alertBadgeLabel.textContent = emergency
-          ? `Alerta Crítico: Chama ${flame.toFixed(1)}m (Extremo)`
-          : `Apoio Aéreo Recomendado (Chama ${flame.toFixed(1)}m)`
+    if (this.refs.alertPopover) this.refs.alertPopover.hidden = true
+    this.updateTacticalAlert(0)
+  }
 
-        this.refs.popoverTitle.textContent = emergency
-          ? '🚨 ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO'
-          : '⚠️ RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
-        this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(sim.intensityKWPerM)} kW/m`
-        this.refs.popoverDesc.textContent = emergency
-          ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
-          : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
-        this.refs.alertDispatchBtn.textContent = emergency
-          ? '✈️ Mobilizar Avião Anfíbio Pesado (AVBP)'
-          : '🚁 Mobilizar Helicóptero Bombardeiro (HEBL)'
-      } else {
-        this.refs.alertContainer.hidden = true
-        this.refs.alertPopover.hidden = true
-      }
-    } else if (this.refs.alertContainer) {
+  private updateTacticalAlert(hours: number) {
+    if (!this.sim || !this.refs.alertContainer) return
+    const peakIntensity = this.sim.intensityKWPerM
+    // Ramp up from initial attack intensity (~15% at t=0) to full peak intensity as fire develops
+    const scale = Math.min(1.0, 0.15 + 0.85 * Math.min(Math.max(hours, 0) / 1.5, 1.0))
+    const currentIntensity = peakIntensity * scale
+    const flame = 0.0775 * Math.pow(Math.max(currentIntensity, 0), 0.46)
+    this.currentFlameM = flame
+
+    if (flame >= 2.4) {
+      this.refs.alertContainer.hidden = false
+      const emergency = flame >= 3.4
+      this.refs.alertContainer.classList.toggle('emergency', emergency)
+      this.refs.alertBadge.classList.toggle('emergency', emergency)
+      this.refs.alertBadge.classList.add('pulsing')
+      this.refs.alertIcon.textContent = emergency ? '🚨' : '⚠️'
+      this.refs.alertBadge.title = emergency
+        ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · Clica para ver recomendação`
+        : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · Clica para ver recomendação`
+
+      this.refs.popoverTitle.textContent = emergency
+        ? '🚨 ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO'
+        : '⚠️ RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+      this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
+      this.refs.popoverDesc.textContent = emergency
+        ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
+        : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
+      this.refs.alertDispatchBtn.textContent = emergency
+        ? '✈️ Mobilizar Avião Anfíbio Pesado (AVBP)'
+        : '🚁 Mobilizar Helicóptero Bombardeiro (HEBL)'
+    } else {
       this.refs.alertContainer.hidden = true
       this.refs.alertPopover.hidden = true
     }
@@ -427,6 +440,7 @@ export class Hud {
     }
 
     this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? (this.director ? 'Realizador' : 'Replay') : 'Pausa')
+    this.updateTacticalAlert(frame.hours)
     this.set('source', sim ? (split ? 'decisões' : 'simulado') : 'observado')
     this.root.classList.toggle('paused', !frame.playing)
     this.root.classList.toggle('simulated', !!sim)

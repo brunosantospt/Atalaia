@@ -20,7 +20,7 @@ import {
 } from 'cesium'
 import type { Fire, NearStation } from './data'
 import { lineSchedule, type Run, type Scenario } from './fastModel'
-import { cellOf } from './grid'
+import { cellOf, lonLatAt, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
@@ -223,6 +223,44 @@ interface Loaded {
   context: Context | undefined
   scenario: Scenario
   examples: [Decision, Decision]
+}
+
+/** Clips road coordinates to only the contiguous segments engulfed by the active fire perimeter. */
+function clipRoadToFire(
+  pts: [number, number][],
+  grid: Grid,
+  arrival: Float32Array,
+  currentMin: number,
+): [number, number][][] {
+  const segments: [number, number][][] = []
+  let current: [number, number][] = []
+
+  for (let i = 0; i < pts.length; i++) {
+    const pt = pts[i]
+    const cell = cellOf(grid, { lon: pt[0], lat: pt[1] })
+    const isBurned = cell >= 0 && arrival[cell] <= currentMin
+
+    if (isBurned) {
+      if (current.length === 0 && i > 0) {
+        current.push(pts[i - 1])
+      }
+      current.push(pt)
+    } else {
+      if (current.length > 0) {
+        current.push(pt)
+        if (current.length >= 2) {
+          segments.push(current)
+        }
+        current = []
+      }
+    }
+  }
+
+  if (current.length >= 2) {
+    segments.push(current)
+  }
+
+  return segments
 }
 
 export class Editor {
@@ -729,7 +767,18 @@ export class Editor {
     this.cutTooltip.hidden = false
   }
 
-  private showUnitTooltip(position: Cartesian2, unitInfo: { assignment: Assignment; point: LonLat; allUnits: Assignment[] }) {
+  private showUnitTooltip(
+    position: Cartesian2,
+    unitInfo: {
+      assignment: Assignment
+      point: LonLat
+      allUnits: Assignment[]
+      radiusM?: number
+      growMPerH?: number
+      arrived?: boolean
+      earliestArrival?: number
+    },
+  ) {
     if (!this.cutTooltip) {
       this.cutTooltip = document.createElement('div')
       this.cutTooltip.className = 'road-cut-tooltip'
@@ -772,6 +821,8 @@ export class Editor {
       </div>
       <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
+      ${unitInfo.radiusM ? `<div class="tooltip-detail" style="color:#6ee7b7;">🛡️ Perímetro de Combate: Raio ${Math.round(unitInfo.radiusM)} m (${unitInfo.arrived ? 'ativo na frente' : 'a caminho'})</div>` : ''}
+      ${unitInfo.growMPerH ? `<div class="tooltip-detail" style="color:#93c5fd;">⚡ Ritmo de Avanço: ${Math.round(unitInfo.growMPerH)} m/h (Doutrina Tese Matos 2025 · ELMFIRE)</div>` : ''}
       <div class="tooltip-action" style="color:#93c5fd;">✅ Meio alocado e ativo no cenário</div>
     `
     this.cutTooltip.hidden = false
@@ -836,31 +887,90 @@ export class Editor {
     let targetPoint: LonLat | undefined
 
     if (aerial) {
-      // Planes and helicopters drop water freely over the fire without needing a road
-      const angle = (Object.keys(d.points).length * 60) * Math.PI / 180
+      // Find advancing head of the fire front
+      let headPoint: LonLat = scenario.ignition
+      if (activeRun) {
+        const frontCells: number[] = []
+        const step = Math.max(1, Math.floor(activeRun.arrival.length / 5000))
+        for (let i = 0; i < activeRun.arrival.length; i += step) {
+          const t = activeRun.arrival[i]
+          if (t <= this.minutes && t >= Math.max(0, this.minutes - 45)) {
+            frontCells.push(i)
+          }
+        }
+        if (frontCells.length > 0) {
+          const chosen = frontCells[frontCells.length - 1]
+          const col = chosen % scenario.grid.cols
+          const row = (chosen - col) / scenario.grid.cols
+          headPoint = lonLatAt(scenario.grid, col, row)
+        }
+      }
+      const existing = Object.values(d.points)
+      const angle = (existing.length * 60 * Math.PI) / 180
       targetPoint = {
-        lon: scenario.ignition.lon + Math.cos(angle) * 0.009,
-        lat: scenario.ignition.lat + Math.sin(angle) * 0.009,
+        lon: headPoint.lon + Math.cos(angle) * 0.005,
+        lat: headPoint.lat + Math.sin(angle) * 0.005,
       }
     } else if (context && context.access.length > 0) {
+      const existing = Object.values(d.points)
+      const station = stations.find((s) => s.id === this.fromId) ?? stations[0]
+
+      // 1. Collect points along the active fire perimeter
+      const frontPoints: LonLat[] = []
+      if (activeRun) {
+        const step = Math.max(1, Math.floor(activeRun.arrival.length / 3000))
+        for (let i = 0; i < activeRun.arrival.length; i += step) {
+          const t = activeRun.arrival[i]
+          if (t <= this.minutes && t >= Math.max(0, this.minutes - 60)) {
+            const col = i % scenario.grid.cols
+            const row = (i - col) / scenario.grid.cols
+            frontPoints.push(lonLatAt(scenario.grid, col, row))
+          }
+        }
+      }
+      if (frontPoints.length === 0) {
+        frontPoints.push(scenario.ignition)
+      }
+
+      // 2. Filter candidates: must be strictly UNBURNED with >= 15 min buffer, and not occupied
       const candidates = context.access.filter((a) => {
         const cell = cellOf(scenario.grid, a)
-        return cell >= 0 && (!activeRun || activeRun.arrival[cell] > this.minutes)
+        if (cell < 0) return false
+        if (activeRun && activeRun.arrival[cell] <= this.minutes + 15) return false
+        if (existing.some((p) => distanceM(p, a) < 220)) return false
+        return true
       })
 
-      if (candidates.length > 0) {
-        const existing = Object.values(d.points)
-        candidates.sort((a, b) => distanceM(scenario.ignition, a) - distanceM(scenario.ignition, b))
-        targetPoint = candidates.find((c) => !existing.some((p) => distanceM(p, c) < 250)) ?? candidates[0]
+      // 3. Score candidates by proximity to active front and confirmed safe road route from station
+      const scored: { pt: LonLat; distToFront: number; hasRoute: boolean }[] = []
+      for (const a of candidates) {
+        let minDist = Infinity
+        for (const fp of frontPoints) {
+          const dist = distanceM(a, fp)
+          if (dist < minDist) minDist = dist
+        }
+        if (minDist > 3000) continue
+        const route = station ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, a) : undefined
+        scored.push({ pt: a, distToFront: minDist, hasRoute: !!route })
+      }
+
+      scored.sort((a, b) => {
+        if (a.hasRoute !== b.hasRoute) return a.hasRoute ? -1 : 1
+        return a.distToFront - b.distToFront
+      })
+
+      if (scored.length > 0) {
+        targetPoint = scored[0].pt
+      } else if (candidates.length > 0) {
+        candidates.sort((a, b) => distanceM(a, frontPoints[0]) - distanceM(b, frontPoints[0]))
+        targetPoint = candidates[0]
       }
     }
 
     if (!targetPoint) {
-      const angle = (Object.keys(d.points).length * 45) * Math.PI / 180
-      targetPoint = {
-        lon: scenario.ignition.lon + Math.cos(angle) * 0.012,
-        lat: scenario.ignition.lat + Math.sin(angle) * 0.012,
-      }
+      this.refs.hint.classList.add('danger')
+      this.refs.hint.textContent = 'Não foi encontrado um acesso rodoviário seguro fora do fogo para este quartel. Clica no mapa no local pretendido.'
+      return
     }
 
     const id = nextId(d.points, 'p')
@@ -878,7 +988,7 @@ export class Editor {
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
       ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
-      : `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
+      : `✓ Meio colocado no acesso seguro mais próximo da frente! Rota rodoviária calculada no mapa.`
     this.commit()
   }
 
@@ -1403,26 +1513,68 @@ export class Editor {
                 material: Color.fromCssColorString('#00d2ff'),
               },
             })
-          } else if (!route) {
-            // Access road cut by fire perimeter! Show dashed hazard line
-            this.routes.entities.add({
-              polyline: {
-                positions: [Cartesian3.fromDegrees(station.lon, station.lat), Cartesian3.fromDegrees(p.lon, p.lat)],
-                width: 2.5,
-                clampToGround: true,
-                material: new PolylineDashMaterialProperty({ color: Color.RED, dashLength: 10 }),
-              },
-            })
           }
         }
       }
     }
 
-    // 2. Draw attack points with discreet tactical badge icon and clean label
+    // 2. Draw attack points with operational combat perimeter and tactical badge icon
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       if (!units.length) continue
       const mainUnit = units[0]
+
+      // 2.1 Calculate operational suppression perimeter based on Matos 2025 doctrine & fastModel
+      const cell = this.loaded ? cellOf(this.loaded.scenario.grid, p) : -1
+      const fuelClass = cell >= 0 && this.loaded ? this.loaded.scenario.grid.fuelClass[cell] : 2
+      let totalR0 = 0
+      let totalGrowMPerH = 0
+      let maxReachM = 0
+      let earliestArrival = Infinity
+
+      for (const a of units) {
+        const spec = this.sup.units[a.unit]
+        const arriveMin = this.eta(a, p) ?? 0
+        earliestArrival = Math.min(earliestArrival, arriveMin)
+        const r0 = isAerial(spec)
+          ? aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
+          : spec.radiusM * Math.sqrt(a.count)
+        totalR0 = Math.max(totalR0, r0)
+
+        const grow = a.task === 'protect' ? 0 : attackMPerH(spec, fuelClass) * a.count
+        totalGrowMPerH += grow
+        maxReachM = Math.max(maxReachM, spec.reachM ?? r0)
+      }
+
+      const activeMin = Math.max(0, this.minutes - earliestArrival)
+      const currentRadiusM = Math.max(
+        25,
+        Math.min(maxReachM || 1000, totalR0 + (totalGrowMPerH * activeMin) / 60),
+      )
+      const arrived = this.minutes >= earliestArrival
+
+      const unitColorMap: Record<UnitId, Color> = {
+        vfci: Color.fromCssColorString('#dc2626'),
+        crew: Color.fromCssColorString('#f59e0b'),
+        vttu: Color.fromCssColorString('#0284c7'),
+        hebl: Color.fromCssColorString('#0d9488'),
+        avbp: Color.fromCssColorString('#4f46e5'),
+      }
+      const unitColor = unitColorMap[mainUnit.unit] ?? AMBER
+
+      // Active suppression perimeter circle clamped to ground
+      entities.add({
+        position: Cartesian3.fromDegrees(p.lon, p.lat),
+        ellipse: {
+          semiMajorAxis: currentRadiusM,
+          semiMinorAxis: currentRadiusM,
+          material: unitColor.withAlpha(arrived ? 0.20 : 0.08),
+          outline: true,
+          outlineColor: arrived ? unitColor : DIM,
+          outlineWidth: 2,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        },
+      })
 
       const pointEntity = entities.add({
         position: Cartesian3.fromDegrees(p.lon, p.lat),
@@ -1446,7 +1598,15 @@ export class Editor {
           disableDepthTestDistance: Infinity,
         },
       })
-      ;(pointEntity as any)._unitInfo = { assignment: mainUnit, point: p, allUnits: units }
+      ;(pointEntity as any)._unitInfo = {
+        assignment: mainUnit,
+        point: p,
+        allUnits: units,
+        radiusM: currentRadiusM,
+        growMPerH: totalGrowMPerH,
+        arrived,
+        earliestArrival,
+      }
     }
 
     // 3. Draw lines
@@ -1547,26 +1707,25 @@ export class Editor {
     if (context && scenario && activeRun) {
       const threatened = detectThreatenedRoads(scenario.grid, context, activeRun, this.minutes)
 
-      // Draw threatened roads only for PSP (traffic & safety role), without billboard icon clutter
-      if (this.role === 'psp') {
+      // Draw cut roads strictly inside the fire perimeter (no straight lines to stations, no extensions outside fire)
+      if (this.role === 'psp' || this.role === 'cmd') {
         for (const cut of threatened) {
-          if (cut.pts && cut.pts.length >= 2) {
-            const cutColor =
-              cut.urgency === 'cortado'
-                ? Color.fromCssColorString('#e63946')
-                : cut.urgency === 'urgente'
-                  ? Color.fromCssColorString('#ff3b30')
-                  : Color.fromCssColorString('#f0a33a')
-
-            const lineEntity = this.agency.entities.add({
-              polyline: {
-                positions: cut.pts.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
-                width: 4,
-                clampToGround: true,
-                material: new PolylineDashMaterialProperty({ color: cutColor, dashLength: 10 }),
-              },
-            })
-            ;(lineEntity as any)._roadCut = cut
+          if (cut.urgency === 'cortado' && cut.pts && cut.pts.length >= 2) {
+            const burnedSegments = clipRoadToFire(cut.pts, scenario.grid, activeRun.arrival, this.minutes)
+            for (const seg of burnedSegments) {
+              const lineEntity = this.agency.entities.add({
+                polyline: {
+                  positions: seg.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
+                  width: 4,
+                  clampToGround: true,
+                  material: new PolylineDashMaterialProperty({
+                    color: Color.fromCssColorString('#e63946'),
+                    dashLength: 10,
+                  }),
+                },
+              })
+              ;(lineEntity as any)._roadCut = cut
+            }
           }
         }
       }
