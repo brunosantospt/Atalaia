@@ -1,4 +1,4 @@
-﻿// High-resolution simulated fire on the terrain:
+// High-resolution simulated fire on the terrain:
 // 1. Anti-pixelated 2x supersampled drape with smooth bilinear arrival field and linear texture filtering
 // 2. Active flaming front in vibrant incandescent amber/gold
 // 3. Already burned area in deep charred charcoal black/ash
@@ -10,9 +10,9 @@ import {
   BillboardCollection,
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Color,
   ConeEmitter,
-  HeightReference,
   type ImageryLayer,
   Math as CesiumMath,
   Matrix4,
@@ -95,11 +95,14 @@ export class SplitLayer {
       )
     })
 
-    // 2. 3D Flame Billboard pool
+    // 2. 3D Flame Billboard pool (without HeightReference to avoid asynchronous clamping errors)
     this.flameImage = makeFlameSprite()
     this.smokeImage = makeSmokeSprite()
     this.flames = viewer.scene.primitives.add(new BillboardCollection())
-    const initPos = Cartesian3.fromDegrees((this.grid.rect.west + this.grid.rect.east) / 2, (this.grid.rect.south + this.grid.rect.north) / 2)
+    const initPos = Cartesian3.fromDegrees(
+      (this.grid.rect.west + this.grid.rect.east) / 2,
+      (this.grid.rect.south + this.grid.rect.north) / 2,
+    )
     for (let i = 0; i < MAX_FLAMES; i++) {
       const bb = this.flames.add({
         position: initPos,
@@ -108,7 +111,6 @@ export class SplitLayer {
         width: 18 * 0.55,
         height: 18,
         verticalOrigin: VerticalOrigin.BOTTOM,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
         scaleByDistance: new NearFarScalar(600, 1.0, 15_000, 2.5),
         show: false,
       })
@@ -214,7 +216,8 @@ export class SplitLayer {
     for (let i = 0; i < numActive && usedFlames < MAX_FLAMES; i += step) {
       const cell = activeFront[i]
       const bb = this.flamePool[usedFlames]
-      bb.position = Cartesian3.fromDegrees(cell.lon, cell.lat)
+      const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
+      bb.position = Cartesian3.fromDegrees(cell.lon, cell.lat, h)
 
       const life = Math.min(1, cell.age / 0.8) * Math.max(0, 1 - Math.pow(cell.age / FRONT_MIN, 2.2))
       const flicker = 0.82 + 0.18 * Math.sin(frame * 0.35 + cell.k * 13.7)
@@ -269,7 +272,8 @@ export class SplitLayer {
         this.removePlume(p)
         continue
       }
-      const origin = Cartesian3.fromDegrees(cell.lon, cell.lat, 5)
+      const h = this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(cell.lon, cell.lat)) ?? 0
+      const origin = Cartesian3.fromDegrees(cell.lon, cell.lat, h + 5)
       const enu = Transforms.eastNorthUpToFixedFrame(origin)
       Matrix4.multiplyByPointAsVector(enu, driftEnu, this.smokeDrift[p])
 
