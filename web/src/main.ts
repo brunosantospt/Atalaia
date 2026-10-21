@@ -10,6 +10,8 @@ import {
   Math as CesiumMath,
   type PerspectiveFrustum,
 } from 'cesium'
+import { sampleTerrainMostDetailed } from 'cesium'
+import { computeAlerts, prepareAlerts, type AlertSide, type PreparedAlerts } from './alerts'
 import { applyPose, readPose, type Pose } from './camera'
 import {
   loadFire,
@@ -155,6 +157,24 @@ async function main() {
     })
   }
 
+  /** An alert's place (alerts.ts), seen from 1.5 km to the south, on the terrain even where no tile is loaded yet. */
+  async function flyToAlert(at: { lon: number; lat: number }) {
+    if (!replay) return
+    replay.player.playing = false
+    replay.player.userMoved = true
+    const c = Cartographic.fromDegrees(at.lon, at.lat)
+    let height = viewer.scene.globe.getHeight(c)
+    if (height === undefined || !Number.isFinite(height)) {
+      await sampleTerrainMostDetailed(viewer.terrainProvider, [c]).catch(() => undefined)
+      height = Number.isFinite(c.height) ? c.height : 0
+    }
+    const target = Cartesian3.fromDegrees(at.lon, at.lat, height)
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(0, CesiumMath.toRadians(-40), 1500),
+      duration: 1.2,
+    })
+  }
+
   const hud = new Hud(document.getElementById('hud')!, index, {
     toggle: () => replay?.player.toggle(),
     prev: () => replay?.player.prev(),
@@ -170,6 +190,7 @@ async function main() {
     flyToIgnition,
     toggleEditor: () => editor.toggle(),
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
+    flyTo: (at) => void flyToAlert(at),
   })
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
@@ -303,6 +324,9 @@ async function main() {
     setShots()
   }
 
+  // The special alerts of the three runs, prepared in rerun() and read at the clock in the loop.
+  let alerts: PreparedAlerts | undefined
+
   /** Simulate Livre, A and B as the editor holds them, show A and B split, and report them at 6 h. */
   function rerun() {
     if (!replay) return
@@ -337,6 +361,7 @@ async function main() {
     replay.split.set(replay.player.update(0).hours)
     replay.split.show(false) // the loop shows it in the director's shots, or on key A
     editor.setRuns(runs, reports)
+    alerts = prepareAlerts({ scenario, context, decisions: [a, b], runs })
     void refreshDirector(runs, reports)
   }
 
@@ -412,6 +437,9 @@ async function main() {
       if (pose) spotlight.set(pose, frame.spot * (pose.range / Math.max(frame.pose.range, 1)))
     }
     hud.update(frame, readout, splitOn)
+    // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
+    const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
+    if (alerts) hud.setAlerts(computeAlerts(alerts, frame.hours * 60, side))
     if (frameNo % 60 === 0) {
       const dispatch = editor.getMultiAgencyDispatch()
       if (dispatch) hud.updateBriefings(dispatch)
