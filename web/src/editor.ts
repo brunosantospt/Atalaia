@@ -535,7 +535,8 @@ export class Editor {
     const cell = cellOf(this.loaded.scenario.grid, p)
     const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
     const isFire = cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes
-    this.viewer.scene.canvas.style.cursor = isFire ? 'not-allowed' : 'crosshair'
+    const aerial = isAerial(this.sup.units[this.unit])
+    this.viewer.scene.canvas.style.cursor = isFire && !aerial ? 'not-allowed' : 'crosshair'
   }
 
   private showCutTooltip(position: Cartesian2, cut: RoadCutItem) {
@@ -647,10 +648,18 @@ export class Editor {
     const { context, stations, scenario } = this.loaded
     const d = this.decisions[this.active]
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+    const aerial = isAerial(this.sup.units[this.unit])
 
     let targetPoint: LonLat | undefined
 
-    if (context && context.access.length > 0) {
+    if (aerial) {
+      // Planes and helicopters drop water freely over the fire without needing a road
+      const angle = (Object.keys(d.points).length * 60) * Math.PI / 180
+      targetPoint = {
+        lon: scenario.ignition.lon + Math.cos(angle) * 0.009,
+        lat: scenario.ignition.lat + Math.sin(angle) * 0.009,
+      }
+    } else if (context && context.access.length > 0) {
       const candidates = context.access.filter((a) => {
         const cell = cellOf(scenario.grid, a)
         return cell >= 0 && (!activeRun || activeRun.arrival[cell] > this.minutes)
@@ -678,11 +687,13 @@ export class Editor {
       count: this.count,
       from: this.from(stations),
       target: id,
-      task: isAerial(this.sup.units[this.unit]) ? 'direct' : this.task,
+      task: aerial ? 'direct' : this.task,
     })
 
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
+    this.refs.hint.textContent = aerial
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado com sucesso no setor da frente de fogo!`
+      : `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
     this.commit()
   }
 
@@ -692,13 +703,17 @@ export class Editor {
     if (!p) return
 
     const { context, stations, scenario } = this.loaded
-    const access = context ? snapToRoad(context, p, SNAP_M) : undefined
+    const aerial = isAerial(this.sup.units[this.unit])
+
+    // Ground vehicles snap to road. Aerial vehicles (planes/helis) have 100% free spatial allocation!
+    const access = (!aerial && context) ? snapToRoad(context, p, SNAP_M) : undefined
     const point = access ? { lon: access.lon, lat: access.lat } : p
 
-    // Active fire safety check: reject placing ground crews inside active fire perimeter
+    // Active fire safety check: reject placing ground crews inside active fire perimeter.
+    // Aircraft drop water directly from above into active flames, so exempt them.
     const cell = cellOf(scenario.grid, point)
     const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
-    if (cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes) {
+    if (!aerial && cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes) {
       this.showDangerWarning(point, activeRun.arrival[cell])
       return
     }
@@ -717,11 +732,19 @@ export class Editor {
     const d = this.decisions[this.active]
     const id = nextId(d.points, 'p')
     d.points[id] = point
-    d.assignments.push({ unit: this.unit, count: this.count, from: this.from(stations), target: id, task: isAerial(this.sup.units[this.unit]) ? 'direct' : this.task })
+    d.assignments.push({
+      unit: this.unit,
+      count: this.count,
+      from: this.from(stations),
+      target: id,
+      task: aerial ? 'direct' : this.task,
+    })
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent = access
-      ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
-      : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
+    this.refs.hint.textContent = aerial
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado livremente nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
+      : access
+        ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
+        : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
     this.commit()
   }
 
