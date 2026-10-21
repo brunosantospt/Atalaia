@@ -985,7 +985,12 @@ export class Editor {
         option.value = s.id
         const stock = this.stock(this.unit, s.id)
         const left = this.available(this.unit, s.id)
-        const badge = stock !== undefined ? ` (${left}/${stock} disp.)` : ''
+        const badge =
+          stock !== undefined
+            ? this.unit === 'crew'
+              ? ` (${left}/${stock} eq. · ${left * 5} op.)`
+              : ` (${left}/${stock} disp.)`
+            : ''
         option.textContent = `${s.short} · ${fmtKm(s.km)}${badge}`
         return option
       }),
@@ -1231,8 +1236,9 @@ export class Editor {
     } else {
       const deployed = stock - left
       const source = this.inventory?.[from] ? stockSource(this.inventory[from]) : ''
+      const unitDesc = this.unit === 'crew' ? `equipas ECIN (${left * 5} operacionais)` : unit.short
       this.refs.stock.textContent =
-        `${station?.short ?? from}: ${left} de ${stock} ${unit.short} disponíveis` +
+        `${station?.short ?? from}: ${left} de ${stock} ${unitDesc} disponíveis` +
         (deployed > 0 ? `, ${deployed} já nesta decisão` : '') +
         (left === 0 ? ' · ESGOTADO' : '') +
         ` · ${source}`
