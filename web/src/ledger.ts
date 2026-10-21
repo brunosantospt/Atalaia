@@ -8,7 +8,7 @@ import type { Detection } from './detection'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
 import { fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
 import { compass } from './geo'
-import type { Inventory } from './inventory'
+import { fleet, stockSource, type Inventory } from './inventory'
 
 export interface Known {
   fire: Fire
@@ -94,8 +94,11 @@ export class Ledger {
       },
       {
         layer: 'Inventário',
-        source: 'INE 2024 · estimado',
-        at: () => (stock && nearest ? ['on', `${nearest.short} · ${stock.units.vfci} VFCI · ${stock.personnel.onDuty} de serviço`] : ['off', 'sem estimativa']),
+        source: stock ? stockSource(stock) : 'INE 2024 · estimado',
+        at: () =>
+          stock && nearest
+            ? ['on', `${nearest.short} · ${fleet(stock) ?? `${stock.units.vfci} VFCI`} · ${stock.personnel.onDuty} de serviço`]
+            : ['off', 'sem estimativa'],
       },
       {
         layer: 'Satélite',

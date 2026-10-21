@@ -23,7 +23,7 @@ O protótipo `HACK4/twin-sandbox` foi feito antes do evento, por isso não entra
 | | P6 Modelo rápido | Propagação no browser, desenhada no terreno |
 | | P7 Validação | Sørensen simulado vs observado, por passo e por motor |
 | Qua 21 | P8 Meios e despacho | Quartéis reais, rotas, frota animada |
-| | P9 Decisões A/B | Mesmo cenário, duas decisões, métricas e recomendação |
+| | P9 Decisões A/B | Mesmo cenário: plano do comandante (A) vs plano otimizado pelo ILS (B), métricas e recomendação |
 | Qui 22 | P10 Modo realizador | Os 90 s da demo, guiados |
 | | P11 Resumo ao comandante | Resumo da comparação A/B gerado por LLM |
 | | **Feature freeze** | |
@@ -208,23 +208,52 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
 - `scripts/build_context.py` busca no Overpass as aldeias e os pontos de água, e no OSRM as rotas dos quartéis mais próximos de cada incêndio (os quartéis já vêm do P1). Tudo fica guardado em JSON, para rodar offline.
 - A distância dos quartéis no HUD passa de linha reta a estrada, com tempo de chegada.
 - Bases aéreas (CMA) com HEBL; frota animada (VCI, VTT, HEBL) com modelos glTF.
+- **Inventário por quartel:** `scripts/build_inventory.py` escreve `web/public/inventory.json`, uma entrada por id de `stations.json` com `tier`, `source`, `municipality`, `personnel {total, onDuty}`, `units {vfci, vttu, vlci, vrci}` e `decir {ecin, eip}`, mais `_meta` (data, edição da CAOP, ano do INE, tabela de tiers). O concelho de cada quartel vem da CAOP (Carta Administrativa Oficial de Portugal, DGT, CAOP2025, CC BY 4.0; `scripts/fetch_caop.py` descarrega o GeoPackage para `data/caop/`): ponto-em-polígono na camada de municípios, com a correspondência por nome só como verificação (as discordâncias saem no terminal e a geografia ganha). Efetivos do INE por concelho (dados.gov.pt "Bombeiros (N.º)", CC BY 4.0) divididos por todos os quartéis do concelho; viaturas e equipas por tier, assumidas; concelho sem valor no INE fica com `personnel.total: null` (hoje nenhum: 171 quartéis em 94 concelhos).
+- Correções manuais com fonte em `scripts/data/inventory-overrides.json` (chave = id do quartel, `source` com URL obrigatório; a entrada sai como `manual:<url>`, as restantes como `estimate:ine-<ano>+tier`). O concelho não se substitui: vem sempre da CAOP.
+- **Distrito de Braga com viaturas reais:**
+  - Os 21 quartéis da Tabela 41 de Matos (2025), tese de doutoramento da UMinho (hdl 1822/97938, CC BY-NC-SA 4.0), entram como overrides com `vehicles` (letra → litros): 113 viaturas, 240 400 L.
+  - As contagens de `units` saem dos litros: até 1000 L é vlci, até 6000 L vfci, acima vttu. A tese não dá o tipo.
+  - Os efetivos continuam a ser estimativa do INE.
+  - A secção de Ruivães fica sem viaturas, porque a tese conta o corpo de Vieira do Minho uma só vez.
+  - Fragoso (Barcelos) não está na tabela e fica com a estimativa por tier.
+  - O ledger e o stock do editor dizem "Matos 2025" onde a viatura é real.
 - **Ref:**
   - `scripts/build-stations.py`, `scripts/build-fire-context.mjs`;
   - `src/stations.ts`, `src/director/fleet.ts`;
   - `public/data/meios-reais.md` (doutrina DECIR), `scripts/make-models.mjs`.
 
 ### P9 · Decisões A/B
-- Num passo observado, correr três futuros com o mesmo cenário base: sem intervenção, **A** ataque à cabeça e **B** proteção das aldeias.
-- Os meios arrastam-se para o mapa: é o editor de cenários.
+- Num passo observado, correr três futuros com o mesmo cenário base: sem intervenção, **A** o plano do comandante e **B** o plano otimizado.
+- **A · plano do comandante.** Os meios arrastam-se para o mapa: é o editor de cenários. Por omissão, o plano de doutrina (ataque à cabeça).
+- **B · plano otimizado.** Proposto pelo ILS de Mendes & Alvelos (EJOR 2023), a meta-heurística sugerida pelos orientadores, com os mesmos meios disponíveis que o A. Formulação e mapeamento em `docs/ils.md`.
+  - **Solução:** um ponto de acesso na estrada (`context.access`) para cada meio. Um ponto só vale se o meio lá chega antes do fogo.
+  - **Construir:** cada meio vai para um ponto sorteado entre os próximos a arder, repetido muitas vezes; fica a melhor construção. O A entra também como solução inicial, com as linhas que tiver (o ILS não mexe nelas), por isso o B nunca fica pior que o A no modelo rápido.
+  - **Melhorar:**
+    - pesquisa local: mover um meio para um ponto vizinho e ficar com o melhor movimento, até não haver ganhos;
+    - perturbação: tirar, acrescentar ou mover 3–5 meios, e voltar à pesquisa local; só se aceita se melhorar.
+  - **Avaliar:** `simulate()` + `makeReport()`. Conta primeiro as aldeias atingidas, depois a área ardida e por fim o número de meios.
+  - **Onde corre:** num Web Worker, `src/optimize.ts`, com um orçamento de ~10 s. O editor mostra a melhor solução até ao momento e o número de planos testados.
+  - **Tempo de cálculo** (medido a 20 out, neste Mac, simulação + relatório a 6 h, mediana de 200 corridas):
+    - Vieira: 3–4 ms;
+    - Cabeceiras: ~2 ms.
+
+    Cabem ~2–5 mil planos em 10 s.
+  - **Fora:** o ILS não escolhe a tarefa nem desenha linhas. Os meios terrestres seguram a zona onde ficam e os aéreos fazem descargas.
 - **Métricas:** área ardida, aldeias e casas atingidas (edifícios reais do OSM, `building=*`), estradas cortadas e tempo de chegada a cada aldeia.
-- Recomendação: a decisão que atinge menos aldeias e, em empate, a que deixa arder menos área. O motor físico escolhido nas settings confirma a decisão escolhida.
+- **Recomendação:**
+  - a decisão que atinge menos aldeias e, em empate, a que deixa arder menos área;
+  - o B mostra o que mudou em relação ao A (que meio foi para onde) e o que isso poupa;
+  - o motor físico escolhido nas settings confirma os dois planos.
 - **Ref:** `src/director/decisions.ts`, `src/scenarios.ts`, `src/director/context.ts`, `src/units.ts`.
-- **Muda:** casas reais em vez de sintéticas, e confirmação pelo motor físico.
+- **Muda:**
+  - casas reais em vez de sintéticas;
+  - confirmação pelo motor físico;
+  - o B deixa de ser desenhado à mão e passa a ser proposto pelo ILS.
 
 ## Fase 3 · Demo (qui 22)
 
 ### P10 · Modo realizador
-- História guiada para os 90 s da demo: ignição → replay observado → ponto de decisão → A vs B → resultado.
+- História guiada para os 90 s da demo: ignição → replay observado → ponto de decisão → plano do comandante (A) vs plano otimizado (B) → resultado.
 - Reaproveita o leitor de planos, o HUD e o spotlight do P2; acrescenta os planos de decisão, despacho e confronto A/B.
 - **Ref:** `src/director/*` (planos de decisão e frota).
 

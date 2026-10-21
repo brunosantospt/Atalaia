@@ -1,3428 +1,3953 @@
 {
-  "_meta": {
-    "source": "Universidade do Minho (2025) PhD Thesis - Marina Araújo de Matos",
-    "advisor": "Prof. Filipe Alvelos",
-    "district": "Braga",
-    "stations_count": 21
-  },
-  "way/211570064": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Guimarães",
-    "personnel": {
-      "total": 150,
-      "onDuty": 50
-    },
-    "units": {
-      "vfci": 10,
-      "vttu": 3,
-      "vlci": 2,
-      "vrci": 2,
-      "crew": 10
-    },
-    "decir": {
-      "ecin": 5,
-      "eip": 3
-    }
-  },
-  "node/1684667295": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Guimarães",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/665963909": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vila Nova de Famalicão",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/878008770": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Cabeceiras de Basto",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/166715546": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Amares",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1098320326": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Barcelos",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/108167762": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Esposende",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/90646600": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Fafe",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "node/4536685493": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Póvoa de Lanhoso",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/1493506592": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Barcelos",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420207501": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vieira do Minho",
-    "personnel": {
-      "total": 105,
-      "onDuty": 35
-    },
-    "units": {
-      "vfci": 7,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 7
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/573737010": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vila Nova de Famalicão",
-    "personnel": {
-      "total": 120,
-      "onDuty": 40
-    },
-    "units": {
-      "vfci": 8,
-      "vttu": 2,
-      "vlci": 2,
-      "vrci": 2,
-      "crew": 8
-    },
-    "decir": {
-      "ecin": 4,
-      "eip": 2
-    }
-  },
-  "way/783268071": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vila Verde",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/538953580": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vila Nova de Famalicão",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/1546848032": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Celorico de Basto",
-    "personnel": {
-      "total": 60,
-      "onDuty": 20
-    },
-    "units": {
-      "vfci": 4,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 4
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420207325": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Terras de Bouro",
-    "personnel": {
-      "total": 75,
-      "onDuty": 25
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1361135886": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Braga",
-    "personnel": {
-      "total": 150,
-      "onDuty": 50
-    },
-    "units": {
-      "vfci": 10,
-      "vttu": 3,
-      "vlci": 2,
-      "vrci": 2,
-      "crew": 10
-    },
-    "decir": {
-      "ecin": 5,
-      "eip": 3
-    }
-  },
-  "node/1251618757": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Esposende",
-    "personnel": {
-      "total": 60,
-      "onDuty": 20
-    },
-    "units": {
-      "vfci": 4,
-      "vttu": 1,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 4
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/526849681": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Braga",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/120953337": {
-    "tier": "Oficial UMinho 2025",
-    "source": "Tese UMinho Prof. Filipe Alvelos (Table 41)",
-    "municipality": "Vizela",
-    "personnel": {
-      "total": 90,
-      "onDuty": 30
-    },
-    "units": {
-      "vfci": 6,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 6
-    },
-    "decir": {
-      "ecin": 3,
-      "eip": 2
-    }
-  },
-  "way/1198488178": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Viana do Castelo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/524619738": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Portucel - Cacia",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/151842033": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Salvador Caetano",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/524507683": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vista Alegre",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/259475550": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Gaia",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/306717178": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Porto",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/826105771": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Viseu",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/706143767": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Regional",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/108565618": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Aguda",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/86579505": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Águeda",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/419515644": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Águeda",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/401997628": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Aguiar da Beira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1376585970": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Albergaria-a-Velha",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/441777810": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Alijó",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1463409867": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Amarante",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/211013770": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Arcos de Valdevez",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/342364381": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Areosa - Rio Tinto",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/105142994": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Armamar",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/889373621": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Arouca",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/871895184": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Arrifana",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/353879643": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Aveiro Novos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/181068968": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Aveiro Novos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/138323750": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Aveiro Velhos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/128432681": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Avintes",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/451797871": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Baião",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/157243380": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Baltar",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/986725891": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Barcelinhos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/104660725": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Barcelos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1493510906": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Boticas",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/162471041": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Caminha",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1132615398": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Carrazeda de Ansiães",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1213128840": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Carrazedo de Montenegro",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1228323477": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Carvalhos",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1536617627": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Castelo de Paiva",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/891966332": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Castro Daire",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/885235103": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cerva",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/329127763": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cete",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/724146490": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cinfães",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/544348440": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Coimbrões",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1225637981": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Concelho de Espinho",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/440392345": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Crestuma",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/805997389": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cruz Branca",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/802489809": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cruz Verde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1124313635": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Cruz Verde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/391810110": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Entre-os-Rios",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/1183701876": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ermesinde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1495723498": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ervedosa do Douro",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/400391529": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Esmoriz",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/509506939": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Espinhenses",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1263725929": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Espinho",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/134486162": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Estarreja",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/569455874": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Fajões",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420214165": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Farejinhas",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/682465807": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Favaios",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1361189503": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Felgueiras",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/843861861": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Flavienses",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/2595359959": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Fragoso",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420210149": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Freamunde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1062152231": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Freixo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/259204988": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Gondomar",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/450768973": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ílhavo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1071019106": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Lamego",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/658592799": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Leça da Palmeira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1228133674": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Leça Do Balio",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/108363206": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Leixões",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/170364191": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Lixa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/328631937": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Lordelo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1062140398": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Lourosa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/108102246": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Lousada",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/818059741": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Mangualde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/884931018": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Marco de Canaveses",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1272107732": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Mêda",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/365354527": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Melgaço",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/358861708": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Melres",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/1917203782": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Mesão Frio",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/673316118": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Mirandela",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/6385453257": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Moimenta da Beira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/135441071": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Monção",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/871563484": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Mondim de Basto",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/133298077": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Montalegre",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/1650422094": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Moreira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/1585578265": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Moreira da Maia",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/6100551579": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Moreira-Maia",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1452938566": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Murça",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/245003228": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Murtosa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/197351042": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Nespereira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1080617334": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Oliveira de Azeméis",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/910661606": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Oliveira de Frades",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "relation/16693854": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ovar",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/125484568": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Paço de Sousa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/210194330": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Paços de Ferreira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420211633": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Paredes",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/2763969861": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Paredes de Coura",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/342381151": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Pedrouços",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/379655919": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Penafiel",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/664860669": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Penedono",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1499630016": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Peso da Régua",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/380519007": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Pindelo dos Milagres",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1155832147": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Pinhão",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420206520": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ponte da Barca",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/390490336": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ponte de Lima",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/365024753": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Porto",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/474899884": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Portuenses",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1030730789": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Provesende",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/105875011": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Rebordosa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/108166253": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Resende",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1482946309": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Ribeira de Pena",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1371853057": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Sabrosa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/156186089": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Salto",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1023384114": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Salvação Pública",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1498945899": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Salvação Publica de Chaves",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/10006200924": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Santa Cruz da Trapa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/331408539": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Santa Maria da Feira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/13086855038": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Santa Marinha do Zêzere",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/847272114": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Santa Marta de Penaguião",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/469400491": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Santo Tirso",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1191676306": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "São João da Madeira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/349671971": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "São João da Pesqueira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/36989139": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "São Mamede de Infesta",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/332353839": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "São Pedro da Cova",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/4519285093": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Sátão",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/8911403617": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Sereia da Gelfa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1051587943": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Sernancelhe",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1495734936": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Tabuaço",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/170229612": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Tarouca",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1279880769": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Tirsenses (Amarelos)",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/770355337": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Torre de Dona Chama",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/205703213": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Trofa",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/106759095": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Valadares",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1292604717": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Valbom",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1254608459": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vale Besteiros",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/718893546": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vale de Cambra",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/235142640": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Valença",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/156513653": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Valongo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/268564423": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Valpaços",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/886323613": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vidago",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/2078077893": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vieira do Minho",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/13501064198": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Boa do Bispo",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1106122303": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila das Aves",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/154608189": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila de Praia de Âncora",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/109249686": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila do Conde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/1563859642": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila do Conde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "node/4337343554": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila do Conde",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/98511405": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Flor",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/889963479": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Meã",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/161392295": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Nova de Cerveira",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/864698420": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Nova de Paiva",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1478430761": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vila Pouca de Aguiar",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/532165973": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Viseu",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1420214309": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vouzela",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
-  },
-  "way/1138643116": {
-    "tier": "Estimativa Operacional",
-    "source": "INE 2021 / Proteção Civil",
-    "municipality": "Vouzela",
-    "personnel": {
-      "total": 30,
-      "onDuty": 10
-    },
-    "units": {
-      "vfci": 5,
-      "vttu": 2,
-      "vlci": 1,
-      "vrci": 1,
-      "crew": 5
-    },
-    "decir": {
-      "ecin": 2,
-      "eip": 1
-    }
+ "_meta": {
+  "generated": "2026-10-21",
+  "note": "Estimativa Atalaia: viaturas por tier assumidas; efetivos INE por concelho (concelho de cada quartel pela CAOP) divididos pelos quartéis do concelho",
+  "caop": {
+   "edition": "CAOP2025",
+   "dataset": "https://dados.gov.pt/pt/datasets/carta-administrativa-oficial-de-portugal-caop2025-continente",
+   "licence": "CC BY 4.0",
+   "layer": "cont_municipios",
+   "located": 171,
+   "nearest": 0
+  },
+  "ine": {
+   "indicator": "0013371",
+   "dataset": "https://dados.gov.pt/en/datasets/bombeiros-n-o-2",
+   "licence": "CC BY 4.0",
+   "year": 2024,
+   "updated": "2025-12-12",
+   "matched": 171,
+   "unmatched": 0
+  },
+  "tiers": {
+   "small": {
+    "maxPersonnel": 60,
+    "onDuty": 6,
+    "units": {
+     "vfci": 2,
+     "vttu": 1,
+     "vlci": 1,
+     "vrci": 1
+    },
+    "decir": {
+     "ecin": 1,
+     "eip": 1
+    }
+   },
+   "medium": {
+    "maxPersonnel": 120,
+    "onDuty": 10,
+    "units": {
+     "vfci": 3,
+     "vttu": 2,
+     "vlci": 2,
+     "vrci": 1
+    },
+    "decir": {
+     "ecin": 2,
+     "eip": 1
+    }
+   },
+   "large": {
+    "maxPersonnel": null,
+    "onDuty": 16,
+    "units": {
+     "vfci": 5,
+     "vttu": 2,
+     "vlci": 3,
+     "vrci": 2
+    },
+    "decir": {
+     "ecin": 3,
+     "eip": 1
+    }
+   },
+   "municipal": {
+    "maxPersonnel": null,
+    "onDuty": 24,
+    "units": {
+     "vfci": 6,
+     "vttu": 3,
+     "vlci": 4,
+     "vrci": 2
+    },
+    "decir": {
+     "ecin": 3,
+     "eip": 1
+    }
+   }
+  },
+  "units": {
+   "vfci": "Veículo Florestal de Combate a Incêndios",
+   "vttu": "Veículo Tanque Tático Urbano",
+   "vlci": "Veículo Ligeiro de Combate a Incêndios",
+   "vrci": "Veículo Rural de Combate a Incêndios",
+   "ecin": "Equipa de Combate a Incêndios (DECIR)",
+   "eip": "Equipa de Intervenção Permanente"
+  },
+  "vehicles": {
+   "reference": "Matos, M. A. (2025). Minimizing the Impact of Forest Fires. PhD thesis, Universidade do Minho. Table 41",
+   "url": "https://hdl.handle.net/1822/97938",
+   "licence": "CC BY-NC-SA 4.0",
+   "kinds": "até 1000 L vlci, até 6000 L vfci, acima vttu (inferido da capacidade)",
+   "stations": 22
   }
+ },
+ "way/1198488178": {
+  "tier": "municipal",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Viana do Castelo",
+  "personnel": {
+   "total": 77,
+   "onDuty": 24
+  },
+  "units": {
+   "vfci": 6,
+   "vttu": 3,
+   "vlci": 4,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/524619738": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Aveiro",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/151842033": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ovar",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/524507683": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ílhavo",
+  "personnel": {
+   "total": 40,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/526849681": {
+  "tier": "municipal",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Braga",
+  "personnel": {
+   "total": 106,
+   "onDuty": 24
+  },
+  "units": {
+   "vfci": 4,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CU",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CQ",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "CS",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "CR",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "CT",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/259475550": {
+  "tier": "municipal",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 24
+  },
+  "units": {
+   "vfci": 6,
+   "vttu": 3,
+   "vlci": 4,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/306717178": {
+  "tier": "municipal",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Porto",
+  "personnel": {
+   "total": 149,
+   "onDuty": 24
+  },
+  "units": {
+   "vfci": 6,
+   "vttu": 3,
+   "vlci": 4,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/826105771": {
+  "tier": "municipal",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Viseu",
+  "personnel": {
+   "total": 80,
+   "onDuty": 24
+  },
+  "units": {
+   "vfci": 6,
+   "vttu": 3,
+   "vlci": 4,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/706143767": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Póvoa de Varzim",
+  "personnel": {
+   "total": 87,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/108565618": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/86579505": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Águeda",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/419515644": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Águeda",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/401997628": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Aguiar da Beira",
+  "personnel": {
+   "total": 47,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1376585970": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Albergaria-a-Velha",
+  "personnel": {
+   "total": 82,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/441777810": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Alijó",
+  "personnel": {
+   "total": 70,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1463409867": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Amarante",
+  "personnel": {
+   "total": 79,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/166715546": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Amares",
+  "personnel": {
+   "total": 62,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 3,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "Y",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "Z",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AA",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "AB",
+    "capacityL": 2000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AC",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/211013770": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Arcos de Valdevez",
+  "personnel": {
+   "total": 76,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/342364381": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Gondomar",
+  "personnel": {
+   "total": 64,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/105142994": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Armamar",
+  "personnel": {
+   "total": 45,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/889373621": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Arouca",
+  "personnel": {
+   "total": 87,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/871895184": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santa Maria da Feira",
+  "personnel": {
+   "total": 65,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/353879643": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Aveiro",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/181068968": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Aveiro",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/138323750": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Aveiro",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/128432681": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/451797871": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Baião",
+  "personnel": {
+   "total": 83,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/157243380": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/986725891": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Barcelos",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 3,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CX",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CY",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CZ",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "CW",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "CV",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/104660725": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Barcelos",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 4,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "AD",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AE",
+    "capacityL": 2200,
+    "kind": "vfci"
+   },
+   {
+    "id": "AG",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AH",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AF",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/1493510906": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Boticas",
+  "personnel": {
+   "total": 61,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1361135886": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Braga",
+  "personnel": {
+   "total": 106,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CM",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "CK",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "CL",
+    "capacityL": 3000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/878008770": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Cabeceiras de Basto",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "V",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "X",
+    "capacityL": 2500,
+    "kind": "vfci"
+   },
+   {
+    "id": "W",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/162471041": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Caminha",
+  "personnel": {
+   "total": 29,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1132615398": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Carrazeda de Ansiães",
+  "personnel": {
+   "total": 47,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1213128840": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Valpaços",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1228323477": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1536617627": {
+  "tier": "large",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Castelo de Paiva",
+  "personnel": {
+   "total": 125,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 5,
+   "vttu": 2,
+   "vlci": 3,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/891966332": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Castro Daire",
+  "personnel": {
+   "total": 92,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1546848032": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Celorico de Basto",
+  "personnel": {
+   "total": 95,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 5,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CD",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CE",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BY",
+    "capacityL": 1000,
+    "kind": "vlci"
+   },
+   {
+    "id": "BZ",
+    "capacityL": 1000,
+    "kind": "vlci"
+   },
+   {
+    "id": "CA",
+    "capacityL": 1000,
+    "kind": "vlci"
+   },
+   {
+    "id": "CB",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "CC",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/885235103": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ribeira de Pena",
+  "personnel": {
+   "total": 43,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/329127763": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/724146490": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Cinfães",
+  "personnel": {
+   "total": 79,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/544348440": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1225637981": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Espinho",
+  "personnel": {
+   "total": 26,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/440392345": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/805997389": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Real",
+  "personnel": {
+   "total": 90,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/802489809": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Real",
+  "personnel": {
+   "total": 90,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1124313635": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Real",
+  "personnel": {
+   "total": 90,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/391810110": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Penafiel",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/1183701876": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Valongo",
+  "personnel": {
+   "total": 86,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1495723498": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São João da Pesqueira",
+  "personnel": {
+   "total": 37,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/400391529": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ovar",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/509506939": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Espinho",
+  "personnel": {
+   "total": 26,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1263725929": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Espinho",
+  "personnel": {
+   "total": 26,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/108167762": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Esposende",
+  "personnel": {
+   "total": 58,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "AK",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AI",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AJ",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/134486162": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Estarreja",
+  "personnel": {
+   "total": 78,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/90646600": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Fafe",
+  "personnel": {
+   "total": 94,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 4,
+   "vttu": 0,
+   "vlci": 3,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "AL",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AM",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AN",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AQ",
+    "capacityL": 2500,
+    "kind": "vfci"
+   },
+   {
+    "id": "AR",
+    "capacityL": 2500,
+    "kind": "vfci"
+   },
+   {
+    "id": "AO",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AP",
+    "capacityL": 3000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/569455874": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Oliveira de Azeméis",
+  "personnel": {
+   "total": 68,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/538953580": {
+  "tier": "large",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vila Nova de Famalicão",
+  "personnel": {
+   "total": 132,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 1,
+   "vlci": 3,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "BV",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BW",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BX",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "BT",
+    "capacityL": 1500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BR",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "BS",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BU",
+    "capacityL": 9000,
+    "kind": "vttu"
+   }
+  ]
+ },
+ "node/1251618757": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Esposende",
+  "personnel": {
+   "total": 58,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CP",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CO",
+    "capacityL": 1500,
+    "kind": "vfci"
+   },
+   {
+    "id": "CN",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/1420214165": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Castro Daire",
+  "personnel": {
+   "total": 92,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/682465807": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Alijó",
+  "personnel": {
+   "total": 70,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1361189503": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Felgueiras",
+  "personnel": {
+   "total": 91,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/843861861": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Chaves",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/2595359959": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Barcelos",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1420210149": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paços de Ferreira",
+  "personnel": {
+   "total": 82,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1062152231": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ponte de Lima",
+  "personnel": {
+   "total": 66,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/259204988": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Gondomar",
+  "personnel": {
+   "total": 64,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/211570064": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Guimarães",
+  "personnel": {
+   "total": 102,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 0,
+   "vlci": 2,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "A",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "B",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "C",
+    "capacityL": 2000,
+    "kind": "vfci"
+   },
+   {
+    "id": "D",
+    "capacityL": 3200,
+    "kind": "vfci"
+   },
+   {
+    "id": "E",
+    "capacityL": 3500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/450768973": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ílhavo",
+  "personnel": {
+   "total": 40,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1071019106": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Lamego",
+  "personnel": {
+   "total": 73,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/658592799": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Matosinhos",
+  "personnel": {
+   "total": 55,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1228133674": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Matosinhos",
+  "personnel": {
+   "total": 55,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/108363206": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Matosinhos",
+  "personnel": {
+   "total": 55,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/170364191": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Felgueiras",
+  "personnel": {
+   "total": 91,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/328631937": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1062140398": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santa Maria da Feira",
+  "personnel": {
+   "total": 65,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/108102246": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Lousada",
+  "personnel": {
+   "total": 100,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/818059741": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mangualde",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/884931018": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Marco de Canaveses",
+  "personnel": {
+   "total": 63,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1272107732": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mêda",
+  "personnel": {
+   "total": 86,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/365354527": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Melgaço",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/358861708": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Gondomar",
+  "personnel": {
+   "total": 64,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/1917203782": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mesão Frio",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/673316118": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mirandela",
+  "personnel": {
+   "total": 56,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/6385453257": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Moimenta da Beira",
+  "personnel": {
+   "total": 94,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/135441071": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Monção",
+  "personnel": {
+   "total": 53,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/871563484": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mondim de Basto",
+  "personnel": {
+   "total": 68,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/133298077": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Montalegre",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/1650422094": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Maia",
+  "personnel": {
+   "total": 36,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/1585578265": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Maia",
+  "personnel": {
+   "total": 36,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/6100551579": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Maia",
+  "personnel": {
+   "total": 36,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1452938566": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Murça",
+  "personnel": {
+   "total": 50,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/245003228": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Murtosa",
+  "personnel": {
+   "total": 57,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/197351042": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Cinfães",
+  "personnel": {
+   "total": 79,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1080617334": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Oliveira de Azeméis",
+  "personnel": {
+   "total": 68,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/910661606": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Oliveira de Frades",
+  "personnel": {
+   "total": 32,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "relation/16693854": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ovar",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/125484568": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Penafiel",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/210194330": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paços de Ferreira",
+  "personnel": {
+   "total": 82,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1420211633": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/2763969861": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes de Coura",
+  "personnel": {
+   "total": 58,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/342381151": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Maia",
+  "personnel": {
+   "total": 36,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/379655919": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Penafiel",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/664860669": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Penedono",
+  "personnel": {
+   "total": 31,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1499630016": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Peso da Régua",
+  "personnel": {
+   "total": 36,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/380519007": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São Pedro do Sul",
+  "personnel": {
+   "total": 50,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1155832147": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Alijó",
+  "personnel": {
+   "total": 70,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1420206520": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ponte da Barca",
+  "personnel": {
+   "total": 42,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/390490336": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ponte de Lima",
+  "personnel": {
+   "total": 66,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/365024753": {
+  "tier": "large",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Porto",
+  "personnel": {
+   "total": 149,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 5,
+   "vttu": 2,
+   "vlci": 3,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/474899884": {
+  "tier": "large",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Porto",
+  "personnel": {
+   "total": 149,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 5,
+   "vttu": 2,
+   "vlci": 3,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "node/4536685493": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Póvoa de Lanhoso",
+  "personnel": {
+   "total": 111,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 0,
+   "vlci": 2,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "AV",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AW",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "AS",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "AT",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "AU",
+    "capacityL": 4000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/1030730789": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Sabrosa",
+  "personnel": {
+   "total": 51,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/105875011": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Paredes",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/108166253": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Resende",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/665963909": {
+  "tier": "large",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vila Nova de Famalicão",
+  "personnel": {
+   "total": 132,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 5,
+   "vttu": 0,
+   "vlci": 3,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "R",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "S",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "T",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "U",
+    "capacityL": 2000,
+    "kind": "vfci"
+   },
+   {
+    "id": "N",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "O",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "P",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "Q",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/1482946309": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Ribeira de Pena",
+  "personnel": {
+   "total": 43,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1371853057": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Sabrosa",
+  "personnel": {
+   "total": 51,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/156186089": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Montalegre",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1023384114": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São Pedro do Sul",
+  "personnel": {
+   "total": 50,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1498945899": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Chaves",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/10006200924": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São Pedro do Sul",
+  "personnel": {
+   "total": 50,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/331408539": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santa Maria da Feira",
+  "personnel": {
+   "total": 65,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/13086855038": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Baião",
+  "personnel": {
+   "total": 83,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/847272114": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santa Marta de Penaguião",
+  "personnel": {
+   "total": 102,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/469400491": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santo Tirso",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1191676306": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São João da Madeira",
+  "personnel": {
+   "total": 68,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/349671971": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "São João da Pesqueira",
+  "personnel": {
+   "total": 37,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/36989139": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Matosinhos",
+  "personnel": {
+   "total": 55,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/332353839": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Gondomar",
+  "personnel": {
+   "total": 64,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/4519285093": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Sátão",
+  "personnel": {
+   "total": 66,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/8911403617": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Caminha",
+  "personnel": {
+   "total": 29,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1051587943": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Sernancelhe",
+  "personnel": {
+   "total": 46,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1495734936": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Tabuaço",
+  "personnel": {
+   "total": 69,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "node/1684667295": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Guimarães",
+  "personnel": {
+   "total": 102,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 4,
+   "vttu": 0,
+   "vlci": 4,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "J",
+    "capacityL": 400,
+    "kind": "vlci"
+   },
+   {
+    "id": "K",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "L",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "M",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "F",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "G",
+    "capacityL": 4000,
+    "kind": "vfci"
+   },
+   {
+    "id": "H",
+    "capacityL": 4500,
+    "kind": "vfci"
+   },
+   {
+    "id": "I",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/170229612": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Tarouca",
+  "personnel": {
+   "total": 81,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1420207325": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Terras de Bouro",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 0,
+   "vlci": 2,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "CF",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "CG",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "CH",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "CI",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "CJ",
+    "capacityL": 4500,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/1279880769": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santo Tirso",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/770355337": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Mirandela",
+  "personnel": {
+   "total": 56,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/205703213": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Trofa",
+  "personnel": {
+   "total": 70,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/106759095": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Gaia",
+  "personnel": {
+   "total": 88,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1292604717": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Gondomar",
+  "personnel": {
+   "total": 64,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1254608459": {
+  "tier": "large",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Tondela",
+  "personnel": {
+   "total": 143,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 5,
+   "vttu": 2,
+   "vlci": 3,
+   "vrci": 2
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  }
+ },
+ "way/718893546": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vale de Cambra",
+  "personnel": {
+   "total": 73,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/235142640": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Valença",
+  "personnel": {
+   "total": 40,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/156513653": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Valongo",
+  "personnel": {
+   "total": 86,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/268564423": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Valpaços",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1098320326": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Viana do Castelo",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1493506592": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Barcelos",
+  "personnel": {
+   "total": 71,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 1,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "AY",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "AX",
+    "capacityL": 3000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/886323613": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Chaves",
+  "personnel": {
+   "total": 60,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1420207501": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vieira do Minho",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 4,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "BC",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "BD",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "BE",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "BF",
+    "capacityL": 600,
+    "kind": "vlci"
+   },
+   {
+    "id": "AZ",
+    "capacityL": 2500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BA",
+    "capacityL": 4000,
+    "kind": "vfci"
+   },
+   {
+    "id": "BB",
+    "capacityL": 9000,
+    "kind": "vttu"
+   }
+  ]
+ },
+ "node/2078077893": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vieira do Minho",
+  "personnel": {
+   "total": 54,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 0,
+   "vttu": 0,
+   "vlci": 0,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": []
+ },
+ "node/13501064198": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Marco de Canaveses",
+  "personnel": {
+   "total": 63,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/1106122303": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Santo Tirso",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/154608189": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Caminha",
+  "personnel": {
+   "total": 29,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/109249686": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila do Conde",
+  "personnel": {
+   "total": 27,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/1563859642": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila do Conde",
+  "personnel": {
+   "total": 27,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "node/4337343554": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila do Conde",
+  "personnel": {
+   "total": 27,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/98511405": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Flor",
+  "personnel": {
+   "total": 59,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/889963479": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Amarante",
+  "personnel": {
+   "total": 79,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/161392295": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Cerveira",
+  "personnel": {
+   "total": 45,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/573737010": {
+  "tier": "large",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vila Nova de Famalicão",
+  "personnel": {
+   "total": 132,
+   "onDuty": 16
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 0,
+   "vlci": 5,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 3,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "BN",
+    "capacityL": 300,
+    "kind": "vlci"
+   },
+   {
+    "id": "BJ",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BK",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BL",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BM",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BG",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BH",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BI",
+    "capacityL": 4000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/864698420": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Nova de Paiva",
+  "personnel": {
+   "total": 58,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1478430761": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vila Pouca de Aguiar",
+  "personnel": {
+   "total": 77,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/783268071": {
+  "tier": "small",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vila Verde",
+  "personnel": {
+   "total": 56,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 0,
+   "vlci": 1,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "BO",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "BQ",
+    "capacityL": 3500,
+    "kind": "vfci"
+   },
+   {
+    "id": "BP",
+    "capacityL": 4000,
+    "kind": "vfci"
+   }
+  ]
+ },
+ "way/532165973": {
+  "tier": "medium",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Viseu",
+  "personnel": {
+   "total": 80,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 3,
+   "vttu": 2,
+   "vlci": 2,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  }
+ },
+ "way/120953337": {
+  "tier": "medium",
+  "source": "manual:https://hdl.handle.net/1822/97938",
+  "municipality": "Vizela",
+  "personnel": {
+   "total": 117,
+   "onDuty": 10
+  },
+  "units": {
+   "vfci": 4,
+   "vttu": 1,
+   "vlci": 4,
+   "vrci": 0
+  },
+  "decir": {
+   "ecin": 2,
+   "eip": 1
+  },
+  "vehicles": [
+   {
+    "id": "DF",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "DG",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "DH",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "DI",
+    "capacityL": 500,
+    "kind": "vlci"
+   },
+   {
+    "id": "DB",
+    "capacityL": 1500,
+    "kind": "vfci"
+   },
+   {
+    "id": "DC",
+    "capacityL": 1800,
+    "kind": "vfci"
+   },
+   {
+    "id": "DD",
+    "capacityL": 2000,
+    "kind": "vfci"
+   },
+   {
+    "id": "DA",
+    "capacityL": 3000,
+    "kind": "vfci"
+   },
+   {
+    "id": "DE",
+    "capacityL": 7000,
+    "kind": "vttu"
+   }
+  ]
+ },
+ "way/1420214309": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vouzela",
+  "personnel": {
+   "total": 31,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ },
+ "way/1138643116": {
+  "tier": "small",
+  "source": "estimate:ine-2024+tier",
+  "municipality": "Vouzela",
+  "personnel": {
+   "total": 31,
+   "onDuty": 6
+  },
+  "units": {
+   "vfci": 2,
+   "vttu": 1,
+   "vlci": 1,
+   "vrci": 1
+  },
+  "decir": {
+   "ecin": 1,
+   "eip": 1
+  }
+ }
 }

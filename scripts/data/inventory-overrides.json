@@ -1,0 +1,44 @@
+{
+ "_note": "Manual overrides for scripts/build_inventory.py, keyed by the station id in web/public/stations.json. An entry may replace \"personnel\" (total and/or onDuty), \"units\" and \"decir\", in whole or in part, or list \"vehicles\" as {vehicle: litres} in place of \"units\", and must carry a \"source\" URL for the values. Stations with an override get source \"manual:<url>\" in inventory.json; a new personnel.total also moves the station to the matching tier before the defaults are filled in. Keys starting with \"_\" are ignored. See \"_example\" for the shape.",
+ "_example": {
+  "way/878008770": {
+   "source": "https://example.org/corporacao/cabeceiras-de-basto/meios",
+   "personnel": {
+    "total": 72
+   },
+   "units": {
+    "vfci": 3,
+    "vttu": 1,
+    "vlci": 2,
+    "vrci": 1
+   },
+   "decir": {
+    "ecin": 2,
+    "eip": 1
+   }
+  }
+ },
+ "_matos2025": {"note": "Matos, M. A. (2025), Minimizing the Impact of Forest Fires, PhD thesis, Universidade do Minho, Table 41 (p. 75): the vehicles of the 21 stations of the Braga district, by letter, with their litres (CC BY-NC-SA 4.0). The thesis gives no source of its own beyond the PyO3F framework and no type per vehicle; build_inventory.py infers the kind from the litres. Ruivães is a section of Vieira do Minho, which the thesis lists once: it gets no vehicles here so that the corps is not counted twice.", "stations": {"way/211570064": "Guimarães", "node/1684667295": "Caldas das Taipas", "way/665963909": "Riba de Ave", "way/878008770": "Cabeceirenses", "way/166715546": "Amares", "way/104660725": "Barcelos", "way/108167762": "Esposende", "way/90646600": "Fafe", "node/4536685493": "Póvoa de Lanhoso", "way/1493506592": "Viatodos", "way/1420207501": "Vieira do Minho", "way/573737010": "Vila Nova de Famalicão", "way/783268071": "Vila Verde", "way/538953580": "Famalicenses", "way/1546848032": "Celoricenses", "way/1420207325": "Terras de Bouro", "way/1361135886": "Braga", "node/1251618757": "Fão", "way/526849681": "Sapadores de Braga", "way/986725891": "Barcelinhos", "way/120953337": "Vizela", "node/2078077893": "Vieira do Minho, secção de Ruivães"}},
+ "way/211570064": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"A": 400, "B": 400, "C": 2000, "D": 3200, "E": 3500}},
+ "node/1684667295": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"J": 400, "K": 500, "L": 500, "M": 600, "F": 3500, "G": 4000, "H": 4500, "I": 4500}},
+ "way/665963909": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"R": 400, "S": 500, "T": 600, "U": 2000, "N": 3000, "O": 3000, "P": 3500, "Q": 4500}},
+ "way/878008770": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"V": 400, "X": 2500, "W": 3500}},
+ "way/166715546": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"Y": 400, "Z": 500, "AA": 600, "AB": 2000, "AC": 4500}},
+ "way/104660725": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"AD": 500, "AE": 2200, "AG": 3000, "AH": 3000, "AF": 4500}},
+ "way/108167762": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"AK": 500, "AI": 3000, "AJ": 3500}},
+ "way/90646600": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"AL": 500, "AM": 500, "AN": 500, "AQ": 2500, "AR": 2500, "AO": 3000, "AP": 3000}},
+ "node/4536685493": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"AV": 500, "AW": 600, "AS": 3000, "AT": 3500, "AU": 4000}},
+ "way/1493506592": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"AY": 500, "AX": 3000}},
+ "way/1420207501": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"BC": 600, "BD": 600, "BE": 600, "BF": 600, "AZ": 2500, "BA": 4000, "BB": 9000}},
+ "way/573737010": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"BN": 300, "BJ": 500, "BK": 500, "BL": 500, "BM": 500, "BG": 3500, "BH": 3500, "BI": 4000}},
+ "way/783268071": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"BO": 500, "BQ": 3500, "BP": 4000}},
+ "way/538953580": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"BV": 500, "BW": 500, "BX": 600, "BT": 1500, "BR": 3000, "BS": 3500, "BU": 9000}},
+ "way/1546848032": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CD": 500, "CE": 500, "BY": 1000, "BZ": 1000, "CA": 1000, "CB": 3500, "CC": 3500}},
+ "way/1420207325": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CF": 500, "CG": 600, "CH": 3000, "CI": 3500, "CJ": 4500}},
+ "way/1361135886": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CM": 400, "CK": 3000, "CL": 3000}},
+ "node/1251618757": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CP": 500, "CO": 1500, "CN": 3500}},
+ "way/526849681": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CU": 500, "CQ": 3000, "CS": 3000, "CR": 3500, "CT": 4500}},
+ "way/986725891": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"CX": 500, "CY": 500, "CZ": 600, "CW": 3000, "CV": 3500}},
+ "way/120953337": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {"DF": 500, "DG": 500, "DH": 500, "DI": 500, "DB": 1500, "DC": 1800, "DD": 2000, "DA": 3000, "DE": 7000}},
+ "node/2078077893": {"source": "https://hdl.handle.net/1822/97938", "vehicles": {}}
+}
