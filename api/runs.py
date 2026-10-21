@@ -8,10 +8,12 @@ import math
 import os
 from datetime import timedelta
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
+import fuels
 from engines import Engine
 from fires import NONBURNABLE, ROOT, Fire, format_time, parse_time
 
@@ -19,6 +21,18 @@ API = Path(__file__).resolve().parent
 CACHE = Path(os.environ.get('ATALAIA_CACHE', ROOT / 'data/cache'))
 MAX_DURATION_MIN = 48 * 60
 WEATHER_EVERY_MIN = 30  # weather.json is hourly; every half hour keeps each hour when a step starts at :30
+# ELMFIRE's ember model with the middle values of its own forecast template, as hindcast/run.py runs it
+# (hindcast-registos branch).
+SPOTTING = {'ENABLE_SPOTTING': True, 'ENABLE_SURFACE_FIRE_SPOTTING': True, 'USE_SUPERSEDED_SPOTTING': True,
+            'CRITICAL_SPOTTING_FIRELINE_INTENSITY(:)': 1000.0, 'SPOTTING_DISTRIBUTION_TYPE': 'LOGNORMAL',
+            'SURFACE_FIRE_SPOTTING_PERCENT(:)': 0.1,
+            'MEAN_SPOTTING_DIST_MIN': 10.0, 'MEAN_SPOTTING_DIST_MAX': 10.0,
+            'NORMALIZED_SPOTTING_DIST_VARIANCE_MIN': 425.0, 'NORMALIZED_SPOTTING_DIST_VARIANCE_MAX': 425.0,
+            'SPOT_WS_EXP_LO': 0.55, 'SPOT_WS_EXP_HI': 0.55, 'SPOT_FLIN_EXP_LO': 0.3, 'SPOT_FLIN_EXP_HI': 0.3,
+            'NEMBERS_MIN': 1, 'NEMBERS_MAX_LO': 1, 'NEMBERS_MAX_HI': 1,
+            'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MIN': 0.065, 'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MAX': 0.065,
+            'CROWN_FIRE_SPOTTING_PERCENT_MIN': 0.65, 'CROWN_FIRE_SPOTTING_PERCENT_MAX': 0.65,
+            'PIGN_MIN': 55.0, 'PIGN_MAX': 55.0}
 
 
 class ScenarioError(ValueError):
@@ -57,6 +71,11 @@ class Scenario(Strict):
     duration_min: float | None = Field(None, gt=0, le=MAX_DURATION_MIN)
     moisture: Moisture = Moisture()
     decision: Decision = Decision()
+    # ELMFIRE only (hindcast-registos): Scott & Burgan (sb) or the Portuguese models of Fernandes et al.
+    # 2009 (pt) for the COS classes that have one; ELMFIRE's ember model, and the seed it draws from.
+    fuels: Literal['sb', 'pt'] = 'sb'
+    spotting: bool = False
+    seed: int = Field(1, ge=1)
 
 
 def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
@@ -73,6 +92,8 @@ def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
         if scenario.start_step + 1 == len(steps):
             raise ScenarioError(f'duration_min: o passo {scenario.start_step} é o último observado, diz quanto tempo correr')
         duration = (steps[scenario.start_step + 1]['hours'] - steps[scenario.start_step]['hours']) * 60
+    if scenario.engine != 'elmfire' and (scenario.fuels != 'sb' or scenario.spotting):
+        raise ScenarioError('fuels e spotting: só o ELMFIRE os tem')
     for barrier in scenario.decision.barriers:
         if barrier.from_min >= duration:
             raise ScenarioError(f'decision.barriers: from_min {barrier.from_min:g} não é antes do fim ({duration:g} min)')
@@ -133,6 +154,13 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
     step = fire.steps[scenario.start_step]
     start, duration = parse_time(step['time']), scenario.duration_min
     layers = fire.layers()
+    extra = {}
+    if scenario.fuels == 'pt':
+        legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
+        layers['fuel'] = fuels.codes(legend)[fire.read('fuel.u8', 'u1')]
+        extra['fuel_models'] = fuels.elmfire_rows()
+    if scenario.spotting:
+        extra.update(spotting=SPOTTING, seed=scenario.seed)
     barriers = [(b.from_min, fire.line(b.path, b.width_m)) for b in scenario.decision.barriers]
     # Foci that showed up later on, within the run. Those at the start are inside its perimeter.
     ignitions = []
@@ -162,6 +190,7 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
                 'slope_deg': layers['slope_deg'].tolist(),
                 'aspect_deg': layers['aspect_deg'].tolist(),
             },
+            **extra,
         }
         result = engine.run(request)
         stretch = np.array(result['arrival_min'], dtype=float)  # null becomes NaN

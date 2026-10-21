@@ -41,6 +41,11 @@ A API está em `api/`, em FastAPI. `api/setup.sh` cria o venv (uma vez), `api/se
   - `from_min`: o minuto, desde o início da corrida, a partir do qual a faixa segura (0 por omissão). Tem de ser antes do fim.
   - As células da faixa passam a combustível 91 (não combustível). Conta cada célula que a faixa toca, não só as que têm o centro dentro dela. Assim a faixa fica unida pelas arestas, e o SimFire, que espalha o fogo para os 8 vizinhos, não passa por uma diagonal.
 
+- **`fuels`, `spotting`, `seed`:** opcionais, só para o ELMFIRE, do ramo `hindcast-registos`.
+  - `fuels`: `sb` (por omissão), Scott & Burgan do `fuel.json`, ou `pt`, os 18 modelos portugueses de Fernandes et al. (2009) nas classes da COS que têm um (`api/fuels.py`).
+  - `spotting`: as projeções do ELMFIRE (`false` por omissão), com a semente `seed` (1 por omissão).
+  - Ficam desligados: sem as copas do LiDAR, os combustíveis portugueses queimam de mais (Vieira às 22,5 h: 2800 ha com `pt`, 3576 ha com `pt`, vivas 30/70 e projeções, contra 1621 observados e 1798 por omissão).
+
 Campos que não estão aqui dão erro, para que um nome mal escrito não passe sem efeito.
 
 ### O que a API junta ao cenário
