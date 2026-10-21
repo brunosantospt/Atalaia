@@ -27,6 +27,7 @@ import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
+import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
   buildMultiAgencyDispatch,
@@ -110,7 +111,7 @@ const TEMPLATE = `
   <section>
     <h3>Adicionar</h3>
     <div class="palette">
-      <div class="field"><label>Quartel</label><select data-ref="from" title="Quartel de origem"></select></div>
+      <div class="field"><label data-ref="fromLabel">Quartel</label><select data-ref="from" title="Origem do meio"></select></div>
       <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
       <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
         <option value="direct">ataque direto</option>
@@ -531,9 +532,12 @@ export class Editor {
     this.renderPalette()
   }
 
-  /** What the station has of a unit (inventory.json), or undefined when nothing is known: aerial means, unknown stations. */
+  /** What the station or CMA has of a unit (inventory.json or airBases.ts). */
   private stock(unit: UnitId, from: string): number | undefined {
-    if (isAerial(this.sup.units[unit])) return undefined
+    if (isAerial(this.sup.units[unit])) {
+      const base = findAirBase(from)
+      return base?.units[unit]
+    }
     const stock = this.inventory?.[from]
     if (!stock) return undefined
     if (unit === 'crew') return stock.decir.ecin + stock.decir.eip
@@ -548,16 +552,18 @@ export class Editor {
     return Math.max(0, stock - used)
   }
 
-  /** How many of the palette's unit go out now: the count, cut to what the station has left. Nothing
-   *  left gives 0 and says so: a station with 3 VFCI cannot send a 4th. */
+  /** How many of the palette's unit go out now: the count, cut to what the station has left. */
   private placeable(): number {
     const from = this.from(this.loaded?.stations ?? [])
     const left = this.available(this.unit, from)
     if (left > 0) return Math.min(this.count, left)
-    const station = this.loaded?.stations.find((s) => s.id === from)
+    const unit = this.sup.units[this.unit]
+    const base = isAerial(unit) ? findAirBase(from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === from) : undefined
+    const name = base?.short ?? station?.short ?? from
     this.setTool(null)
     this.refs.hint.classList.add('danger')
-    this.refs.hint.textContent = `${station?.short ?? from} já não tem ${this.sup.units[this.unit].short} disponíveis nesta decisão: retira um do terreno ou escolhe outro quartel.`
+    this.refs.hint.textContent = `${name} já não tem ${unit.short} disponíveis nesta decisão: retira um do terreno ou escolhe outr${base ? 'a base aérea' : 'o quartel'}.`
     return 0
   }
 
@@ -615,7 +621,8 @@ export class Editor {
     const len = this.drawing.length
     if (len < 2) {
       finishBtn.disabled = true
-      finishBtn.textContent = '✓ Concluir Linha (mín. 2 pontos)'
+      finishBtn.textContent = '✓ Concluir Linha'
+      finishBtn.title = 'Uma linha precisa de pelo menos 2 pontos desenhados no mapa'
       this.refs.hint.classList.remove('danger')
       this.refs.hint.textContent =
         len === 1
@@ -626,7 +633,8 @@ export class Editor {
     } else {
       const lenM = lineLengthM(this.drawing)
       finishBtn.disabled = false
-      finishBtn.textContent = `✓ Concluir Linha (${fmtNumber(lenM)} m)`
+      finishBtn.textContent = '✓ Concluir Linha'
+      finishBtn.title = 'Concluir traçado e registar linha nos meios no terreno'
 
       const unit = this.sup.units[this.unit]
       let rateInfo = ''
@@ -758,15 +766,20 @@ export class Editor {
 
     const { assignment: a } = unitInfo
     const spec = this.sup.units[a.unit]
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
+    const isAerialUnit = isAerial(spec)
+    const base = isAerialUnit ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
     const taskLabel = TASK_NAME[a.task] ?? a.task
 
     const isTanker = a.unit === 'vttu'
     const isCrew = a.unit === 'crew'
-    const isAerialUnit = isAerial(spec)
+
+    const originDetail = isAerialUnit
+      ? (base ? `${base.name} (${base.operator})` : 'Centro de Meios Aéreos')
+      : (station?.name ?? 'Quartel de Bombeiros')
 
     const resourceDetail = isAerialUnit
-      ? `${spec.waterL} L de água/retardante · Apoio Aéreo`
+      ? `${spec.waterL} L de água/retardante · ${base?.aircraftModel ?? 'Apoio Aéreo'}`
       : isCrew
         ? `${spec.people * a.count} operacionais apeados (ferramentas manuais)`
         : `${a.count} veículo${a.count > 1 ? 's' : ''} (${spec.short}) · ${spec.people * a.count} bombeiros · ${(spec.waterL ?? 0) * a.count} L de água`
@@ -785,7 +798,7 @@ export class Editor {
           🎯 Tarefa: ${taskLabel.toUpperCase()}
         </span>
       </div>
-      <div class="tooltip-detail">Origem: ${station?.name ?? 'Base Aérea'}</div>
+      <div class="tooltip-detail">Origem: ${originDetail}</div>
       <div class="tooltip-detail">Efetivo: ${resourceDetail}</div>
       <div class="tooltip-action" style="color:#93c5fd;">✅ Meio alocado e ativo no cenário</div>
     `
@@ -879,18 +892,20 @@ export class Editor {
     }
 
     const id = nextId(d.points, 'p')
+    const fromId = this.from(stations)
+    const base = aerial ? findAirBase(fromId) : undefined
     d.points[id] = { lon: targetPoint.lon, lat: targetPoint.lat }
     d.assignments.push({
       unit: this.unit,
       count,
-      from: this.from(stations),
+      from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
     })
 
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado com sucesso no setor da frente de fogo!`
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
       : `Meio colocado com sucesso! Rota rodoviária calculada no mapa.`
     this.commit()
   }
@@ -936,17 +951,19 @@ export class Editor {
 
     const d = this.decisions[this.active]
     const id = nextId(d.points, 'p')
+    const fromId = this.from(stations)
+    const base = aerial ? findAirBase(fromId) : undefined
     d.points[id] = point
     d.assignments.push({
       unit: this.unit,
       count,
-      from: this.from(stations),
+      from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
     })
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
-      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) alocado livremente nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
+      ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? point, point) / 1000)}) alocado nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
       : access
         ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
         : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
@@ -976,7 +993,10 @@ export class Editor {
   }
 
   private from(stations: NearStation[]): string {
-    if (isAerial(this.sup.units[this.unit])) return 'air'
+    if (isAerial(this.sup.units[this.unit])) {
+      const bases = airBasesForUnit(this.unit)
+      return bases.some((b) => b.id === this.fromId) ? this.fromId : (bases[0]?.id ?? 'cma-braga')
+    }
     return stations.some((s) => s.id === this.fromId) ? this.fromId : (stations[0]?.id ?? 'none')
   }
 
@@ -1001,6 +1021,37 @@ export class Editor {
   private updateStationDropdown() {
     const from = this.refs.from as HTMLSelectElement
     if (!this.loaded) return
+    const unit = this.sup.units[this.unit]
+    const aerial = isAerial(unit)
+
+    if (this.refs.fromLabel) {
+      this.refs.fromLabel.textContent = aerial ? 'Base Aérea / CMA' : 'Quartel'
+    }
+
+    if (aerial) {
+      const bases = airBasesForUnit(this.unit)
+      const ignition = this.loaded.scenario.ignition
+      const sortedBases = [...bases].sort((a, b) => distanceM(a, ignition) - distanceM(b, ignition))
+
+      const current = sortedBases.some((b) => b.id === this.fromId) ? this.fromId : (sortedBases[0]?.id ?? '')
+      this.fromId = current
+
+      from.replaceChildren(
+        ...sortedBases.map((b) => {
+          const option = document.createElement('option')
+          option.value = b.id
+          const km = distanceM(b, ignition) / 1000
+          const stock = this.stock(this.unit, b.id)
+          const left = this.available(this.unit, b.id)
+          const badge = stock !== undefined ? ` (${left}/${stock} disp.)` : ''
+          option.textContent = `${b.short} · ${fmtKm(km)}${badge}`
+          return option
+        }),
+      )
+      from.value = this.fromId
+      return
+    }
+
     const stations = this.loaded.stations
     const current = from.value || this.fromId
 
@@ -1113,7 +1164,8 @@ export class Editor {
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
     const eta = target ? this.eta(a, target) : undefined
     const isGround = !isAerial(unit)
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
+    const base = isAerial(unit) ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
 
     let routeBadge = ''
     if (isGround && target && station && this.loaded?.context) {
@@ -1124,6 +1176,14 @@ export class Editor {
       }
     }
 
+    let fromText = ''
+    if (isAerial(unit)) {
+      const airKm = base && target ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm
+      fromText = base ? `${base.short} · ${fmtKm(airKm)}` : `Base aérea · ${this.sup.dispatch.airBaseKm} km`
+    } else {
+      fromText = station?.short ?? ''
+    }
+
     li.innerHTML = `
       <div class="who"><b></b><span class="n"></span><span class="task"></span>
         <div class="ctl"><button type="button" class="info" aria-label="O que faz">i</button><button type="button" class="x" title="Retirar">×</button></div>
@@ -1132,7 +1192,7 @@ export class Editor {
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
-    li.querySelector('.from')!.textContent = isAerial(unit) ? `Base aérea · ${this.sup.dispatch.airBaseKm} km` : (station?.short ?? '')
+    li.querySelector('.from')!.textContent = fromText
     li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
     const [info, x] = li.querySelectorAll('button')
     const what = this.whatText(a)
@@ -1162,11 +1222,14 @@ export class Editor {
     this.refs.capacityInfo?.classList.remove('active')
   }
 
-  /** Minutes until an assignment is at work, from its station or the air base. */
+  /** Minutes until an assignment is at work, from its station or CMA / air base. */
   private eta(a: Assignment, target: LonLat): number {
     const unit = this.sup.units[a.unit]
-    const station = this.loaded?.stations.find((s) => s.id === a.from)
-    let km = isAerial(unit) ? this.sup.dispatch.airBaseKm : station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm
+    const base = isAerial(unit) ? findAirBase(a.from) : undefined
+    const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
+    let km = isAerial(unit)
+      ? (base ? distanceM(base, target) / 1000 : this.sup.dispatch.airBaseKm)
+      : (station ? distanceM(station, target) / 1000 : this.sup.dispatch.airBaseKm)
 
     // For ground units, use real safe driving route along OSM road network
     if (!isAerial(unit) && station && this.loaded?.context) {
@@ -1176,7 +1239,7 @@ export class Editor {
       if (route) km = route.distanceKm
     }
 
-    return arrivalMin(this.sup, unit, km, false)
+    return arrivalMin(this.sup, unit, km, a.unit === 'crew')
   }
 
   /** What the assignment can do, in one line: the front it holds and how it grows, line built, drops, water. */
@@ -1250,16 +1313,20 @@ export class Editor {
       this.showTip(this.refs.capacityInfo, this.currentCapacityText)
     }
     this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
-    this.refs.from.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
-    // What the station still has of this unit for the active decision (inventory.json: Table 41 of
-    // Matos 2025 in the Braga district, an estimate by tier elsewhere).
+    this.refs.from.closest<HTMLElement>('.field')!.hidden = false
+    // What the station or CMA still has of this unit for the active decision.
     const from = this.from(this.loaded?.stations ?? [])
     const stock = this.stock(this.unit, from)
     const left = this.available(this.unit, from)
-    const station = this.loaded?.stations.find((s) => s.id === from)
+    const station = !isAerial(unit) ? this.loaded?.stations.find((s) => s.id === from) : undefined
     if (isAerial(unit)) {
-      this.refs.stock.textContent = `da base aérea a ${this.sup.dispatch.airBaseKm} km · sem limite de meios nesta estimativa`
-      this.refs.stock.classList.remove('out')
+      const base = findAirBase(from)
+      const km = base && this.loaded ? distanceM(base, this.loaded.scenario.ignition) / 1000 : this.sup.dispatch.airBaseKm
+      const deployed = (stock ?? 0) - left
+      this.refs.stock.textContent = base
+        ? `${base.short}: ${left} de ${stock} ${unit.short} disponíveis${deployed > 0 ? ` (${deployed} em uso)` : ''} · ${base.operator} · ${base.aircraftModel}`
+        : `Base aérea a ${fmtKm(km)} · ${left} de ${stock ?? 1} disponíveis`
+      this.refs.stock.classList.toggle('out', left === 0)
     } else if (stock === undefined) {
       this.refs.stock.textContent = station ? `${station.short}: sem estimativa de meios` : 'sem quartel selecionado'
       this.refs.stock.classList.remove('out')

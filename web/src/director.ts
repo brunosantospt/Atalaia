@@ -13,6 +13,7 @@ import { lonLatAt, type Grid } from './grid'
 import { describeVerdict, recommend, type Report } from './report'
 import type { Shot, ShotKind } from './shots'
 import { arrivalMin, isAerial, type Decision, type Suppression } from './suppression'
+import { findAirBase } from './airBases'
 
 const MARGIN = 1.35
 const MIN_RANGE_M = 1500
@@ -52,11 +53,15 @@ export function decisionShots(
     const parts = d.assignments.map((a) => {
       const unit = sup.units[a.unit]
       const station = stations.find((s) => s.id === a.from)
+      const base = isAerial(unit) ? findAirBase(a.from) : undefined
       const target = d.points[a.target] ?? d.lines[a.target]?.[0]
-      const km = isAerial(unit) || !station || !target ? sup.dispatch.airBaseKm : distanceM(station, target) / 1000
+      const km = isAerial(unit)
+        ? (base && target ? distanceM(base, target) / 1000 : sup.dispatch.airBaseKm)
+        : !station || !target ? sup.dispatch.airBaseKm : distanceM(station, target) / 1000
       const minutes = Math.round(arrivalMin(sup, unit, km, false))
       lastMin = Math.max(lastMin, minutes)
-      return `${unit.short}×${a.count} ${isAerial(unit) ? 'da base aérea' : (station?.short ?? '')} T+${minutes} min`
+      const fromName = isAerial(unit) ? (base?.short ?? 'da base aérea') : (station?.short ?? '')
+      return `${unit.short}×${a.count} ${fromName} T+${minutes} min`
     })
     const hours = Math.min(Math.max(lastMin, 15), durationMin) / 60
     shots.push({
