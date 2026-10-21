@@ -121,10 +121,10 @@ const TEMPLATE = `
         <button type="button" data-ref="less" title="Menos">−</button>
         <span data-ref="count">1</span>
         <button type="button" data-ref="more" title="Mais">+</button>
+        <button type="button" class="info" data-ref="capacityInfo" aria-label="Capacidade e rendimento deste meio" title="Ver capacidade e rendimento deste meio">i</button>
       </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
-    <p class="note" data-ref="capacity"></p>
     <div class="tools">
       <button type="button" data-ref="quickAdd" class="primary-btn" title="Posiciona este meio automaticamente no acesso seguro mais próximo da frente de fogo">+ Colocar Meio</button>
       <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
@@ -317,6 +317,8 @@ export class Editor {
   private readonly tip: HTMLElement
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
+  private currentCapacityText = ''
+  private activeTipAnchor: HTMLElement | null = null
 
   constructor(
     private readonly viewer: Viewer,
@@ -374,6 +376,29 @@ export class Editor {
     this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
+    this.refs.capacityInfo?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      if (this.tip.hidden || this.activeTipAnchor !== this.refs.capacityInfo) {
+        this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+        this.activeTipAnchor = this.refs.capacityInfo
+        this.refs.capacityInfo.classList.add('active')
+      } else {
+        this.hideTip()
+      }
+    })
+    this.refs.capacityInfo?.addEventListener('mouseenter', () => {
+      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+    })
+    this.refs.capacityInfo?.addEventListener('mouseleave', () => {
+      if (this.activeTipAnchor !== this.refs.capacityInfo) {
+        this.hideTip()
+      }
+    })
+    document.addEventListener('click', () => {
+      if (this.activeTipAnchor === this.refs.capacityInfo) {
+        this.hideTip()
+      }
+    })
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
@@ -1133,6 +1158,8 @@ export class Editor {
 
   private hideTip() {
     this.tip.hidden = true
+    this.activeTipAnchor = null
+    this.refs.capacityInfo?.classList.remove('active')
   }
 
   /** Minutes until an assignment is at work, from its station or the air base. */
@@ -1218,7 +1245,10 @@ export class Editor {
       if (unit.lineMPerH) parts.push(`linha: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
       parts.push(`segura chama até ${unit.holdFlameM} m`)
     }
-    this.refs.capacity.textContent = parts.join(' · ')
+    this.currentCapacityText = parts.join(' · ')
+    if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
+      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
+    }
     this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
     this.refs.from.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
     // What the station still has of this unit for the active decision (inventory.json: Table 41 of
