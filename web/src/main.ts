@@ -105,6 +105,10 @@ async function main() {
   let loading: string | undefined
 
   function resetNorth() {
+    if (replay?.player) {
+      replay.player.playing = false
+      replay.player.userMoved = true
+    }
     const current = readPose(scene)
     if (current) {
       const target = Cartesian3.fromDegrees(current.lon, current.lat, current.h)
@@ -127,11 +131,27 @@ async function main() {
 
   function flyToIgnition() {
     if (!replay) return
-    const { data: fire } = replay
-    const target = Cartesian3.fromDegrees(fire.ignition.lon, fire.ignition.lat, 0)
-    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 120), {
-      offset: new HeadingPitchRange(0, CesiumMath.toRadians(-32), 1200),
-      duration: 1.1,
+    const { data: fire, story } = replay
+    replay.player.playing = false
+    replay.player.userMoved = true
+
+    // Coordenadas exatas do marcador "I - Ignição"
+    const ignMarker = story.markers.find((m) => m.id === 'ignition:0' || m.badge === 'I')
+    const lon = ignMarker ? ignMarker.lon : fire.ignition.lon
+    const lat = ignMarker ? ignMarker.lat : fire.ignition.lat
+    let height = ignMarker && ignMarker.h > 0 ? ignMarker.h : 0
+    if (!height) {
+      const sampled = viewer.scene.globe.getHeight(Cartographic.fromDegrees(lon, lat))
+      if (sampled !== undefined && Number.isFinite(sampled)) height = sampled
+    }
+    const target = Cartesian3.fromDegrees(lon, lat, height)
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(
+        0, // Norte
+        CesiumMath.toRadians(-35), // inclinação de 35° para perspetiva tática do terreno
+        650, // zoom próximo e centrado no ponto I de ignição
+      ),
+      duration: 1.2,
     })
   }
 

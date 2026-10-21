@@ -10,6 +10,8 @@
   width: min(400px, 100vw);
   padding: 28px 22px 24px 28px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) #08090a;
   background: rgba(8, 9, 10, 0.88);
   border-right: 1px solid var(--ink-faint);
   backdrop-filter: blur(4px);
@@ -17,6 +19,19 @@
   visibility: hidden;
   transform: translateX(-100%);
   transition: transform 0.25s ease, visibility 0s 0.25s;
+}
+.hud .editor::-webkit-scrollbar {
+  width: 6px;
+}
+.hud .editor::-webkit-scrollbar-track {
+  background: #08090a;
+}
+.hud .editor::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+.hud .editor::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
 }
 .hud .editor.open {
   visibility: visible;
