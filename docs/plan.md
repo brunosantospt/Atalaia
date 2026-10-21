@@ -201,6 +201,7 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
 - **Ref:** `src/replay.ts`.
 - **Muda:** os 2 incêndios e resultados calculados na hora (no protótipo eram tabelas congeladas).
 - **Pronto quando:** há um Sørensen por passo e por motor. Este número vai para o pitch (técnico, 25%).
+- **Hindcast com os registos oficiais** (`hindcast/`): o ELMFIRE com a ficha do SGIF, as cicatrizes, os combustíveis portugueses e as linhas de ataque inferidas, com Sørensen por passo, contra o perímetro oficial e contra os focos de satélite. Em Vieira o Sørensen do último passo vai de 0,73 (como a API) a 0,78 só com dados (combustíveis, cicatrizes, seca, projeções; mediana de 10 sementes, 0,76–0,80), e a 0,83 (0,80–0,85) com as linhas inferidas a segurar antes do fogo do modelo; as linhas estão traçadas ao longo do perímetro final, por isso parte do ganho é por construção. Uma elipse a favor do vento que sabe a área observada já dá 0,69. Em Cabeceiras a mesma configuração não transfere: 0,61, contra 0,73 do melhor passo. O vento do CERRA e do relevo (ramo `feature/cerra-wind-engine`) fica dentro do ruído das sementes (relevo) ou piora (CERRA). Ver `hindcast/README.md`.
 
 ## Fase 2 · Decisões (qua 21)
 

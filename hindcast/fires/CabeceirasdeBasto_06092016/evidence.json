@@ -1,0 +1,341 @@
+{
+  "fire": "CabeceirasdeBasto_06092016",
+  "incident": {
+    "sgif_id": "DM4161664",
+    "ncco": "2016030067614",
+    "municipality": "Cabeceiras de Basto",
+    "parish": "Rio Douro",
+    "place": "Juguelhe",
+    "lon": -7.94647800021701,
+    "lat": 41.5627290005154,
+    "alert": "2016-09-06T06:09:00+01:00",
+    "alert_source": "117",
+    "first_intervention": "2016-09-06T06:30:00+01:00",
+    "extinguished": "2016-09-07T23:24:00+01:00",
+    "duration_h": 41.2,
+    "area_ha": {
+      "stands": 450.0,
+      "shrub": 1100.0,
+      "farmland": 5.0,
+      "total": 1555.0
+    },
+    "cause": "Intencional",
+    "weather_at_fire": {
+      "temp_c": 19.1,
+      "rh_pct": 54.0,
+      "wind_kmh": 7.8,
+      "wind_from_deg": 249.0,
+      "ffmc": 92.5,
+      "dmc": 144.6,
+      "dc": 728.9,
+      "isi": 10.2,
+      "bui": 193.3,
+      "fwi": 39.3,
+      "dsr": 18.1
+    },
+    "fuel_model_at_ignition": "",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2016&MES=9)"
+  },
+  "news": [],
+  "scars": [
+    {
+      "kind": "scar",
+      "ncco": "2016030056993",
+      "parish": "Vilar de Cunhas",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-07-30T07:44:00+01:00",
+      "extinguished": "2016-07-30T10:19:00+01:00",
+      "area_ha": 2.4,
+      "reported_ha": 2.5,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416710.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059298",
+      "parish": "Outeiro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-08-07T01:21:00+01:00",
+      "extinguished": "2016-08-07T02:08:00+01:00",
+      "area_ha": 2.3,
+      "reported_ha": 2.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm416858.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030060003",
+      "parish": "Outeiro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-08-08T23:09:00+01:00",
+      "extinguished": "2016-08-09T03:00:00+01:00",
+      "area_ha": 2.0,
+      "reported_ha": 2.0,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416995.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030064111",
+      "parish": "Cavês",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-08-23T16:10:00+01:00",
+      "extinguished": "2016-08-23T17:31:00+01:00",
+      "area_ha": 1.5,
+      "reported_ha": 1.5,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161376.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030064532",
+      "parish": "Rio Douro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-08-25T12:28:00+01:00",
+      "extinguished": "2016-08-25T17:39:00+01:00",
+      "area_ha": 58.7,
+      "reported_ha": 53.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161397.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030065474",
+      "parish": "Cavez",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-08-29T06:50:00+01:00",
+      "extinguished": "2016-08-29T22:08:00+01:00",
+      "area_ha": 404.1,
+      "reported_ha": 414.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161448.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030066460",
+      "parish": "Rio Douro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-09-02T01:14:00+01:00",
+      "extinguished": "2016-09-02T12:51:00+01:00",
+      "area_ha": 46.7,
+      "reported_ha": 30.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161531.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030066513",
+      "parish": "Rio Douro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-09-02T10:24:00+01:00",
+      "extinguished": "2016-09-02T23:27:00+01:00",
+      "area_ha": 254.0,
+      "reported_ha": 249.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM4161533%281%29.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030066972",
+      "parish": "Outeiro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-09-03T22:43:00+01:00",
+      "extinguished": "2016-09-03T23:53:00+01:00",
+      "area_ha": 1.0,
+      "reported_ha": 1.0,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161586.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030067175",
+      "parish": "Outeiro",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-09-04T16:30:00+01:00",
+      "extinguished": "2016-09-04T19:41:00+01:00",
+      "area_ha": 2.1,
+      "reported_ha": 1.8,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161611.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030067523",
+      "parish": "Abadim",
+      "municipality": "Cabeceiras de Basto",
+      "alert": "2016-09-05T20:44:00+01:00",
+      "extinguished": "2016-09-06T04:53:00+01:00",
+      "area_ha": 95.1,
+      "reported_ha": 80.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/dm4161650.kml"
+    }
+  ],
+  "satellite_passes": [
+    {
+      "time_utc": "2016-09-05T14:19:00+00:00",
+      "time_local": "05 Sep 15:19",
+      "hours_after_alert": -14.83,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 2,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-05T14:32:00+00:00",
+      "time_local": "05 Sep 15:32",
+      "hours_after_alert": -14.62,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 2,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-05T22:06:00+00:00",
+      "time_local": "05 Sep 23:06",
+      "hours_after_alert": -7.05,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 1,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T02:17:00+00:00",
+      "time_local": "06 Sep 03:17",
+      "hours_after_alert": -2.87,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 4,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T02:50:00+00:00",
+      "time_local": "06 Sep 03:50",
+      "hours_after_alert": -2.32,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 14,
+      "this_fire": 0,
+      "near_fire_before_alert": 1
+    },
+    {
+      "time_utc": "2016-09-06T11:43:00+00:00",
+      "time_local": "06 Sep 12:43",
+      "hours_after_alert": 6.57,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 12,
+      "this_fire": 12,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T12:33:00+00:00",
+      "time_local": "06 Sep 13:33",
+      "hours_after_alert": 7.4,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 33,
+      "this_fire": 32,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T13:23:00+00:00",
+      "time_local": "06 Sep 14:23",
+      "hours_after_alert": 8.23,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 10,
+      "this_fire": 7,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T14:13:00+00:00",
+      "time_local": "06 Sep 15:13",
+      "hours_after_alert": 9.07,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 45,
+      "this_fire": 45,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-06T22:49:00+00:00",
+      "time_local": "06 Sep 23:49",
+      "hours_after_alert": 17.67,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 11,
+      "this_fire": 9,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T02:31:00+00:00",
+      "time_local": "07 Sep 03:31",
+      "hours_after_alert": 21.37,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 61,
+      "this_fire": 61,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T03:00:00+00:00",
+      "time_local": "07 Sep 04:00",
+      "hours_after_alert": 21.85,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 4,
+      "this_fire": 4,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T10:48:00+00:00",
+      "time_local": "07 Sep 11:48",
+      "hours_after_alert": 29.65,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 1,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T12:14:00+00:00",
+      "time_local": "07 Sep 13:14",
+      "hours_after_alert": 31.08,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T13:54:00+00:00",
+      "time_local": "07 Sep 14:54",
+      "hours_after_alert": 32.75,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-09-07T14:06:00+00:00",
+      "time_local": "07 Sep 15:06",
+      "hours_after_alert": 32.95,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 2,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}
