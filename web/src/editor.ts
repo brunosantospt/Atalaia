@@ -484,7 +484,7 @@ export class Editor {
     if (this.minutes !== targetMin) {
       this.minutes = targetMin
       const hour = this.refs.hour as HTMLInputElement
-      if (hour && document.activeElement !== hour) hour.value = String(targetMin)
+      if (hour) hour.value = String(targetMin) // focused too: the clock follows a moved slider, nothing fights the drag
       const start = this.loaded?.fire.start
       if (this.refs.hourText) {
         this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`

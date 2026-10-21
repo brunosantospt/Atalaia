@@ -1,6 +1,7 @@
 // Plays the shots: move to a shot, hold on it, go to the next. The fire clock, the burned area
 // and the fire on the ground follow the camera. While paused (and between moves) the mouse
-// has the camera; resuming after the mouse moved it flies back into the shot first.
+// has the camera; resuming after the mouse moved it flies back into the shot first. It starts
+// paused on the first shot, with the camera still outside it: play flies there.
 
 import type { Scene } from 'cesium'
 import { along, applyPose, ease, readPose, type Pose } from './camera'
@@ -24,13 +25,14 @@ export interface Frame {
 }
 
 const REVEAL_AT = 0.6 // markers of a shot appear this far into the move
+const EASE_S = 1.5 // a shot built again under the moving camera is eased into over this long
 
 export class Player {
   index = 0
-  phase: Phase = 'move'
-  playing = true
+  phase: Phase = 'hold'
+  playing = false
   /** Set by the page when the mouse moves the camera while the player is not driving it. */
-  userMoved = false
+  userMoved = true
 
   private t = 0 // seconds into the phase
   private from: Pose
@@ -43,6 +45,9 @@ export class Player {
   private areaHa = 0
   private step = -1
   private spot: number
+  private seeked: [hours: number, k: number] | undefined // the clock the hour slider set, and how far into the hold
+  private easeFrom: Pose | undefined // where the camera was when its shot was built again
+  private easeT = 0
 
   constructor(
     private readonly scene: Scene,
@@ -68,6 +73,7 @@ export class Player {
     this.fromStep = this.step
     this.fromSpot = this.spot
     this.userMoved = false
+    this.seeked = this.easeFrom = undefined
   }
 
   next() {
@@ -87,6 +93,25 @@ export class Player {
     if (this.playing && this.userMoved) this.goTo(this.index)
   }
 
+  /** The editor's hour slider sets the fire clock. It stays there until the next shot, or runs on from
+   *  there in a shot whose clock runs (A vs B); playing or paused, the player goes on as it was. */
+  seek(hours: number) {
+    this.hours = hours
+    this.seeked = [hours, this.phase === 'hold' ? Math.min(this.t / this.shots[this.index].holdS, 1) : 0]
+  }
+
+  /** New shots in which `index` is the shot on screen, or the one built again in its place (the
+   *  director's are new after every run). The camera stays: a driving player eases into the new
+   *  framing, a paused one flies there when played. */
+  keep(shots: Shot[], index: number) {
+    const rebuilt = shots[index] !== this.shots[this.index]
+    this.shots = shots
+    this.index = index
+    if (!rebuilt) return
+    if (this.driving) [this.easeFrom, this.easeT] = [this.pose, 0]
+    else this.userMoved = true
+  }
+
   update(dt: number): Frame {
     const shot = this.shots[this.index]
     let revealCurrent = this.phase !== 'move'
@@ -96,9 +121,9 @@ export class Player {
       this.t += dt
       const k = Math.min(this.t / shot.moveS, 1)
       const e = ease(k)
-      this.pose = applyPose(this.scene, along([this.from, shot.path[0]], e))
+      this.pose = this.place(along([this.from, shot.path[0]], e), dt)
       driving = true
-      this.hours = lerp(this.fromHours, shot.hours, e)
+      if (!this.seeked) this.hours = lerp(this.fromHours, shot.hours, e)
       this.areaHa = lerp(this.fromArea, shot.areaHa, e)
       this.spot = Math.exp(lerp(Math.log(this.fromSpot), Math.log(shot.spot), e))
       this.step = shot.step
@@ -110,15 +135,29 @@ export class Player {
     if (this.phase === 'hold' && this.playing) {
       this.t += dt
       const k = Math.min(this.t / shot.holdS, 1)
-      this.pose = applyPose(this.scene, holdPose(shot, k))
+      this.pose = this.place(holdPose(shot, k), dt)
       driving = true
-      if (shot.hoursTo !== undefined) this.hours = lerp(shot.hours, shot.hoursTo, ease(k))
+      if (shot.hoursTo !== undefined) {
+        const [from, k0] = this.seeked ?? [shot.hours, 0]
+        this.hours = lerp(from, shot.hoursTo, k0 < 1 ? (ease(k) - ease(k0)) / (1 - ease(k0)) : 1)
+      }
       if (k >= 1) {
         if (this.index < this.shots.length - 1) this.goTo(this.index + 1)
         else [this.phase, this.playing] = ['done', false]
       }
     }
     return this.frame(shot, driving, revealCurrent, 1, shot.untimed)
+  }
+
+  /** Puts the camera at `pose`, eased from where it was when its shot was built again. */
+  private place(pose: Pose, dt: number): Pose {
+    if (this.easeFrom) {
+      this.easeT += dt
+      const k = Math.min(this.easeT / EASE_S, 1)
+      pose = along([this.easeFrom, pose], ease(k))
+      if (k >= 1) this.easeFrom = undefined
+    }
+    return applyPose(this.scene, pose)
   }
 
   private frame(shot: Shot, driving: boolean, revealCurrent: boolean, fade: number, untimed: boolean): Frame {

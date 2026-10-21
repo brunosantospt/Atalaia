@@ -99,8 +99,8 @@ const TEMPLATE = `
     <div><label>Hdg</label><span data-ref="hdg"></span></div>
     <div><label>Pitch</label><span data-ref="pitch"></span></div>
     <div><label>Rng</label><span data-ref="rng"></span></div>
-    <div><label>Coord</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS. Clica para copiar."></span></div>
-    <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas decimais GPS. Clica para copiar."></span></div>
+    <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clica para copiar."></span></div>
+    <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clica para copiar."></span></div>
   </section>
   <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
     <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,13 +519,12 @@ export class Hud {
     this.set('place', [fire.parish, fire.name].filter(Boolean).join(' · '))
 
     if (!this.cursorCoords) {
-      const pos = camera.centre ?? shot.place
-      const dms = formatDMS(pos)
-      const dec = `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}`
-      this.lastCoordsDMS = dms
-      this.lastCoordsDec = dec
-      this.set('coordDMS', dms)
-      this.set('coordDec', dec)
+      // The ground under the crosshair (the reticle at the centre of the screen); none when it is on the sky.
+      const pos = camera.centre
+      this.lastCoordsDMS = pos ? formatDMS(pos) : ''
+      this.lastCoordsDec = pos ? `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}` : ''
+      this.set('coordDMS', this.lastCoordsDMS || '—')
+      this.set('coordDec', this.lastCoordsDec || '—')
     }
 
     this.set('mode', frame.phase === 'done' ? 'Fim' : frame.playing ? (this.director ? 'Realizador' : 'Replay') : 'Pausa')

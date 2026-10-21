@@ -95,17 +95,22 @@
 .hud .third.v2 { left: 66.666%; }
 .hud .third.h1 { top: 33.333%; }
 .hud .third.h2 { top: 66.666%; }
+/* The crosshair: the ground point the coordinates on the rail and the spotlight refer to, marked by a dot. */
 .hud .reticle {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   transform: translate(-50%, -50%);
+  --reticle: rgba(220, 224, 228, 0.55);
   background:
-    linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat,
-    linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat;
-  mask: radial-gradient(circle, transparent 4px, #000 4.5px);
+    radial-gradient(circle, var(--ink) 0 1px, transparent 1.5px),
+    linear-gradient(var(--reticle), var(--reticle)) center / 1px 100% no-repeat,
+    linear-gradient(var(--reticle), var(--reticle)) center / 100% 1px no-repeat;
+  -webkit-mask: radial-gradient(circle, #000 2px, transparent 2.5px 5px, #000 5.5px);
+  mask: radial-gradient(circle, #000 2px, transparent 2.5px 5px, #000 5.5px);
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
 }
 
 /* ---------- panels ---------- */
