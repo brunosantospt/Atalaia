@@ -1,9 +1,9 @@
 ﻿// High-resolution simulated fire on the terrain:
-// 1. Anti-pixelated 4x supersampled drape with smooth bilinear arrival field and linear texture filtering
+// 1. Anti-pixelated 2x supersampled drape with smooth bilinear arrival field and linear texture filtering
 // 2. Active flaming front in vibrant incandescent amber/gold
 // 3. Already burned area in deep charred charcoal black/ash
-// 4. Volumetric 3D animated flame billboards flickering along the active front
-// 5. Realistic smoke plumes drifting with the wind
+// 4. Lightweight pool of 3D animated flame billboards flickering along the active front
+// 5. Smoke plumes drifting with the wind over the fire
 
 import {
   Billboard,
@@ -33,6 +33,7 @@ import './split.css'
 
 const KEY = 0.5
 const FRONT_MIN = 25 // active flame window in minutes; older cells turn to black ash
+const MAX_FLAMES = 120 // pool size of 3D flame billboards along the active front
 const SMOKE_PLUMES = 3
 const SMOKE_RISE_MS = 4.5
 const SMOKE_RELAX_S = 18
@@ -51,16 +52,7 @@ interface Look {
 // Active front: vibrant, incandescent golden-orange
 const FRONT: Look = { alpha: 0.94, brightness: 1.25, saturation: 1.3 }
 // Burned scar: deep charred charcoal black ash
-const SCAR: Look = { alpha: 0.88, brightness: 0.08, saturation: 0.0 }
-
-interface FlameItem {
-  billboard: Billboard
-  arrival: number
-  cellIndex: number
-  sideIndex: number
-  lon: number
-  lat: number
-}
+const SCAR: Look = { alpha: 0.88, brightness: 0.15, saturation: 0.0 }
 
 export class SplitLayer {
   private readonly layers: ImageryLayer[] = []
@@ -70,12 +62,13 @@ export class SplitLayer {
 
   // 3D Flames & Smoke
   private readonly flames: BillboardCollection
-  private readonly flameItems: FlameItem[] = []
+  private readonly flamePool: Billboard[] = []
   private frame = 0
   private readonly smoke: (ParticleSystem | undefined)[] = new Array(SMOKE_PLUMES).fill(undefined)
   private readonly smokeDrift = Array.from({ length: SMOKE_PLUMES }, () => new Cartesian3())
   private lastSmokeMin = -Infinity
-  private flameImage: string
+  private readonly flameImage: string
+  private readonly smokeImage: string
 
   constructor(
     private readonly viewer: Viewer,
@@ -88,20 +81,39 @@ export class SplitLayer {
     const rect = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
     const split = sides.length > 1
 
-    // 1. Drape imagery layers: 4x supersampled with bilinear anti-pixelation
+    // 1. Drape imagery layers: supersampled with bilinear anti-pixelation
+    const scale = 2
+    const outW = grid.cols * scale
+    const outH = grid.rows * scale
+
     sides.forEach((side, s) => {
-      const url = encodeHighRes(grid, side.arrival, durationMin, 4)
+      const url = encodeHighRes(grid, side.arrival, durationMin, scale)
       const direction = !split ? SplitDirection.NONE : s === 0 ? SplitDirection.LEFT : SplitDirection.RIGHT
       this.layers.push(
-        this.add(url, rect, direction, FRONT),
-        this.add(url, rect, direction, SCAR),
+        this.add(url, outW, outH, rect, direction, FRONT),
+        this.add(url, outW, outH, rect, direction, SCAR),
       )
     })
 
-    // 2. 3D Flame Billboards
+    // 2. 3D Flame Billboard pool
     this.flameImage = makeFlameSprite()
+    this.smokeImage = makeSmokeSprite()
     this.flames = viewer.scene.primitives.add(new BillboardCollection())
-    this.buildFlames()
+    const initPos = Cartesian3.fromDegrees((this.grid.rect.west + this.grid.rect.east) / 2, (this.grid.rect.south + this.grid.rect.north) / 2)
+    for (let i = 0; i < MAX_FLAMES; i++) {
+      const bb = this.flames.add({
+        position: initPos,
+        image: this.flameImage,
+        sizeInMeters: true,
+        width: 18 * 0.55,
+        height: 18,
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        scaleByDistance: new NearFarScalar(600, 1.0, 15_000, 2.5),
+        show: false,
+      })
+      this.flamePool.push(bb)
+    }
 
     this.set(0)
     if (!split) return
@@ -128,48 +140,6 @@ export class SplitLayer {
     })
     handle.addEventListener('pointerup', () => (dragging = false))
     this.setPosition(this.position)
-  }
-
-  /** Build 3D flame billboards along all burnable cells */
-  private buildFlames() {
-    const { cols } = this.grid
-
-    this.sides.forEach((side, sIdx) => {
-      const { arrival } = side
-      for (let k = 0; k < arrival.length; k++) {
-        const arr = arrival[k]
-        if (!Number.isFinite(arr) || arr >= this.durationMin) continue
-
-        const col = k % cols
-        const row = (k - col) / cols
-        // Pseudo-random jitter within cell to give organic clustering
-        const colOff = Math.sin(k * 73.1 + sIdx) * 0.22
-        const rowOff = Math.cos(k * 91.7 + sIdx) * 0.22
-        const pos = lonLatAt(this.grid, col + 0.5 + colOff, row + 0.5 + rowOff)
-
-        const baseH = 15 + (Math.sin(k * 133.7) * 0.5 + 0.5) * 11 // 15m to 26m flame height
-        const bb = this.flames.add({
-          position: Cartesian3.fromDegrees(pos.lon, pos.lat),
-          image: this.flameImage,
-          sizeInMeters: true,
-          width: baseH * 0.55,
-          height: baseH,
-          verticalOrigin: VerticalOrigin.BOTTOM,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          scaleByDistance: new NearFarScalar(800, 1.0, 14_000, 2.4),
-          show: false,
-        })
-
-        this.flameItems.push({
-          billboard: bb,
-          arrival: arr,
-          cellIndex: k,
-          sideIndex: sIdx,
-          lon: pos.lon,
-          lat: pos.lat,
-        })
-      }
-    })
   }
 
   setPosition(position: number) {
@@ -201,51 +171,68 @@ export class SplitLayer {
       this.layers[i + 1].colorToAlphaThreshold = scar
     }
 
-    if (!this.visible) {
+    if (!this.visible || t <= 0) {
       this.flames.show = false
+      for (let i = 0; i < this.flamePool.length; i++) this.flamePool[i].show = false
+      for (let p = 0; p < SMOKE_PLUMES; p++) this.removePlume(p)
       return
     }
 
-    // 2. Update 3D flame billboards
-    const frame = ++this.frame
+    // 2. Find currently burning cells on the active front [t - FRONT_MIN, t]
+    const { cols } = this.grid
     const isSplit = this.sides.length > 1
-    const activeFlameCells: { lon: number; lat: number }[] = []
+    const activeFront: { lon: number; lat: number; age: number; k: number }[] = []
 
-    for (let i = 0; i < this.flameItems.length; i++) {
-      const item = this.flameItems[i]
-      const age = t - item.arrival
+    // Collect active cells from the primary (or both) sides
+    for (let sIdx = 0; sIdx < this.sides.length; sIdx++) {
+      const arr = this.sides[sIdx].arrival
+      for (let k = 0; k < arr.length; k++) {
+        const arrivalMin = arr[k]
+        const age = t - arrivalMin
+        if (age >= 0 && age <= FRONT_MIN) {
+          const col = k % cols
+          const row = (k - col) / cols
+          const pos = lonLatAt(this.grid, col + 0.5, row + 0.5)
 
-      // Flame is actively burning in the current window
-      if (age >= 0 && age <= FRONT_MIN) {
-        // If split comparison is on, clip to respective side
-        if (isSplit) {
-          const normLon = (item.lon - this.grid.rect.west) / (this.grid.rect.east - this.grid.rect.west)
-          if (item.sideIndex === 0 && normLon > this.position) {
-            item.billboard.show = false
-            continue
+          if (isSplit) {
+            const normLon = (pos.lon - this.grid.rect.west) / (this.grid.rect.east - this.grid.rect.west)
+            if (sIdx === 0 && normLon > this.position) continue
+            if (sIdx === 1 && normLon < this.position) continue
           }
-          if (item.sideIndex === 1 && normLon < this.position) {
-            item.billboard.show = false
-            continue
-          }
-        }
 
-        const life = Math.min(1, age / 0.8) * Math.max(0, 1 - Math.pow(age / FRONT_MIN, 2.2))
-        const flicker = 0.82 + 0.18 * Math.sin(frame * 0.35 + item.cellIndex * 13.7)
-        item.billboard.scale = life * flicker
-        item.billboard.show = life > 0.03
-        if (item.billboard.show && activeFlameCells.length < 60) {
-          activeFlameCells.push({ lon: item.lon, lat: item.lat })
+          activeFront.push({ lon: pos.lon, lat: pos.lat, age, k })
         }
-      } else {
-        item.billboard.show = false
       }
     }
 
-    // 3. Update smoke plumes periodically
+    // 3. Update flame billboards from pool
+    const frame = ++this.frame
+    const numActive = activeFront.length
+    const step = numActive > MAX_FLAMES ? Math.ceil(numActive / MAX_FLAMES) : 1
+    let usedFlames = 0
+
+    for (let i = 0; i < numActive && usedFlames < MAX_FLAMES; i += step) {
+      const cell = activeFront[i]
+      const bb = this.flamePool[usedFlames]
+      bb.position = Cartesian3.fromDegrees(cell.lon, cell.lat)
+
+      const life = Math.min(1, cell.age / 0.8) * Math.max(0, 1 - Math.pow(cell.age / FRONT_MIN, 2.2))
+      const flicker = 0.82 + 0.18 * Math.sin(frame * 0.35 + cell.k * 13.7)
+      bb.scale = life * flicker
+      bb.show = life > 0.03
+      usedFlames++
+    }
+
+    // Hide remaining billboards in pool
+    for (let i = usedFlames; i < MAX_FLAMES; i++) {
+      this.flamePool[i].show = false
+    }
+    this.flames.show = true
+
+    // 4. Update smoke plumes periodically
     if (Math.abs(t - this.lastSmokeMin) >= 1.5 || (this.lastSmokeMin === -Infinity && t > 0)) {
       this.lastSmokeMin = t
-      this.updateSmoke(hours, activeFlameCells)
+      this.updateSmoke(hours, activeFront)
     }
   }
 
@@ -297,11 +284,10 @@ export class SplitLayer {
   private makePlume(p: number): ParticleSystem {
     const drift = this.smokeDrift[p]
     const pull = new Cartesian3()
-    const sprite = makeSmokeSprite()
 
     return this.viewer.scene.primitives.add(
       new ParticleSystem({
-        image: sprite,
+        image: this.smokeImage,
         sizeInMeters: true,
         imageSize: new Cartesian2(36, 36),
         startScale: 1.0,
@@ -338,9 +324,18 @@ export class SplitLayer {
     this.viewer.scene.splitPosition = 0
   }
 
-  private add(url: string, rectangle: Rectangle, splitDirection: SplitDirection, look: Look): ImageryLayer {
+  private add(
+    url: string,
+    tileWidth: number,
+    tileHeight: number,
+    rectangle: Rectangle,
+    splitDirection: SplitDirection,
+    look: Look,
+  ): ImageryLayer {
     const provider = new SingleTileImageryProvider({
       url,
+      tileWidth,
+      tileHeight,
       rectangle,
     })
     const layer = this.viewer.imageryLayers.addImageryProvider(provider)
@@ -356,7 +351,7 @@ export class SplitLayer {
 }
 
 /** Supersample the arrival grid with bilinear anti-pixelation into a high-res image */
-function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, scale = 4): string {
+function encodeHighRes(grid: Grid, arrival: Float32Array, durationMin: number, scale = 2): string {
   const { cols, rows } = grid
   const outW = cols * scale
   const outH = rows * scale
@@ -455,8 +450,8 @@ function makeFlameSprite(): string {
   return canvas.toDataURL('image/png')
 }
 
-/** Soft circular radial smoke sprite */
-function makeSmokeSprite(): HTMLCanvasElement {
+/** Soft circular radial smoke sprite as a data URL */
+function makeSmokeSprite(): string {
   const canvas = document.createElement('canvas')
   canvas.width = 64
   canvas.height = 64
@@ -467,5 +462,5 @@ function makeSmokeSprite(): HTMLCanvasElement {
   grad.addColorStop(1, 'rgba(200, 200, 210, 0)')
   g.fillStyle = grad
   g.fillRect(0, 0, 64, 64)
-  return canvas
+  return canvas.toDataURL('image/png')
 }
