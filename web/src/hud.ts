@@ -1,10 +1,10 @@
-// The gray "intel" HUD: shot word and place, fire clock, camera readout, screen-centre
-// position in PT-TM06, caption card, transport bar and the settings drawer (fire and engine).
+// The gray "intel" HUD: shot word and place, fire clock, camera readout, caption card with
+// the transport bar (bottom left) and the settings drawer (fire and engine).
 // Data credits are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
 
 import type { Fire, FireIndexEntry } from './data'
 import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
-import { compass, formatDMS, toPTTM06, type LonLat } from './geo'
+import { compass, formatDMS, type LonLat } from './geo'
 import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
@@ -88,10 +88,6 @@ const TEMPLATE = `
     <div><label>Pitch</label><span data-ref="pitch"></span></div>
     <div><label>Rng</label><span data-ref="rng"></span></div>
   </section>
-  <section class="panel position">
-    <div><label>PT-TM06</label><span data-ref="tm"></span></div>
-    <div><label>WGS84</label><span data-ref="dms"></span></div>
-  </section>
   <section class="bottom">
     <div class="card">
       <div class="card-head" data-ref="cardHead"></div>
@@ -105,13 +101,13 @@ const TEMPLATE = `
       <div class="ticks" data-ref="ticks"></div>
       <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · S settings · H esconde o HUD</div>
   </section>
 `
 
 type Refs = Record<
   | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
-  | 'hdg' | 'pitch' | 'rng' | 'tm' | 'dms' | 'cardHead' | 'cardTitle' | 'cardBody'
+  | 'hdg' | 'pitch' | 'rng' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody',
   HTMLElement
@@ -260,7 +256,12 @@ export class Hud {
     this.root.classList.toggle('hidden')
   }
 
-  /** The decision editor is open on the left: the title, ledger and position give it the room. */
+  /** Folds or opens the ledger of the instant (key L). */
+  toggleLedger() {
+    this.ledger.toggle()
+  }
+
+  /** The decision editor is open on the left: the title and the ledger give it the room. */
   setEditing(on: boolean) {
     this.root.classList.toggle('editing', on)
   }
@@ -322,11 +323,6 @@ export class Hud {
     this.set('hdg', `${pad3(Math.round(((camera.heading % 360) + 360) % 360))}° ${compass(camera.heading)}`)
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))
     this.set('rng', fmtRange(camera.range))
-    if (camera.centre) {
-      const tm = toPTTM06(camera.centre)
-      this.set('tm', `X ${fmtNumber(tm.x)} · Y ${fmtNumber(tm.y)}`.replaceAll('-', '−'))
-      this.set('dms', formatDMS(camera.centre))
-    }
 
     this.set('cardHead', `Plano ${pad2(frame.index + 1)}/${pad2(n)} · ${shot.word}`)
     this.set('cardTitle', shot.title)

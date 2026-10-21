@@ -1,6 +1,7 @@
 // The ledger of the instant: what is known at the fire clock's T, each layer with its source and
 // its hour, and what is only known in hindsight. Lines light up as the clock passes the moment
-// the data would arrive; the satellite stays dim until T_sat.
+// the data would arrive; the satellite stays dim until T_sat. A click on the title folds the
+// table away (key L too); the choice is kept in this browser.
 
 import type { Fire, NearStation, Weather } from './data'
 import type { Detection } from './detection'
@@ -28,6 +29,8 @@ interface Row {
   at(hours: number): [State, string]
 }
 
+const STORAGE_KEY = 'atalaia.ledger'
+
 export class Ledger {
   readonly el: HTMLElement
   private rows: { row: Row; state: HTMLElement; text: HTMLElement; source: HTMLElement; shown: string }[] = []
@@ -35,8 +38,21 @@ export class Ledger {
   constructor(parent: HTMLElement) {
     this.el = document.createElement('section')
     this.el.className = 'panel ledger'
-    this.el.innerHTML = '<div class="eyebrow">Conhecido em T</div><table></table>'
+    this.el.innerHTML =
+      '<button type="button" class="eyebrow" title="Mostra ou esconde os dados (L)"><i></i>Dados conhecidos em tempo real</button><table></table>'
     parent.append(this.el)
+    this.el.querySelector('button')!.addEventListener('click', () => this.toggle())
+    this.fold(localStorage.getItem(STORAGE_KEY) === 'folded')
+  }
+
+  /** Folds the table away under the title, or opens it again. */
+  toggle() {
+    this.fold(!this.el.classList.contains('folded'))
+  }
+
+  private fold(folded: boolean) {
+    this.el.classList.toggle('folded', folded)
+    localStorage.setItem(STORAGE_KEY, folded ? 'folded' : 'open')
   }
 
   set(known: Known) {

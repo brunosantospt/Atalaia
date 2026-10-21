@@ -99,20 +99,25 @@ const TEMPLATE = `
     <ul class="assignments" data-ref="list"></ul>
   </section>
   <section>
+    <h3>Quartéis <span data-ref="stationsFor"></span></h3>
+    <table class="stations" data-ref="stations"></table>
+    <p class="note">Disponível / estimado por quartel (INE 2024, tier). Chegada: um VFCI à ignição. Clica num quartel para o escolher.</p>
+  </section>
+  <section>
     <h3>Adicionar</h3>
     <div class="palette">
-      <select data-ref="from" title="Quartel de origem"></select>
-      <select data-ref="unit" title="Meio"></select>
-      <div class="count">
-        <button type="button" data-ref="less" title="Menos">−</button>
-        <span data-ref="count">1</span>
-        <button type="button" data-ref="more" title="Mais">+</button>
-      </div>
-      <select data-ref="task" title="Tarefa num ponto">
+      <div class="field"><label>Quartel</label><select data-ref="from" title="Quartel de origem"></select></div>
+      <div class="field"><label>Meio</label><select data-ref="unit" title="Meio"></select></div>
+      <div class="field"><label>Tarefa</label><select data-ref="task" title="Tarefa num ponto">
         <option value="direct">ataque direto</option>
         <option value="protect">proteção</option>
         <option value="shuttle">abastecimento</option>
-      </select>
+      </select></div>
+      <div class="field"><label>Quantos</label><div class="count">
+        <button type="button" data-ref="less" title="Menos">−</button>
+        <span data-ref="count">1</span>
+        <button type="button" data-ref="more" title="Mais">+</button>
+      </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
     <p class="note" data-ref="capacity"></p>
@@ -336,16 +341,12 @@ export class Editor {
       unit.append(option)
     }
     unit.value = this.unit
-    unit.addEventListener('change', () => {
-      this.unit = unit.value as UnitId
-      this.updateStationDropdown()
-      this.updateTaskDropdown()
-      this.setCount(this.count)
-    })
+    unit.addEventListener('change', () => this.setUnit(unit.value as UnitId))
     const from = this.refs.from as HTMLSelectElement
     from.addEventListener('change', () => {
       this.fromId = from.value
       this.setCount(this.count)
+      this.renderStations()
     })
     const hour = this.refs.hour as HTMLInputElement
     hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
@@ -924,8 +925,66 @@ export class Editor {
     ;(this.refs.name as HTMLInputElement).value = d.name
     this.refs.list.replaceChildren(...d.assignments.map((a, k) => this.row(a, k)))
     if (!d.assignments.length) this.refs.list.innerHTML = '<li class="none">Nada no terreno: o fogo corre livre.</li>'
+    this.renderStations()
     this.renderReport()
     this.draw()
+  }
+
+  /** The palette's unit changed (the select, or a click on a station or the air base). */
+  private setUnit(unit: UnitId) {
+    this.unit = unit
+    ;(this.refs.unit as HTMLSelectElement).value = unit
+    this.updateStationDropdown()
+    this.updateTaskDropdown()
+    this.setCount(this.count)
+    this.renderStations()
+  }
+
+  /** The stations within reach: what each still has for the active decision, and how soon a VFCI from it would arrive. */
+  private renderStations() {
+    const table = this.refs.stations
+    const stations = this.loaded?.stations ?? []
+    const d = this.decisions[this.active]
+    this.refs.stationsFor.textContent = `· disponível para ${d.id}`
+    table.innerHTML = '<tr><th>Quartel</th><th>km</th><th>VFCI</th><th>VTTU</th><th>ECIN</th><th>Chegada</th></tr>'
+    const from = this.from(stations)
+    const cell = (unit: UnitId, id: string) => {
+      const stock = this.stock(unit, id)
+      return stock === undefined ? '–' : `${this.available(unit, id)}/${stock}`
+    }
+    for (const s of stations) {
+      const tr = document.createElement('tr')
+      tr.classList.toggle('on', s.id === from)
+      const stock = this.inventory?.[s.id]
+      tr.innerHTML = '<th></th><td></td><td></td><td></td><td></td><td class="eta"></td>'
+      const [name, km, vfci, vttu, crew, eta] = tr.children as unknown as HTMLElement[]
+      name.textContent = s.short
+      name.title = stock ? `${s.name} · ${stock.personnel.onDuty} de serviço (estimado)` : s.name
+      km.textContent = fmtKm(s.km)
+      vfci.textContent = cell('vfci', s.id)
+      vttu.textContent = cell('vttu', s.id)
+      crew.textContent = cell('crew', s.id)
+      eta.textContent = `T+${Math.round(arrivalMin(this.sup, this.sup.units.vfci, s.km, false))}`
+      tr.addEventListener('click', () => {
+        this.fromId = s.id
+        ;(this.refs.from as HTMLSelectElement).value = s.id
+        this.setUnit(isAerial(this.sup.units[this.unit]) ? 'vfci' : this.unit)
+      })
+      table.append(tr)
+    }
+    const air = Object.entries(this.sup.units).find(([, u]) => isAerial(u))
+    if (air) {
+      const [id, unit] = air
+      const tr = document.createElement('tr')
+      tr.classList.toggle('on', from === 'air')
+      tr.innerHTML = '<th>Base aérea</th><td></td><td colspan="3" class="free"></td><td class="eta"></td>'
+      tr.children[1].textContent = fmtKm(this.sup.dispatch.airBaseKm)
+      tr.children[2].textContent = `${unit.short} sem limite`
+      tr.children[3].textContent = `T+${Math.round(arrivalMin(this.sup, unit, this.sup.dispatch.airBaseKm, false))}`
+      tr.addEventListener('click', () => this.setUnit(id as UnitId))
+      table.append(tr)
+    }
+    if (!stations.length) table.innerHTML += '<tr><td colspan="6" class="none">Sem quartel a menos de 20 km.</td></tr>'
   }
 
   private row(a: Assignment, k: number): HTMLElement {
@@ -947,14 +1006,17 @@ export class Editor {
     }
 
     li.innerHTML = `
-      <div class="who"><b></b><span class="n"></span><span class="from"></span>${routeBadge}<em></em></div>
-      <div class="what"></div>
-      <div class="ctl"><button type="button" title="Menos">−</button><button type="button" title="Mais">+</button><button type="button" class="x" title="Retirar">×</button></div>`
+      <div class="who"><b></b><span class="n"></span><span class="task"></span>
+        <div class="ctl"><button type="button" title="Menos">−</button><button type="button" title="Mais">+</button><button type="button" class="x" title="Retirar">×</button></div>
+      </div>
+      <div class="meta"><span class="from"></span>${routeBadge}<em></em></div>
+      <div class="what"></div>`
     li.querySelector('b')!.textContent = unit.short
-    li.querySelector('.n')!.textContent = `× ${a.count}`
-    li.querySelector('.from')!.textContent = isAerial(unit) ? 'base aérea' : (station?.short ?? '')
-    li.querySelector('em')!.textContent = eta === undefined ? '' : `T+${Math.round(eta)} min`
-    li.querySelector('.what')!.textContent = `${TASK_NAME[a.task]} · ${this.whatText(a)}`
+    li.querySelector('.n')!.textContent = `×${a.count}`
+    li.querySelector('.task')!.textContent = TASK_NAME[a.task]
+    li.querySelector('.from')!.textContent = isAerial(unit) ? `Base aérea · ${this.sup.dispatch.airBaseKm} km` : (station?.short ?? '')
+    li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
+    li.querySelector('.what')!.textContent = this.whatText(a)
     const [less, more, x] = li.querySelectorAll('button')
     less.addEventListener('click', () => this.recount(k, -1))
     more.addEventListener('click', () => this.recount(k, 1))
@@ -1046,9 +1108,9 @@ export class Editor {
       parts.push(`segura chama até ${unit.holdFlameM} m`)
     }
     this.refs.capacity.textContent = parts.join(' · ')
-    ;(this.refs.task as HTMLSelectElement).hidden = isAerial(unit)
-    ;(this.refs.from as HTMLSelectElement).hidden = isAerial(unit)
-    // What the station still has of this unit for the active decision (inventory.json)
+    this.refs.task.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
+    this.refs.from.closest<HTMLElement>('.field')!.hidden = isAerial(unit)
+    // What the station still has of this unit for the active decision (inventory.json: an estimate by tier).
     const from = this.from(this.loaded?.stations ?? [])
     const stock = this.stock(this.unit, from)
     const left = this.available(this.unit, from)

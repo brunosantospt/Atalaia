@@ -187,26 +187,62 @@
   margin: 0;
 }
 
-.hud .position {
-  left: 34px;
-  bottom: 32px;
-}
-
 /* ---------- ledger of the instant (ledger.ts) ---------- */
 
 .hud .ledger {
   left: 34px;
   bottom: calc(var(--credits-h, 20px) + 200px); /* above the caption card, however long it is */
+  padding: 10px 14px 9px 12px;
   font-size: 10px;
   letter-spacing: 0.08em;
+  background: rgba(8, 9, 10, 0.72);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid var(--amber);
+  backdrop-filter: blur(4px);
+}
+.hud .ledger .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.hud .ledger .eyebrow:hover {
+  color: var(--amber);
+}
+/* The fold mark: a chevron that points down when open and right when folded. */
+.hud .ledger .eyebrow i {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s;
+}
+.hud .ledger.folded .eyebrow i {
+  transform: translateX(-1px) rotate(-45deg);
+}
+.hud .ledger.folded {
+  padding-bottom: 8px;
+}
+.hud .ledger.folded table {
+  display: none;
 }
 .hud .ledger table {
-  margin-top: 6px;
+  margin-top: 7px;
   border-collapse: collapse;
 }
 .hud .ledger th,
 .hud .ledger td {
-  padding: 1px 0;
+  padding: 2px 0;
   text-align: left;
   font-weight: 400;
   white-space: nowrap;
@@ -255,29 +291,29 @@
   font-style: italic;
 }
 
-/* ---------- caption card and transport ---------- */
+/* ---------- caption card and transport: bottom left, at 90 % of the HUD's size ---------- */
 
 .hud .bottom {
   position: absolute;
-  left: 50%;
+  left: 34px;
   bottom: calc(var(--credits-h, 20px) + 14px);
-  transform: translateX(-50%);
-  width: min(680px, calc(100vw - 32px));
+  width: min(612px, calc(100vw - 68px));
+  font-size: 90%;
 }
 .hud .card {
   background: var(--panel);
   border: 1px solid var(--ink-faint);
   border-left: 2px solid var(--line);
-  padding: 10px 14px 11px;
+  padding: 9px 13px 10px;
   backdrop-filter: blur(3px);
 }
 .hud .card-head {
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.2em;
   color: var(--ink-dim);
 }
 .hud .card-title {
-  font-size: 14px;
+  font-size: 13px;
   margin-top: 3px;
 }
 .hud .card-body {
@@ -289,9 +325,12 @@
 .hud .transport {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 7px;
   pointer-events: auto;
+}
+.hud .transport button {
+  height: 24px;
 }
 .hud button {
   font: inherit;
@@ -304,7 +343,7 @@
   cursor: pointer;
 }
 .hud .transport > button {
-  width: 30px;
+  width: 27px;
   padding: 0;
 }
 .hud button:hover {
@@ -314,7 +353,7 @@
   flex: 1;
   display: flex;
   gap: 3px;
-  height: 26px;
+  height: 24px;
 }
 .hud .tick {
   flex: 1;
@@ -343,10 +382,9 @@
   letter-spacing: 0.14em;
 }
 .hud .keys {
-  margin-top: 6px;
-  font-size: 9px;
+  margin-top: 5px;
+  font-size: 8px;
   color: var(--ink-dim);
-  text-align: center;
   letter-spacing: 0.14em;
 }
 
@@ -512,13 +550,15 @@
 .markers .lead-ignition,
 .markers .lead-step,
 .markers .lead-eta,
-.markers .lead-tsat {
+.markers .lead-tsat,
+.markers .lead-means {
   stroke: var(--amber);
 }
 .markers circle.lead-ignition,
 .markers circle.lead-step,
 .markers circle.lead-eta,
-.markers circle.lead-tsat {
+.markers circle.lead-tsat,
+.markers circle.lead-means {
   fill: var(--amber);
 }
 .markers .lead.on {
@@ -555,8 +595,19 @@
 .markers .tag-ignition b,
 .markers .tag-step b,
 .markers .tag-eta b,
-.markers .tag-tsat b {
+.markers .tag-tsat b,
+.markers .tag-means b {
   background: var(--amber);
+}
+.markers .tag-means {
+  padding: 5px 10px 5px 5px;
+  background: rgba(8, 9, 10, 0.78);
+  border-color: rgba(240, 163, 58, 0.45);
+}
+.markers .tag-means span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 .markers .tag small {
   font-size: 9px;
@@ -632,9 +683,8 @@
   color: var(--ink);
 }
 
-/* Medium screens: the position readout and the ledger no longer fit beside the card. */
+/* Medium screens: the ledger no longer fits above the card. */
 @media (max-width: 1180px) {
-  .hud .position,
   .hud .ledger {
     display: none;
   }
