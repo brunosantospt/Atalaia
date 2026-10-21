@@ -1,0 +1,444 @@
+{
+  "id": "Penha_Guimaraes_hipotetico",
+  "name": "Penha, Guimarães (simulado)",
+  "parish": "Mesão Frio",
+  "incidentId": null,
+  "timeZone": "Europe/Lisbon",
+  "start": "2024-09-16T10:00",
+  "end": "2024-09-17T10:00",
+  "simulated": true,
+  "simulation": {
+    "model": "ELMFIRE 2025.0717 (engines/elmfire), no suppression, no canopy",
+    "runMin": 1440,
+    "gridEdgeMin": null
+  },
+  "ignition": {
+    "lon": -8.243557,
+    "lat": 41.437309
+  },
+  "ignitions": [
+    {
+      "time": "2024-09-16T10:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 0.6,
+      "lon": -8.243557,
+      "lat": 41.437309
+    }
+  ],
+  "bbox": [
+    -8.272735,
+    41.430181,
+    -8.239355,
+    41.442073
+  ],
+  "areaHa": {
+    "timed": 152.6,
+    "untimed": 0.0,
+    "total": 152.6
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2024-09-16T10:00",
+      "hours": 0.0,
+      "areaHa": 0.6,
+      "addedHa": 0.6,
+      "period": null,
+      "center": {
+        "lon": -8.243557,
+        "lat": 41.437309
+      },
+      "bbox": [
+        -8.244095,
+        41.436904,
+        -8.243019,
+        41.437714
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2024-09-16T11:00",
+      "hours": 1.0,
+      "areaHa": 1.0,
+      "addedHa": 0.4,
+      "period": 1,
+      "center": {
+        "lon": -8.244085,
+        "lat": 41.437798
+      },
+      "bbox": [
+        -8.244384,
+        41.436904,
+        -8.242947,
+        41.438023
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2024-09-16T12:00",
+      "hours": 2.0,
+      "areaHa": 2.3,
+      "addedHa": 1.3,
+      "period": 2,
+      "center": {
+        "lon": -8.244875,
+        "lat": 41.437959
+      },
+      "bbox": [
+        -8.24618,
+        41.436904,
+        -8.242947,
+        41.438294
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2024-09-16T13:00",
+      "hours": 3.0,
+      "areaHa": 5.1,
+      "addedHa": 2.8,
+      "period": 3,
+      "center": {
+        "lon": -8.24484,
+        "lat": 41.437051
+      },
+      "bbox": [
+        -8.246897,
+        41.435592,
+        -8.242945,
+        41.438563
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2024-09-16T14:00",
+      "hours": 4.0,
+      "areaHa": 10.8,
+      "addedHa": 5.7,
+      "period": 4,
+      "center": {
+        "lon": -8.242783,
+        "lat": 41.435891
+      },
+      "bbox": [
+        -8.246897,
+        41.434244,
+        -8.240071,
+        41.438563
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2024-09-16T15:00",
+      "hours": 5.0,
+      "areaHa": 14.6,
+      "addedHa": 3.8,
+      "period": 5,
+      "center": {
+        "lon": -8.24351,
+        "lat": 41.43603
+      },
+      "bbox": [
+        -8.247256,
+        41.434244,
+        -8.239712,
+        41.438563
+      ]
+    },
+    {
+      "step": 6,
+      "time": "2024-09-16T16:00",
+      "hours": 6.0,
+      "areaHa": 16.8,
+      "addedHa": 2.2,
+      "period": 6,
+      "center": {
+        "lon": -8.244001,
+        "lat": 41.436224
+      },
+      "bbox": [
+        -8.247256,
+        41.434244,
+        -8.239712,
+        41.438564
+      ]
+    },
+    {
+      "step": 7,
+      "time": "2024-09-16T19:00",
+      "hours": 9.0,
+      "areaHa": 22.3,
+      "addedHa": 5.5,
+      "period": 7,
+      "center": {
+        "lon": -8.244338,
+        "lat": 41.436613
+      },
+      "bbox": [
+        -8.247972,
+        41.433968,
+        -8.239355,
+        41.438834
+      ]
+    },
+    {
+      "step": 8,
+      "time": "2024-09-16T22:00",
+      "hours": 12.0,
+      "areaHa": 39.1,
+      "addedHa": 16.8,
+      "period": 8,
+      "center": {
+        "lon": -8.2477,
+        "lat": 41.434539
+      },
+      "bbox": [
+        -8.250483,
+        41.431536,
+        -8.239355,
+        41.439104
+      ]
+    },
+    {
+      "step": 9,
+      "time": "2024-09-17T04:00",
+      "hours": 18.0,
+      "areaHa": 88.2,
+      "addedHa": 49.1,
+      "period": 9,
+      "center": {
+        "lon": -8.253314,
+        "lat": 41.435859
+      },
+      "bbox": [
+        -8.263403,
+        41.430182,
+        -8.239355,
+        41.440723
+      ]
+    },
+    {
+      "step": 10,
+      "time": "2024-09-17T10:00",
+      "hours": 24.0,
+      "areaHa": 152.6,
+      "addedHa": 64.4,
+      "period": 10,
+      "center": {
+        "lon": -8.262502,
+        "lat": 41.435943
+      },
+      "bbox": [
+        -8.272735,
+        41.430181,
+        -8.239355,
+        41.442073
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2024-09-16T10:00",
+      "end": "2024-09-16T11:00",
+      "durationH": 1.0,
+      "areaHa": 0.4,
+      "growthHaPerH": 0.4,
+      "rosMPerH": 39,
+      "maxRosMPerH": 39,
+      "spreadTowardDeg": 319,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 2,
+      "start": "2024-09-16T11:00",
+      "end": "2024-09-16T12:00",
+      "durationH": 1.0,
+      "areaHa": 1.3,
+      "growthHaPerH": 1.3,
+      "rosMPerH": 136,
+      "maxRosMPerH": 136,
+      "spreadTowardDeg": 276,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 3,
+      "start": "2024-09-16T12:00",
+      "end": "2024-09-16T13:00",
+      "durationH": 1.0,
+      "areaHa": 2.8,
+      "growthHaPerH": 2.8,
+      "rosMPerH": 132,
+      "maxRosMPerH": 132,
+      "spreadTowardDeg": 188,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 4,
+      "start": "2024-09-16T13:00",
+      "end": "2024-09-16T14:00",
+      "durationH": 1.0,
+      "areaHa": 5.7,
+      "growthHaPerH": 5.7,
+      "rosMPerH": 279,
+      "maxRosMPerH": 279,
+      "spreadTowardDeg": 126,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 5,
+      "start": "2024-09-16T14:00",
+      "end": "2024-09-16T15:00",
+      "durationH": 1.0,
+      "areaHa": 3.8,
+      "growthHaPerH": 3.8,
+      "rosMPerH": 87,
+      "maxRosMPerH": 87,
+      "spreadTowardDeg": 149,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 6,
+      "start": "2024-09-16T15:00",
+      "end": "2024-09-16T16:00",
+      "durationH": 1.0,
+      "areaHa": 2.2,
+      "growthHaPerH": 2.2,
+      "rosMPerH": 21,
+      "maxRosMPerH": 21,
+      "spreadTowardDeg": 225,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 7,
+      "start": "2024-09-16T16:00",
+      "end": "2024-09-16T19:00",
+      "durationH": 3.0,
+      "areaHa": 5.5,
+      "growthHaPerH": 1.8,
+      "rosMPerH": 38,
+      "maxRosMPerH": 38,
+      "spreadTowardDeg": 247,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 8,
+      "start": "2024-09-16T19:00",
+      "end": "2024-09-16T22:00",
+      "durationH": 3.0,
+      "areaHa": 16.8,
+      "growthHaPerH": 5.6,
+      "rosMPerH": 89,
+      "maxRosMPerH": 89,
+      "spreadTowardDeg": 196,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 9,
+      "start": "2024-09-16T22:00",
+      "end": "2024-09-17T04:00",
+      "durationH": 6.0,
+      "areaHa": 49.1,
+      "growthHaPerH": 8.2,
+      "rosMPerH": 178,
+      "maxRosMPerH": 178,
+      "spreadTowardDeg": 274,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 10,
+      "start": "2024-09-17T04:00",
+      "end": "2024-09-17T10:00",
+      "durationH": 6.0,
+      "areaHa": 64.4,
+      "growthHaPerH": 10.7,
+      "rosMPerH": 128,
+      "maxRosMPerH": 128,
+      "spreadTowardDeg": 270,
+      "intensityKWPerM": null
+    }
+  ],
+  "windShift": {
+    "time": "2024-09-16T12:30",
+    "minutes": 150,
+    "window": {
+      "from": "2024-09-16T12:00",
+      "to": "2024-09-16T13:00",
+      "minutes": [
+        120,
+        180
+      ]
+    },
+    "fromDeg": [
+      89,
+      335
+    ],
+    "kmh": [
+      22.7,
+      36.0
+    ],
+    "gustKmh": [
+      45.7,
+      63.0
+    ],
+    "until": "2024-09-16T21:00",
+    "headTowardDeg": [
+      292,
+      135
+    ],
+    "decisionAxisDeg": 319,
+    "atShift": {
+      "areaHa": 2.2,
+      "homesWithin100m": 0
+    },
+    "within6h": {
+      "areaHa": 16.8,
+      "homesWithin100m": 0
+    },
+    "villages": [
+      {
+        "name": "Penha",
+        "kind": "hamlet",
+        "lon": -8.26833,
+        "lat": 41.43091,
+        "minutes": 1311,
+        "noShiftMinutes": 1243
+      }
+    ],
+    "noShift": {
+      "within6h": {
+        "areaHa": 7.8,
+        "homesWithin100m": 0
+      },
+      "areaHa24h": 151.3
+    },
+    "note": "synthetic: injected for the demo, not observed. Hourly weather, so the wind turns linearly from the first hour of the window to the second (fastModel.ts, api/fires.py). No village is reached within the 6 h window, with or without the shift: what changes is where the head goes.",
+    "alert": "Mudança brusca de vento: de E a 23 km/h para NNO a 36 km/h. A cabeça do incêndio roda de ONO para SE.",
+    "compare": {
+      "model": "fast",
+      "note": "the same fire and weather in the other model, areas only",
+      "areaHa": {
+        "3h": 21.5,
+        "6h": 87.7,
+        "12h": 694.7,
+        "24h": 961.2
+      },
+      "noShiftAreaHa": {
+        "3h": 20.5,
+        "6h": 49.0,
+        "12h": 430.5,
+        "24h": 861.2
+      }
+    }
+  },
+  "source": {
+    "dataset": "Incêndio hipotético na Penha (Guimarães): não aconteceu",
+    "data": "Incêndio simulado na Penha, Guimarães (ELMFIRE, sem combate), com a meteorologia real de 16/09/2024 (ECMWF IFS 9 km via Open-Meteo) e uma rotação do vento sintética às 12h-13h",
+    "cite": "Paisagem: COS2015 v2 e MDT LiDAR 2 m, DGT (CC BY 4.0); meteorologia ECMWF IFS via Open-Meteo (CC BY 4.0)",
+    "fire": "hypothetical: the ignition and start of the UE render's Penha fire (FireRenderer scenarios/penha_elmfire); no observed spread exists",
+    "weather": "real ECMWF IFS analysis of 16 Sep 2024 at the 9 km cell over Penha, except the wind from 13:00 to 21:00, which is synthetic",
+    "windShift": "synthetic, injected for the demo, not observed: the easterly backs to NNW and strengthens between 12:00 and 13:00",
+    "steps": "simulated, not observed: ELMFIRE 2025.0717 (engines/elmfire), no suppression, no canopy under that weather (scripts/build_hypothetical.py)"
+  }
+}
