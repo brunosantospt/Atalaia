@@ -2,8 +2,8 @@
 // is picked in the palette, then a click puts it on the nearest road (a point of attack), or
 // clicks draw a crew line or an aerial water line. Each assignment shows when it gets there
 // and what it can do; the lines show how much of them is built before the fire arrives.
-// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Decisions
-// are kept per fire in this browser; the 6 h report compares Livre, A and B.
+// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Every
+// fire opens with nothing on the ground; the 6 h report compares Livre, A and B.
 
 import {
   Cartesian2,
@@ -83,7 +83,6 @@ export interface EditorActions {
   editing(open: boolean): void
 }
 
-const STORAGE_PREFIX = 'atalaia.decisions.'
 const SNAP_M = 400 // a click further than this from any road stays where it is
 const ACCESS_SHOWN_M = 2500 // access dots are shown this far from the ignition while a point tool is on
 const TASK_NAME: Record<Task, string> = {
@@ -410,7 +409,6 @@ export class Editor {
     this.refs.ils.addEventListener('click', () => {
       if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
       this.stopIls(true)
-      this.remember()
     })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
@@ -516,8 +514,8 @@ export class Editor {
     this.actions.editing(open)
   }
 
-  /** A fire opened: its decisions come back from this browser, or A starts from the example, on the
-   *  roads. B comes back with them while it is still the search's plan for that A, or is searched again. */
+  /** A fire opened: A starts empty, with nothing on the ground ("Repor exemplo" brings the example
+   *  back, on the roads), and B with it. Decisions are not kept across visits. */
   setFire(
     fireId: string,
     fire: Fire,
@@ -534,19 +532,8 @@ export class Editor {
     this.stopIls()
     this.ilsDone = undefined
     this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
-    const stored = load(fireId)
-    const a = this.fit(stored?.decisions[0] ?? clone(this.loaded.example))
-    const b = stored && this.fit(stored.decisions[1])
-    this.decisions = [a, b ?? named(a)]
-    const ils = stored?.ils
-    if (b && ils?.a === planKey(a) && (planKey(b) !== ils.b || ils.done)) {
-      this.ilsFor = ils.a
-      this.ilsB = ils.b
-      if (planKey(b) === ils.b && ils.done) {
-        const { stopped, ...score } = ils.done
-        this.ilsDone = { result: { ...score, decision: b }, changes: diffDecisions(a, b), stopped }
-      }
-    } else this.proposeB()
+    this.decisions = [empty('A'), empty('B')]
+    this.proposeB()
     this.runs = this.reports = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
@@ -1157,7 +1144,7 @@ export class Editor {
     this.commit()
   }
 
-  /** The decisions changed: remember them, show them and have them simulated again. By hand, a new
+  /** The decisions changed: show them and have them simulated again. By hand, a new
    *  A has B searched again; B changed by hand ends its search, and is no longer what it proposed. */
   private commit(byIls = false) {
     if (!byIls) {
@@ -1167,16 +1154,8 @@ export class Editor {
         this.ilsDone = undefined
       }
     }
-    this.remember()
     this.render()
     this.actions.changed()
-  }
-
-  /** The decisions in this browser, with what the search left of B. */
-  private remember() {
-    if (!this.loaded) return
-    const done = this.ilsDone && { ...scoreOf(this.ilsDone.result), stopped: this.ilsDone.stopped }
-    save(this.loaded.fireId, this.decisions, { a: this.ilsFor, b: this.ilsB, done })
   }
 
   /** B as the search starts it: A's own plan. */
@@ -1291,7 +1270,9 @@ export class Editor {
           ? 'O B foi mudado à mão e já não é a proposta do ILS: "Procurar B de novo", ou mudar o A, volta a propô-lo.'
           : canMove
             ? 'Procura parada: o B ainda é igual ao A.'
-            : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
+            : !this.decisions[0].assignments.length
+              ? 'O A ainda não tem meios: põe meios no mapa e o B é procurado com os mesmos.'
+              : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
       return
     }
     const { result, changes } = done
@@ -2166,7 +2147,6 @@ const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
 /** Whether the search has anything of A to move: units at a point. */
 const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points)
-const scoreOf = ({ improved, best, a, plans, elapsedMs }: Result) => ({ improved, best, a, plans, elapsedMs })
 
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
@@ -2212,28 +2192,4 @@ function splitLine(line: LonLat[], fraction: number): [LonLat[], LonLat[]] {
     before.push(line[i])
   }
   return [before, []]
-}
-
-/** What the search left of B: the A it was for and B as it left it (planKey), and how it ended. Older entries have none. */
-interface StoredIls {
-  a: string
-  b: string
-  done?: ReturnType<typeof scoreOf> & { stopped?: boolean }
-}
-
-function load(fireId: string): { decisions: [Decision, Decision]; ils?: StoredIls } | undefined {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_PREFIX + fireId) ?? 'null') as { v: number; decisions: [Decision, Decision]; ils?: StoredIls } | null
-    return raw?.v === 1 && raw.decisions?.length === 2 ? raw : undefined
-  } catch {
-    return undefined
-  }
-}
-
-function save(fireId: string, decisions: [Decision, Decision], ils: StoredIls) {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + fireId, JSON.stringify({ v: 1, decisions, ils }))
-  } catch {
-    // Not remembered beyond this visit.
-  }
 }
