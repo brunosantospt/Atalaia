@@ -356,8 +356,13 @@ function apply(scenario: Scenario, decision: Decision, zoneOf: Int16Array[], lin
       else for (let t = arrive; t < durationMin; t += work + refill) windows.push(t, Math.min(t + work, durationMin))
       r0 = unit.radiusM * Math.sqrt(a.count)
       const fuelClass = grid.fuelClass[centre.row * grid.cols + centre.col]
-      grow = (attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)) / 60
-      reach = unit.reachM ?? r0
+      // In 'protect' task, units hold a stationary defensive perimeter around structures/villages (grow = 0, reach = r0)
+      // In 'direct' attack, units advance offensively along the fireline into the brush (grow = attackMPerH, reach = reachM)
+      grow =
+        a.task === 'protect'
+          ? 0
+          : (attackMPerH(unit, fuelClass) * a.count * (relay ? dutyCycle(unit, waterKm) : 1)) / 60
+      reach = a.task === 'protect' ? r0 : (unit.reachM ?? r0)
     }
     if (windows.length === 0 || r0 <= 0) continue
     const zone = zones.push({ factor: unit.rosFactor, holdFlameM: unit.holdFlameM, windows, x, y, r0, grow, reach }) - 1
