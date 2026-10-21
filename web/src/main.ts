@@ -2,7 +2,6 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
-  Cartesian2,
   Cartesian3,
   Cartographic,
   Credit,
@@ -46,7 +45,6 @@ import { containmentProbability, loadSuppression, type Decision } from './suppre
 const PENHA = { lon: -8.2683, lat: 41.4256 }
 // Where the replay starts: high over Penha, looking north-east towards the Minho fires.
 const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
-const PICK_EVERY = 4 // frames between screen-centre picks while the mouse has the camera
 const DECISION_MIN = 360 // how far the free run and the decisions A and B are simulated: the 6 h of the report
 const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
@@ -179,33 +177,15 @@ async function main() {
       if (!replay) return
       if (open) {
         replay.player.playing = false // the mouse has the camera and the map takes the clicks
-        // The drawer's hour starts where the replay stands; before the replay starts, at the end of the run.
-        const hours = replay.player.update(0).hours
-        editor.setHours(hours > 0 ? hours : DECISION_MIN / 60)
+        // The drawer's hour is the replay's clock; before the replay starts, the clock goes to the end of the run.
+        if (!(replay.player.update(0).hours > 0)) replay.player.seek(DECISION_MIN / 60)
         replay.showSplit = true
       }
     },
   })
 
-  const mouseMovePixel = new Cartesian2()
-  scene.canvas.addEventListener('mousemove', (e) => {
-    mouseMovePixel.x = e.clientX
-    mouseMovePixel.y = e.clientY
-    const ray = viewer.camera.getPickRay(mouseMovePixel)
-    if (!ray) return
-    const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
-    if (cartesian) {
-      const c = Cartographic.fromCartesian(cartesian)
-      hud.updateCursorCoords({
-        lon: CesiumMath.toDegrees(c.longitude),
-        lat: CesiumMath.toDegrees(c.latitude),
-        h: c.height,
-      })
-    } else {
-      hud.updateCursorCoords(undefined)
-    }
-  })
-  scene.canvas.addEventListener('mouseleave', () => hud.updateCursorCoords(undefined))
+  // The drawer's hour slider moves the fire clock (the editor has taken the new hour by now); the replay goes on from there.
+  editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => replay?.player.seek(editor.hours))
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
@@ -238,6 +218,7 @@ async function main() {
     if (loading !== id) return // another fire was picked meanwhile
     loading = undefined
 
+    const switched = replay !== undefined
     const from = replay ? (readPose(scene) ?? START) : START
     replay?.fire.destroy()
     replay?.markers.destroy()
@@ -263,6 +244,8 @@ async function main() {
       director: replay?.director ?? false,
       shotShown: undefined,
     }
+    // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
+    if (switched) replay.player.goTo(0)
     hud.setDirector(replay.director)
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
     replay.free.show(false)
@@ -283,11 +266,18 @@ async function main() {
     const { story, player, director } = replay
     const shots = director ? story.shots.filter((s) => CUT.includes(s.kind)) : story.shots
     const current = player.shots[player.index]
-    player.shots = shots
+    // The same shot, or the one built again in its place: the director's are new after every run, in the same order.
+    const nth = player.shots.filter((s) => s.kind === current.kind).indexOf(current)
+    const index = shots.includes(current) ? shots.indexOf(current) : shots.indexOf(shots.filter((s) => s.kind === current.kind)[nth])
     hud.setShots(shots)
-    const index = shots.indexOf(current)
-    if (index < 0) player.goTo(Math.min(player.index, shots.length - 1))
-    else player.index = index
+    if (index < 0) {
+      player.shots = shots
+      player.goTo(Math.min(player.index, shots.length - 1))
+      return
+    }
+    // A rerun moves neither the camera nor, as a new shot would, the editor's tab and the split.
+    if (replay.shotShown === current) replay.shotShown = shots[index]
+    player.keep(shots, index)
   }
 
   /** The director's shots follow the decisions: built again after every run, on the terrain. */
@@ -373,11 +363,9 @@ async function main() {
     if (!replay) return
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving
-    const played = player.update(dt)
+    const frame = player.update(dt)
     // The split shows in the director's shots, or through every shot on key A.
-    const splitOn = !!split && (replay.showSplit || !!played.shot.split)
-    // While the editor is open its hour slider holds the clock of the split, and the HUD reads that hour.
-    const frame = editor.open && splitOn ? { ...played, hours: editor.hours } : played
+    const splitOn = !!split && (replay.showSplit || !!frame.shot.split)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     const simulated = frame.shot.simulated || splitOn
     fire.set(simulated ? { step: -1, fade: 1, untimed: false } : frame.fire)
@@ -385,10 +373,8 @@ async function main() {
     free.set(frame.hours)
     split?.show(splitOn)
     split?.set(frame.hours)
-    // Synchronize editor overlays (cut roads strictly inside the fire, tactical perimeters) with simulation clock
-    if (!editor.open || player.playing) {
-      editor.syncTime(frame.hours)
-    }
+    // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.
+    editor.syncTime(frame.hours)
     // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
     // the comparison starts with the split in the middle.
     if (frame.shot !== replay.shotShown) {
@@ -401,16 +387,15 @@ async function main() {
     }
     revealed = frame.revealed
 
-    if (frame.driving) {
-      // The camera orbits the pose target, which is therefore the centre of the screen.
-      readout = { ...frame.pose, centre: frame.pose }
-      spotlight.set(frame.pose, frame.spot)
-    } else if (frameNo++ % PICK_EVERY === 0) {
-      const pose = readPose(scene)
-      readout = pose ? { ...pose, centre: pose } : { ...readout, centre: undefined }
-      // Free camera: the light follows the screen centre and widens as the mouse zooms out.
-      if (pose) spotlight.set(pose, frame.spot * (pose.range / Math.max(frame.pose.range, 1)))
-    }
+    // The crosshair, its coordinates and the light are on the ground at the centre of the screen, picked every
+    // frame now that the camera has its pose; while the player drives, its target is there too (the camera orbits it).
+    const centre = readPose(scene) ?? (frame.driving ? frame.pose : undefined)
+    if (centre) {
+      readout = { ...centre, centre }
+      // Free camera: the light widens as the mouse zooms out.
+      spotlight.set(centre, frame.driving ? frame.spot : frame.spot * (centre.range / Math.max(frame.pose.range, 1)))
+    } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
+    frameNo++
     hud.update(frame, readout, splitOn)
     if (frameNo % 60 === 0) {
       const dispatch = editor.getMultiAgencyDispatch()
