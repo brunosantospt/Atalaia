@@ -27,6 +27,7 @@ export interface HudActions {
   goTo(i: number): void
   pickFire(id: string): void
   roleChanged?(role: AgencyRole): void
+  toggleEditor?(): void
   resetNorth?(): void
   flyToIgnition?(): void
   mobilizeAerial?(flameM: number): void
@@ -57,8 +58,7 @@ const TEMPLATE = `
     <div class="eyebrow">Atalaia · gémeo de decisão</div>
     <div class="word" data-ref="word"></div>
     <div class="line" data-ref="place"></div>
-    <div class="line dim" data-ref="coords"></div>
-  </section>
+      </section>
   <nav class="role-selector">
     <div class="role-pill">
       <button type="button" class="role-btn active" data-role="cmd" title="Visão de Comando Completo (Proteção Civil & Bombeiros)">
@@ -100,21 +100,13 @@ const TEMPLATE = `
     <div><label>Coord</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS. Clica para copiar."></span></div>
     <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas decimais GPS. Clica para copiar."></span></div>
   </section>
-  <div class="nav-controls">
-    <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (visão base)">
-      <span class="nav-icon" data-ref="compassNeedle">
-        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
-          <circle cx="12" cy="12" r="10.5" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2" fill="none"/>
-          <polygon points="12,3.5 15,12 12,10" fill="#f8fafc" />
-          <polygon points="12,3.5 9,12 12,10" fill="#94a3b8" />
-          <polygon points="12,20.5 15,12 12,10" fill="#475569" />
-          <polygon points="12,20.5 9,12 12,10" fill="#334155" />
-          <circle cx="12" cy="12" r="1.5" fill="#0f172a" />
-        </svg>
-      </span>
-      <span class="nav-label">Norte</span>
-    </button>
-    <button type="button" class="nav-btn ignition-btn" data-ref="btnIgnition" title="Centrar câmara no Ponto de Ignição inicial">
+  <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
+    <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  </button>
+  <div class="bottom-nav-cluster">
+    <button type="button" class="nav-btn ignition-btn" data-ref="btnIgnition" title="Centrar câmara no Ponto de Ignição inicial (visão aproximada)">
       <span class="nav-icon">
         <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
           <circle cx="12" cy="12" r="7.5" stroke="#94a3b8" stroke-width="1.3" />
@@ -127,27 +119,39 @@ const TEMPLATE = `
       </span>
       <span class="nav-label">Ignição</span>
     </button>
-  </div>
-
-  <div class="bottom-compass" data-ref="bottomCompass" title="Bússola Tática: Aponta para o Norte Geográfico. Clica para reorientar a 0°">
-    <div class="compass-dial" data-ref="compassDial">
-      <svg class="compass-svg" viewBox="0 0 56 56" width="52" height="52" fill="none">
-        <circle cx="28" cy="28" r="25.5" stroke="rgba(241, 245, 249, 0.4)" stroke-width="1.3" fill="none"/>
-        <circle cx="28" cy="28" r="21.5" stroke="rgba(148, 163, 184, 0.25)" stroke-width="0.8" fill="none"/>
-        <line x1="28" y1="3" x2="28" y2="7.5" stroke="#ffffff" stroke-width="1.8"/>
-        <line x1="28" y1="48.5" x2="28" y2="53" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
-        <line x1="3" y1="28" x2="7.5" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
-        <line x1="48.5" y1="28" x2="53" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
-        <text x="28" y="14.5" font-size="8.5" font-weight="800" font-family="ui-monospace, monospace" fill="#ffffff" text-anchor="middle">N</text>
-        <text x="28" y="47" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">S</text>
-        <text x="44.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">E</text>
-        <text x="11.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">W</text>
-        <polygon points="28,15.5 31.5,28 28,26" fill="#f8fafc"/>
-        <polygon points="28,15.5 24.5,28 28,26" fill="#cbd5e1"/>
-        <polygon points="28,40.5 31.5,28 28,26" fill="#475569"/>
-        <polygon points="28,40.5 24.5,28 28,26" fill="#334155"/>
-        <circle cx="28" cy="28" r="2.5" fill="#0f172a" stroke="#f8fafc" stroke-width="1"/>
-      </svg>
+    <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (0°)">
+      <span class="nav-icon" data-ref="compassNeedle">
+        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
+          <circle cx="12" cy="12" r="10.5" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2" fill="none"/>
+          <polygon points="12,3.5 15,12 12,10" fill="#f8fafc" />
+          <polygon points="12,3.5 9,12 12,10" fill="#94a3b8" />
+          <polygon points="12,20.5 15,12 12,10" fill="#475569" />
+          <polygon points="12,20.5 9,12 12,10" fill="#334155" />
+          <circle cx="12" cy="12" r="1.5" fill="#0f172a" />
+        </svg>
+      </span>
+      <span class="nav-label">Norte</span>
+    </button>
+    <div class="bottom-compass" data-ref="bottomCompass" title="Rosa dos Ventos: Aponta para o Norte Geográfico em tempo real. Clica para reorientar a 0°">
+      <div class="compass-dial" data-ref="compassDial">
+        <svg class="compass-svg" viewBox="0 0 56 56" width="52" height="52" fill="none">
+          <circle cx="28" cy="28" r="25.5" stroke="rgba(241, 245, 249, 0.4)" stroke-width="1.3" fill="none"/>
+          <circle cx="28" cy="28" r="21.5" stroke="rgba(148, 163, 184, 0.25)" stroke-width="0.8" fill="none"/>
+          <line x1="28" y1="3" x2="28" y2="7.5" stroke="#ffffff" stroke-width="1.8"/>
+          <line x1="28" y1="48.5" x2="28" y2="53" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+          <line x1="3" y1="28" x2="7.5" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+          <line x1="48.5" y1="28" x2="53" y2="28" stroke="rgba(148, 163, 184, 0.6)" stroke-width="1.2"/>
+          <text x="28" y="14.5" font-size="8.5" font-weight="800" font-family="ui-monospace, monospace" fill="#ffffff" text-anchor="middle">N</text>
+          <text x="28" y="47" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">S</text>
+          <text x="44.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">E</text>
+          <text x="11.5" y="30.5" font-size="7" font-weight="600" font-family="ui-monospace, monospace" fill="#64748b" text-anchor="middle">W</text>
+          <polygon points="28,15.5 31.5,28 28,26" fill="#f8fafc"/>
+          <polygon points="28,15.5 24.5,28 28,26" fill="#cbd5e1"/>
+          <polygon points="28,40.5 31.5,28 28,26" fill="#475569"/>
+          <polygon points="28,40.5 24.5,28 28,26" fill="#334155"/>
+          <circle cx="28" cy="28" r="2.5" fill="#0f172a" stroke="#f8fafc" stroke-width="1"/>
+        </svg>
+      </div>
     </div>
   </div>
   <div class="hud-alert-container" data-ref="alertContainer" hidden>
@@ -182,11 +186,11 @@ const TEMPLATE = `
 `
 
 type Refs = Record<
-  | 'word' | 'place' | 'coords' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
+  | 'word' | 'place' | 'mode' | 'source' | 'time' | 'date' | 'elapsed' | 'area' | 'step'
   | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
-  | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
+  | 'editorToggle' | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
@@ -208,7 +212,6 @@ export class Hud {
   private currentFlameM = 0
   private isAlertPopoverOpen = false
   private lastAlertEmergency: boolean | undefined = undefined
-  private lastCoordsFull = ''
   private lastCoordsDMS = ''
   private lastCoordsDec = ''
   private cursorCoords: (LonLat & { h?: number }) | undefined = undefined
@@ -250,6 +253,7 @@ export class Hud {
       }
     })
 
+    this.refs.editorToggle?.addEventListener('click', () => this.actions.toggleEditor?.())
     this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.bottomCompass?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
@@ -303,8 +307,7 @@ export class Hud {
         finishToast()
       }
     }
-    this.refs.coords?.addEventListener('click', () => copyText(this.lastCoordsFull || this.refs.coords.textContent || ''))
-    this.refs.coordDMS?.addEventListener('click', () => copyText(this.lastCoordsDMS))
+        this.refs.coordDMS?.addEventListener('click', () => copyText(this.lastCoordsDMS))
     this.refs.coordDec?.addEventListener('click', () => copyText(this.lastCoordsDec))
   }
 
@@ -424,11 +427,8 @@ export class Hud {
     if (coords) {
       const dms = formatDMS(coords)
       const dec = `${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}`
-      const alt = coords.h !== undefined ? ` · ${Math.round(coords.h)}m` : ''
       this.lastCoordsDMS = dms
       this.lastCoordsDec = dec
-      this.lastCoordsFull = `${dms} (${dec})`
-      this.set('coords', `📍 ${dms} (${dec}${alt})`)
       this.set('coordDMS', dms)
       this.set('coordDec', dec)
     }
@@ -468,6 +468,9 @@ export class Hud {
   /** The decision editor is open on the left: the title and the ledger give it the room. */
   setEditing(on: boolean) {
     this.root.classList.toggle('editing', on)
+    if (this.refs.editorToggle) {
+      this.refs.editorToggle.title = on ? 'Fechar menu de edição (E)' : 'Abrir menu de edição (E)'
+    }
   }
 
   /** Screen left free by the title, clock, rail, caption card and open settings; all of it when the HUD is hidden. */
@@ -510,11 +513,8 @@ export class Hud {
       const pos = camera.centre ?? shot.place
       const dms = formatDMS(pos)
       const dec = `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}`
-      const alt = (pos as any).h !== undefined ? ` · ${Math.round((pos as any).h)}m` : ''
       this.lastCoordsDMS = dms
       this.lastCoordsDec = dec
-      this.lastCoordsFull = `${dms} (${dec})`
-      this.set('coords', `📍 ${dms} (${dec}${alt})`)
       this.set('coordDMS', dms)
       this.set('coordDec', dec)
     }

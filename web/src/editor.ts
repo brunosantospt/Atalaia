@@ -164,13 +164,6 @@ const TEMPLATE = `
     <button type="button" data-ref="clear">Limpar esta decisão</button>
     <button type="button" data-ref="reset">Repor exemplos</button>
   </footer>
-
-  <button type="button" class="editor-edge-toggle" data-ref="edgeToggle" title="Abrir menu de edição tática (E)">
-    <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  </button>
-
 `
 
 const UNIT_CANVASES = new Map<string, HTMLCanvasElement>()
@@ -331,13 +324,9 @@ export class Editor {
     this.tip.hidden = true
     document.body.append(this.tip)
     this.el.addEventListener('scroll', () => this.hideTip(), { passive: true })
-        this.refs = Object.fromEntries(
+    this.refs = Object.fromEntries(
       [...this.el.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     )
-    this.refs.edgeToggle?.addEventListener('click', (e) => {
-      e.stopPropagation()
-      this.toggle()
-    })
     void viewer.dataSources.add(this.source)
     void viewer.dataSources.add(this.access)
     void viewer.dataSources.add(this.routes)

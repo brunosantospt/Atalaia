@@ -129,9 +129,9 @@ async function main() {
     if (!replay) return
     const { data: fire } = replay
     const target = Cartesian3.fromDegrees(fire.ignition.lon, fire.ignition.lat, 0)
-    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 400), {
-      offset: new HeadingPitchRange(0, CesiumMath.toRadians(-35), 4500),
-      duration: 1.2,
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 120), {
+      offset: new HeadingPitchRange(0, CesiumMath.toRadians(-32), 1200),
+      duration: 1.1,
     })
   }
 
@@ -148,6 +148,7 @@ async function main() {
     },
     resetNorth,
     flyToIgnition,
+    toggleEditor: () => editor.toggle(),
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
   })
   // The decision editor: what it draws is simulated again at once and shown split.

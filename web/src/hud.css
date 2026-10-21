@@ -195,75 +195,7 @@
   margin: 0;
 }
 
-/* ---------- navigation controls (right side) ---------- */
 
-.hud .nav-controls {
-  position: absolute;
-  right: 34px;
-  bottom: calc(50% + 75px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-  pointer-events: auto;
-}
-.hud .nav-controls .nav-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 6px;
-  color: #94a3b8;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  transition: all 0.18s ease;
-  padding: 0;
-}
-.hud .nav-controls .nav-btn:hover {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(203, 213, 225, 0.45);
-  color: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-.hud .nav-controls .nav-btn:active {
-  transform: translateY(0);
-  background: rgba(15, 23, 42, 0.95);
-}
-.hud .nav-controls .nav-btn .nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  line-height: 1;
-}
-.hud .nav-controls .nav-btn .nav-svg-icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-.hud .nav-controls .nav-btn.north-btn .nav-icon {
-  transform-origin: center center;
-  transition: transform 0.08s linear;
-}
-.hud .nav-controls .nav-btn .nav-label {
-  font-size: 7.5px;
-  font-family: var(--mono);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-top: 2px;
-  color: #64748b;
-  transition: color 0.18s ease;
-}
-.hud .nav-controls .nav-btn:hover .nav-label {
-  color: #cbd5e1;
-}
 
 /* ---------- minimized tactical hazard badge & popover ---------- */
 
@@ -985,12 +917,126 @@
   }
 }
 
-/* ---------- bottom-right precision compass ---------- */
 
-.bottom-compass {
+
+/* ---------- left edge toggle button for editor ---------- */
+
+.editor-edge-toggle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 54px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f8fafc;
+  cursor: pointer;
+  padding: 0;
+  z-index: 100;
+  pointer-events: auto;
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.5);
+  transition: left 0.25s ease, background 0.18s ease, width 0.18s ease;
+}
+.editor-edge-toggle:hover {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  width: 26px;
+}
+.editor-edge-toggle .toggle-icon-svg {
+  transition: transform 0.25s ease;
+}
+.hud.editing .editor-edge-toggle {
+  left: min(400px, 100vw);
+}
+.hud.editing .editor-edge-toggle .toggle-icon-svg {
+  transform: rotate(180deg);
+}
+.hud.role-psp .editor-edge-toggle,
+.hud.role-inem .editor-edge-toggle {
+  display: none !important;
+}
+
+/* ---------- bottom-right navigation cluster (Ignition, North, Compass Rose) ---------- */
+
+.hud .bottom-nav-cluster {
   position: absolute;
   right: 34px;
   bottom: calc(var(--credits-h, 20px) + 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.hud .bottom-nav-cluster .nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.18s ease;
+  padding: 0;
+}
+.hud .bottom-nav-cluster .nav-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(203, 213, 225, 0.45);
+  color: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+.hud .bottom-nav-cluster .nav-btn:active {
+  transform: translateY(0);
+  background: rgba(15, 23, 42, 0.95);
+}
+.hud .bottom-nav-cluster .nav-btn .nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+.hud .bottom-nav-cluster .nav-btn .nav-svg-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.hud .bottom-nav-cluster .nav-btn.north-btn .nav-icon {
+  transform-origin: center center;
+  transition: transform 0.08s linear;
+}
+.hud .bottom-nav-cluster .nav-btn .nav-label {
+  font-size: 7.5px;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+  color: #64748b;
+  transition: color 0.18s ease;
+}
+.hud .bottom-nav-cluster .nav-btn:hover .nav-label {
+  color: #cbd5e1;
+}
+
+.bottom-compass {
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -1003,7 +1049,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
   transition: all 0.2s ease;
 }
 .bottom-compass:hover {
@@ -1028,6 +1073,12 @@
 }
 
 .hud .rail {
+  right: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  text-align: right;
   pointer-events: auto;
 }
 .hud .rail span[data-ref^="coord"] {
@@ -1041,14 +1092,5 @@
 .hud .rail span[data-ref^="coord"]:hover {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.1);
-  text-decoration: underline;
-}
-.hud .line[data-ref="coords"] {
-  cursor: pointer;
-  pointer-events: auto;
-  user-select: all;
-}
-.hud .line[data-ref="coords"]:hover {
-  color: #ffffff !important;
   text-decoration: underline;
 }
