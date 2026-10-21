@@ -427,3 +427,31 @@
   background: #f7b355;
   border-color: #f7b355;
 }
+
+/* Proposta B: the search's button, its progress, and what moved from A to B. */
+.hud .editor .ils .primary-btn {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--amber);
+  color: #08090a;
+  font-weight: 700;
+  border-color: var(--amber);
+}
+.hud .editor .ils .primary-btn:hover:not(:disabled) {
+  background: #f7b355;
+  border-color: #f7b355;
+}
+.hud .editor .ils .primary-btn:disabled {
+  opacity: 0.45;
+}
+.hud .editor .changes {
+  margin-top: 8px;
+}
+.hud .editor .changes li.same,
+.hud .editor .changes li.removed {
+  border-left-color: var(--ink-faint);
+}
+.hud .editor .changes li.same em,
+.hud .editor .changes li.removed em {
+  color: var(--ink-dim);
+}

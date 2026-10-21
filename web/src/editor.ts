@@ -22,9 +22,11 @@ import type { Fire, NearStation } from './data'
 import { lineSchedule, type Run, type Scenario } from './fastModel'
 import { cellOf } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { distanceM, lerpLonLat, type LonLat } from './geo'
+import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
+import { diffDecisions, groundOf, type Change, type Progress, type Result, type Score } from './optimize'
+import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
 import {
@@ -85,6 +87,8 @@ const GROUPS = [
 ] as const
 type Kind = (typeof GROUPS)[number]['kind']
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
+const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
+const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
@@ -132,6 +136,12 @@ const TEMPLATE = `
       <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
     </div>
     <p class="note hint" data-ref="hint"></p>
+  </section>
+  <section class="ils">
+    <h3>Proposta B</h3>
+    <button type="button" data-ref="ils" class="primary-btn" title="Procura durante 10 s onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023). Substitui a decisão B."></button>
+    <p class="note" data-ref="ilsNote"></p>
+    <ul class="assignments changes" data-ref="ilsChanges"></ul>
   </section>
   <section>
     <h3>Relatório <span data-ref="reportAt"></span></h3>
@@ -306,6 +316,10 @@ export class Editor {
   private readonly hazards = new CustomDataSource('hazards')
   private readonly agency = new CustomDataSource('agency')
   private dangerTimer?: number
+  /** The search for B while it runs: what it says, its last word, its best plan on the map and the better one not yet there. */
+  private ils: { worker: Worker; shownAt: number; note: string; last?: Progress; shown?: Progress; pending?: Progress } | undefined
+  /** The last search's B and how it differs from A, while B is still that plan; stopped when ended by hand. */
+  private ilsDone: { result: Result; changes: Change[]; stopped?: boolean } | undefined
   private readonly dispatchModal = new DispatchModal()
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
@@ -366,6 +380,7 @@ export class Editor {
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
     this.refs.quickAdd?.addEventListener('click', () => this.quickAdd())
+    this.refs.ils.addEventListener('click', () => (this.ils ? this.stopIls(true) : this.runIls()))
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
     this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
@@ -449,6 +464,8 @@ export class Editor {
       return { ...clone(d), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
     }) as [Decision, Decision]
     const fitted = snapped.map((d) => this.fit(d)) as [Decision, Decision]
+    this.stopIls()
+    this.ilsDone = undefined
     this.loaded = { fireId, fire, stations, context, scenario, examples: fitted }
     this.decisions = (load(fireId) ?? fitted.map(clone)).map((d) => this.fit(d)) as [Decision, Decision]
     this.runs = this.reports = undefined
@@ -894,11 +911,145 @@ export class Editor {
     this.commit()
   }
 
-  /** The decisions changed: remember them, show them and have them simulated again. */
-  private commit() {
+  /** The decisions changed: remember them, show them and have them simulated again. A change by
+   *  hand ends the search for B, and B is no longer what it proposed. */
+  private commit(byIls = false) {
+    if (!byIls) {
+      this.stopIls()
+      this.ilsDone = undefined
+    }
     if (this.loaded) save(this.loaded.fireId, this.decisions)
     this.render()
     this.actions.changed()
+  }
+
+  /** Search B with A's means (optimize.ts) in a worker: B follows its best plan, and shows what moved. */
+  private runIls() {
+    const loaded = this.loaded
+    if (!loaded?.context || this.ils) return
+    const worker = new Worker(new URL('./optimize.worker.ts', import.meta.url), { type: 'module' })
+    this.ils = { worker, shownAt: -Infinity, note: 'A preparar os pontos de acesso…' }
+    this.ilsDone = undefined
+    worker.onmessage = ({ data }: MessageEvent<IlsReply>) => {
+      const ils = this.ils
+      if (ils?.worker !== worker) return
+      if (data.type === 'error') {
+        this.stopIls()
+        this.refs.ilsNote.textContent = `A procura falhou: ${data.message}`
+        return
+      }
+      if (data.type === 'done') {
+        this.stopIls()
+        const { result } = data
+        this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision) }
+        this.decisions[1] = result.decision
+        this.active = 1
+        this.cancel()
+        this.commit(true)
+        return
+      }
+      const { progress } = data
+      ils.note = `${fmtNumber(progress.plans)} planos · ${fmtNumber(progress.elapsedMs / 1000, 1)} s · melhor ${scoreText(progress.best)} (A: ${scoreText(progress.a)})`
+      ils.last = progress
+      if (progress.decision) ils.pending = progress
+      if (ils.pending?.decision && performance.now() - ils.shownAt >= ILS_SHOW_MS) {
+        ils.shownAt = performance.now()
+        this.decisions[1] = ils.pending.decision
+        ils.shown = ils.pending
+        ils.pending = undefined
+        this.commit(true)
+      } else this.renderIls()
+    }
+    worker.onerror = (e) => {
+      this.stopIls()
+      this.refs.ilsNote.textContent = `A procura falhou: ${e.message}`
+    }
+    const request: IlsRequest = { scenario: loaded.scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), budgetMs: ILS_BUDGET_MS, seed: 1 }
+    worker.postMessage(request)
+    this.renderIls()
+  }
+
+  /** Ends the search; by the button, B keeps the best plan it had shown, and says what it saves. */
+  private stopIls(byHand = false) {
+    if (!this.ils) return
+    const shown = byHand ? this.ils.shown : undefined
+    const last = this.ils.last ?? shown
+    this.ils.worker.terminate()
+    this.ils = undefined
+    if (shown?.decision && last) {
+      const result = { decision: shown.decision, improved: true, best: shown.best, a: shown.a, plans: last.plans, elapsedMs: last.elapsedMs }
+      this.ilsDone = { result, changes: diffDecisions(this.decisions[0], shown.decision), stopped: true }
+    }
+    this.renderIls()
+    if (byHand && !shown) this.refs.ilsNote.textContent = 'Procura parada antes de bater o A: B fica como estava.'
+  }
+
+  /** The search's button, its progress, and once done what B saves and where each of A's means went. */
+  private renderIls() {
+    const button = this.refs.ils as HTMLButtonElement
+    const a = this.decisions[0]
+    const movable = a.assignments.some((x) => x.target in a.points)
+    button.textContent = this.ils ? 'Parar' : 'Propor B com os meios do A'
+    button.disabled = !this.ils && (!this.loaded?.context || !movable)
+    const note = this.refs.ilsNote
+    const list = this.refs.ilsChanges
+    list.replaceChildren()
+    if (this.ils) {
+      note.textContent = this.ils.note
+      return
+    }
+    const done = this.ilsDone
+    if (!done) {
+      note.textContent = !this.loaded?.context
+        ? 'Sem dados OSM para este incêndio: sem acessos onde pôr os meios.'
+        : movable
+          ? 'Os mesmos meios do A, noutros acessos: procura 10 s o plano em que o fogo atinge menos lugares e arde menos.'
+          : 'O A não tem meios em pontos para mudar de sítio.'
+      return
+    }
+    const { result, changes } = done
+    const hours = fmtNumber((this.loaded?.scenario.durationMin ?? 360) / 60)
+    const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
+    if (!result.improved) {
+      note.textContent = `Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
+      return
+    }
+    const saved = [
+      result.a.places > result.best.places ? `${result.a.places - result.best.places} ${result.a.places - result.best.places === 1 ? 'lugar' : 'lugares'}` : '',
+      result.a.ha - result.best.ha >= 0.5 ? fmtHa(result.a.ha - result.best.ha) : '',
+    ].filter(Boolean)
+    const home = result.a.units - result.best.units
+    note.textContent =
+      (done.stopped ? 'Procura parada. ' : '') +
+      `Com os mesmos meios, B poupa ${saved.join(' e ') || 'pouco'} às ${hours} h` +
+      (home > 0 ? `, e deixa ${home} ${home === 1 ? 'meio' : 'meios'} no quartel` : '') +
+      ` · ${tested}.`
+    list.replaceChildren(...changes.map((c) => this.changeRow(c)))
+  }
+
+  /** One line of what changed from A to B: which means, from where, and where it went. */
+  private changeRow(c: Change): HTMLElement {
+    const li = document.createElement('li')
+    li.className = c.kind
+    li.innerHTML = `
+      <div class="who"><b></b><span class="n"></span><span class="task"></span></div>
+      <div class="meta"><span class="from"></span><em></em></div>`
+    const unit = this.sup.units[c.unit]
+    li.querySelector('b')!.textContent = unit.short
+    li.querySelector('.n')!.textContent = `×${c.count}`
+    li.querySelector('.task')!.textContent = TASK_NAME[c.task]
+    li.querySelector('.from')!.textContent = isAerial(unit) ? 'Base aérea' : (this.loaded?.stations.find((s) => s.id === c.from)?.short ?? c.from)
+    let where = ''
+    if (c.kind === 'same') where = 'no mesmo sítio'
+    else if (c.kind === 'removed') where = 'fica no quartel'
+    else if (c.kind === 'added') where = 'novo'
+    else if (c.a && c.b) {
+      const access = !isAerial(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
+      const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
+      where = `${fmtNumber(distanceM(c.a, c.b))} m para ${compass(bearingDeg(c.a, c.b))}${road}`
+    }
+    li.querySelector('em')!.textContent = where
+    return li
   }
 
   private updateStationDropdown() {
@@ -972,6 +1123,7 @@ export class Editor {
     ;(this.refs.name as HTMLInputElement).value = d.name
     this.renderList(d)
     this.setCount(this.count)
+    this.renderIls()
     this.renderReport()
     this.draw()
   }
@@ -1539,6 +1691,9 @@ function nextId(existing: Record<string, unknown>, prefix: string): string {
   while (existing[`${prefix}${n}`]) n++
   return `${prefix}${n}`
 }
+
+/** A plan's score in the search's note: places reached, then hectares. */
+const scoreText = (s: Score) => `${s.places} ${s.places === 1 ? 'lugar' : 'lugares'}, ${fmtHa(s.ha)}`
 
 function roadName(context: Context, road: number): string {
   const r = context.osm.roads[road]

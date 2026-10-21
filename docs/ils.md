@@ -188,3 +188,47 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
   - Em 10 s cabem ~2–5 mil planos, contra as dezenas de milhares do artigo.
   - Escalam-se em conformidade o número de construções (NCH), o tamanho da vizinhança (LN) e o número de perturbações. Por exemplo: NCH ≈ 100, LN ≈ 8, perturbações até esgotar o tempo.
   - Se a máquina da demo for mais lenta, baixa-se o orçamento, não o modelo.
+
+### 5.1 Implementação (21 out)
+
+- **Código:**
+  - `web/src/optimize.ts` tem o ILS, sem DOM, e corre no browser e em node;
+  - `web/src/optimize.worker.ts` corre-o num Web Worker;
+  - no editor, a secção **Proposta B** tem o botão "Propor B com os meios do A".
+- **Orçamento:** 10 s. O botão passa a "Parar" e a nota mostra os planos testados, o tempo e o melhor plano contra o A. O B no mapa segue o melhor plano no máximo de 1,5 em 1,5 s.
+- **No fim:**
+  - o B fica com o melhor plano e a aba B ativa-se;
+  - a nota diz o que o B poupa (lugares, ha às 6 h, meios que ficam no quartel);
+  - a lista diz onde foi cada meio do A, por exemplo "VFCI ×2 · 210 m para O · caminho de terra";
+  - parar à mão deixa o B com o último plano mostrado, com a mesma nota e a mesma lista;
+  - mexer no A ou mudar de incêndio cancela a procura e apaga a nota.
+
+**Adaptações ao artigo:**
+
+| Artigo | `optimize.ts` |
+|---|---|
+| meios `r` | os meios do A, unidade a unidade e com a tarefa do A (`direct`, `protect`, `shuttle`); as linhas e as descargas do A ficam como estão |
+| células candidatas | os pontos do A + `context.access` (um a cada 80 m de estrada); os meios aéreos também numa malha de 5 em 5 células (150 m) |
+| `t_i ≥ b_k` | um ponto está aberto a uma unidade se o fogo livre (sem ninguém, o mais cedo que o fogo pode lá estar) chega ≥ `SAFETY_MIN` = 10 min depois dela; a ECIN conta o ganho de saída (2 min em vez de 20) só se for a primeira do quartel; o ponto do A está sempre aberto |
+| construção: RCL das `L` próximas a arder | RCL de 6 pontos abertos a ≥ 200 m uns dos outros, por ordem de chegada do fogo livre; 100 construções ou 25% do orçamento |
+| pesquisa local de melhor melhoria | primeira melhoria, por ordem aleatória: mover uma unidade para um dos `LN` = 8 pontos a ≤ 300 m, mover o grupo que partilha um ponto, trocar o ponto de abastecimento entre os de água |
+| perturbação | 7,5% tirar a unidade que chega mais tarde; 2,5% pôr uma que esteja no quartel; no resto, mover 3–5 unidades para pontos à frente do fogo **ou à volta dos lugares que o fogo atinge** (≤ 600 m, 2 por lugar), que é a proteção de bens que o artigo deixa para trabalho futuro |
+| paragem | 250 perturbações, 50 seguidas sem melhoria, ou fim do tempo |
+| `f` | lexicográfico: lugares atingidos → ha às 6 h → unidades no terreno |
+
+- **Memória:** os planos repetidos não se simulam outra vez. As unidades iguais são intercambiáveis na chave.
+- **Determinismo:** semente fixa (`mulberry32`). O mesmo A dá o mesmo B na mesma máquina, a menos do corte por tempo.
+- **Garantia:** se nenhum plano bater o A, o B é uma cópia do A e a nota di-lo.
+
+**Medido (21 out, este Mac, Chrome, 10 s):**
+
+| Incêndio | A | B | Planos |
+|---|---|---|---|
+| Vieira do Minho 2016 | 3 lugares · 871,9 ha | 0 lugares · 138,4 ha | ~2000 |
+| Cabeceiras de Basto | 4 lugares · 429,6 ha | 3 lugares · 346,4 ha (salva Asnela) | ~2100 (node) |
+
+- **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m), sempre ≥ 10 min antes do fogo livre.
+- **Onde está o ganho:**
+  - a maior parte aparece na construção, nos primeiros 0,5 s (A 871,9 → 172,7 ha);
+  - a pesquisa local e a perturbação afinam no fim (→ 149,6 ha aos 8 s, → 138,4 ha aos 8,3 s).
+- **Cada plano custa ~5 ms** (`simulate()` + lugares + ha), por isso cabem ~1600–2100 planos em 10 s.
