@@ -72,8 +72,8 @@ const SNAP_M = 400 // a click further than this from any road stays where it is
 const ACCESS_SHOWN_M = 2500 // access dots are shown this far from the ignition while a point tool is on
 const TASK_NAME: Record<Task, string> = {
   direct: 'ataque direto',
-  line: 'linha',
-  drops: 'descargas',
+  line: 'linha apeada',
+  drops: 'linha aérea',
   protect: 'proteção',
   shuttle: 'abastecimento',
 }
@@ -130,6 +130,10 @@ const TEMPLATE = `
       <button type="button" data-tool="point" title="Ativa a mira para clicares manualmente no mapa 3D">Clicar no mapa</button>
       <button type="button" data-tool="line" title="Desenha uma linha apeada no mapa">Linha apeada</button>
       <button type="button" data-tool="drops" title="Desenha linha de água para descargas aéreas">Linha aérea</button>
+    </div>
+    <div class="line-actions" data-ref="lineActions" hidden>
+      <button type="button" class="finish-line-btn" data-ref="finishLine" disabled title="Concluir e registar esta linha nos meios no terreno">✓ Concluir Linha</button>
+      <button type="button" class="cancel-line-btn" data-ref="cancelLine" title="Cancelar traçado da linha">✕ Cancelar</button>
     </div>
     <p class="note hint" data-ref="hint"></p>
   </section>
@@ -343,6 +347,11 @@ export class Editor {
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
     this.handler.setInputAction((e: { endPosition: Cartesian2 }) => this.hover(e.endPosition), ScreenSpaceEventType.MOUSE_MOVE)
+    this.handler.setInputAction(() => {
+      if (this.open && (this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
+        this.finishLine()
+      }
+    }, ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
 
     const unit = this.refs.unit as HTMLSelectElement
     for (const [id, spec] of Object.entries(sup.units)) {
@@ -384,6 +393,8 @@ export class Editor {
       this.decisions[this.active].name = name.value.trim() || this.decisions[this.active].id
       this.commit()
     })
+    this.refs.finishLine?.addEventListener('click', () => this.finishLine())
+    this.refs.cancelLine?.addEventListener('click', () => this.setTool(null))
     for (const tab of this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]'))
       tab.addEventListener('click', () => {
         this.active = Number(tab.dataset.tab)
@@ -391,7 +402,18 @@ export class Editor {
         this.render()
       })
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
-      button.addEventListener('click', () => this.setTool(this.tool === button.dataset.tool ? null : (button.dataset.tool as Tool)))
+      button.addEventListener('click', () => {
+        const next = button.dataset.tool as Tool
+        if (this.tool === next) {
+          if ((this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
+            this.finishLine()
+            return
+          }
+          this.setTool(null)
+          return
+        }
+        this.setTool(next)
+      })
     this.renderPalette()
     this.toggle(false)
   }
@@ -546,16 +568,53 @@ export class Editor {
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
       button.classList.toggle('on', button.dataset.tool === tool)
     this.refs.hint.classList.remove('danger')
-    this.refs.hint.textContent =
-      tool === 'point'
-        ? 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
-        : tool === 'line'
-          ? 'Clica os vértices da linha; Enter termina, Esc cancela. A linha avança ao ritmo da equipa.'
-          : tool === 'drops'
-            ? 'Clica os vértices da linha de água; Enter termina. As descargas percorrem-na em ciclo.'
-            : ''
+    this.updateLineActionsUI()
+    if (!tool) {
+      this.refs.hint.textContent = ''
+    } else if (tool === 'point') {
+      this.refs.hint.textContent = 'Clica no mapa: o meio fica no ponto de acesso mais próximo (estrada, caminho ou trilho).'
+    }
     this.drawAccess()
     this.draw()
+  }
+
+  private updateLineActionsUI() {
+    if (!this.refs.lineActions) return
+    const isLine = this.tool === 'line' || this.tool === 'drops'
+    this.refs.lineActions.hidden = !isLine
+    if (!isLine) return
+
+    const finishBtn = this.refs.finishLine as HTMLButtonElement
+    if (!finishBtn) return
+
+    const len = this.drawing.length
+    if (len < 2) {
+      finishBtn.disabled = true
+      finishBtn.textContent = '✓ Concluir Linha (mín. 2 pontos)'
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent =
+        len === 1
+          ? '📍 1º vértice colocado no mapa. Clica para colocar o próximo vértice da linha.'
+          : this.tool === 'line'
+            ? '📍 Clica no mapa para colocar os vértices da linha apeada de defesa.'
+            : '📍 Clica no mapa para colocar os vértices da linha aérea de descargas.'
+    } else {
+      const lenM = lineLengthM(this.drawing)
+      finishBtn.disabled = false
+      finishBtn.textContent = `✓ Concluir Linha (${fmtNumber(lenM)} m)`
+
+      const unit = this.sup.units[this.unit]
+      let rateInfo = ''
+      if (this.tool === 'line' && unit.lineMPerH) {
+        const rateMPerH = (unit.lineMPerH[2] || 30) * this.count
+        const hours = lenM / rateMPerH
+        const pax = this.count * (unit.people || 5)
+        rateInfo = ` · Estimativa: ~${hours < 1 ? `${Math.round(hours * 60)} min` : `${hours.toFixed(1)} h`} (${this.count} equipa${this.count > 1 ? 's' : ''} / ${pax} operacionais)`
+      }
+
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent = `📍 ${len} vértices · ${fmtNumber(lenM)} m de linha${rateInfo}. Clica em "✓ Concluir Linha", duplo clique no mapa, ou Enter.`
+    }
   }
 
   private cancel() {
@@ -840,7 +899,12 @@ export class Editor {
     const count = this.placeable()
     if (!count) return
     if (this.tool !== 'point') {
+      if (this.drawing.length > 0) {
+        const last = this.drawing[this.drawing.length - 1]
+        if (distanceM(last, point) < 8) return
+      }
       this.drawing.push(point)
+      this.updateLineActionsUI()
       this.draw()
       return
     }
@@ -866,16 +930,24 @@ export class Editor {
 
   private finishLine() {
     if (!this.loaded || (this.tool !== 'line' && this.tool !== 'drops')) return
-    if (this.drawing.length < 2) return void (this.refs.hint.textContent = 'Uma linha precisa de dois cliques pelo menos.')
+    if (this.drawing.length < 2) {
+      this.refs.hint.classList.remove('danger')
+      this.refs.hint.textContent = 'Uma linha precisa de pelo menos dois cliques.'
+      return
+    }
     const count = this.placeable()
     if (!count) return
     const d = this.decisions[this.active]
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing
-    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task: this.tool })
+    const task = this.tool
+    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task })
+    const lenM = lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
     this.commit()
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.textContent = `✓ ${task === 'line' ? 'Linha apeada' : 'Linha aérea'} de ${fmtNumber(lenM)} m registada! Adicionada aos Meios no terreno.`
   }
 
   private from(stations: NearStation[]): string {
@@ -1305,6 +1377,29 @@ export class Editor {
       if (!a) continue
       if (a.task === 'drops') {
         this.polyline(line, INK, true)
+        const dropEntity = entities.add({
+          position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
+          billboard: {
+            image: getUnitTacticalCanvas(a.unit),
+            width: 20,
+            height: 20,
+            verticalOrigin: VerticalOrigin.CENTER,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+          label: {
+            text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
+            font: 'bold 10px ui-monospace, Menlo, monospace',
+            fillColor: INK,
+            outlineColor: Color.BLACK,
+            outlineWidth: 3,
+            style: 2,
+            pixelOffset: new Cartesian2(0, 16),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+        })
+        ;(dropEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
         continue
       }
       const schedule = this.loaded && lineSchedule(this.loaded.scenario, d, a)
@@ -1313,12 +1408,60 @@ export class Editor {
       const [built, late] = splitLine(line, fraction)
       if (built.length > 1) this.polyline(built, AMBER, false)
       if (late.length > 1) this.polyline(late, DIM, true)
+
+      const lineEntity = entities.add({
+        position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
+        billboard: {
+          image: getUnitTacticalCanvas(a.unit),
+          width: 20,
+          height: 20,
+          verticalOrigin: VerticalOrigin.CENTER,
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Infinity,
+        },
+        label: {
+          text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
+          font: 'bold 10px ui-monospace, Menlo, monospace',
+          fillColor: AMBER,
+          outlineColor: Color.BLACK,
+          outlineWidth: 3,
+          style: 2,
+          pixelOffset: new Cartesian2(0, 16),
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Infinity,
+        },
+      })
+      ;(lineEntity as any)._unitInfo = { assignment: a, point: line[0], allUnits: [a] }
     }
 
     // 4. Line being drawn
     if (this.drawing.length) {
       this.polyline(this.drawing, this.tool === 'drops' ? INK : AMBER, true)
-      entities.add({ position: Cartesian3.fromDegrees(this.drawing[0].lon, this.drawing[0].lat), point: { pixelSize: 6, color: INK, heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity } })
+      for (let i = 0; i < this.drawing.length; i++) {
+        const pt = this.drawing[i]
+        entities.add({
+          position: Cartesian3.fromDegrees(pt.lon, pt.lat),
+          point: {
+            pixelSize: i === 0 ? 8 : 6,
+            color: i === 0 ? Color.WHITE : AMBER,
+            outlineColor: Color.BLACK,
+            outlineWidth: 1.5,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+          label: {
+            text: String(i + 1),
+            font: 'bold 9px ui-monospace, Menlo, monospace',
+            fillColor: Color.WHITE,
+            outlineColor: Color.BLACK,
+            outlineWidth: 2,
+            style: 2,
+            pixelOffset: new Cartesian2(0, -12),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+        })
+      }
     }
 
     // 5. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)

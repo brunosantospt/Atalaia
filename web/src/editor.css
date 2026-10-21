@@ -299,6 +299,42 @@
   border-color: var(--amber);
   border-left-width: 2px;
 }
+.hud .editor .line-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.hud .editor .line-actions button {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.hud .editor .line-actions .finish-line-btn {
+  background: #059669;
+  border: 1px solid #10b981;
+  color: #ffffff;
+}
+.hud .editor .line-actions .finish-line-btn:hover:not(:disabled) {
+  background: #10b981;
+}
+.hud .editor .line-actions .finish-line-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(5, 150, 105, 0.3);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.hud .editor .line-actions .cancel-line-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  flex: 0 0 75px;
+}
+.hud .editor .line-actions .cancel-line-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
 .hud .editor .report {
   width: 100%;
   border-collapse: collapse;
