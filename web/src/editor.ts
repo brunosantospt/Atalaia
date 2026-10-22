@@ -1340,7 +1340,6 @@ export class Editor {
     const unit = this.sup.units[c.unit]
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${c.count}`
-    li.querySelector('.task')!.textContent = TASK_NAME[c.task]
     li.querySelector('.from')!.textContent = isAerial(unit) ? 'Base aérea' : (this.loaded?.stations.find((s) => s.id === c.from)?.short ?? c.from)
     const access = c.b && isRoadVehicle(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
     const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
