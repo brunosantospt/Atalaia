@@ -1941,31 +1941,19 @@ export class Editor {
     for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, DIM, true)
     for (const w of lines) {
       const a = d.assignments[w.slot]
+      // In direct attack, do not draw the straight line through the vehicle:
+      // the vehicle has its circular base perimeter (35-45m) and hose line.
+      // The extinguished line is drawn only where work was actually done along the fire front (w.grown)!
+      if (a.task === 'direct' && !w.grown) continue
+      // Village protection is rendered as the dedicated protective dome around the settlement
+      if (a.task === 'protect') continue
+
       const clean = cleanPath(w.barrier.path, (p) => p)
       if (!clean.length) continue // zero-length strip
       const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const holds = this.minutes >= w.barrier.from_min
 
-      if (a.task === 'protect') {
-        // Defensive perimeter corridor & ring around village dwellings
-        entities.add({
-          corridor: {
-            positions,
-            width: Math.max(w.barrier.width_m, 12),
-            material: Color.fromCssColorString('#1e40af').withAlpha(holds ? 0.35 : 0.12),
-          },
-        })
-        const strip = entities.add({
-          polyline: {
-            positions,
-            width: 3.5,
-            clampToGround: true,
-            material: holds ? Color.fromCssColorString('#fbbf24') : new PolylineDashMaterialProperty({ color: Color.fromCssColorString('#fbbf24').withAlpha(0.6), dashLength: 10 }),
-          },
-        })
-        const at = d.points[a.target]
-        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-      } else if (a.task === 'direct') {
+      if (a.task === 'direct') {
         // Active extinguished fire front trail in emerald green (#10b981)
         const green = Color.fromCssColorString('#10b981')
         entities.add({
@@ -2128,7 +2116,7 @@ export class Editor {
           },
         })
         const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, baseR))
-        this.polyline(ring, Color.fromCssColorString(primaryColor), true, 2)
+        this.polyline(ring, Color.fromCssColorString(primaryColor), false)
       }
 
       for (const a of units) {
