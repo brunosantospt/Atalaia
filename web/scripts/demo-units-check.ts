@@ -1,5 +1,5 @@
 import { combatResources, resourceAt } from '../src/combatResources'
-import { placements, addPlacement, placementAt, relocationPosition } from '../src/placementTimeline'
+import { placements, editPlacement, addPlacement, placementAt, relocationPosition } from '../src/placementTimeline'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { simulateFast } from '../src/demoModel'
@@ -184,3 +184,17 @@ outOfRange.fireArrival![centre-8]=10
 const untouched=combatResources(outOfRange,defence)
 assert.equal(resourceAt(untouched,0,150).waterPct,100,'fire beyond the current growing ring cannot spend water')
 assert.equal(resourceAt(untouched,0,150).autonomyPct,100,'fire beyond the current growing ring cannot spend autonomy')
+
+const corrected=structuredClone(moving)
+const correctedPoint=destination(p,90,80)
+editPlacement(scenario,corrected,0,1,correctedPoint)
+assert.deepEqual(placements(scenario,corrected,0)[1].point,correctedPoint)
+assert.deepEqual(placements(scenario,corrected,0)[0],initialPlacement)
+assert.equal(corrected.assignments.length,1)
+addPlacement(scenario,corrected,0,p,100)
+const beforeEdit=JSON.stringify(corrected)
+assert.throws(()=>editPlacement(scenario,corrected,0,1,destination(p,90,1000000)))
+assert.equal(JSON.stringify(corrected),beforeEdit,'invalid correction is atomic')
+editPlacement(scenario,corrected,0,0,destination(p,90,10))
+assert.notDeepEqual(placements(scenario,corrected,0)[0].point,initialPlacement.point)
+console.log('OK: placement corrections preserve history, recalculate ETAs and reject overlapping journeys')

@@ -26,3 +26,24 @@ export function addPlacement(s:Scenario,d:Decision,slot:number,point:LonLat,minu
  ;(a.placements??=[]).push({point,orderedMin:minute,arrivalMin,path:route})
  return arrivalMin
 }
+
+/** Correct an order in place; preserve order times and reject overlapping journeys atomically. */
+export function editPlacement(s:Scenario,d:Decision,slot:number,index:number,point:LonLat,
+ routeFor?:(from:LonLat,to:LonLat,minute:number)=>LonLat[]|undefined) {
+ const draft=structuredClone(d),a=draft.assignments[slot]
+ if(index===0) {
+  const target=`edited-${a.id??slot}`
+  draft.points[target]=point;a.target=target;delete a.arrivalMin
+  a.arrivalMin=arrivals(s,draft)[slot]
+ } else a.placements![index-1].point=point
+ const list=placements(s,draft,slot)
+ const speed=a.unit==='crew'?4:s.suppression.units[a.unit].speedKmh
+ for(let i=Math.max(1,index);i<list.length;i++) {
+  const previous=list[i-1],p=list[i]
+  if(p.orderedMin<previous.arrivalMin)throw new Error('Esta alteração sobrepõe viagens. Edite primeiro a ordem seguinte.')
+  const route=routeFor?.(previous.point,p.point,p.orderedMin)??[previous.point,p.point]
+  p.path=route
+  p.arrivalMin=p.orderedMin+route.slice(1).reduce((sum,q,k)=>sum+distanceM(route[k],q),0)/1000/Math.max(1,speed)*60
+ }
+ d.points=draft.points;d.assignments[slot]=a
+}

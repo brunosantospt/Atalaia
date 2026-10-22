@@ -1,4 +1,4 @@
-import { placements, placementAt, relocationPosition, addPlacement } from './placementTimeline'
+import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
 // button arms the map, then each click puts it on the nearest road (a point of attack, where it
@@ -704,7 +704,7 @@ export class Editor {
     if (tool === 'line' && !unit.lineMPerH) tool = null
     if (tool === 'drops' && !isAerial(unit)) tool = null
     this.tool = tool
-    if (!tool) this.relocating = undefined
+    if (!tool) { this.relocating = undefined; this.editingPlacement = undefined }
     this.drawing = []
     this.viewer.scene.canvas.style.cursor = tool ? 'crosshair' : ''
     this.renderUnits()
@@ -1014,6 +1014,7 @@ export class Editor {
   }
 
   private relocating?: number
+  private editingPlacement?: { slot:number; index:number }
 
   private click(position: Cartesian2) {
     if (!this.open || !this.tool || !this.loaded) return
@@ -1031,7 +1032,8 @@ export class Editor {
     // Aircraft drop water directly from above into active flames, so exempt them.
     const cell = cellOf(scenario.grid, point)
     const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
-    if (!aerial && cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes) {
+    const orderMinute = this.editingPlacement ? placements(scenario,this.decisions[this.active],this.editingPlacement.slot)[this.editingPlacement.index].orderedMin : this.minutes
+    if (!aerial && cell >= 0 && activeRun && activeRun.arrival[cell] <= orderMinute) {
       this.showDangerWarning(point, activeRun.arrival[cell])
       return
     }
@@ -1040,6 +1042,15 @@ export class Editor {
       this.setPmaLocation(point)
       this.setTool(null)
       return
+    }
+    if (this.editingPlacement) {
+      const {slot,index}=this.editingPlacement,d=this.decisions[this.active]
+      try {
+        editPlacement(scenario,d,slot,index,point,(from,to,minute)=>
+          context&&isRoadVehicle(this.sup.units[d.assignments[slot].unit])
+            ? findSafeRoute(scenario.grid,context.osm.roads,activeRun?.arrival,minute,from,to)?.path : undefined)
+      } catch(e) { this.refs.hint.textContent=e instanceof Error?e.message:String(e);return }
+      this.setTool(null);this.commit();return
     }
     if (this.relocating !== undefined) {
       const slot=this.relocating,d=this.decisions[this.active]
@@ -1624,7 +1635,9 @@ export class Editor {
     if(this.loaded) {
       const list=placements(this.loaded.scenario,d,k),history=document.createElement('ol')
       history.className='placement-history'
-      list.forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. Ordem ${fmtTime(wallClock(this.loaded!.fire.start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded!.fire.start,p.arrivalMin/60))}`;history.append(item)})
+      list.forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. Ordem ${fmtTime(wallClock(this.loaded!.fire.start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded!.fire.start,p.arrivalMin/60))}`;const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
+        edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Escolha o destino corrigido no mapa. Esc para cancelar.'})
+        item.append(edit);history.append(item)})
       const move=document.createElement('button');move.type='button';move.textContent=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação'
       move.disabled=this.minutes<list.at(-1)!.arrivalMin || resourceAt(cachedCombatResources(this.loaded.scenario,d),k,this.playbackMinute).exhausted
       move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})

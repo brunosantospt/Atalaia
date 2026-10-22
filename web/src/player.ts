@@ -168,7 +168,9 @@ export class Player {
       driving = true
       if (shot.hoursTo !== undefined) {
         const [from, k0] = this.seeked ?? [shot.hours, 0]
-        this.hours = lerp(from, shot.hoursTo, k0 < 1 ? (ease(k) - ease(k0)) / (1 - ease(k0)) : 1)
+        const progress = shot.simulated ? k : ease(k)
+        const startProgress = shot.simulated ? k0 : ease(k0)
+        this.hours = lerp(from, shot.hoursTo, startProgress < 1 ? (progress - startProgress) / (1 - startProgress) : 1)
       }
       if (k >= 1) {
         if (this.index < this.shots.length - 1) this.goTo(this.index + 1)

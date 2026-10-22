@@ -12,7 +12,6 @@ import type { Shot, ShotKind } from './shots'
 import type { Decision, Suppression } from './suppression'
 import { departures } from './unitMotion'
 import { fieldIds } from './unitIdentity'
-import { findAirBase } from './airBases'
 import { arrivals } from './wetLine'
 
 export const CUT: ShotKind[] = ['ignition', 'response', 'checkpoint', 'control', 'incident', 'outcome']
@@ -51,7 +50,8 @@ export function incidentShots(input: IncidentInput): Shot[] {
   const centre = bboxCenter(box)
   const radius = Math.max(650, bboxRadiusM(box))
   const path = [{ ...centre, h: 0, heading: 0, pitch: -65, range: Math.max(1500, radius * 1.35 / Math.tan(fovy / 2)) }]
-  const ignitionPath = [{ ...fire.ignition, h: 0, heading: 0, pitch: -50, range: 1500 }]
+  const firstTarget = selected && eta.length ? selected.points[selected.assignments[eta.indexOf(first)].target] ?? selected.lines[selected.assignments[eta.indexOf(first)].target]?.[0] : undefined
+  const arrivalPath = [{ ...(firstTarget ?? centre), h: 0, heading: 0, pitch: -60, range: 1100 }]
   const cache = new Map<number, number>()
   const area = (h: number) => {
     const m = Math.round(h * 60)
@@ -68,11 +68,9 @@ export function incidentShots(input: IncidentInput): Shot[] {
   if (selected && eta.length) {
     const dispatch = Math.min(...selected.assignments.map(a => a.dispatchMin ?? detection.droneMin))
     events.push({ minute: dispatch, kind: 'response', word: 'Mobilização', caption: 'Os meios saem das suas bases e seguem para as posições.' })
-    for (const minute of [...new Set(eta)]) {
-      const labels = ids.filter((_, i) => Math.abs(eta[i]-minute) < 1e-6).flat().join(', ')
-      events.push({ minute, kind: 'response', word: minute === first ? 'Primeiros meios' : 'Meios chegam',
-        caption: `${labels} no local. Reprodução em pausa; continue quando decidir.`, gate: 'arrival' })
-    }
+    const labels = ids.filter((_,i)=>Math.abs(eta[i]-first)<1e-6).flat().join(', ')
+    events.push({ minute:first,kind:'response',word:'Primeiros meios',caption:`${labels} no local. O combate continua com a expansão do fogo.` })
+
   }
   if (runs) {
     const control = end.minute !== null ? Math.max(first, end.minute) : Math.min(stop, Math.max(first, detection.satelliteMin) + 5)
@@ -85,7 +83,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
     events.push({ minute: shift + 5, kind: 'control', word: 'Resposta revista',
       caption: `Nova previsão do modelo rápido com a decisão ${id}. Acompanhe a frente até confirmar contenção.` })
   // End points include real milestones, so none can be skipped by an accelerated clock.
-  const times = new Set([0, stop, ...dep.filter(m => m <= stop), ...events.filter(e => e.minute <= stop).map(e => e.minute)])
+  const times = new Set([0, stop, ...(firstTarget && first + 5 < stop ? [first + 5] : []), ...dep.filter(m => m <= stop), ...events.filter(e => e.minute <= stop).map(e => e.minute)])
   for (let m = 5; m < stop; m += MAX_STEP_MIN) times.add(m)
   const ordered = [...times].sort((a, b) => a - b)
   let current = events[0]
@@ -96,30 +94,26 @@ export function incidentShots(input: IncidentInput): Shot[] {
     const event = matching.find(e => e.gate === 'arrival') ?? matching.at(-1)
     if (event) current = event
     const to = ordered[k + 1] ?? minute
-    const moving = selected?.assignments.flatMap((a, i) => {
-      if (!(dep[i] <= to && eta[i] > minute)) return []
-      const origin = stations.find(s => s.id === a.from) ?? findAirBase(a.from)
-      const target = selected.points[a.target] ?? selected.lines[a.target]?.[0]
-      return origin && target ? [origin, target] : []
-    }) ?? []
-    const travelBox = moving.length ? bboxOf([fire.ignition, ...moving]) : undefined
-    const travelPath = travelBox ? [{ ...bboxCenter(travelBox), h: 0, heading: 0, pitch: -65, range: Math.max(2000, bboxRadiusM(travelBox)*1.5/Math.tan(fovy/2)) }] : undefined
+    const close = !!firstTarget && minute >= first && minute < first + 5
+    const shotPath = close ? arrivalPath : path
+    const previousPath = shots.at(-1)?.path
+    const cameraChange = !previousPath || previousPath !== shotPath
     shots.push({
       kind: current.kind, word: current.word, title: current.word,
       caption: current.caption, place: centre, simulated: true, step: -1,
       hours: minute / 60, hoursTo: to / 60, areaHa: 0, untimed: false,
-      path: travelPath ?? (current.kind === 'ignition' ? ignitionPath : path), driftDeg: 0, spot: travelBox ? bboxRadiusM(travelBox)*1.65 : radius * 1.5,
-      moveS: k === 0 ? 1.5 : 0.12, holdS: event ? 3 : 0.7,
+      path: shotPath, driftDeg: 0, spot: radius * 1.5,
+      moveS: cameraChange ? 1.5 : 0.001, holdS: Math.max(0.5, (to-minute)*0.8),
       reveal: ['ignition:0'], conceal: [], decision: runs ? decision : undefined,
       milestone: !!event, gate: event?.gate, area,
     })
   }
-  // The film ends in a three-footprint comparison only when the chosen response actually contains it.
-  if ((post || shift === undefined) && runs && end.minute !== null) {
+  // Always show the aftermath; distinguish the forecast horizon from confirmed containment.
+  if ((post || shift === undefined) && runs) {
     const finalPath = outcomePose(input)
     shots.push({ ...shots.at(-1)!, kind: 'outcome', word: 'Área ardida', title: 'Sem decisão · decisão A · decisão B',
-      caption: 'As três áreas sobrepõem-se rapidamente, da maior para a menor. Cores identificam cada cenário.',
-      milestone: true, hours: stop / 60, hoursTo: stop / 60, moveS: 0.2, holdS: 4, gate: undefined,
+      caption: `As três áreas sobrepõem-se da maior para a menor. ${end.minute === null ? 'Fim da previsão; contenção não confirmada.' : 'Contenção prevista pelo modelo.'}`,
+      milestone: true, hours: stop / 60, hoursTo: stop / 60, moveS: 1.5, holdS: 4, gate: undefined,
       path: finalPath, spot: finalPath[0].range * Math.tan(fovy / 2) * 1.5, decision: undefined })
   } else if (post || shift === undefined) {
     const last = shots.at(-1)!
