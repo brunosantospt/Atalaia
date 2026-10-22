@@ -13,7 +13,7 @@ Os números são do `MULTIFIRE.md`, gerado pelo `multifire_report.py`. Este text
    Para as primeiras horas, a configuração a usar é o K5 (secção "As primeiras horas").
 2. **Depois das primeiras horas o problema é o combate:** o modelo reacende a borda toda do perímetro em cada recomeço, mas 85–99 % dela já não cresce.
    - Saber que borda está ativa leva o Sørensen do crescimento de 0,19 para 0,41 e a área de 3,9× para 0,68× (K5o, o limite).
-   - Com os focos do VIIRS e do MODIS só se recupera uma parte: 0,23 e 2,2× (K5a).
+   - Com os focos do VIIRS e do MODIS só se recupera uma parte (K5a): a área desce de 3,1× para 1,65× e as janelas dentro do fator 2 sobem de 29 % para 40 %, mas o Sørensen fica igual (0,18).
    - O MTG-FCI (10 min) e os setores ativos e dominados da ANEPC são a entrada em tempo real que mais vale.
 3. **O combustível é o fator principal.**
    - O S&B é lento em pinhal e eucaliptal (TU5).
@@ -155,12 +155,15 @@ As referências (regra dos 10 %, persistência, elipse com a área certa) cresce
 
 Resultados no passo a passo, sem Monchique (secção 2 do `MULTIFIRE.md`):
 
-| | K5 (borda toda) | K5a (focos de 6 h, tempo real; 7 de 8 incêndios no momento da escrita) | K5o (oráculo, limite) |
+As mesmas 75 janelas dos oito incêndios sem Monchique:
+
+| | K5 (borda toda) | K5a (focos de 6 h, tempo real) | K5o (oráculo, limite) |
 |---|---|---|---|
-| Sørensen do crescimento (mediana) | 0,19 | 0,23 | 0,41 |
-| Área: corrida / observada (mediana) | 3,9× | 2,2× | 0,68× |
-| Ganha à regra dos 10 % com a mesma borda | 67 % das janelas | 77 % | 64 % |
-| Ganha à elipse que sabe a área, com a mesma borda | — | 69 % | 21 % |
+| Sørensen do crescimento (mediana) | 0,19 | 0,18 | 0,41 |
+| Área: corrida / observada (mediana) | 3,1× | 1,65× | 0,68× |
+| Janelas dentro do fator 2 | 29 % | 40 % | 35 % |
+| Ganha à regra dos 10 % com a mesma borda | 67 % | 61 % | 64 % |
+| Ganha à elipse que sabe a área, com a mesma borda | — | 64 % | 21 % |
 
 - **Saber a borda ativa vale mais do que qualquer outra mudança testada.**
 - **Com a borda perfeita, uma elipse que soubesse a área ganharia ao modelo** (0,56 contra 0,41). O que o modelo ainda tem de acertar é a área, ou seja, a velocidade, não a forma.

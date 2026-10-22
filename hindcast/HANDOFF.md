@@ -28,7 +28,7 @@ Testar o ELMFIRE noutros incêndios do PT-FireSprd, perceber porque falha, que e
 - **Corridas livres** de todas as configurações nos nove incêndios: K0, K3, K3m, K4, K5, K5m, K5b, K5mm, K3g, K5g, K3s, K6, K6m, K6d. As projeções (K6s2–5, K6x, K3x, K3xs2–3) correram nos oito sem Monchique.
 - **Passo a passo:**
   - K3, K3m, K5 e K5m nos nove incêndios;
-  - K5o nos oito sem Monchique, e K5a em sete deles (a terminar).
+  - K5o e K5a nos oito sem Monchique.
 - **Referências sem modelo** para todas as janelas: com a borda toda (`references.py`, a correr quando isto foi escrito) e com a borda ativa (`--active-edge oracle` e `hotspots --active-window-h 6`).
 - **Calibração** por classe de combustível, deixando um incêndio de fora, sobre o K3 e o K5 (`fires/adj_all_K3.json`, `adj_all_K5.json`, `fires/<id>/adj_lofo_*.json`). Os fatores do K5 mudam até ×2 entre dobras: provavelmente não transferem.
 - **Análises:**
@@ -42,7 +42,7 @@ Testar o ELMFIRE noutros incêndios do PT-FireSprd, perceber porque falha, que e
 
 ## O que estava a correr e o que falta
 
-À hora da passagem estava a correr um lote em segundo plano, sem Monchique, 3 trabalhos de cada vez: K5a, depois os membros do ensemble, depois K3x, K5as e K5c. Se a máquina reiniciou ou a sessão morreu, recomeça-se assim. O `multifire_runs.sh` salta o que já tem `steps/<cfg>.json`, por isso pode correr-se outra vez sem medo:
+À hora da passagem estava a correr um lote em segundo plano, sem Monchique, 3 trabalhos de cada vez: os membros do ensemble, depois K3x, K5as e K5c (K5o e K5a já acabaram). Se a máquina reiniciou ou a sessão morreu, recomeça-se assim. O `multifire_runs.sh` salta o que já tem `steps/<cfg>.json`, por isso pode correr-se outra vez sem medo:
 
 ```bash
 cd /home/ragdraco/development/Hack4Guimaraes/Atalaia-multifire
