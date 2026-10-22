@@ -1,0 +1,30 @@
+/* The cards that took over the ledger's rows: danger (five steps), detection (a timeline) and means (a bar). */
+.hud .known-value { margin-top: 1px; color: #8da7bb; font: 9px/1.3 system-ui, sans-serif; }
+.hud .known-value strong { color: #e7f0f7; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hud .known-sub { overflow: hidden; color: #b8cad8; font: 9px/1.3 system-ui, sans-serif; white-space: nowrap; text-overflow: ellipsis; }
+
+.hud .danger-steps { display: flex; gap: 2px; margin: 2px 0 3px; }
+.hud .danger-steps i { flex: 1; height: 6px; border-radius: 2px; background: #14222e; }
+.hud .danger-steps i.good { background: #0ca30c; }
+.hud .danger-steps i.warning { background: #fbbf24; }
+.hud .danger-steps i.serious { background: #f27a2e; }
+.hud .danger-steps i.critical { background: #d03b3b; }
+
+.hud .detection-line { position: relative; height: 12px; margin: 2px 3px 3px; }
+.hud .detection-line::before { content: ''; position: absolute; left: 0; right: 0; top: 5px; height: 2px; border-radius: 1px; background: #14222e; }
+.hud .detection-line i { position: absolute; top: 2px; width: 8px; height: 8px; margin-left: -4px; box-sizing: border-box; border: 1.5px solid #f0a33a; background: #0b141d; }
+.hud .detection-line .detection-drone { border-radius: 50%; }
+.hud .detection-line .detection-sat { border-radius: 1px; }
+.hud .detection-line i.on { border-color: #0ca30c; background: #0ca30c; }
+.hud .detection-line .detection-head { top: 0; width: 2px; height: 12px; margin-left: -1px; border: 0; border-radius: 1px; background: #e7f0f7; }
+
+.hud .means-bar { height: 5px; margin: 3px 0 3px; border-radius: 3px; background: #14222e; overflow: hidden; }
+.hud .means-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: #7dd3fc; transition: width .3s ease; }
+@media (prefers-reduced-motion: reduce) { .hud .means-bar i { transition: none; } }
+
+.hud .growth-card .known-value { display: flex; align-items: baseline; gap: 3px; }
+.hud .growth-card .known-value i { flex: none; width: 6px; height: 6px; border-radius: 50%; align-self: center; }
+.hud .growth-card .known-value i.good { background: #0ca30c; }
+.hud .growth-card .known-value i.warning { background: #fbbf24; }
+.hud .growth-card .known-value i.critical { background: #d03b3b; }
+.hud .growth-card { height: 57px; } /* its bottom meets the water card's: the two columns end square */

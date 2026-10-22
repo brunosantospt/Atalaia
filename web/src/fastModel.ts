@@ -31,6 +31,9 @@ const FUEL: Record<number, [number, number]> = {
   186: [0.6, 0.8],
   188: [0.7, 1.3],
 }
+/** Fine fuel load (kg/m²) of a Scott & Burgan code; 0 where the table has nothing that burns. */
+export const fineLoadKgPerM2 = (code: number) => FUEL[code]?.[1] ?? 0
+
 /** The knobs of the model, in one place so they can be tuned from the console in dev (atalaia.params). */
 export const params = {
   // The table is for moderate fuel moisture; a Minho afternoon in August with 25 % humidity burns

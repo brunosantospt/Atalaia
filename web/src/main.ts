@@ -42,6 +42,12 @@ import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { OutcomeLayer } from './outcomeLayer'
 import { WindLayer } from './windLayer'
+import { IntensityGauge } from './intensityGauge'
+import { WaterGauge } from './waterGauge'
+import { DangerGauge } from './dangerGauge'
+import { DetectionGauge } from './detectionGauge'
+import { MeansGauge } from './meansGauge'
+import { GrowthGauge } from './growthGauge'
 import { WindShiftWatch } from './windShift'
 import { computeReach } from './reach'
 import { ReachLayer } from './reachLayer'
@@ -79,6 +85,12 @@ interface Replay {
   credits: Credit[]
   fire: FireLayer // the observed fire
   wind: WindLayer
+  intensity: IntensityGauge // under the wind compass: the head's intensity against what can hold it
+  water: WaterGauge // under it: the water of the engines and tankers on scene
+  danger: DangerGauge // a second column, right of the wind: the weather's danger
+  detection: DetectionGauge // under it: drone and satellite on one timeline
+  means: MeansGauge // under it: the means of the decision on scene
+  growth: GrowthGauge // under it: how fast the free run grows
   markers: MarkerLayer
   player: Player
   scenario: Scenario // shared model inputs, forecast and deployment geometry
@@ -364,6 +376,12 @@ async function main() {
     replay?.fire.destroy()
     replay?.markers.destroy()
     replay?.wind.destroy()
+    replay?.intensity.destroy()
+    replay?.water.destroy()
+    replay?.danger.destroy()
+    replay?.detection.destroy()
+    replay?.means.destroy()
+    replay?.growth.destroy()
     replay?.free.destroy()
     replay?.reach.destroy()
     replay?.rings.destroy()
@@ -371,13 +389,39 @@ async function main() {
     replay?.outcome?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
+    // The floating cards stack under each other until the commander moves them; a move reflows the map labels.
+    const reflow = () => viewer.scene.requestRender()
+    const wind = new WindLayer(viewer, hud.root, fire.ignition)
+    const intensity = new IntensityGauge(hud.root, wind.el, scenario.suppression, reflow)
+    const water = new WaterGauge(hud.root, intensity.el, reflow)
+    let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
+    const areaHa = (hours: number) => {
+      const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
+      if (hudRun !== run || hudMinute !== minute) {
+        hudRun = run; hudMinute = minute; hudHa = burnedHa(grid, run, minute)
+      }
+      return hudHa
+    }
+    const poc = (ha: number) => containmentProbability(suppression, ha, reach.intensityKWPerM)
+    const known = { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries }
+    const under = (above: HTMLElement) => () => ({ x: above.offsetLeft, y: above.offsetTop + above.offsetHeight + 10 })
+    const danger = new DangerGauge(hud.root, known, () => ({ x: wind.el.offsetLeft + wind.el.offsetWidth + 10, y: wind.el.offsetTop }), reflow)
+    const detectionCard = new DetectionGauge(hud.root, known, under(danger.el), reflow)
+    const means = new MeansGauge(hud.root, { stations: near, inventory, poc: (minute) => poc(areaHa(minute / 60)) }, under(detectionCard.el), reflow)
+    const growth = new GrowthGauge(hud.root, { areaHa, poc }, under(means.el), reflow)
     replay = {
       id,
       data: fire,
       stations: regional,
       credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
-      wind: new WindLayer(viewer, hud.root, fire.ignition),
+      wind,
+      intensity,
+      water,
+      danger,
+      detection: detectionCard,
+      means,
+      growth,
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,
@@ -408,17 +452,9 @@ async function main() {
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
-    let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
     hud.setFire(fire, story.shots, {
-      known: { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
-      areaHa: (hours) => {
-        const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
-        if (hudRun !== run || hudMinute !== minute) {
-          hudRun = run; hudMinute = minute; hudHa = burnedHa(grid, run, minute)
-        }
-        return hudHa
-      },
-      poc: (areaHa) => containmentProbability(suppression, areaHa, reach.intensityKWPerM),
+      areaHa,
+      poc,
       intensityKWPerM: reach.intensityKWPerM,
     })
     document.title = `${fire.name} · Atalaia`
@@ -746,6 +782,12 @@ async function main() {
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
     const shifted = frame.hours*60 >= (replay.data.windShift?.minutes ?? Infinity)
     replay.wind.update(shifted ? replay.scenario.weather : replay.scenario.forecastWeather ?? replay.scenario.weather, replay.scenario.startIndex, shifted ? Math.max(frame.hours*60, Math.ceil((replay.data.windShift?.minutes ?? 0)/60)*60) : frame.hours*60)
+    replay.intensity.update(alerts, frame.hours * 60, side)
+    replay.water.update(replay.scenario, editor.decisions[editor.decisionIndex], frame.hours * 60) // the units on the globe
+    replay.danger.update(frame.hours * 60)
+    replay.detection.update(frame.hours * 60)
+    replay.means.update(replay.scenario, editor.decisions[editor.decisionIndex], frame.hours * 60)
+    replay.growth.update(frame.hours * 60)
     windShift.update(frame.hours, frame.playing)
     if (alerts) hud.setAlerts(windShift.alerts(computeAlerts(alerts, frame.hours * 60, side)))
     if (frameNo % 60 === 0) {
@@ -776,7 +818,6 @@ async function main() {
       r: () => playback(() => player.restart()),
       s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
-      l: () => hud.toggleLedger(),
       a: () => toggleDecisions(),
       d: () => toggleDirector(),
       e: () => editor.toggle(),

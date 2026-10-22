@@ -38,8 +38,7 @@
   transform: none;
   transition: transform 0.25s ease;
 }
-.hud.editing .title,
-.hud.editing .ledger {
+.hud.editing .title {
   display: none;
 }
 /* The caption card and the transport step out from under the drawer. */
