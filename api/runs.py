@@ -89,6 +89,7 @@ class Scenario(Strict):
     fuels: Literal['sb', 'pt'] | None = None
     spotting: bool | None = None
     seed: int | None = Field(None, ge=1)
+    wind_shift: bool = True  # false: the fire's forecast without the synthetic wind shift (weather_noshift.json); ignored where it has none
     canopy: bool | None = None  # typical canopy in the forest classes (fuels.canopy_layers), so it can crown
 
 
@@ -127,6 +128,8 @@ def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
             raise ScenarioError(f'duration_min: o passo {scenario.start_step} é o último observado, diz quanto tempo correr')
         duration = (steps[scenario.start_step + 1]['hours'] - steps[scenario.start_step]['hours']) * 60
     scenario = with_engine_defaults(scenario, fire)
+    if not fire.has_noshift:
+        scenario = scenario.model_copy(update={'wind_shift': True})  # nothing to switch off: one key
     if scenario.engine != 'elmfire' and (scenario.fuels != 'sb' or scenario.spotting or scenario.canopy or scenario.weather_moisture):
         raise ScenarioError('fuels, spotting, canopy e weather_moisture: só o ELMFIRE os tem')
     if scenario.engine != 'elmfire' and scenario.moisture is None:
@@ -137,7 +140,7 @@ def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
     scenario = scenario.model_copy(update={'duration_min': float(duration)})
     last = max(times[-1] for _, _, times in stretches(scenario))
     try:
-        fire.weather(parse_time(steps[scenario.start_step]['time']), [0, last])
+        fire.weather(parse_time(steps[scenario.start_step]['time']), [0, last], weather_file(scenario))
     except ValueError as e:
         raise ScenarioError(f'duration_min: {e}') from None
     return fire, scenario
@@ -185,6 +188,10 @@ def write_cache(key: str, result: dict):
     os.replace(temp, CACHE / f'{key}.json')
 
 
+def weather_file(scenario: Scenario) -> str:
+    return 'weather.json' if scenario.wind_shift else 'weather_noshift.json'
+
+
 def emc_pct(temp_c: float, rh: float) -> float:
     """Equilibrium moisture of fine dead fuel (%), Simard (1968) as NFDRS uses it (scripts/build_hypothetical.py)."""
     t = temp_c * 9 / 5 + 32
@@ -200,7 +207,7 @@ def moisture(scenario: Scenario, fire: Fire, start, minute: float) -> dict:
     wm = scenario.weather_moisture
     if wm is None:
         return scenario.moisture.model_dump()
-    temp, rh = (fire.series(start, [minute], name)[0] for name in ('tempC', 'rhPct'))
+    temp, rh = (fire.series(start, [minute], name, weather_file(scenario))[0] for name in ('tempC', 'rhPct'))
     m1 = max(wm.floor_pct, emc_pct(temp, rh) - wm.dry)
     return {'dead_1h_pct': round(m1, 1), 'dead_10h_pct': round(m1 + 1.5, 1), 'dead_100h_pct': round(m1 + 3.0, 1),
             'live_herb_pct': wm.live_herb_pct, 'live_woody_pct': wm.live_woody_pct}
@@ -238,7 +245,7 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
         for from_min, cells in barriers:
             if from_min <= t0:
                 fuel[cells] = NONBURNABLE
-        weather = fire.weather(start, times)
+        weather = fire.weather(start, times, weather_file(scenario))
         request = {
             'grid': fire.grid,
             'duration_min': t1 - t0,
