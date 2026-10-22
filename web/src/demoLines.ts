@@ -22,6 +22,16 @@ export function demoLines(scenario: Scenario, decision: Decision): WetLine[] {
     const drawn = decision.lines[a.target]
     const point = decision.points[a.target] ?? drawn?.[0]
     if (!point) return []
+    if (a.task === 'protect') {
+      const r = Math.min(65 * Math.sqrt(a.count), 100)
+      const ring = Array.from({ length: 9 }, (_, k) => destination(point, (k * 360) / 8, r))
+      return [{
+        slot,
+        kind: 'wet' as const,
+        lengthM: Math.round(2 * Math.PI * r),
+        barrier: { path: ring.map(p => [p.lon, p.lat] as [number, number]), width_m: Math.max(6, (unit.wetLineWidthM ?? 2) * 2), from_min: eta[slot] }
+      }]
+    }
     const lengthM = demoLineLength(a)
     const bearing = demoLineBearing(scenario, decision, a)
     // Multiple units form parallel strips, rather than making each unit's line longer.

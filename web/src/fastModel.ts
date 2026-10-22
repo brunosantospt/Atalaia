@@ -246,9 +246,12 @@ function stepFactors(scenario: Scenario, fwiSeries: FWIHourly[], m: number, out:
   const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-0.03 * kmh), 2.155)
   const e = Math.sqrt(1 - 1 / (lb * lb))
   const to = fromDeg + 180
+  const back = (head * (1 - e)) / (1 + e)
+  const flank = (head + back) / (2 * lb)
   for (let k = 0; k < K; k++) {
     const cos = Math.cos(((BEARING[k] - to) * Math.PI) / 180)
-    out[at + k] = (head * (1 - e)) / (1 - e * cos)
+    const dirRate = (head * (1 - e)) / (1 - e * cos)
+    out[at + k] = Math.max(flank * (1 + 0.4 * cos), dirRate)
   }
 }
 

@@ -59,8 +59,13 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
     const head = Math.max(.05, fwiAt(series, scenario.startIndex, m).isi / 11.2 * 4.6)
     const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-.03 * kmh), 2.155)
     const e = Math.sqrt(1 - 1 / (lb * lb))
-    for (let k = 0; k < K; k++)
-      wind[m*K+k] = head * (1-e) / (1-e*Math.cos((BEARING[k]-fromDeg-180)*Math.PI/180))
+    const back = head * (1 - e) / (1 + e)
+    const flank = (head + back) / (2 * lb)
+    for (let k = 0; k < K; k++) {
+      const cos = Math.cos((BEARING[k] - fromDeg - 180) * Math.PI / 180)
+      const dirRate = head * (1 - e) / (1 - e * cos)
+      wind[m * K + k] = Math.max(flank * (1 + 0.4 * cos), dirRate)
+    }
   }
   const cosUp = new Float32Array(360*K)
   for (let a = 0; a < 360; a++) for (let k = 0; k < K; k++) cosUp[a*K+k] = Math.cos((BEARING[k]-a-180)*Math.PI/180)

@@ -11,6 +11,7 @@ import {
   CallbackPositionProperty,
   CallbackProperty,
   Cartographic,
+  ClassificationType,
   Color,
   CustomDataSource,
   HeightReference,
@@ -59,6 +60,7 @@ import {
 } from './icons'
 import { arrivals, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
+  aerialFrontM,
   flameLengthM,
   isAerial,
   isRoadVehicle,
@@ -1764,16 +1766,54 @@ export class Editor {
       allUnits,
       lines: lines.filter((w) => allUnits.includes(d.assignments[w.slot])),
     })
+    // Under them, each crew line as drawn, dashed grey: what is left of it is not finished within the run.
+    for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, INK, true)
     for (const w of lines) {
       const a = d.assignments[w.slot]
-      // Nao desenhar linhas de wetline artificiais em ataque direto (feedback do especialista)
-      if (a.task === 'direct' && !d.lines[a.target]) continue
-      const positions = w.barrier.path.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
-      const strip = entities.add({
-        polyline: { show: new CallbackProperty(() => this.open || this.playbackMinute >= w.barrier.from_min, false), positions, width: 3, clampToGround: true, material: WET },
-      })
-      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-      if (at) (strip as any)._unitInfo = unitInfo(a, at, [a])
+      if (a.task === 'protect') continue
+
+      const clean = cleanPath(w.barrier.path, (p) => p)
+      if (!clean.length) continue
+      const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
+      const isVisible = new CallbackProperty(() => (this.open ? this.minutes : this.playbackMinute) >= w.barrier.from_min, false)
+
+      if (a.task === 'direct') {
+        // Zona já coberta / rasto consolidado extinto em verde esmeralda (#10b981)
+        const green = Color.fromCssColorString('#10b981')
+        const strip = entities.add({
+          polyline: {
+            show: isVisible,
+            positions,
+            width: 4.0,
+            clampToGround: true,
+            material: green,
+          },
+        })
+        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+      } else {
+        // Linha apeada / faixa de contenção (WET light blue)
+        entities.add({
+          corridor: {
+            show: isVisible,
+            positions,
+            width: Math.max(w.barrier.width_m, 1),
+            material: WET.withAlpha(0.5),
+            classificationType: ClassificationType.TERRAIN,
+          },
+        })
+        const strip = entities.add({
+          polyline: {
+            show: isVisible,
+            positions,
+            width: 3.0,
+            clampToGround: true,
+            material: WET,
+          },
+        })
+        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+      }
     }
 
     // Tankers supply nearby fire engines; the circle is coverage, never a combat barrier.
@@ -1828,6 +1868,80 @@ export class Editor {
       }
     }
     this.unitMarkers.set(deployed)
+
+    // 4. Perímetros táticos operacionais nos pontos de intervenção (clamped ao terreno 3D)
+    for (const [id, p] of Object.entries(d.points)) {
+      const units = d.assignments.filter((a) => a.target === id)
+      if (!units.length) continue
+
+      const isProtect = units.some((a) => a.task === 'protect')
+      const isShuttle = units.every((a) => a.task === 'shuttle')
+      const primaryColor = originColor(units[0]?.from ?? '', stations ?? [])
+
+      const pointEtas = units.map((u) => {
+        const slot = d.assignments.indexOf(u)
+        return eta[slot] ?? 0
+      })
+      const earliestEta = pointEtas.length ? Math.min(...pointEtas) : 0
+      const pointVisible = new CallbackProperty(() => this.open || this.playbackMinute >= earliestEta, false)
+
+      if (isProtect) {
+        // Perímetro defensivo de proteção de aldeia / aglomerado populacional
+        const defR = 65 + (units.length > 1 ? 15 : 0)
+        const ring = Array.from({ length: 33 }, (_, k) => destination(p, (k * 360) / 32, defR))
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
+        const dome = entities.add({
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString('#1e40af').withAlpha(0.25),
+            classificationType: ClassificationType.TERRAIN,
+            show: pointVisible,
+          },
+        })
+        ;(dome as any)._unitInfo = unitInfo(units[0], p, units)
+        this.polyline(ring, Color.fromCssColorString('#fbbf24'), false, 0, 3.5, pointVisible)
+      } else if (isShuttle) {
+        // Ponto / zona de abastecimento de água (VTTU)
+        const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, 30))
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
+        const shuttleZone = entities.add({
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString('#0284c7').withAlpha(0.20),
+            classificationType: ClassificationType.TERRAIN,
+            show: pointVisible,
+          },
+        })
+        ;(shuttleZone as any)._unitInfo = unitInfo(units[0], p, units)
+        this.polyline(ring, Color.fromCssColorString('#38bdf8'), true, 8, 2.0, pointVisible)
+      } else {
+        // Perímetro operacional de combate imediato da viatura (35-45m)
+        const baseR = 35 + Math.min(15, (units.length - 1) * 6)
+        const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, baseR))
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
+        const base = entities.add({
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString(primaryColor).withAlpha(0.22),
+            classificationType: ClassificationType.TERRAIN,
+            show: pointVisible,
+          },
+        })
+        ;(base as any)._unitInfo = unitInfo(units[0], p, units)
+        this.polyline(ring, Color.fromCssColorString(primaryColor), false, 0, 2.5, pointVisible)
+      }
+
+      for (const a of units) {
+        const spec = this.sup.units[a.unit]
+        if (!isAerial(spec)) continue
+        const r = aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
+        if (r <= 0) continue
+        const ring = Array.from({ length: 49 }, (_, k) => destination(p, (k * 360) / 48, r))
+        const slot = d.assignments.indexOf(a)
+        const airVisible = new CallbackProperty(() => this.open || this.playbackMinute >= (eta[slot] ?? 0), false)
+        this.polyline(ring, Color.fromCssColorString(originColor(a.from, stations ?? [])), true, 12, 2.5, airVisible)
+      }
+    }
 
     // 5. Line being drawn
     if (this.drawing.length) {
@@ -1957,15 +2071,16 @@ export class Editor {
     }
   }
 
-  private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12) {
+  private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12, width?: number, show?: CallbackProperty | boolean) {
     const line = cleanLonLat(raw)
     if (!line.length) return
     this.source.entities.add({
       polyline: {
         positions: line.map((p) => Cartesian3.fromDegrees(p.lon, p.lat)),
-        width: dashed ? 2.5 : 4,
+        width: width ?? (dashed ? 2.5 : 4),
         clampToGround: true,
         material: dashed ? new PolylineDashMaterialProperty({ color, dashLength }) : color,
+        show: show ?? true,
       },
     })
   }
