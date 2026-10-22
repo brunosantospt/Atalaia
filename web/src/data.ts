@@ -64,6 +64,8 @@ export interface Fire {
   start: string
   end: string
   simulated?: boolean // hypothetical fire: the steps are a simulation, not an observation
+  referenceCapHa?: number // the reference (and every simulated run shown) is cut where it has burned this much
+  referenceCapMin?: number // the minute the reference hit that cap
   windShift?: WindShift
   ignition: LonLat
   ignitions: Ignition[]

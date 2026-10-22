@@ -1372,3 +1372,46 @@
   background: #f7b659;
   border-color: #f7b659;
 }
+
+/* ---------- the simulate button: reachable with the drawer closed, under the role selector ---------- */
+.hud .simulate-hud {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: auto;
+  padding: 9px 22px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #08090a;
+  background: var(--amber);
+  border: 1px solid var(--amber);
+  border-radius: 20px;
+  cursor: pointer;
+  text-shadow: none;
+  box-shadow: 0 0 0 0 rgba(240, 163, 58, 0.55), 0 4px 16px rgba(0, 0, 0, 0.5);
+  animation: simulate-pulse 1.8s ease-out infinite;
+}
+.hud .simulate-hud:hover:not(:disabled) {
+  background: #f7b355;
+}
+.hud .simulate-hud:disabled {
+  color: var(--ink-dim);
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(148, 163, 184, 0.22);
+  cursor: default;
+  animation: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.hud.editing .simulate-hud {
+  display: none; /* the drawer has its own */
+}
+@keyframes simulate-pulse {
+  to {
+    box-shadow: 0 0 0 12px rgba(240, 163, 58, 0), 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+}

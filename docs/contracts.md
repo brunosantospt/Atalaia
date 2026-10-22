@@ -46,6 +46,20 @@ A API está em `api/`, em FastAPI. `api/setup.sh` cria o venv (uma vez), `api/se
   - `spotting`: as projeções do ELMFIRE (`false` por omissão), com a semente `seed` (1 por omissão).
   - Ficam desligados: sem as copas do LiDAR, os combustíveis portugueses queimam de mais (Vieira às 22,5 h: 2800 ha com `pt`, 3576 ha com `pt`, vivas 30/70 e projeções, contra 1621 observados e 1798 por omissão).
 
+- **`wind_shift`:** `true` por omissão. Com `false`, a corrida usa a meteo do incêndio sem a rotação sintética do vento (`weather_noshift.json`, o vento do IFS multiplicado como em `weather.json`), a previsão de antes do incidente. Um incêndio sem `windShift` no `fire.json` ignora o campo. Faz parte da chave da cache.
+- **`canopy`, `weather_moisture`:** só ELMFIRE. `canopy` liga as copas típicas no eucaliptal e no pinhal e folhosas (`api/fuels.py`). `weather_moisture` (`dry`, `floor_pct`, `live_herb_pct`, `live_woody_pct`) calcula a humidade do combustível morto de cada hora a partir da temperatura e da humidade relativa (equilíbrio de Simard menos `dry` pontos, mínimo `floor_pct`) e dá as vivas constantes; só vale se `moisture` não vier.
+
+### O bloco `engine` do `fire.json`
+
+Um incêndio pode trazer em `fire.json` um bloco `engine` com as definições da sua referência, que a API aplica a todos os campos que o pedido não traz (`fuels`, `spotting`, `seed`, `canopy`, `weather_moisture`; `moisture` explícito ganha). Exemplo, o incêndio hipotético da Penha:
+
+```json
+"engine": {"fuels": "pt", "spotting": true, "seed": 2, "canopy": "typical",
+           "deadMoisture": {"simardDryPoints": 3.0, "floorPct": 2.0}, "liveHerbPct": 30.0, "liveWoodyPct": 70.0}
+```
+
+Sem o bloco (ou com outro motor que não o ELMFIRE) valem os valores por omissão acima. Os valores resolvidos fazem parte da chave da cache.
+
 Campos que não estão aqui dão erro, para que um nome mal escrito não passe sem efeito.
 
 ### O que a API junta ao cenário

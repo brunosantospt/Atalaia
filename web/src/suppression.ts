@@ -20,6 +20,8 @@ export interface UnitSpec {
   reachM?: number // ground: how far from the access point the unit can work (track and hose)
   wetLineLengthM?: number // ground: line laid across the spread at a point, per unit (wetLine.ts)
   wetLineWidthM?: number // ground: its width; a crew's dug line too
+  followsEdge?: boolean // ground, at a point: goes on extending its line along the fire edge at attackMPerH (wetLine.ts)
+  maxWorkH?: number // ... for this many hours after arriving (a shift)
   speedKmh: number // by road, or in the air
   waterL?: number
   flowLPerMin?: number

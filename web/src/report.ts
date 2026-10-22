@@ -122,6 +122,8 @@ export interface FireEnd {
   minute: number | null // the last cell reached, when the fire has stopped; null when it still grows at the end
   burnedHa: number // at the end of the run
   edge: boolean // it reached the grid's border: the area is a minimum, and the fire did not stop there
+  cutMin?: number // the run was cut at the cap, this minute: the fire was still growing
+  capHa?: number
 }
 
 const QUIET_MIN = 60 // stopped: no new cell in the run's last hour
@@ -148,8 +150,36 @@ export function fireEnd(grid: Grid, run: Run): FireEnd {
   return end
 }
 
+export const CAP_HA = 2000 // when fire.json has no referenceCapHa
+
+/**
+ * A simulated run cut where it has burned `capHa` (the browser draws every cell, so the scar stays light): cells
+ * reached after that minute never burn, and the run ends there. A run that stays under the cap comes back as it is.
+ * The cut run's end is the cut itself: judged on its arrival it would read as a fire that stopped there.
+ */
+export function capRun(grid: Grid, run: Run, capHa: number): Run {
+  const limit = Math.ceil(capHa / cellHa(grid) - 1e-9)
+  const reached = new Uint32Array(Math.ceil(run.durationMin) + 2)
+  for (const a of run.arrival) if (a <= run.durationMin) reached[Math.max(0, Math.ceil(a))]++
+  let cells = 0
+  let cutMin = -1
+  for (let m = 0; m < reached.length; m++) {
+    cells += reached[m]
+    if (cells >= limit) {
+      cutMin = m
+      break
+    }
+  }
+  if (cutMin < 0) return run
+  const arrival = run.arrival.map((a) => (a > cutMin ? Infinity : a))
+  const cut: Run = { ...run, arrival, durationMin: cutMin }
+  ends.set(cut, { minute: null, burnedHa: cells * cellHa(grid), edge: false, cutMin, capHa })
+  return cut
+}
+
 /** "Extinto às 21:40 (T+11h 40min) · 820,0 ha", "Não extinto em 24 h · 1942,2 ha" */
 export function describeEnd(end: FireEnd, start: string, durationMin: number): string {
+  if (end.cutMin !== undefined) return `corte aos ${Math.round(end.capHa!)} ha (${fmtTime(wallClock(start, end.cutMin / 60))})`
   if (end.minute === null) {
     const hours = fmtNumber(durationMin / 60)
     return end.edge ? `Não extinto em ${hours} h · sai da grelha, mais de ${fmtHa(end.burnedHa)}` : `Não extinto em ${hours} h · ${fmtHa(end.burnedHa)}`

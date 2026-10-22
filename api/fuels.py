@@ -63,3 +63,14 @@ def elmfire_rows() -> list[list]:
         rows.append([code, name, w[3] > 0, *[x * LB_FT2_PER_T_HA for x in w], *[s * 30.48 for s in sav],
                      depth * FT_PER_CM, mx, heat * BTU_LB_PER_KJ_KG])
     return rows
+
+
+# Typical canopy by fuel class of fuel.json (3 eucalyptus, 4 pinhal e folhosas; none elsewhere), not measured: cover %,
+# height m, base m, bulk density kg/m3. Same values as scripts/build_hypothetical.py, so the API's runs crown like the reference.
+CANOPY = {'canopy_cover_pct': (70, 65), 'canopy_height_m': (20, 15), 'canopy_base_m': (3, 3), 'canopy_bulk_kgm3': (0.15, 0.10)}
+
+
+def canopy_layers(legend: list, fuel_index: np.ndarray) -> dict:
+    """ELMFIRE's canopy layers for the grid, from the legend's fuel class of each cell."""
+    cls = np.array([e['class'] for e in legend])[fuel_index]
+    return {name: np.select([cls == 3, cls == 4], [euc, forest], 0) for name, (euc, forest) in CANOPY.items()}

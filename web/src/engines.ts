@@ -31,6 +31,7 @@ export interface ScenarioRequest {
   engine: string
   duration_min: number
   decision: { barriers: Barrier[] }
+  wind_shift?: boolean // the fire's synthetic wind shift: false plans on the forecast without it; left out for fires with none
 }
 
 /** What the web reads of the API's result: the arrival grid as the fast model keeps it, and where it came from. */
@@ -39,6 +40,7 @@ export interface EngineRun {
   engine: string // "ELMFIRE 2025.0717"
   runtimeS: number // of the engine, summed over the run's stretches; 0 when cached
   cached: boolean
+  shiftIgnored?: boolean // the API is an old one that does not take wind_shift: it ran with its own default
 }
 
 interface ApiResult {
@@ -53,9 +55,19 @@ interface ApiResult {
 const NAMES: Record<string, string> = { elmfire: 'ELMFIRE', simfire: 'SimFire' }
 export const engineName = (id: string) => NAMES[id] ?? id
 
+let windShiftTaken = true // false once an old API has refused the field
+
 /** Runs a scenario on the API. Throws with the API's reason when it cannot (down, not ready, scenario refused). */
 export async function runScenario(request: ScenarioRequest, rows: number, cols: number): Promise<EngineRun> {
-  const res = await fetch('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) })
+  const post = (r: ScenarioRequest) => fetch('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(r) })
+  const { wind_shift: shift, ...plain } = request
+  let ignored = shift !== undefined && !windShiftTaken
+  let res = await post(ignored ? plain : request)
+  // An old API (extra fields forbidden) answers 422: the same scenario without the field, and the screen says so.
+  if (res.status === 422 && shift !== undefined && !ignored) {
+    const retry = await post(plain)
+    if (retry.ok) [res, ignored, windShiftTaken] = [retry, true, false]
+  }
   if (!res.ok) {
     const detail = await res.json().then((b: { detail?: unknown }) => b.detail, () => undefined)
     throw new Error(`HTTP ${res.status}${typeof detail === 'string' ? `: ${detail}` : ''}`)
@@ -65,5 +77,5 @@ export async function runScenario(request: ScenarioRequest, rows: number, cols: 
   if (r.grid.rows !== rows || r.grid.cols !== cols || r.arrival_min.length !== rows) throw new Error(`grade ${r.grid.rows}x${r.grid.cols}, a web tem ${rows}x${cols}`)
   const arrival = new Float32Array(rows * cols).fill(Infinity)
   r.arrival_min.forEach((row, i) => row.forEach((v, j) => v !== null && (arrival[i * cols + j] = v)))
-  return { arrival, engine: `${engineName(r.engine)} ${r.version}`.trim(), runtimeS: r.cached ? 0 : r.runtime_s, cached: r.cached }
+  return { arrival, engine: `${engineName(r.engine)} ${r.version}`.trim(), runtimeS: r.cached ? 0 : r.runtime_s, cached: r.cached, shiftIgnored: ignored || undefined }
 }

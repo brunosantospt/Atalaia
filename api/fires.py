@@ -41,13 +41,16 @@ class Fire:
         self.folder = FIRES / fire_id
         self.meta = json.loads((self.folder / 'fire.json').read_text())
         self.steps = self.meta['steps']
+        # the forecast without the synthetic wind shift (scripts/build_hypothetical.py), for runs planned before it
+        self.has_noshift = 'windShift' in self.meta and (self.folder / 'weather_noshift.json').exists()
         grid = json.loads((self.folder / 'grid.json').read_text())
         self.grid = {key: grid[key] for key in GRID_KEYS}
         self.rows, self.cols, self.cellsize = grid['rows'], grid['cols'], grid['cellsize']
         self.to_grid = Transformer.from_crs('EPSG:4326', grid['srs'], always_xy=True)
 
     def file_hashes(self) -> dict:
-        return {name: hashlib.sha256((self.folder / name).read_bytes()).hexdigest() for name in FILES}
+        names = [*FILES, *(['weather_noshift.json'] if self.has_noshift else [])]
+        return {name: hashlib.sha256((self.folder / name).read_bytes()).hexdigest() for name in names}
 
     def read(self, name: str, dtype: str) -> np.ndarray:
         """One value per cell, row 0 along the northern edge."""
@@ -104,10 +107,10 @@ class Fire:
         touched[rows, cols] = shapely.intersects(shape, boxes)
         return touched
 
-    def weather(self, start: datetime, minutes: list[float]) -> list[dict]:
+    def weather(self, start: datetime, minutes: list[float], file: str = 'weather.json') -> list[dict]:
         """Wind at 10 m at each of `minutes` after `start`, linear between the hours of
         weather.json, the direction turning the short way round."""
-        w = json.loads((self.folder / 'weather.json').read_text())
+        w = json.loads((self.folder / file).read_text())
         hours = np.array([(parse_time(t) - start).total_seconds() / 60 for t in w['time']])
         if min(minutes) < hours[0] or max(minutes) > hours[-1]:
             first, last = (format_time(start + timedelta(minutes=float(m))) for m in (hours[0], hours[-1]))
@@ -117,3 +120,9 @@ class Fire:
         wind_from = np.interp(minutes, hours, np.unwrap(np.radians(w['windFromDeg'])))
         direction = np.degrees(wind_from) % 360
         return [{'wind_kmh': round(float(s), 2), 'wind_from_deg': round(float(d), 1)} for s, d in zip(speed, direction)]
+
+    def series(self, start: datetime, minutes: list[float], name: str, file: str = 'weather.json') -> list[float]:
+        """A column of weather.json (tempC, rhPct, ...) at each of `minutes` after `start`, linear between the hours."""
+        w = json.loads((self.folder / file).read_text())
+        hours = np.array([(parse_time(t) - start).total_seconds() / 60 for t in w['time']])
+        return [float(v) for v in np.interp(minutes, hours, w[name])]
