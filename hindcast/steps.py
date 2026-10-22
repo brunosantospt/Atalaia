@@ -57,7 +57,7 @@ def mean_wind(fire, start, minutes: float) -> tuple[float, float, float]:
     return math.degrees(math.atan2(east, north)) % 360, math.hypot(east, north), float(s.mean())
 
 
-def rule10(fire, start_mask: np.ndarray, to_deg: float, speed_kmh: float) -> np.ndarray:
+def rule10(fire, start_mask: np.ndarray, to_deg: float, speed_kmh: float, edge_mask: np.ndarray | None = None) -> np.ndarray:
     """Minutes for an elliptical fire (head ROS = 10 % of the wind, Alexander's length-to-breadth) to reach each cell
     from the nearest point of start_mask's edge. A point p is reached at time t when, along the wind (x) and across
     it (y) from the source, ((x - c t) / (a t))^2 + (y / (b t))^2 <= 1; solved for t in closed form."""
@@ -71,7 +71,9 @@ def rule10(fire, start_mask: np.ndarray, to_deg: float, speed_kmh: float) -> np.
     A = 1 - c * c / (a * a)
     u = np.array([-math.cos(math.radians(to_deg)), math.sin(math.radians(to_deg))])   # (row, col) downwind
     n = np.array([u[1], -u[0]])
-    edge = np.argwhere(start_mask & ~ndimage.binary_erosion(start_mask)).astype(float)
+    if edge_mask is None:                                    # the whole edge, or only its active part (references.py)
+        edge_mask = start_mask & ~ndimage.binary_erosion(start_mask)
+    edge = np.argwhere(edge_mask).astype(float)
     if len(edge) > 1500:
         edge = edge[np.linspace(0, len(edge) - 1, 1500).astype(int)]
     rows, cols = np.indices(start_mask.shape)

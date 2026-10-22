@@ -32,8 +32,11 @@ from scipy.stats import spearmanr
 HERE = Path(__file__).resolve().parent
 FIRES = HERE / "fires"
 FREE = ["K0", "K3", "K3m", "K4", "K5", "K5m", "K3s", "K6", "K6m", "K6d"]
-MAIN = ["K3", "K3m", "K5", "K5m", "K6", "K6d"]
-DRIVERS = ["K3", "K3m", "K5", "K5m", "K6"]
+MAIN = ["K3", "K3m", "K5", "K5m"]
+EXTRA = ["K5o", "K5a", "K3o", "K5as", "K3as", "K5c", "K3c", "K3x", "K3g", "K5g"]
+ACTIVE = {"K5o": "_oracle", "K3o": "_oracle", "K5a": "_hotspots"}   # their references grow from the same active edge
+DRIVERS = ["K3", "K3m", "K5", "K5m", "K5o", "K3x"]
+SPOT = {"K6": ["K6", "K6s2", "K6s3", "K6s4", "K6s5"], "K3x": ["K3x", "K3xs2", "K3xs3"]}   # spotting seeds (free runs)
 
 
 def load_free():
@@ -145,6 +148,27 @@ def main():
         lines.append("| " + " | ".join(row) + " |")
     result["free"] = {f: {c: r[c]["sorensen_last_step"] for c in r} for f, r in free.items()}
 
+    # 1b. spotting: the seeds as a range, and strong spotting (distance x5, 3 embers, Schroeder's ignition probability)
+    if any("K6s2" in r for r in free.values()):
+        lines += ["", "### Projeções (corridas livres): Sørensen no último passo e área final / observada", "",
+                  "As sementes como intervalo (mediana, mínimo–máximo). K6x e K3x: projeções fortes (distância × 5, até 3 faúlhas, "
+                  "probabilidade de ignição de Schroeder). Sem Monchique.", "",
+                  "| Incêndio | K5 (sem projeções) | K6, 5 sementes | K6d | K6x | K3 (sem projeções) | K3x, 3 sementes |",
+                  "|---|---|---|---|---|---|---|"]
+        def one(st, obs):
+            return f"{st['sorensen_last_step']:.2f} · {st['by_hour'][-1]['run_ha'] / obs:.2f}×"
+        def seeds(runs, names, obs):
+            ss = [runs[n]["sorensen_last_step"] for n in names if n in runs]
+            aa = [runs[n]["by_hour"][-1]["run_ha"] / obs for n in names if n in runs]
+            return f"{np.median(ss):.2f} ({min(ss):.2f}–{max(ss):.2f}) · {np.median(aa):.2f}× ({min(aa):.2f}–{max(aa):.2f})" if ss else ""
+        for fire, runs in free.items():
+            if "K6s2" not in runs:
+                continue
+            obs = last_obs(runs["K5"])
+            lines.append(f"| {short(fire)} | {one(runs['K5'], obs)} | {seeds(runs, SPOT['K6'], obs)} | "
+                         f"{one(runs['K6d'], obs) if 'K6d' in runs else ''} | {one(runs['K6x'], obs) if 'K6x' in runs else ''} | "
+                         f"{one(runs['K3'], obs)} | {seeds(runs, SPOT['K3x'], obs)} |")
+
     # 2. step by step
     steps = load_steps()
     if steps:
@@ -155,7 +179,7 @@ def main():
         lines.append("|---|---|---|---|---|---|")
         seen_rule = {}
         for cfg, by_fire in sorted(steps.items()):
-            if cfg.startswith("shape_"):
+            if cfg.startswith("shape_") or cfg.startswith("ref_rule10"):
                 continue
             ws = [w for v in by_fire.values() for w in v if "model" in w]
             for f, v in by_fire.items():
@@ -196,45 +220,39 @@ def main():
             lines.append("| " + " | ".join(row) + " |")
 
         # paired: the model against the references on the same windows, and its shape at equal area
-        refs = {r: steps.get(r, {}) for r in ("ref_persist", "ref_area")}
-        lines += ["", "Lado a lado, nas mesmas janelas (mediana do Sørensen do crescimento; entre parênteses, a parte das janelas "
-                  "em que o modelo ganha). A persistência é o crescimento da janela anterior à mesma taxa, numa elipse a "
-                  "favor do vento; a elipse com a área certa sabe a área observada. **Forma** compara o modelo e a elipse "
-                  "cortados à mesma área (`references.py --shape-of`): só conta para onde o fogo vai, não a velocidade.", "",
-                  "| Configuração | Janelas | Modelo | Regra 10 % | Persistência | Elipse com a área certa | Forma: modelo · elipse (janelas) |",
-                  "|---|---|---|---|---|---|---|"]
-        for cfg in [c for c in MAIN + ["K3c", "K5c", "K3g", "K5g"] if c in steps]:
-            row, model_s, r10_s = [], [], []
-            pers, area = [], []
-            for f, v in steps[cfg].items():
-                pk = {w["k"]: w for w in refs["ref_persist"].get(f, [])}
-                ak = {w["k"]: w for w in refs["ref_area"].get(f, [])}
-                for w in v:
-                    if "model" not in w:
-                        continue
-                    model_s.append(w["model"]["sorensen_growth"])
-                    r10_s.append(w["rule10"]["sorensen_growth"] if "rule10" in w else np.nan)
-                    pers.append((w["model"]["sorensen_growth"], pk[w["k"]]["model"]["sorensen_growth"]) if w["k"] in pk else None)
-                    area.append((w["model"]["sorensen_growth"], ak[w["k"]]["model"]["sorensen_growth"]) if w["k"] in ak else None)
-            if not model_s:
+        lines += ["", "Lado a lado: cada referência contra o modelo **nas mesmas janelas** (as que as duas têm). Em cada célula: "
+                  "Sørensen do crescimento da referência · do modelo nessas janelas (n; parte das janelas em que o modelo ganha). "
+                  "A persistência é o crescimento da janela anterior à mesma taxa, numa elipse a favor do vento; a elipse com "
+                  "a área certa sabe a área observada (batota). Nas configurações com borda ativa (`--active-edge`) as "
+                  "referências crescem da mesma borda ativa (`references.py --active-edge`). **Forma**: o modelo e a elipse "
+                  "cortados à mesma área (`references.py --shape-of`), só conta para onde o fogo vai.", "",
+                  "| Configuração | Janelas | Regra 10 % | Persistência | Elipse com a área certa | Forma: modelo · elipse |",
+                  "|---|---|---|---|---|---|"]
+        for cfg in [c for c in MAIN + EXTRA if c in steps]:
+            sfx = ACTIVE.get(cfg, "")
+            own = {(f, w["k"]): w for f, v in steps[cfg].items() for w in v if "model" in w}
+            if not own:
                 continue
-            pp = [x for x in pers if x]
-            aa = [x for x in area if x]
-            win = lambda xs: f" ({np.mean([m > r for m, r in xs]):.0%})" if xs else ""   # noqa: E731
-            r10 = [(m, r) for m, r in zip(model_s, r10_s) if r == r]
-            sh = [w for f in steps.get(f"shape_{cfg}", {}).values() for w in f]
-            shape = (f"{np.median([w['model']['sorensen_growth'] for w in sh]):.2f} · "
-                     f"{np.median([w['ellipse']['sorensen_growth'] for w in sh]):.2f} ({len(sh)}; modelo ganha "
-                     f"{np.mean([w['model']['sorensen_growth'] > w['ellipse']['sorensen_growth'] for w in sh]):.0%})") if sh else ""
-            lines.append(f"| {cfg} | {len(model_s)} | {np.median(model_s):.2f} | "
-                         f"{np.median([r for _, r in r10]):.2f}{win(r10)} | "
-                         + (f"{np.median([r for _, r in pp]):.2f}{win(pp)} (n={len(pp)})" if pp else "") + " | "
-                         + (f"{np.median([r for _, r in aa]):.2f}{win(aa)}" if aa else "") + f" | {shape} |")
-            result["steps"].setdefault(cfg, {})["paired"] = {
-                "model_vs_persist_win": float(np.mean([m > r for m, r in pp])) if pp else None,
-                "model_vs_area_ellipse_win": float(np.mean([m > r for m, r in aa])) if aa else None,
-                "shape_model_median": float(np.median([w['model']['sorensen_growth'] for w in sh])) if sh else None,
-                "shape_ellipse_median": float(np.median([w['ellipse']['sorensen_growth'] for w in sh])) if sh else None}
+            cells_ = []
+            for ref in ("rule10", "ref_persist", "ref_area"):
+                if ref == "rule10" and not sfx:
+                    pairs = [(w["rule10"]["sorensen_growth"], w["model"]["sorensen_growth"]) for w in own.values() if "rule10" in w]
+                else:
+                    name = ("ref_rule10" if ref == "rule10" else ref) + sfx
+                    rk = {(f, w["k"]): w for f, v in steps.get(name, {}).items() for w in v}
+                    pairs = [(rk[key]["model"]["sorensen_growth"], own[key]["model"]["sorensen_growth"]) for key in own if key in rk]
+                cells_.append(f"{np.median([r for r, _ in pairs]):.2f} · {np.median([m for _, m in pairs]):.2f} "
+                              f"(n={len(pairs)}; {np.mean([m > r for r, m in pairs]):.0%})" if pairs else "")
+                result["steps"].setdefault(cfg, {})[f"vs_{ref}"] = {
+                    "n": len(pairs), "model_win": float(np.mean([m > r for r, m in pairs])) if pairs else None}
+            sh = [w for v in steps.get(f"shape_{cfg}", {}).values() for w in v]
+            cells_.append(f"{np.median([w['model']['sorensen_growth'] for w in sh]):.2f} · "
+                          f"{np.median([w['ellipse']['sorensen_growth'] for w in sh]):.2f} (n={len(sh)}; "
+                          f"{np.mean([w['model']['sorensen_growth'] > w['ellipse']['sorensen_growth'] for w in sh]):.0%})" if sh else "")
+            if sh:
+                result["steps"][cfg]["shape"] = {"n": len(sh), "model": float(np.median([w['model']['sorensen_growth'] for w in sh])),
+                                                 "ellipse": float(np.median([w['ellipse']['sorensen_growth'] for w in sh]))}
+            lines.append(f"| {cfg} | {len(own)} | " + " | ".join(cells_) + " |")
 
         # 3. drivers of the error
         lines += ["", "## 3. Porque falha: o erro do ROS de cabeça contra as condições", "",
@@ -294,18 +312,18 @@ def main():
     ens = sorted(HERE.glob("ensemble*.json"))
     if ens:
         lines += ["## 5. Ensembles (probabilidade de arder por janela)", "",
-                  "| Ensemble | Membros | Janelas | Brier: ensemble · melhor membro · regra 10 % | Sørensen P≥0,5 · membro mediano · "
-                  "oráculo · regra 10 % | Cobertura P≥0,5 · envelope | Área observada dentro do leque | Ganha à regra 10 % (Brier · Sørensen) |",
-                  "|---|---|---|---|---|---|---|---|"]
+                  "| Ensemble | Membros | Janelas | Brier: ensemble · melhor membro | Sørensen P≥0,5 · membro mediano · "
+                  "oráculo · regra 10 % | Cobertura P≥0,5 · envelope | Área observada dentro do leque | Ganha à regra 10 % (Sørensen) | Ensemble ganha a todos os membros (Brier) |",
+                  "|---|---|---|---|---|---|---|---|---|"]
         for f in ens:
             sm = json.loads(f.read_text())["summary"]
             best_member = min(sm["brier_member_medians"].values())
             lines.append(f"| {f.stem} | {' '.join(sm['members'])} | {sm['windows']} | {sm['brier_ensemble_median']:.3f} · "
-                         f"{best_member:.3f} · {sm.get('brier_rule10_median', float('nan')):.3f} | {sm['sorensen_p50_median']:.2f} · "
+                         f"{best_member:.3f} | {sm['sorensen_p50_median']:.2f} · "
                          f"{sm['sorensen_median_member_median']:.2f} · {sm['sorensen_best_member_median (oracle)']:.2f} · "
                          f"{sm.get('sorensen_rule10_median', float('nan')):.2f} | {sm['hit_p50_median']:.0%} · {sm['hit_any_median']:.0%} | "
-                         f"{sm['bracket_share']:.0%} | {sm.get('ensemble_beats_rule10_brier_share', float('nan')):.0%} · "
-                         f"{sm.get('ensemble_beats_rule10_sorensen_share', float('nan')):.0%} |")
+                         f"{sm['bracket_share']:.0%} | {sm.get('ensemble_beats_rule10_sorensen_share', float('nan')):.0%} | "
+                         f"{sm['ensemble_beats_every_member_brier_share']:.0%} |")
             result.setdefault("ensembles", {})[f.stem] = sm
         lines.append("")
     (HERE / "MULTIFIRE.md").write_text("\n".join(lines) + "\n")

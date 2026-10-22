@@ -56,9 +56,10 @@ O Sørensen no último passo observado, mediana dos nove incêndios: a elipse qu
 | Mediana | 0,59 | 0,60 | **0,69** | 0,66 | 0,61 | 0,61 | 0,60 | 0,61 | 0,60 | 0,60 |
 | Incêndios em que é a melhor | 0 | 2 | **4** | 3 | 1 | 0 | 2 | 0 | 0 | 0 |
 
-- **A área final varia até ×30 entre configurações do mesmo incêndio.** É o combustível que decide:
-  - **Com S&B** (K3) o fogo fica muito curto onde há pinhal e eucalipto: Oleiros 0,28×, Vila de Rei 0,25×, Sever do Vouga 0,48×. Os modelos S&B que a tradução da COS dá às florestas são de folhada (TL), que ardem devagar, e o sub-bosque de mato não está lá.
-  - **Com os combustíveis portugueses** (K4, K5) esses três passam a arder de mais (1,3–3,6×), e os incêndios de mato disparam: Vila Nova de Cerveira 4,4×, Monchique 6,4× em 48 h.
+- **A área final varia até ×11 entre configurações do mesmo incêndio** (Vila de Rei: 0,24× com K3m, 2,73× com K6). É o combustível que decide:
+  - **Com S&B** (K3) o fogo fica muito curto onde há pinhal e eucalipto: Oleiros 0,28×, Vila de Rei 0,25×, Sever do Vouga 0,48×. Nestes três, 70–90 % da área ardida é pinhal-bravo (COS 5.1.2.1) e eucaliptal (5.1.1.5). A tradução da COS dá-lhes o TU5 (folhada com sub-bosque), que com estes ventos anda devagar, sobretudo debaixo do abrigo das copas.
+  - **Com os combustíveis portugueses** (K4, K5) esses três passam a arder de mais (1,3–3,6×): pinhal M-PIN, eucaliptal M-EUC.
+  - **Os incêndios de mato disparam:** Vila Nova de Cerveira 4,4× (75 % de matos), Monchique 6,4× em 48 h. Todos os matos (COS 6.1.1.1) recebem o V-MAa, o mato alto com muita carga morta, escolhido para o tojo e a urze dos montes do Minho. No S&B são SH5, e Cerveira fica em 1,7×.
 - **As copas da Meta** (K3m) travam o fogo onde o S&B já queimava de mais (Cerveira 1,71× → 1,29×), mas também onde já era lento (Oleiros 0,28× → 0,21×). Nas copas o ELMFIRE abriga o vento (~10–15 % do vento a 10 m), e isso pesa mais do que o fogo de copas.
 - **As vivas de seca** (K5 contra K4) aceleram tudo mais 20–30 %. Ajudam onde o K4 era curto e estragam onde já era comprido.
 - **As projeções** com os parâmetros de origem quase não mudam nada: +0 a 4 % de área (K6 contra K5, K3s contra K3). O que queima de mais nas corridas com projeções são os combustíveis portugueses e as vivas de seca, não as projeções. A probabilidade de ignição de Schroeder (K6d) dá entre 24 e 60 % conforme o incêndio, contra 55 % fixos, e muda ainda menos.
@@ -95,7 +96,12 @@ O erro do ROS de cabeça por janela (corrida / observado), com o K3 em 33 janela
 
 ## Projeções
 
-*(a completar com as sementes e o K3x)*
+O K6 e o K6d ficaram fora do teste passo a passo: nas corridas livres, as projeções de origem só acrescentam 0–4 % de área. Fica o K3x (projeções fortes por janela) para ver em que condições ajudam.
+
+Corridas livres sem Monchique (tabela "Projeções" do `MULTIFIRE.md`):
+- **As 5 sementes do K6 variam pouco:** o Sørensen dentro de 0,06 em cada incêndio, a área até +0,9× em Sever do Vouga e quase nada nos outros.
+- **Projeções fortes com os combustíveis portugueses (K6x)** estragam todos os incêndios.
+- **Projeções fortes com S&B (K3x, 3 sementes)** não salvam os fogos lentos: Oleiros fica em 0,29×, Vila de Rei em 0,23×. Faúlhas que caem em combustível lento não crescem. E pioram os que já queimavam de mais: Cerveira 0,60 → 0,52, Cabeceiras 0,73 → 0,61. Só ajudam um pouco em Guarda (0,73 → 0,77) e em Vieira (0,74 → 0,76).
 
 - Com os parâmetros de origem, as projeções quase não contam (+0–4 % de área).
 - Fortes e sem condições, estragam tudo (K6x).

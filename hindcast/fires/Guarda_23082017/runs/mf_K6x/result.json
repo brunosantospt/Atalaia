@@ -1,0 +1,229 @@
+{
+ "fire": "Guarda_23082017",
+ "name": "mf_K6x",
+ "start": "2017-08-23T14:00",
+ "duration_min": 2160.0,
+ "options": {
+  "fire": "Guarda_23082017",
+  "name": "mf_K6x",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": true,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": true,
+  "spotting_dist_mult": 5.0,
+  "spotting_embers": 3,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 11.0,
+ "wall_s": 12.6,
+ "notes": [
+  "cicatrizes: 14 ha",
+  "projeções: probabilidade de ignição 34 %",
+  "projeções: distância ×5, até 3 faúlhas"
+ ],
+ "stats": {
+  "burned_ha": 5859.8,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 14,
+    "run_ha": 14
+   },
+   {
+    "h": 3,
+    "observed_ha": 18,
+    "run_ha": 268
+   },
+   {
+    "h": 6,
+    "observed_ha": 38,
+    "run_ha": 1180
+   },
+   {
+    "h": 9,
+    "observed_ha": 74,
+    "run_ha": 1844
+   },
+   {
+    "h": 12,
+    "observed_ha": 448,
+    "run_ha": 2298
+   },
+   {
+    "h": 13.5,
+    "observed_ha": 989,
+    "run_ha": 2495
+   },
+   {
+    "h": 15,
+    "observed_ha": 999,
+    "run_ha": 2670
+   },
+   {
+    "h": 18,
+    "observed_ha": 1094,
+    "run_ha": 2850
+   },
+   {
+    "h": 21,
+    "observed_ha": 1278,
+    "run_ha": 3307
+   },
+   {
+    "h": 21.5,
+    "observed_ha": 1306,
+    "run_ha": 3410
+   },
+   {
+    "h": 24,
+    "observed_ha": 1744,
+    "run_ha": 3857
+   },
+   {
+    "h": 25.0,
+    "observed_ha": 2083,
+    "run_ha": 4042
+   },
+   {
+    "h": 27,
+    "observed_ha": 2146,
+    "run_ha": 4468
+   },
+   {
+    "h": 30,
+    "observed_ha": 2283,
+    "run_ha": 4946
+   },
+   {
+    "h": 33,
+    "observed_ha": 2495,
+    "run_ha": 5432
+   },
+   {
+    "h": 33.5,
+    "observed_ha": 2522,
+    "run_ha": 5514
+   },
+   {
+    "h": 36.0,
+    "observed_ha": 3145,
+    "run_ha": 5860
+   }
+  ],
+  "sorensen_last_step": 0.663,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 13.5,
+    "sorensen": 0.312
+   },
+   {
+    "step": 2,
+    "h": 21.5,
+    "sorensen": 0.427
+   },
+   {
+    "step": 3,
+    "h": 25.0,
+    "sorensen": 0.608
+   },
+   {
+    "step": 4,
+    "h": 33.5,
+    "sorensen": 0.59
+   },
+   {
+    "step": 5,
+    "h": 36.0,
+    "sorensen": 0.663
+   }
+  ],
+  "official_ha": 3118.5,
+  "sorensen_official": 0.657,
+  "outside_official_ha": 2908.5,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2017-08-23T22:06:00+00:00",
+     "h": 9.1,
+     "n": 8,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2017-08-24T02:18:00+00:00",
+     "h": 13.3,
+     "n": 14,
+     "reached": 0.79
+    },
+    {
+     "time_utc": "2017-08-24T02:50:00+00:00",
+     "h": 13.83,
+     "n": 40,
+     "reached": 0.33
+    },
+    {
+     "time_utc": "2017-08-24T11:44:00+00:00",
+     "h": 22.73,
+     "n": 13,
+     "reached": 0.92
+    },
+    {
+     "time_utc": "2017-08-24T12:32:00+00:00",
+     "h": 23.53,
+     "n": 38,
+     "reached": 0.92
+    },
+    {
+     "time_utc": "2017-08-24T13:23:00+00:00",
+     "h": 24.38,
+     "n": 11,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2017-08-24T14:12:00+00:00",
+     "h": 25.2,
+     "n": 77,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2017-08-24T22:49:00+00:00",
+     "h": 33.81,
+     "n": 5,
+     "reached": 1.0
+    }
+   ],
+   "mean_reached": 0.82
+  }
+ }
+}

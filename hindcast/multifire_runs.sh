@@ -29,6 +29,10 @@ declare -A CFG=(
   [K5a]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge hotspots --active-window-h 6"
   [K5o]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge oracle"
   [K3o]="--fuels sb --scars --active-edge oracle"
+  # the shrub model (COS 6.1.1.1 is half the burned area in several fires): V-MAa (default, tall Minho gorse) against
+  # the lighter tall shrub V-MAb and the medium shrub V-MMb (Fernandes et al. 2009)
+  [K5b]="--fuels pt --scars --live-herb 30 --live-woody 70 --shrub V-MAb"
+  [K5mm]="--fuels pt --scars --live-herb 30 --live-woody 70 --shrub V-MMb"
   # online correction: each window's spread factor from the previous window's area error of the plain run (steps.py)
   [K5as]="--fuels pt --scars --live-herb 30 --live-woody 70 --assimilate-from K5"
   [K3as]="--fuels sb --scars --assimilate-from K3"
