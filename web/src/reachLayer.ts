@@ -4,7 +4,7 @@
 // shots, like the markers.
 
 import { Cartesian3, Color, CustomDataSource, type Entity, PolylineDashMaterialProperty, type Viewer } from 'cesium'
-import type { LonLat } from './geo'
+import { cleanLonLat, type LonLat } from './geo'
 import type { Reach } from './reach'
 
 export const BEST_CSS = '#9be3b0' // calm green, apart from the amber fire and the grey HUD; markers.ts tags it too
@@ -24,11 +24,11 @@ export class ReachLayer {
     viewer.dataSources.add(this.source)
     this.groups.set(
       'best',
-      reach.best.rings.map((ring) => this.line(ring, BEST, 2)),
+      reach.best.rings.flatMap((ring) => this.line(ring, BEST, 2)),
     )
     this.groups.set(
       'tsat',
-      reach.tsat.rings.map((ring) =>
+      reach.tsat.rings.flatMap((ring) =>
         this.line(ring, new PolylineDashMaterialProperty({ color: TSAT, dashLength: 24, dashPattern: 0b1111000011110000 }), 2.5),
       ),
     )
@@ -45,8 +45,10 @@ export class ReachLayer {
     this.viewer.dataSources.remove(this.source, true)
   }
 
-  private line(points: LonLat[], material: Color | PolylineDashMaterialProperty, width: number): Entity {
-    return this.source.entities.add({
+  private line(raw: LonLat[], material: Color | PolylineDashMaterialProperty, width: number): Entity[] {
+    const points = cleanLonLat(raw)
+    if (!points.length) return [] // a zero-length segment stops the renderer
+    return [this.source.entities.add({
       show: false,
       polyline: {
         positions: Cartesian3.fromDegreesArray(points.flatMap((p) => [p.lon, p.lat])),
@@ -54,6 +56,6 @@ export class ReachLayer {
         width,
         material,
       },
-    })
+    })]
   }
 }

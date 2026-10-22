@@ -114,6 +114,8 @@ PTTM06 = CRS.from_epsg(3763)
 TO_WGS84 = Transformer.from_crs(PTTM06, CRS.from_epsg(4326), always_xy=True)
 TO_TM06 = Transformer.from_crs(CRS.from_epsg(4326), PTTM06, always_xy=True)
 HA = 10_000
+MIN_PART_HA = 0.5  # spotting specks under this are not drawn
+MIN_EDGE_M = 0.5  # Cesium cannot draw a zero-length ground-polyline segment
 
 SOURCE = {
     "dataset": "Incêndio hipotético na Penha (Guimarães): não aconteceu",
@@ -292,9 +294,28 @@ def rounded(coords, nd=6):
     return [rounded(c, nd) for c in coords]
 
 
+def dedupe_ring(ring):
+    """A closed lon/lat ring without consecutive vertices closer than MIN_EDGE_M; None under 3 distinct."""
+    def near(p, q):
+        return np.hypot((q[0] - p[0]) * 111_320 * np.cos(np.radians(p[1])), (q[1] - p[1]) * 110_540) < MIN_EDGE_M
+    out = []
+    for p in ring[:-1]:
+        if not out or not near(out[-1], p):
+            out.append(p)
+    while len(out) > 1 and near(out[-1], out[0]):
+        out.pop()
+    return out + [out[0]] if len(out) >= 3 else None
+
+
 def to_geojson(shape):
-    m = geometry.mapping(reproject(shape, TO_WGS84))  # simplified before the union, so steps nest
-    return {"type": m["type"], "coordinates": rounded(m["coordinates"])}
+    # Parts under MIN_PART_HA go (in PT-TM06, where the area is in metres); simplified before the union, so steps nest.
+    parts = [p for p in getattr(shape, "geoms", [shape]) if p.area >= MIN_PART_HA * HA]
+    polys = []
+    for part in parts:
+        rings = [dedupe_ring(r) for r in geometry.mapping(reproject(part, TO_WGS84))["coordinates"]]
+        if rings[0]:
+            polys.append([r for r in rings if r])
+    return {"type": "MultiPolygon", "coordinates": rounded(polys)}
 
 
 def bearing(a, b):

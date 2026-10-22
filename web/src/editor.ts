@@ -23,7 +23,7 @@ import type { Fire, NearStation } from './data'
 import { burnedHa, freeArrival, type Run, type Scenario } from './fastModel'
 import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
+import { bearingDeg, cleanLonLat, cleanPath, compass, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
@@ -1715,9 +1715,10 @@ export class Editor {
           if (!station) continue
 
           const route = findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, this.minutes, station, p)
-          if (route && route.path.length >= 2) {
+          const path = route ? cleanLonLat(route.path) : []
+          if (route && path.length) {
             // Dark blue safe driving route, on a pale halo so it reads on dark imagery (light blue is the wet line).
-            const positions = route.path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat))
+            const positions = path.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat))
             this.routes.entities.add({ polyline: { positions, width: 7, clampToGround: true, material: ROUTE_HALO } })
             this.routes.entities.add({ polyline: { positions, width: 4, clampToGround: true, material: ROUTE } })
           }
@@ -1738,7 +1739,9 @@ export class Editor {
     for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, DIM, true)
     for (const w of lines) {
       const a = d.assignments[w.slot]
-      const positions = w.barrier.path.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
+      const clean = cleanPath(w.barrier.path, (p) => p)
+      if (!clean.length) continue // zero-length strip
+      const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const holds = this.minutes >= w.barrier.from_min
       entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? 0.6 : 0.25) } })
       const strip = entities.add({
@@ -1876,7 +1879,9 @@ export class Editor {
           if (!r || !r.pts || r.pts.length < 2) continue
 
           const burnedSegments = clipRoadToFire(r.pts, scenario.grid, activeRun.arrival, this.minutes)
-          for (const seg of burnedSegments) {
+          for (const raw of burnedSegments) {
+            const seg = cleanPath(raw, (p) => p)
+            if (!seg.length) continue
             const lineEntity = this.agency.entities.add({
               polyline: {
                 positions: seg.map((pt) => Cartesian3.fromDegrees(pt[0], pt[1])),
@@ -1931,10 +1936,11 @@ export class Editor {
           })
           ;(pmaEntity as any)._pma = pma
 
-          if (pma.ambulanceRoute && pma.ambulanceRoute.length >= 2) {
+          const ambRoute = pma.ambulanceRoute ? cleanLonLat(pma.ambulanceRoute) : []
+          if (ambRoute.length) {
             const routeEntity = this.agency.entities.add({
               polyline: {
-                positions: pma.ambulanceRoute.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
+                positions: ambRoute.map((pt) => Cartesian3.fromDegrees(pt.lon, pt.lat)),
                 width: 4,
                 clampToGround: true,
                 material: Color.fromCssColorString('#00e676'),
@@ -1947,8 +1953,9 @@ export class Editor {
     }
   }
 
-  private polyline(line: LonLat[], color: Color, dashed: boolean, dashLength = 12) {
-    if (line.length < 2) return
+  private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12) {
+    const line = cleanLonLat(raw)
+    if (!line.length) return
     this.source.entities.add({
       polyline: {
         positions: line.map((p) => Cartesian3.fromDegrees(p.lon, p.lat)),

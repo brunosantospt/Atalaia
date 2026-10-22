@@ -133,3 +133,21 @@ export function destination(from: LonLat, bearing: number, distance: number): Lo
   const lon2 = rad(from.lon) + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2))
   return { lon: deg(lon2), lat: deg(lat2) }
 }
+
+/**
+ * A path safe for Cesium's ground polylines: consecutive points closer than `minM` dropped (the
+ * wrap-around pair too for a loop). Empty when under 3 (loop) or 2 (line) distinct points are left.
+ */
+export function cleanPath<T>(pts: T[], at: (p: T) => [number, number], loop = false, minM = 0.5): T[] {
+  const out: T[] = []
+  const near = (a: T, b: T) => {
+    const [lon1, lat1] = at(a)
+    const [lon2, lat2] = at(b)
+    return Math.hypot((lon2 - lon1) * 111_320 * Math.cos(rad(lat1)), (lat2 - lat1) * 110_540) < minM
+  }
+  for (const p of pts) if (!out.length || !near(out[out.length - 1], p)) out.push(p)
+  while (loop && out.length > 1 && near(out[out.length - 1], out[0])) out.pop()
+  return out.length >= (loop ? 3 : 2) ? out : []
+}
+
+export const cleanLonLat = (pts: LonLat[], loop = false) => cleanPath(pts, (p) => [p.lon, p.lat], loop)
