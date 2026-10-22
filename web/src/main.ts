@@ -1,3 +1,4 @@
+import { configurePenhaDemo } from './demoSetup'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
@@ -267,7 +268,12 @@ async function main() {
   })
 
   // The drawer's hour slider moves the fire clock (the editor has taken the new hour by now); the replay goes on from there.
-  editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => replay?.player.seek(editor.hours))
+  editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => {
+    if (!replay) return
+    const hours = editor.hours
+    setPhase(hours*60 >= (replay.data.windShift?.minutes ?? Infinity) ? 'post' : 'pre')
+    replay.player.seek(hours)
+  })
 
   // The one incident, the wind shift of a simulated fire: playback stops there and the commander reallocates (windShift.ts).
   const windShift = new WindShiftWatch({
@@ -289,9 +295,9 @@ async function main() {
   function setPhase(phase: Phase) {
     if (!replay || replay.phase === phase) return
     replay.phase = phase
-    windShift.setResolved(false)
-    const pre = replay.sims.pre
-    if (pre) show(pre.runs, pre.decisions)
+    const cached = replay.sims[phase]
+    windShift.setResolved(phase === 'post' && !!cached)
+    if (cached) show(cached.runs, cached.decisions)
     else showFreeOnly(replay.freeRun)
     refreshSimulate()
   }
@@ -305,6 +311,8 @@ async function main() {
       loadWeather(id),
       loadOsm(id),
     ])
+    const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : structuredClone(weather)).catch(() => structuredClone(weather)) : structuredClone(weather)
+    const movedDemo = configurePenhaDemo(fire0, weather, forecastWeather, progression0)
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
     // Only the stations in play are available anywhere means come from (stationRings.ts).
     const near = stationsInPlay(stations, fire0.ignition, suppression)
@@ -313,16 +321,15 @@ async function main() {
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
     const durationMin = Math.min(180, horizonMin(fire0.start, weather))
-    const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : weather).catch(() => weather) : weather
     const scenario: Scenario = { demo: true, windShiftMin: fire0.windShift?.minutes, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
     // Loading shows the saved reference; the demo model only runs after a button press.
     const t0 = performance.now()
     const capHa = fire0.referenceCapHa ?? CAP_HA
     const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0).map(t => t <= durationMin ? t : Infinity), durationMin,
       runtimeMs: 0, engine: 'Referência guardada' }
-    const source = 'Referência guardada · simule o modelo rápido'
+    const source = movedDemo ? 'Nova ignição · carregue em Simular' : 'Referência guardada · simule o modelo rápido'
     const free = capRun(grid, reference, capHa)
-    const freeEnd = endMinute(grid, free)
+    const freeEnd = movedDemo ? durationMin : endMinute(grid, free)
     // The story and the observed layer stop where the run does.
     const { fire, progression } = cutSteps(fire0, progression0, Math.min(durationMin, fireEnd(grid, free).cutMin ?? Infinity))
     const reach = computeReach(grid, free, fire, near, suppression, detection)

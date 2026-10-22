@@ -6,7 +6,7 @@ import { toPTTM06 } from './geo'
 import { cellOf, cellOfXY, centerXY } from './grid'
 import type { Scenario, Run } from './scenario'
 import { isAerial, type Decision } from './suppression'
-import { demoLines, demoAttackZones } from './demoLines'
+import { demoLines, demoAttackZones, demoAttackHeldAt } from './demoLines'
 import { stripCells, arrivals } from './wetLine'
 const FUEL: Record<number, [number, number]> = {
   101: [1.5, 0.1],
@@ -55,9 +55,16 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   const wind = new Float32Array(minuteCount * K)
   let series = fwiCache.get(scenario.weather)
   if (!series) { series = computeFWISeries(scenario.weather); fwiCache.set(scenario.weather, series) }
+  let forecastSeries = scenario.forecastWeather ? fwiCache.get(scenario.forecastWeather) : series
+  if (!forecastSeries) {
+    forecastSeries = computeFWISeries(scenario.forecastWeather!)
+    fwiCache.set(scenario.forecastWeather!, forecastSeries)
+  }
   for (let m = 0; m < minuteCount; m++) {
     const { kmh, fromDeg } = weatherAt(scenario, m)
-    const head = Math.max(.05, fwiAt(series, scenario.startIndex, m).isi / 11.2 * 4.6)
+    const beforeShift = m < (scenario.windShiftMin ?? -Infinity)
+    const sample = scenario.windShiftMin !== undefined && !beforeShift ? Math.max(m, Math.ceil(scenario.windShiftMin/60)*60) : m
+    const head = Math.max(.05, fwiAt(beforeShift ? forecastSeries : series, scenario.startIndex, sample).isi / 11.2 * 4.6)
     const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-.03 * kmh), 2.155)
     const e = Math.sqrt(1 - 1 / (lb * lb))
     for (let k = 0; k < K; k++)
@@ -66,19 +73,18 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   const cosUp = new Float32Array(360*K)
   for (let a = 0; a < 360; a++) for (let k = 0; k < K; k++) cosUp[a*K+k] = Math.cos((BEARING[k]-a-180)*Math.PI/180)
   const ros0 = new Float32Array(256)
-  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 1.1
+  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 1.4
   // Timed, fixed-length strips. Neither UI water nor elapsed endurance is read here.
   const heldAt = new Float32Array(n).fill(Infinity)
   if (decision) for (const { barrier } of demoLines(scenario, decision))
     for (const cell of stripCells(grid, barrier)) heldAt[cell] = Math.min(heldAt[cell], barrier.from_min)
   if (decision) for (const zone of demoAttackZones(scenario, decision)) {
     const xy = toPTTM06(zone.point), rc = cellOfXY(grid, xy.x, xy.y)
-    const extent = Math.ceil(zone.radius / cellsize)
+    const extent = Math.ceil(zone.radius * 2 / cellsize)
     for (let r = Math.max(0, rc.row-extent); r <= Math.min(rows-1, rc.row+extent); r++)
       for (let c = Math.max(0, rc.col-extent); c <= Math.min(cols-1, rc.col+extent); c++) {
         const i = r*cols+c, at = centerXY(grid,i)
-        if (Math.hypot(at.x-xy.x,at.y-xy.y) <= zone.radius)
-          heldAt[i] = Math.min(heldAt[i], zone.from)
+        heldAt[i] = Math.min(heldAt[i], demoAttackHeldAt(zone, Math.hypot(at.x-xy.x,at.y-xy.y)))
       }
   }
   // Simplified aerial support: a supplied aircraft slows its assigned zone from its ETA.

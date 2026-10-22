@@ -53,6 +53,18 @@ export function demoAttackZones(scenario: Scenario, decision: Decision) {
     if (!['crew', 'vfci'].includes(a.unit) || a.task === 'shuttle') return []
     const point = decision.points[a.target] ?? decision.lines[a.target]?.[0]
     if (!point) return []
-    return [{ slot, point, radius: (a.unit === 'crew' ? 80 : 150) * Math.sqrt(a.count), from: eta[slot] }]
+    const radius = (a.unit === 'crew' ? 80 : 150) * Math.sqrt(a.count)
+    return [{ slot, point, radius, initialRadius: radius * .35, growthPerMin: radius / 30, from: eta[slot] }]
   })
+}
+
+export type DemoAttackZone = ReturnType<typeof demoAttackZones>[number]
+/** Rewindable coverage: establish a small perimeter, then expand to twice the base radius. */
+export function demoAttackRadius(zone: DemoAttackZone, minute: number): number {
+  if (minute < zone.from) return 0
+  return Math.min(zone.radius * 2, zone.initialRadius + Math.max(0, minute-zone.from)*zone.growthPerMin)
+}
+export function demoAttackHeldAt(zone: DemoAttackZone, distance: number): number {
+  if (distance > zone.radius * 2) return Infinity
+  return zone.from + Math.max(0, distance-zone.initialRadius)/zone.growthPerMin
 }
