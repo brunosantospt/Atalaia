@@ -2097,12 +2097,11 @@ export class Editor {
             semiMajorAxis: defR,
             semiMinorAxis: defR,
             material: Color.fromCssColorString('#1e40af').withAlpha(0.22),
-            outline: true,
-            outlineColor: Color.fromCssColorString('#fbbf24'),
-            outlineWidth: 3,
             heightReference: HeightReference.CLAMP_TO_GROUND,
           },
         })
+        const ring = Array.from({ length: 33 }, (_, k) => destination(p, (k * 360) / 32, defR))
+        this.polyline(ring, Color.fromCssColorString('#fbbf24'), true, 3.5)
       } else if (isShuttle) {
         // Tanker parking and refill zone
         entities.add({
@@ -2111,12 +2110,11 @@ export class Editor {
             semiMajorAxis: 30,
             semiMinorAxis: 30,
             material: Color.fromCssColorString('#0284c7').withAlpha(0.20),
-            outline: true,
-            outlineColor: Color.fromCssColorString('#38bdf8'),
-            outlineWidth: 2,
             heightReference: HeightReference.CLAMP_TO_GROUND,
           },
         })
+        const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, 30))
+        this.polyline(ring, Color.fromCssColorString('#38bdf8'), true, 2)
       } else {
         // Direct attack immediate vehicle base perimeter (35-45m)
         const baseR = 35 + Math.min(15, (units.length - 1) * 6)
@@ -2126,12 +2124,11 @@ export class Editor {
             semiMajorAxis: baseR,
             semiMinorAxis: baseR,
             material: Color.fromCssColorString(primaryColor).withAlpha(0.20),
-            outline: true,
-            outlineColor: Color.fromCssColorString(primaryColor),
-            outlineWidth: 2,
             heightReference: HeightReference.CLAMP_TO_GROUND,
           },
         })
+        const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, baseR))
+        this.polyline(ring, Color.fromCssColorString(primaryColor), true, 2)
       }
 
       for (const a of units) {
