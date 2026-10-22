@@ -1,31 +1,31 @@
 {
-  "measured": "2026-10-22 · 2000 plans · seed 1 · commit a56daf8 + uncommitted changes",
+  "measured": "2026-10-22 · 2000 plans · seed 1 · commit eac5deb + uncommitted changes",
   "fires": [
     {
       "id": "VieiradoMinho_10082016",
       "name": "Vieira do Minho 2016",
       "a": {
         "places": 0,
-        "ha": 129
+        "ha": 128.9
       },
       "b": {
         "places": 0,
-        "ha": 24.2
+        "ha": 88.3
       },
-      "foundAt": 392
+      "foundAt": 883
     },
     {
       "id": "CabeceirasdeBasto_06092016",
       "name": "Cabeceiras de Basto 2016",
       "a": {
         "places": 5,
-        "ha": 464
+        "ha": 471.5
       },
       "b": {
         "places": 1,
-        "ha": 199.4
+        "ha": 237.1
       },
-      "foundAt": 1985
+      "foundAt": 983
     }
   ]
 }

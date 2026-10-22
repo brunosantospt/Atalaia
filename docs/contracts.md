@@ -110,7 +110,10 @@ Tudo sai da pasta do incêndio, `web/public/fires/<id>/` (P1 e P4):
 |---|---|
 | `GET /api/fires` | Os incêndios: `id`, `name`, `start`, os passos observados (`step`, `time`, `hours`, `areaHa`) e os focos (`ignitions`) |
 | `GET /api/engines` | Os motores: `id`, `name`, `version`, `method` e `state` |
-| `POST /api/run` | O resultado de um cenário |
+| `POST /api/run` | O resultado de um cenário, numa só resposta (pode demorar minutos) |
+| `POST /api/jobs` | Valida o mesmo corpo e responde logo com `{id, state, cached}` |
+| `GET /api/jobs/{id}` | O estado da tarefa: `state`, `elapsed_s`, e `stretch` (`"k/n"`) ou `error` |
+| `GET /api/jobs/{id}/result` | O mesmo JSON de `POST /api/run`, quando a tarefa está `done` |
 
 Um motor aparece na lista quando a sua pasta em `engines/` tem um `engine.json` (nome e método). A versão e a imagem Docker vêm do seu `env.sh`. O `state` é um de:
 - `ready`: pronto a correr;
@@ -121,6 +124,15 @@ Um motor aparece na lista quando a sua pasta em `engines/` tem um `engine.json` 
 - **422** quando o cenário não é válido: um campo fora dos limites, um incêndio ou um passo que não existe, uma corrida que sai da meteo;
 - **503** quando o motor não está pronto, com o que falta fazer;
 - **502** quando o motor falhou, com as últimas linhas do que escreveu.
+
+## Tarefas
+
+Uma corrida com muitos troços pode passar de um minuto, e o navegador deixa cair um pedido aberto tanto tempo. A web usa por isso tarefas: nenhum pedido fica aberto.
+- **`POST /api/jobs`** recebe o corpo de `POST /api/run`, com os mesmos erros 422, 503 e o resto. Se o resultado já está na cache, responde `state: "done"` e `cached: true`. Senão lança a corrida numa thread (3 em simultâneo) e responde `queued`. O `id` é a chave da cache, e um cenário igual que já está a correr devolve a mesma tarefa.
+- **`GET /api/jobs/{id}`** dá `state` (`queued`, `running`, `done`, `error`), `elapsed_s`, `stretch` (`"k/n"`, o troço a correr) e `error` (a explicação, como o `detail` do 502). 404 se a API não conhece a tarefa e a cache também não tem o resultado.
+- **`GET /api/jobs/{id}/result`** devolve o resultado da cache, como `POST /api/run`. 409 se a tarefa ainda corre, 502 se falhou.
+- As tarefas vivem na memória: reiniciar a API esquece-as, mas os resultados ficam na cache. Quem fez a corrida pede-a de novo e recebe `done`.
+- Uma API antiga responde 404 a `/api/jobs`: a web volta ao `POST /api/run`.
 
 ## Cache
 

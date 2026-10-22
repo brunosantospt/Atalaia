@@ -213,9 +213,10 @@ def moisture(scenario: Scenario, fire: Fire, start, minute: float) -> dict:
             'live_herb_pct': wm.live_herb_pct, 'live_woody_pct': wm.live_woody_pct}
 
 
-def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
+def simulate(fire: Fire, scenario: Scenario, engine: Engine, progress=None) -> dict:
     """Runs the scenario. A barrier that only holds from a later minute splits the run there: the
-    next stretch starts from what has burned so far, with the barrier in the fuel."""
+    next stretch starts from what has burned so far, with the barrier in the fuel.
+    progress(k, n), if given, is called before each stretch (k from 1)."""
     step = fire.steps[scenario.start_step]
     start, duration = parse_time(step['time']), scenario.duration_min
     layers = fire.layers()
@@ -240,7 +241,10 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
     arrival = np.full((fire.rows, fire.cols), np.nan)
     burned = fire.perimeter(scenario.start_step)
     runtime, result = 0.0, None
-    for t0, t1, times in stretches(scenario):
+    parts = stretches(scenario)
+    for k, (t0, t1, times) in enumerate(parts, 1):
+        if progress:
+            progress(k, len(parts))
         fuel = layers['fuel'].copy()
         for from_min, cells in barriers:
             if from_min <= t0:
