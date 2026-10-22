@@ -1,6 +1,6 @@
 # Demo Penha — estado atual e verificação (22 out 2026)
 
-A demo tem um incêndio simulado na Penha. **Só o ELMFIRE simula a propagação.** A e B são planos manuais independentes; não há mapa de calor, modelo rápido, procura ILS, worker ou respetivos scripts/fixtures. Os tipos e cálculos partilhados de chegada/barreiras estão em `scenario.ts` e `deployment.ts`, sem simulação no browser. O FWI do painel de meteorologia continua a ser um índice meteorológico, não um motor de propagação.
+A demo tem um incêndio simulado na Penha. **Só o ELMFIRE simula a propagação.** O A é do comandante; o B é a proposta do ILS (`optimize.ts`, num Web Worker, 10 s) com os meios do A, procurada de novo sempre que o A muda (`docs/ils.md`). O ILS pontua cada plano no modelo rápido interno (`fastModel.ts`), que nunca aparece no mapa: as barreiras e as chegadas a que se mede são as da previsão ELMFIRE, e "Simular no ELMFIRE" corre o A e o B. Não há mapa de calor. Os tipos e cálculos partilhados de chegada/barreiras estão em `scenario.ts` e `deployment.ts`; o browser só simula dentro da procura do ILS. O FWI do painel de meteorologia continua a ser um índice meteorológico, não um motor de propagação.
 
 ## Executar
 
@@ -53,7 +53,7 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 ## Verificação
 
 - `npm run build`, `npm run demo:check`, `npm run placement:check`, `npm run deployment:check`, `npm run interaction:check` e `npm run director:check` passam.
-- Testes cobrem previsão ELMFIRE obrigatória (sem fallback de simulação), igualdade das barreiras enviadas/desenhadas, contornos assimétricos, aproximação, ETAs, rotação, água ilimitada, colocação apeada, independência A/B, rotas/cache, hover e relatórios.
+- Testes cobrem previsão ELMFIRE obrigatória (sem fallback de simulação), igualdade das barreiras enviadas/desenhadas, contornos assimétricos, aproximação, ETAs, rotação, água ilimitada, colocação apeada, B procurado de novo quando o A muda (`npm run ils:check` para o resultado do ILS), rotas/cache, hover e relatórios.
 - Verificação de dados: todas as velocidades e rajadas correspondem à metade dos valores anteriores (tolerância de arredondamento 0,05 km/h); direções inalteradas. Cenário e meteorologia regenerados.
 - Firefox/WebGL isolado: perfil antigo de calor migra para satélite; três quartéis e hospital visíveis na abertura, sete ícones persistentes; dropdown expande e mantém-se; cinco ícones centrados; exemplo em A preserva B, rotação funciona e botão ELMFIRE fica disponível; realizador mostra descrições curtas. Sem erros de consola.
 - Verificação posterior em Firefox: IDs mantidos ao mudar o relógio, remover e adicionar grupos; IDs e cores iguais na lista/mapa, incluindo equipas em linhas; stock e origem real das aeronaves; picking no círculo devolve o grupo correto; etiquetas a 13 px mesmo no perfil Leve. Ícones claros e texto verificados visualmente. Sem pedidos de simulação.
