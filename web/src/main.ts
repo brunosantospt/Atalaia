@@ -10,6 +10,7 @@ import {
   Math as CesiumMath,
   type PerspectiveFrustum,
 } from 'cesium'
+import { Basemap, MAPS, type MapId } from './basemap'
 import { applyPose, readPose, type Pose } from './camera'
 import {
   loadFire,
@@ -28,6 +29,7 @@ import { Editor, type Reports, type Runs } from './editor'
 import { burnedHa, computeFWISeries, params, simulate, type Scenario } from './fastModel'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
+import { HeatLayer } from './heatLayer'
 import { Hud, type CameraReadout } from './hud'
 import { loadInventory } from './inventory'
 import { MarkerLayer } from './markers'
@@ -36,7 +38,7 @@ import { Player } from './player'
 import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
 import { makeReport, recommend } from './report'
-import { createViewer } from './scene'
+import { createViewer, setQuality } from './scene'
 import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
@@ -61,6 +63,7 @@ interface Replay {
   scenario: Scenario // the fast model's inputs for this fire
   free: SplitLayer // the free run, shown during the simulated shots
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
+  heat: HeatLayer // the heat map profile: who holds the head, cell by cell, at the hour on the clock
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
   split?: SplitLayer // the decisions A and B side by side (always simulated, shown in their shots or on key A)
@@ -87,6 +90,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
+  const basemap = new Basemap(viewer)
   let replay: Replay | undefined
   // Console handle for tuning in dev (atalaia.spotlight.strength = 0, …); absent from the build.
   if (import.meta.env.DEV)
@@ -161,6 +165,8 @@ async function main() {
     next: () => replay?.player.next(),
     goTo: (i) => replay?.player.goTo(i),
     pickFire: (id) => (location.hash = id),
+    pickMap: (id) => setMap(id),
+    pickQuality: (id) => setQuality(viewer, id),
     roleChanged: (role) => {
       editor.setRole(role)
       const dispatch = editor.getMultiAgencyDispatch()
@@ -171,6 +177,16 @@ async function main() {
     toggleEditor: () => editor.toggle(),
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
   })
+  setMap(hud.settings.map)
+  setQuality(viewer, hud.settings.quality)
+
+  /** The map under the fire (settings or key M); the heat map is the fire's own layer. */
+  function setMap(id: MapId) {
+    basemap.set(id)
+    hud.settings.setMap(id)
+    replay?.heat.show(id === 'heat')
+  }
+
   // The decision editor: what it draws is simulated again at once and shown split.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => rerun(),
@@ -196,16 +212,18 @@ async function main() {
     const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
     if (cartesian) {
       const c = Cartographic.fromCartesian(cartesian)
-      hud.updateCursorCoords({
-        lon: CesiumMath.toDegrees(c.longitude),
-        lat: CesiumMath.toDegrees(c.latitude),
-        h: c.height,
-      })
+      const at = { lon: CesiumMath.toDegrees(c.longitude), lat: CesiumMath.toDegrees(c.latitude), h: c.height }
+      hud.updateCursorCoords(at)
+      replay?.heat.hover(at)
     } else {
       hud.updateCursorCoords(undefined)
+      replay?.heat.hover(undefined)
     }
   })
-  scene.canvas.addEventListener('mouseleave', () => hud.updateCursorCoords(undefined))
+  scene.canvas.addEventListener('mouseleave', () => {
+    hud.updateCursorCoords(undefined)
+    replay?.heat.hover(undefined)
+  })
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
@@ -243,6 +261,7 @@ async function main() {
     replay?.markers.destroy()
     replay?.free.destroy()
     replay?.reach.destroy()
+    replay?.heat.destroy()
     replay?.split?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
@@ -257,6 +276,7 @@ async function main() {
       scenario,
       free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], DECISION_MIN),
       reach: new ReachLayer(viewer, fire.ignition, reach),
+      heat: new HeatLayer(viewer, hud.root, scenario, fire.start),
       context,
       story,
       showSplit: false,
@@ -266,6 +286,7 @@ async function main() {
     hud.setDirector(replay.director)
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
     replay.free.show(false)
+    replay.heat.show(basemap.id === 'heat')
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
       known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
@@ -385,6 +406,7 @@ async function main() {
     free.set(frame.hours)
     split?.show(splitOn)
     split?.set(frame.hours)
+    replay.heat.set(frame.hours)
     // Synchronize editor overlays (cut roads strictly inside the fire, tactical perimeters) with simulation clock
     if (!editor.open || player.playing) {
       editor.syncTime(frame.hours)
@@ -441,6 +463,7 @@ async function main() {
       a: () => toggleDecisions(),
       d: () => toggleDirector(),
       e: () => editor.toggle(),
+      m: () => setMap(MAPS[(MAPS.findIndex((m) => m.id === basemap.id) + 1) % MAPS.length].id),
     }
     const action = actions[e.key.length === 1 ? e.key.toLowerCase() : e.key]
     if (!action) return

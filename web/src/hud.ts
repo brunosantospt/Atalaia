@@ -1,13 +1,15 @@
 // The gray "intel" HUD: shot word and place, fire clock, camera readout, caption card with
-// the transport bar (bottom left) and the settings drawer (fire and engine).
+// the transport bar (bottom left) and the settings drawer (fire, map and engine).
 // Data credits are not here but in Cesium's credit line, so they stay on screen when the HUD is hidden.
 
+import type { MapId } from './basemap'
 import type { Fire, FireIndexEntry } from './data'
 import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
 import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
+import type { Quality } from './scene'
 import { SettingsPanel } from './settings'
 import type { Shot } from './shots'
 import type { AgencyRole, MultiAgencyDispatch } from './reporting'
@@ -26,6 +28,8 @@ export interface HudActions {
   next(): void
   goTo(i: number): void
   pickFire(id: string): void
+  pickMap(id: MapId): void
+  pickQuality(id: Quality): void
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
   resetNorth?(): void
@@ -179,9 +183,9 @@ const TEMPLATE = `
       <button type="button" data-ref="play" title="Play / pausa (espaço)"></button>
       <button type="button" data-ref="next" title="Plano seguinte (→)">▸</button>
       <div class="ticks" data-ref="ticks"></div>
-      <button type="button" class="open-settings" data-ref="gear" title="Incêndio e motor (S)">Settings</button>
+      <button type="button" class="open-settings" data-ref="gear" title="Incêndio, mapa e motor (S)">Settings</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · M mapa · S settings · H esconde o HUD</div>
   </section>
 `
 
@@ -228,7 +232,11 @@ export class Hud {
     ) as unknown as Refs
 
     this.ledger = new Ledger(root)
-    this.settings = new SettingsPanel(root, fires, { pickFire: actions.pickFire })
+    this.settings = new SettingsPanel(root, fires, {
+      pickFire: actions.pickFire,
+      pickMap: actions.pickMap,
+      pickQuality: actions.pickQuality,
+    })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
     this.refs.next.addEventListener('click', () => actions.next())
@@ -481,6 +489,7 @@ export class Hud {
     const rect = (sel: string) => this.root.querySelector(sel)!.getBoundingClientRect()
     const rail = rect('.rail')
     const ledger = rect('.ledger')
+    const legend = this.root.querySelector('.heat-legend:not([hidden])')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
@@ -488,7 +497,7 @@ export class Hud {
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: rect('.bottom').top - pad,
-      avoid: ledger.height ? [ledger] : [],
+      avoid: [ledger, legend].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
