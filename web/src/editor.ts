@@ -1770,50 +1770,37 @@ export class Editor {
     for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, INK, true)
     for (const w of lines) {
       const a = d.assignments[w.slot]
-      if (a.task === 'protect') continue
+      // Em ataque direto e proteção não se desenham linhas de wetline (nem verdes nem azuis);
+      // a intervenção é representada no terreno pelos perímetros táticos colados à altimetria
+      // (base operacional da viatura e cúpula de proteção de aldeia).
+      if (a.task === 'protect' || a.task === 'direct') continue
 
       const clean = cleanPath(w.barrier.path, (p) => p)
       if (!clean.length) continue
       const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const isVisible = new CallbackProperty(() => (this.open ? this.minutes : this.playbackMinute) >= w.barrier.from_min, false)
 
-      if (a.task === 'direct') {
-        // Zona já coberta / rasto consolidado extinto em verde esmeralda (#10b981)
-        const green = Color.fromCssColorString('#10b981')
-        const strip = entities.add({
-          polyline: {
-            show: isVisible,
-            positions,
-            width: 4.0,
-            clampToGround: true,
-            material: green,
-          },
-        })
-        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-      } else {
-        // Linha apeada / faixa de contenção (WET light blue)
-        entities.add({
-          corridor: {
-            show: isVisible,
-            positions,
-            width: Math.max(w.barrier.width_m, 1),
-            material: WET.withAlpha(0.5),
-            classificationType: ClassificationType.TERRAIN,
-          },
-        })
-        const strip = entities.add({
-          polyline: {
-            show: isVisible,
-            positions,
-            width: 3.0,
-            clampToGround: true,
-            material: WET,
-          },
-        })
-        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-      }
+      // Linha apeada / faixa de contenção desenhada manualmente (WET light blue)
+      entities.add({
+        corridor: {
+          show: isVisible,
+          positions,
+          width: Math.max(w.barrier.width_m, 1),
+          material: WET.withAlpha(0.5),
+          classificationType: ClassificationType.TERRAIN,
+        },
+      })
+      const strip = entities.add({
+        polyline: {
+          show: isVisible,
+          positions,
+          width: 3.0,
+          clampToGround: true,
+          material: WET,
+        },
+      })
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
     }
 
     // Tankers supply nearby fire engines; the circle is coverage, never a combat barrier.
