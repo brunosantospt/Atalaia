@@ -794,10 +794,11 @@
 /* The maps as squares of themselves, in one row, the picked one outlined. */
 .hud .map-choices {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 .hud .map-choice {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -848,7 +849,8 @@
   outline-offset: 2px;
 }
 .hud .map-choice b {
-  font-size: 10px;
+  font-size: 9px;
+  letter-spacing: 0;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
