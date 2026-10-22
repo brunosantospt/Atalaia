@@ -1,5 +1,5 @@
-// The director's shots: after the observed replay, the decisions A and B as the editor holds
-// them, played on the runs on the screen (the engine's, or the fast model's until they come). One
+// The director's shots: the opening (shots.ts: the drone's sighting, the satellite's, the first ELMFIRE
+// prediction), then the decisions A and B as the last ELMFIRE simulation ran them. One
 // shot per decision (its means on the ground at the hour the last of them arrives), A against B
 // side by side as the fire runs until the later of the two stops, and the outcome with the
 // recommendation and when each fire is out. Built again whenever the decisions change.
@@ -20,7 +20,7 @@ const MARGIN = 1.35
 const MIN_RANGE_M = 1500
 const SPOT = 1.25
 /** The kinds the director's cut keeps (key D): the 90 s of the demo, without the step-by-step observed spread. */
-export const CUT: ShotKind[] = ['overview', 'ignition', 'known', 'reach', 'checkpoint', 'balance', 'decision', 'versus', 'outcome']
+export const CUT: ShotKind[] = ['known', 'checkpoint', 'prediction', 'overview', 'ignition', 'reach', 'incident', 'balance', 'decision', 'versus', 'outcome']
 
 export function decisionShots(
   fire: Fire,
@@ -43,7 +43,7 @@ export function decisionShots(
   const durationMin = Math.max(endMinute(grid, runs.A), endMinute(grid, runs.B))
   const endH = durationMin / 60
   const end = (id: 'free' | 'A' | 'B') => describeEnd(fireEnd(grid, runs[id]), fire.start, runs[id].durationMin)
-  const engine = runs.A.engine ? `Simulado com ${runs.A.engine}.` : 'Modelo rápido; o motor físico confirma depois.'
+  const engine = `Simulado com ${runs.A.engine ?? 'ELMFIRE'}.`
   const areaOf = memo((run: 'free' | 'A' | 'B', minute: number) => burnedHa(grid, runs[run], minute))
   const shots: Shot[] = []
 
@@ -74,7 +74,7 @@ export function decisionShots(
       title: `${id} · ${d.name}`,
       caption: parts.length
         ? `${parts.join(' · ')}. Às ${clock(hours)} o fogo tem ${fmtHa(areaOf(id, hours * 60))}; livre teria ${fmtHa(areaOf('free', hours * 60))}.`
-        : 'Nada no terreno: o fogo corre livre. Abre o editor (E) e põe meios no mapa.',
+        : 'Nada no terreno: o fogo corre livre. Abre o editor (E), põe meios no mapa e simula no ELMFIRE.',
       place: targets[0] ?? ignition,
       simulated: true,
       step: -1,

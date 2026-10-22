@@ -1,4 +1,4 @@
-// The free run of the fast model read for the storyboard: how far the fire gets before each
+// The free run (ELMFIRE, no forces) read for the storyboard: how far the fire gets before each
 // means arrives (its ETA from the drone's detection), the chance the initial attack contains it
 // then (Hirsch), the best case (the first of them), and the moment the satellite would have
 // detected it instead (T_sat).
@@ -33,6 +33,7 @@ export interface Reach {
   etas: Eta[] // by arrival
   best: Eta // the first means on the fire after the drone's detection: the most that burns if all goes well
   tsat: Moment
+  final: Moment // where the run ends: cut at the cap, or out
   areaByMin: Float32Array // hectares burned by each minute of the free run
   intensityKWPerM: number // fireline intensity the POC is computed with
   intensitySource: string
@@ -112,7 +113,7 @@ export function computeReach(
   etas.sort((a, b) => a.minutes - b.minutes)
 
   // etas is never empty: the helicopter is always there.
-  return { detection, etas, best: etas[0], tsat: moment(detection.satelliteMin), areaByMin, intensityKWPerM, intensitySource }
+  return { detection, etas, best: etas[0], tsat: moment(detection.satelliteMin), final: moment(run.durationMin), areaByMin, intensityKWPerM, intensitySource }
 }
 
 /** Hectares the free run has burned `hours` after the ignition. */
