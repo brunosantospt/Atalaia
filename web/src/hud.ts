@@ -5,7 +5,7 @@
 import { rank, type Alert } from './alerts'
 import type { MapId } from './basemap'
 import type { Fire, FireIndexEntry } from './data'
-import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
+import { fmtDate, fmtElapsed, fmtHa, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
 import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
@@ -382,7 +382,7 @@ export class Hud {
     this.fire = fire
     this.sim = sim
     this.ledger.el.hidden = !sim
-    if (sim) this.ledger.set(sim.known)
+    if (sim) this.ledger.set({ ...sim.known, metrics: sim })
     this.settings.setFire(fire.id)
     this.setShots(shots)
 
@@ -515,7 +515,7 @@ export class Hud {
     const rail = rect('.rail')
     const ledger = rect('.ledger')
     const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
-    const wind = this.root.querySelector('.wind-compass.map-mode .wind-needle, .wind-compass:not(.map-mode)')?.getBoundingClientRect()
+    const wind = this.root.querySelector('.wind-compass')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.root.classList.contains('reporting')) right = Math.min(right, rect('.reports-panel').left - pad)
@@ -567,7 +567,7 @@ export class Hud {
       sim
         ? split
           ? `Livre ${fmtHa(sim.areaHa(frame.hours))}`
-          : `POC ${fmtPct(sim.poc(areaHa))} · I ${fmtNumber(sim.intensityKWPerM)} kW/m`
+          : ''
         : `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`,
     )
     this.ledger.update(frame.hours)

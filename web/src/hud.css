@@ -1441,3 +1441,7 @@
 
 /* Point symbols stay on the map; labels carry just the place name. */
 .markers .tag { color: #f0a33a; border-color: #f0a33acc; padding: 6px 10px; }
+
+/* Keep the additional operational figures within the space above the director caption. */
+.hud .ledger { max-height: calc(100% - var(--ledger-top, 160px) - var(--credits-h, 20px) - 190px); overflow-y: auto; scrollbar-width: thin; }
+.hud .ledger th, .hud .ledger td { padding-top: 5px; padding-bottom: 5px; }

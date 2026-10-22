@@ -363,7 +363,7 @@ async function main() {
       stations: regional,
       credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
-      wind: new WindLayer(viewer, hud.root),
+      wind: new WindLayer(viewer, hud.root, fire.ignition),
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,

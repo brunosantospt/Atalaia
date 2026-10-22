@@ -7,7 +7,7 @@ import type { Fire, NearStation, Weather } from './data'
 import { windAt } from './windLayer'
 import type { Detection } from './detection'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
-import { fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
+import { fmtHa, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock } from './format'
 import { compass } from './geo'
 import { fleet, type Inventory } from './inventory'
 
@@ -22,6 +22,7 @@ export interface Known {
   detection: Detection
   satHa: number // burned when the satellite would detect the fire
   fwiSeries?: FWIHourly[]
+  metrics?: { areaHa(hours: number): number; poc(areaHa: number): number; intensityKWPerM: number }
 }
 
 type State = 'on' | 'off' | 'wait' | 'retro'
@@ -47,7 +48,7 @@ export class Ledger {
     this.el.querySelector('button')!.addEventListener('click', () => this.toggle())
     this.fold(localStorage.getItem(STORAGE_KEY) === 'folded')
     const title = parent.querySelector<HTMLElement>('.title')
-    if (title) new ResizeObserver(() => { this.el.style.top = `${title.offsetTop + title.offsetHeight + 12}px` }).observe(title)
+    if (title) new ResizeObserver(() => { const top = `${title.offsetTop + title.offsetHeight + 12}px`; this.el.style.top = top; this.el.style.setProperty('--ledger-top',top) }).observe(title)
   }
 
   /** Folds the table away under the title, or opens it again. */
@@ -63,6 +64,7 @@ export class Ledger {
 
   set(known: Known) {
     const { fire, weather, startIndex, stations, inventory, detection, satHa } = known
+    const metrics = known.metrics
     const fwiList = known.fwiSeries ?? computeFWISeries(weather)
     const forecastFwi = known.forecastWeather ? computeFWISeries(known.forecastWeather) : fwiList
     const weatherAt = (h: number) => h*60 < (known.windShiftMin ?? Infinity) ? known.forecastWeather ?? weather : weather
@@ -76,6 +78,10 @@ export class Ledger {
       { layer: 'Vento', source: `${meteoSource}${fire.simulated ? ' + cenário' : ''}`, at: h => { const w=windAt(weatherAt(h),startIndex,Math.round(h*60)); return ['on', `${fmtNumber(w.kmh)} km/h de ${compass(w.from)} · rajadas ${fmtNumber(w.gust)}`] } },
       { layer: 'Atmosfera', source: meteoSource, at: h => { const i=hourIndex(h); return ['on', `${fmtNumber(weather.tempC[i])} °C · humidade ${fmtNumber(weather.rhPct[i])}%`] } },
       { layer: 'Perigo', source: 'FWI calculado', at: h => { const f=fwiAt(weatherAt(h) === weather ? fwiList : forecastFwi,startIndex,h*60); return ['on', `${f.dangerClass} · FWI ${fmtNumber(f.fwi,1)}`] } },
+      ...(metrics ? [
+        { layer: 'POC', source: 'Estimativa · Livre', at: (h: number): [State, string] => ['on', `${fmtPct(metrics.poc(metrics.areaHa(h)))} · contenção`] },
+        { layer: 'Intensidade', source: 'Pico estimado', at: (): [State, string] => ['on', `${fmtNumber(metrics.intensityKWPerM)} kW/m`] },
+      ] : []),
       { layer: 'Resposta', source: 'Inventário estimado', at: () => ['on', nearest ? `${nearest.short} · ${fmtKm(nearest.km)}${stock ? ` · ${fleet(stock) ?? `${stock.units.vfci} VFCI`}` : ''}` : 'Sem quartel disponível'] },
       { layer: 'Satélite', source: 'Passagem · cenário', at: h => h*60<detection.satelliteMin ? ['wait', `Verificação às ${clock(detection.satelliteMin)}`] : ['on', `${clock(detection.satelliteMin)} · área estimada ${fmtHa(satHa)}`] },
     ]

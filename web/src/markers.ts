@@ -96,9 +96,11 @@ export class MarkerLayer {
       line.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('r', '3')
-      if (spec.color) {
-        line.style.stroke = spec.color
-        dot.style.fill = spec.color
+      const color = spec.symbol ? landmarkColor(spec.symbol) : spec.color
+      if (color) {
+        tag.style.borderColor = color
+        line.style.stroke = color
+        dot.style.fill = color
       }
       if (spec.kind === 'best') {
         // Green like its line on the ground (reachLayer.ts); hud.css colours the other kinds.

@@ -1,6 +1,6 @@
-import { Math as CesiumMath, type Viewer } from 'cesium'
+import { Cartesian2, Cartesian3, Cartographic, Ellipsoid, EllipsoidalOccluder, Math as CesiumMath, SceneTransforms, type Viewer } from 'cesium'
 import type { Weather } from './data'
-import { compass } from './geo'
+import { compass, type LonLat } from './geo'
 import { fmtNumber } from './format'
 import './windWidget.css'
 
@@ -16,6 +16,13 @@ const STORAGE_KEY = 'atalaia.wind-position'
 /** A movable screen widget. Dragging never touches the globe or changes model weather. */
 export class WindLayer {
   readonly el = document.createElement('section')
+  private readonly mapArrow = document.createElement('div')
+  private readonly mapNeedle: SVGElement
+  private readonly mapAnchor: LonLat
+  private readonly world = new Cartesian3()
+  private readonly pixel = new Cartesian2()
+  private readonly ground: Cartographic
+  private readonly occluder: EllipsoidalOccluder
   private readonly rose: SVGElement
   private readonly needle: SVGElement
   private readonly speed: HTMLElement
@@ -30,10 +37,11 @@ export class WindLayer {
   private position?: { x: number; y: number }
   private drag?: { pointer: number; x: number; y: number; left: number; top: number }
 
-  constructor(private readonly viewer: Viewer, private readonly parent: HTMLElement) {
+  constructor(private readonly viewer: Viewer, private readonly parent: HTMLElement, ignition: LonLat) {
     this.el.className = 'wind-compass'
     this.el.setAttribute('aria-label', 'Bússola do vento')
     this.el.innerHTML = `
+      <div class="wind-title">Vento</div>
       <button type="button" class="wind-drag" aria-label="Mover bússola do vento. Use as setas para deslocar ou Home para repor." title="Arraste para mover · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
       <svg class="wind-dial" viewBox="0 0 120 120" aria-hidden="true">
         <circle cx="60" cy="60" r="52" class="wind-bezel"/>
@@ -55,10 +63,18 @@ export class WindLayer {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
       if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) this.position = { x: Math.max(0,Math.min(1,saved.x)), y: Math.max(0,Math.min(1,saved.y)) }
     } catch { /* A malformed saved position simply uses the default. */ }
+    this.mapAnchor = ignition
+    this.ground = Cartographic.fromDegrees(this.mapAnchor.lon, this.mapAnchor.lat)
+    this.occluder = new EllipsoidalOccluder(Ellipsoid.WGS84, viewer.camera.positionWC)
+    this.mapArrow.className = 'map-wind-arrow'
+    this.mapArrow.hidden = true
+    this.mapArrow.innerHTML = `<svg viewBox="0 0 120 120" aria-hidden="true">${this.needle.outerHTML}</svg>`
+    this.mapArrow.setAttribute('role', 'img')
+    this.mapNeedle = this.mapArrow.querySelector('.wind-needle')!
+    parent.append(this.mapArrow)
     try { this.mapToggle.checked = localStorage.getItem('atalaia.wind-map') === 'true' } catch { /* Optional preference. */ }
     const setMap = () => {
-      this.el.classList.toggle('map-mode', this.mapToggle.checked)
-      if (this.mapToggle.checked) this.mapToggle.blur()
+      this.projectArrow()
       try { localStorage.setItem('atalaia.wind-map', String(this.mapToggle.checked)) } catch { /* Optional preference. */ }
       this.viewer.scene.requestRender()
     }
@@ -82,7 +98,6 @@ export class WindLayer {
       if (this.drag?.pointer !== e.pointerId) return
       this.drag = undefined
       this.el.classList.remove('dragging')
-      if (this.mapToggle.checked) this.handle.blur()
       if (this.handle.hasPointerCapture(e.pointerId)) this.handle.releasePointerCapture(e.pointerId)
       this.save()
     }
@@ -103,8 +118,24 @@ export class WindLayer {
     this.resize = new ResizeObserver(() => this.place())
     this.resize.observe(parent)
     this.place()
-    this.remove = viewer.scene.postRender.addEventListener(() => this.orient())
+    this.remove = viewer.scene.postRender.addEventListener(() => { this.orient(); this.projectArrow() })
     this.orient()
+  }
+
+  private projectArrow() {
+    if (!this.mapToggle.checked) { this.mapArrow.hidden = true; return }
+    const h = this.viewer.scene.globe.getHeight(this.ground) ?? 0
+    Cartesian3.fromDegrees(this.mapAnchor.lon, this.mapAnchor.lat, h + 8, undefined, this.world)
+    this.occluder.cameraPosition = this.viewer.camera.positionWC
+    const p = this.occluder.isPointVisible(this.world) ? SceneTransforms.worldToWindowCoordinates(this.viewer.scene, this.world, this.pixel) : undefined
+    const visible = !!p && p.x >= 0 && p.y >= 0 && p.x <= this.parent.clientWidth && p.y <= this.parent.clientHeight
+    this.mapArrow.hidden = !visible
+    if (visible) {
+      // A fixed visual offset keeps the wind arrow clear of the ignition symbol at every zoom.
+      const x = p.x + (p.x+108 > this.parent.clientWidth ? -64 : 64)
+      const y = p.y + (p.y+76 > this.parent.clientHeight ? -32 : 32)
+      this.mapArrow.style.transform = `translate(${Math.round(x-44)}px, ${Math.round(y-44)}px)`
+    }
   }
 
   private bounds() {
@@ -131,6 +162,7 @@ export class WindLayer {
     this.heading=heading
     this.rose.setAttribute('transform',`rotate(${-heading} 60 60)`)
     this.needle.setAttribute('transform',`rotate(${this.to-heading} 60 60)`)
+    this.mapNeedle.setAttribute('transform',`rotate(${this.to-heading} 60 60)`)
   }
   update(weather: Weather,start: number,minute: number) {
     const key=`${start}:${Math.round(minute)}`
@@ -142,7 +174,8 @@ export class WindLayer {
     this.speed.textContent=`${fmtNumber(wind.kmh)} km/h ${compass(wind.from)}`
     this.el.title=`Vento de ${compass(wind.from)} · rajadas ${fmtNumber(wind.gust)} km/h · seta aponta para onde sopra`
     this.el.setAttribute('aria-label',`Vento ${fmtNumber(wind.kmh)} km/h de ${compass(wind.from)}; rajadas ${fmtNumber(wind.gust)} km/h`)
+    this.mapArrow.setAttribute('aria-label', this.el.getAttribute('aria-label')!)
     this.heading=NaN;this.orient()
   }
-  destroy() { this.remove();this.resize.disconnect();this.el.remove() }
+  destroy() { this.remove();this.resize.disconnect();this.el.remove();this.mapArrow.remove() }
 }

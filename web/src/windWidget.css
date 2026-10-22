@@ -14,15 +14,8 @@
 
 .hud .wind-map-toggle { display: flex; justify-content: center; align-items: center; gap: 5px; width: max-content; margin: 5px auto 0; font: 11px/1.4 system-ui, sans-serif; color: #aec3d3; cursor: pointer; border-radius: 4px; }
 .hud .wind-map-toggle input { margin: 0; accent-color: #7dd3fc; cursor: pointer; }
-/* Map mode keeps the same draggable arrow, with no compass card or readings over the terrain. */
-.hud .wind-compass.map-mode { background: transparent; border-color: transparent; box-shadow: none; pointer-events: none; }
-.hud .map-mode .wind-bezel, .hud .map-mode .wind-rose, .hud .map-mode .wind-centre { visibility: hidden; }
-.hud .map-mode .wind-speed, .hud .map-mode .wind-drag { opacity: 0; pointer-events: none; }
-.hud .map-mode .wind-dial { pointer-events: none; }
-.hud .map-mode .wind-needle { pointer-events: visiblePainted; cursor: grab; }
-.hud .map-mode.dragging .wind-needle { cursor: grabbing; }
-.hud .map-mode .wind-map-toggle { opacity: 0; pointer-events: none; background: #0b141df2; padding: 3px 6px; }
-.hud .map-mode:is(:hover, :focus-within) .wind-map-toggle { opacity: 1; pointer-events: auto; }
-.hud .map-mode .wind-drag:focus-visible { opacity: 1; pointer-events: auto; }
 
-.hud .wind-compass.map-mode:is(:hover, :focus-within) { pointer-events: auto; }
+.hud .wind-title { padding: 1px 0 5px; color: #b8cad8; font: 600 10px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .12em; }
+.hud .map-wind-arrow { position: absolute; top: 0; left: 0; width: 88px; height: 88px; pointer-events: none; filter: drop-shadow(0 2px 3px #000b); }
+.hud .map-wind-arrow[hidden] { display: none; }
+.hud .map-wind-arrow svg { display: block; width: 100%; height: 100%; }
