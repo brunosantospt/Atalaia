@@ -37,7 +37,7 @@ import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
 import { ensureAssignmentIds, originColor, originLetter, fieldIds } from './unitIdentity'
-import { demoLines, demoLineLength, demoLineBearing } from './demoLines'
+import { demoLines, demoLineLength } from './demoLines'
 import { supplyStatuses, tankerReach } from './tankerSupport'
 import { unitJourney } from './unitMotion'
 import { unitIconUrl } from './unitIcons'
@@ -57,7 +57,7 @@ import {
   ICON_CLIPBOARD,
   ICON_PMA,
 } from './icons'
-import { wetLineBearing, arrivals, wetLines, type Barrier, type WetLine } from './wetLine'
+import { arrivals, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
   flameLengthM,
   isAerial,
@@ -1598,35 +1598,7 @@ export class Editor {
     info.addEventListener('mouseleave', () => this.hideTip())
     info.addEventListener('blur', () => this.hideTip())
     x.addEventListener('click', () => this.remove(k))
-    if (isGround && a.unit !== 'vttu' && target && unit.wetLineWidthM && (a.task === 'direct' || a.task === 'protect' || a.task === 'line') && this.loaded) {
-      const rotation = document.createElement('div')
-      rotation.className = 'wetline-rotation'
-      const label = document.createElement('label')
-      label.textContent = 'Rodar linha'
-      const slider = document.createElement('input')
-      slider.type = 'range'; slider.min = '0'; slider.max = '179'; slider.step = '1'
-      slider.setAttribute('aria-label', `Orientação da linha molhada de ${unit.short}`)
-      slider.title = '0°: norte–sul · 90°: este–oeste'
-      slider.value = String(Math.round(this.loaded.scenario.demo ? demoLineBearing(this.loaded.scenario, d, a) : wetLineBearing(this.loaded.scenario, forecastArrival(this.loaded.scenario), target, a)) % 180)
-      const angle = document.createElement('output')
-      angle.textContent = `${slider.value}°`
-      const auto = document.createElement('button')
-      auto.type = 'button'; auto.textContent = 'Auto'
-      auto.title = 'Voltar à orientação transversal à propagação do fogo'
-      auto.disabled = a.wetLineBearingDeg === undefined
-      slider.addEventListener('input', () => {
-        this.stopIls()
-        a.wetLineBearingDeg = Number(slider.value)
-        angle.textContent = `${slider.value}°`; auto.disabled = false
-        this.draw() // Keep this slider alive while dragging; rebuild the row when released.
-        this.actions.changed()
-      })
-      slider.addEventListener('change', () => this.commit())
-      auto.addEventListener('click', () => { delete a.wetLineBearingDeg; this.commit() })
-      label.append(slider)
-      rotation.append(label, angle, auto)
-      li.append(rotation)
-    }
+    // A orientacao de combate e 100% automatica perpendicular a propagacao (spreadAt + 90 deg)
     return li
   }
 
