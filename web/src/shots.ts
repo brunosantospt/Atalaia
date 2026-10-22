@@ -1,17 +1,17 @@
 // The replay as a list of camera shots, derived from fire.json, the nearest stations and the
-// free run of the fast model: overview with the stations, ignition, what is known at the
-// detection, the best case (the fire when the first means arrives), the satellite's detection,
-// one shot per observed step, a pass along the spread axis and the final balance. Each shot
-// frames the area in play and says what to reveal.
+// free run of ELMFIRE (no forces, cut at the cap): it opens with the fire when the drone sights it,
+// when the satellite does and the first ELMFIRE prediction; then the overview with the stations, the
+// ignition, the best case (the fire when the first means arrives), one shot per step of the reference,
+// a pass along the spread axis and the final balance. Each shot frames the area in play and says what to reveal.
 
 import { Cartographic, sampleTerrainMostDetailed, type TerrainProvider } from 'cesium'
 import type { Pose } from './camera'
 import type { Fire, NearStation, Progression, Step } from './data'
 import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock } from './format'
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLonLat, type BBox, type LonLat } from './geo'
-import type { Reach } from './reach'
+import { freeAreaHa, type Reach } from './reach'
 
-export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome'
+export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction'
 
 export interface Shot {
   kind: ShotKind
@@ -19,7 +19,7 @@ export interface Shot {
   title: string // caption card
   caption: string
   place: LonLat // whose coordinates sit under the word
-  simulated: boolean // the fire on screen is the free run of the fast model, not the observed one
+  simulated: boolean // the fire on screen is the free run of ELMFIRE, not the observed one
   step: number // last fire step shown, -1 before the ignition
   hours: number // fire clock once the camera arrives
   areaHa: number // burned area shown once the camera arrives
@@ -67,6 +67,7 @@ export function buildStory(
   stations: NearStation[],
   fovy: number,
   reach?: Reach,
+  prediction?: { endMin: number; text: string }, // where the free run ends (cut or out) and how it is told
 ): Story {
   const half = Math.tan(fovy / 2)
   const fit = (radiusM: number, margin = MARGIN) => Math.max(MIN_RANGE_M, (margin * radiusM) / half)
@@ -186,13 +187,14 @@ export function buildStory(
       word: 'Conhecido',
       title: `Deteção pelo drone · ${fmtTime(clock(detection.droneMin / 60))} · ${minutes(detection.droneMin)}`,
       caption:
+        `O drone avista o fogo com ${fmtHa(reach.areaByMin[Math.min(detection.droneMin, reach.areaByMin.length - 1)])}. ` +
         `Ponto de ignição, meteo da hora, combustível, relevo e quartéis: tudo o que há para decidir. ` +
-        `O satélite só deteta o fogo às ${satClock}. ${sim ? 'Os perímetros da referência simulada (ELMFIRE)' : 'Os perímetros observados'} só existem em retrospetiva.`,
+        `O satélite só deteta o fogo às ${satClock}.`,
       place: ignition,
       simulated: true,
       step: -1,
       hours: detection.droneMin / 60,
-      areaHa: reach.areaByMin[detection.droneMin],
+      areaHa: reach.areaByMin[Math.min(detection.droneMin, reach.areaByMin.length - 1)],
       untimed: false,
       path: [pose(ignition, headings[0], -50, 2200)],
       driftDeg: 4,
@@ -271,6 +273,33 @@ export function buildStory(
       reveal: ['tsat'],
       conceal: [],
     })
+
+    // The first ELMFIRE prediction, no forces on the ground: the clock runs from the satellite to where the run ends.
+    if (prediction) {
+      const { final } = reach
+      const predR = Math.max(final.radiusM * 1.3, 2000)
+      shots.push({
+        kind: 'prediction',
+        word: 'Previsão',
+        title: `Previsão ELMFIRE · sem meios · ${fmtHa(final.areaHa)}`,
+        caption: `A primeira previsão do ELMFIRE, sem nenhum meio no terreno: ${prediction.text}. É o ponto de partida; põe meios no editor (E) e simula de novo.`,
+        place: final.center,
+        simulated: true,
+        step: -1,
+        hours: detection.satelliteMin / 60,
+        areaHa: final.areaHa,
+        untimed: false,
+        path: [pose(final.center, headings[0], -60, fit(predR))],
+        driftDeg: 8,
+        spot: SPOT * predR,
+        moveS: 4,
+        holdS: 12,
+        reveal: [],
+        conceal: [],
+        hoursTo: prediction.endMin / 60,
+        area: (h) => fmtHa(freeAreaHa(reach, h)),
+      })
+    }
   }
 
   // ---- one shot per step (observed, or the simulated reference) ----
@@ -403,7 +432,10 @@ export function buildStory(
     conceal: [],
   })
 
-  return { shots, markers }
+  // The opening is the director's first step, in the whole story as in the cut: sighted by the drone, by the
+  // satellite, then what ELMFIRE predicts with nobody on the fire.
+  const opening: ShotKind[] = ['known', 'checkpoint', 'prediction']
+  return { shots: [...opening.flatMap((kind) => shots.filter((s) => s.kind === kind)), ...shots.filter((s) => !opening.includes(s.kind))], markers }
 }
 
 /** Box of the area a step added (outer rings of its new polygons); the perimeter box if it has none. */

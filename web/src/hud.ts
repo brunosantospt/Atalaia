@@ -27,7 +27,8 @@ export interface HudActions {
   next(): void
   goTo(i: number): void
   pickFire(id: string): void
-  pickEngine?(): void // the settings' engine changed: the decisions run on it
+  pickEngine?(): void // the settings' engine changed: the next simulation runs on it
+  simulate?(): void // the "Simular no ELMFIRE" button
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
   resetNorth?(): void
@@ -36,7 +37,7 @@ export interface HudActions {
   flyTo?(at: LonLat): void // a click on an alert of the stack
 }
 
-/** The free run of the fast model behind the simulated shots, as the HUD reads it. */
+/** The free run (ELMFIRE, no forces) behind the simulated shots, as the HUD reads it. */
 export interface Simulated {
   known: Known
   areaHa(hours: number): number
@@ -103,6 +104,7 @@ const TEMPLATE = `
     <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clica para copiar."></span></div>
     <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clica para copiar."></span></div>
   </section>
+  <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o ELMFIRE com os meios de A e de B. Só se acende quando os meios mudaram desde a última simulação."></button>
   <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
     <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 18 15 12 9 6" />
@@ -193,7 +195,7 @@ type Refs = Record<
   | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
-  | 'editorToggle' | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
+  | 'simulate' | 'editorToggle' | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
@@ -259,6 +261,7 @@ export class Hud {
     })
 
     this.refs.editorToggle?.addEventListener('click', () => this.actions.toggleEditor?.())
+    this.refs.simulate.addEventListener('click', () => this.actions.simulate?.())
     this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.bottomCompass?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
@@ -442,6 +445,14 @@ export class Hud {
       this.set('coordDMS', dms)
       this.set('coordDec', dec)
     }
+  }
+
+  /** The simulate button: lit only when the means differ from the last simulation's (main.ts). */
+  setSimulate({ label, enabled, note }: { label: string; enabled: boolean; note: string }) {
+    const button = this.refs.simulate as HTMLButtonElement
+    button.textContent = label
+    button.disabled = !enabled
+    button.title = note
   }
 
   /** The director's cut is on: the HUD says so instead of "Replay". */

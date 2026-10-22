@@ -564,3 +564,22 @@
 .hud .editor .changes li.line b {
   text-transform: none;
 }
+
+/* ---------- the simulate button at the top of the drawer ---------- */
+.hud .editor .simulate .simulate-btn {
+  width: 100%;
+  padding: 11px 10px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  background: var(--amber);
+  color: #08090a;
+  font-weight: 700;
+  border-color: var(--amber);
+}
+.hud .editor .simulate .simulate-btn:hover:not(:disabled) {
+  background: #f7b355;
+  border-color: #f7b355;
+}
+.hud .editor .simulate .simulate-btn:disabled {
+  opacity: 0.45;
+}

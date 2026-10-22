@@ -26,20 +26,23 @@ import {
 import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
 import { CUT, decisionShots } from './director'
-import { Editor, type Reports, type Runs } from './editor'
-import { engineName, runScenario, type EngineRun, type ScenarioRequest } from './engines'
-import { burnedHa, computeFWISeries, decisionBarriers, freeArrival, params, simulate, type Run, type Scenario } from './fastModel'
+import { Busy } from './busy'
+import { Editor, type Reports, type Runs, type SimulateState } from './editor'
+import { ApiDown, engineName, fetchEngines, runScenario, type EngineRun, type ScenarioRequest } from './engines'
+import { burnedHa, computeFWISeries, decisionBarriers, params, type Run, type Scenario } from './fastModel'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
 import { Hud, type CameraReadout } from './hud'
 import { loadInventory } from './inventory'
+import { layoutHash } from './layout'
 import { MarkerLayer } from './markers'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { WindShiftWatch } from './windShift'
 import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
-import { endMinute, makeReport, recommend } from './report'
+import { arrivalFromProgression, cutSteps } from './reference'
+import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
 import { createViewer } from './scene'
 import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
@@ -50,9 +53,9 @@ import { containmentProbability, loadSuppression, type Decision } from './suppre
 const PENHA = { lon: -8.2683, lat: 41.4256 }
 // Where the replay starts: high over Penha, looking north-east towards the Minho fires.
 const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
-const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on until the fire stops, or this long
+const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on until the fire stops, or this long, or the cap
 const REPORT_MIN = 360 // the 6 h of the report, kept beside the end
-const ENGINE_WAIT_MS = 1000 // the decisions have to be still this long before the engine runs them
+const FREE_WAIT_MS = 30_000 // the cached free run is waited for this long on load; then the reference's own progression stands in
 const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
 interface Replay {
@@ -63,14 +66,15 @@ interface Replay {
   fire: FireLayer // the observed fire
   markers: MarkerLayer
   player: Player
-  scenario: Scenario // the fast model's inputs for this fire
-  free: SplitLayer // the free run, shown during the simulated shots
+  scenario: Scenario // the grid and the inputs of the barriers and the ILS (the fast model, never on screen)
+  free: SplitLayer // the free run (ELMFIRE, no forces), shown during the simulated shots
+  freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
-  split?: SplitLayer // the decisions A and B side by side (always simulated, shown in their shots or on key A)
-  freeShown: Float32Array // the arrival the free layer draws: the fast model's, or the engine's once it has run
-  runs?: Runs // the runs on the screen
+  split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
+  runs?: Runs // Livre, A and B of the last ELMFIRE simulation; none before the first
+  simHash: string // the means layout the last simulation ran (the empty one before the first)
   showSplit: boolean // key A: the split stays on through every shot
   director: boolean // key D: the director's cut plays instead of the whole story
   shotShown: Shot | undefined // the shot the split and the editor were last set for
@@ -94,6 +98,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
+  const busy = new Busy() // the loading screen: while an ELMFIRE run is on, nothing can be changed
   let replay: Replay | undefined
   // Console handle for tuning in dev (atalaia.spotlight.strength = 0, …); absent from the build.
   if (import.meta.env.DEV)
@@ -101,12 +106,12 @@ async function main() {
       atalaia: {
         viewer,
         spotlight,
-        params, // of the fast model; rerun() simulates again with them
+        params, // of the fast model (the ILS's, never on screen)
         runs: {},
         get replay() {
           return replay
         },
-        rerun: () => rerun(),
+        simulate: () => void simulate(),
       },
     })
   let loading: string | undefined
@@ -186,7 +191,8 @@ async function main() {
     next: () => replay?.player.next(),
     goTo: (i) => replay?.player.goTo(i),
     pickFire: (id) => (location.hash = id),
-    pickEngine: () => rerun(),
+    pickEngine: () => refreshSimulate(),
+    simulate: () => void simulate(),
     roleChanged: (role) => {
       editor.setRole(role)
       const dispatch = editor.getMultiAgencyDispatch()
@@ -198,9 +204,10 @@ async function main() {
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
     flyTo: (at) => void flyToAlert(at),
   })
-  // The decision editor: what it draws is simulated again at once and shown split.
+  // The decision editor: placing means runs nothing; the simulate button (here and in the HUD) runs A and B on ELMFIRE.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
-    changed: () => rerun(),
+    changed: () => refreshSimulate(),
+    simulate: () => void simulate(),
     editing: (open) => {
       hud.setEditing(open)
       if (!replay) return
@@ -208,7 +215,7 @@ async function main() {
         replay.player.playing = false // the mouse has the camera and the map takes the clicks
         // The drawer's hour is the replay's clock; before the replay starts, the clock goes to the end of the run.
         if (!(replay.player.update(0).hours > 0)) replay.player.seek(shownEndMin() / 60)
-        replay.showSplit = true
+        replay.showSplit = true // only draws once A and B have been simulated
       }
     },
   })
@@ -227,7 +234,7 @@ async function main() {
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
     loading = id
-    const [fire, progression, grid, weather, osm] = await Promise.all([
+    const [fire0, progression0, grid, weather, osm] = await Promise.all([
       loadFire(id),
       loadProgression(id),
       loadGrid(id),
@@ -235,25 +242,49 @@ async function main() {
       loadOsm(id),
     ])
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
-    const near = nearestStations(stations, fire.ignition)
-    const regional = nearestStations(stations, fire.ignition, 30, 65)
-    // The free run: the fire as the fast model lets it go with nobody on it, from the ignition.
-    const startIndex = Math.max(0, weather.time.indexOf(fire.start.slice(0, 16)))
+    const near = nearestStations(stations, fire0.ignition)
+    const regional = nearestStations(stations, fire0.ignition, 30, 65)
+    // The scenario of the barriers and of the ILS (the fast model, never on screen).
+    const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
-    const durationMin = horizonMin(fire.start, weather)
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire.ignition, stations: regional, suppression, durationMin, fwiSeries }
+    const durationMin = horizonMin(fire0.start, weather)
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, fwiSeries }
+    // The free run is the first ELMFIRE prediction, no forces: the API's cached run, or the reference's own
+    // progression (the same ELMFIRE run) while the API is down. It is cut at the cap so the browser stays light.
+    busy.start('A obter a previsão do ELMFIRE…', ['Livre'])
     const t0 = performance.now()
-    // The scenario's own free run (fastModel.freeArrival): the same array the reruns show, so the free layer is drawn once.
-    const free: Run = { decision: null, arrival: freeArrival(scenario), durationMin, runtimeMs: performance.now() - t0 }
+    const capHa = fire0.referenceCapHa ?? CAP_HA
+    let reference: Run
+    let source: string
+    try {
+      const r = await Promise.race([
+        ask(engineRequest(id, scenario, null), grid.rows, grid.cols),
+        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('sem resposta do ELMFIRE')), FREE_WAIT_MS)),
+      ])
+      reference = engineRun(scenario, r, null)
+      source = r.engine
+    } catch (e) {
+      console.warn(`ELMFIRE livre: ${e instanceof Error ? e.message : e}; fica a progressão da referência`)
+      reference = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0), durationMin, runtimeMs: 0, engine: fire0.simulated ? 'ELMFIRE (referência)' : 'perímetros observados' }
+      source = `${reference.engine}, sem a API`
+    }
+    busy.hide()
+    const free = capRun(grid, reference, capHa)
+    const freeEnd = endMinute(grid, free)
+    // The story and the observed layer stop where the run does.
+    const { fire, progression } = cutSteps(fire0, progression0, fireEnd(grid, free).cutMin ?? Infinity)
     const reach = computeReach(grid, free, fire, near, suppression, detection)
     console.info(
-      `free run: ${free.runtimeMs.toFixed(0)} ms · ` +
+      `free run (${source}): ${(performance.now() - t0).toFixed(0)} ms · ${describeEnd(fireEnd(grid, free), fire.start, free.durationMin)} · ` +
         reach.etas.map((e) => `${e.unit} ${e.from} T+${e.minutes} min ${e.areaHa.toFixed(1)} ha POC ${(e.poc * 100).toFixed(0)} %`).join(' · ') +
         ` · T_sat ${reach.tsat.areaHa.toFixed(0)} ha POC ${(reach.tsat.poc * 100).toFixed(0)} %`,
     )
     const context = osm ? buildContext(grid, osm) : undefined
     if (context) console.info(`osm: ${osm!.roads.length} roads, ${osm!.buildings.length} buildings, ${context.access.length} access points`)
-    const story = buildStory(fire, progression, near, fovy, reach)
+    const story = buildStory(fire, progression, near, fovy, reach, {
+      endMin: freeEnd,
+      text: `${describeEnd(fireEnd(grid, free), fire.start, free.durationMin)} (${source})`,
+    })
     await addHeights(story, viewer.terrainProvider)
     if (loading !== id) return // another fire was picked meanwhile
     loading = undefined
@@ -276,19 +307,23 @@ async function main() {
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,
-      free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], durationMin),
-      freeShown: free.arrival,
+      free: new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: free.arrival }], freeEnd),
+      freeRun: free,
       reach: new ReachLayer(viewer, fire.ignition, reach),
       context,
       story,
       showSplit: false,
       director: replay?.director ?? false,
       shotShown: undefined,
+      simHash: '',
     }
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
     hud.setDirector(replay.director)
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
+    editor.setRange(freeEnd)
+    editor.setFree(free)
+    editor.setEngine({ state: 'done', name: source, seconds: 0 })
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
@@ -299,8 +334,11 @@ async function main() {
       intensityKWPerM: reach.intensityKWPerM,
     })
     document.title = `${fire.name} · Atalaia`
-    engineDone.clear()
-    rerun() // the decisions A and B are simulated at once: the director's shots need them
+    // Nothing is simulated yet but Livre: the means layout of the start (empty) is what the button compares against.
+    replay.simHash = layoutKey()
+    alerts = prepareAlerts({ scenario, context, decisions: editor.decisions, runs: { free, A: free, B: free } }) // A and B are never read before they are simulated
+    setShots()
+    refreshSimulate()
   }
 
   /** The player's shots: the whole story, or the director's cut of it. The HUD's ticks follow. */
@@ -323,12 +361,12 @@ async function main() {
     player.keep(shots, index)
   }
 
-  /** The director's shots follow the decisions: built again after every run, on the terrain. */
-  async function refreshDirector(runs: Runs, reports: Reports | undefined) {
+  /** The director's shots follow the decisions of the last simulation: built again after it, on the terrain. */
+  async function refreshDirector(runs: Runs, reports: Reports | undefined, decisions: [Decision, Decision]) {
     if (!replay) return
     const { story, data, scenario, stations } = replay
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
-    const fresh = decisionShots(data, scenario.grid, stations, suppression, editor.decisions, runs, reports, fovy)
+    const fresh = decisionShots(data, scenario.grid, stations, suppression, decisions, runs, reports, fovy)
     await addHeights({ shots: fresh, markers: [] }, viewer.terrainProvider)
     if (replay?.story !== story) return // another fire meanwhile
     const kept = story.shots.filter((s) => !DIRECTOR_KINDS.has(s.kind))
@@ -339,66 +377,35 @@ async function main() {
   // The special alerts of the three runs, prepared in rerun() and read at the clock in the loop.
   let alerts: PreparedAlerts | undefined
 
-  /** The hour the shown runs are over: the later of A and B to stop, or the end of the runs. */
+  /** The hour the shown runs are over, or cut: the later of Livre, A and B (the opening has only Livre). */
   function shownEndMin(): number {
-    const runs = replay?.runs
-    if (!replay || !runs) return REPORT_MIN
-    return Math.max(endMinute(replay.scenario.grid, runs.A), endMinute(replay.scenario.grid, runs.B))
+    if (!replay) return REPORT_MIN
+    const { grid } = replay.scenario
+    const runs = replay.runs
+    return Math.max(endMinute(grid, replay.freeRun), runs ? Math.max(endMinute(grid, runs.A), endMinute(grid, runs.B)) : 0)
   }
 
-  /** Simulate Livre, A and B as the editor holds them and show them: the fast model at once, then the engine's runs
-   *  (ELMFIRE through the API) in their place when they come. Runs the engine already gave are shown straight away. */
-  function rerun() {
-    if (!replay) return
-    const { scenario } = replay
-    const [a, b]: [Decision, Decision] = editor.decisions
-    const requests = { free: engineRequest(scenario, null), A: engineRequest(scenario, a), B: engineRequest(scenario, b) }
-    const known = [requests.free, requests.A, requests.B].map((r) => engineDone.get(JSON.stringify(r)))
-    if (known.every((r) => r)) {
-      window.clearTimeout(engineTimer)
-      engineGen++ // an answer still on its way is for an older plan
-      const [free, A, B] = known as EngineRun[]
-      show({ free: engineRun(scenario, free, null), A: engineRun(scenario, A, a), B: engineRun(scenario, B, b) })
-      editor.setEngine({ state: 'done', name: free.engine, seconds: 0 })
-      return
-    }
-    show({ free: { decision: null, arrival: freeArrival(scenario), durationMin: scenario.durationMin, runtimeMs: 0 }, A: simulate(scenario, a), B: simulate(scenario, b) })
-    askEngine(scenario, [a, b], requests)
-  }
-
-  /** Livre, A and B on the screen: the free layer, A and B split, their reports and alerts, the director's shots. */
-  function show(runs: Runs) {
+  /** Livre, A and B of an ELMFIRE simulation on the screen: A and B split, their reports and alerts, the director's shots. */
+  function show(runs: Runs, [a, b]: [Decision, Decision]) {
     if (!replay) return
     const { scenario, context } = replay
     const { grid } = scenario
-    const [a, b] = editor.decisions
     replay.runs = runs
     for (const [name, run] of Object.entries(runs))
       console.info(
-        `${name}: ${run.engine ?? 'modelo rápido'} ${run.runtimeMs.toFixed(0)} ms · ` +
+        `${name}: ${run.engine ?? 'ELMFIRE'} ${run.runtimeMs.toFixed(0)} ms · ` +
           [60, 360, run.durationMin].map((t) => `${t} min ${burnedHa(grid, run, t).toFixed(0)} ha`).join(' · ') +
-          ` · fim T+${endMinute(grid, run).toFixed(0)} min`,
+          ` · ${describeEnd(fireEnd(grid, run), replay.data.start, run.durationMin)}`,
       )
     if (import.meta.env.DEV) Object.assign((window as unknown as { atalaia: { runs: unknown } }).atalaia, { runs })
     const overlay = document.getElementById('overlay')!
-    if (runs.free.arrival !== replay.freeShown) {
-      replay.free.destroy()
-      replay.free = new SplitLayer(viewer, overlay, grid, [{ name: 'livre', arrival: runs.free.arrival }], runs.free.durationMin)
-      replay.free.set(replay.player.update(0).hours)
-      replay.free.show(false) // the loop shows it in its shots
-      replay.freeShown = runs.free.arrival
-    }
     const reports: Reports | undefined = context && {
       free: makeReport(grid, context, runs.free),
       A: makeReport(grid, context, runs.A),
       B: makeReport(grid, context, runs.B),
     }
-    // A and B are told apart at the end of the engine's runs; the fast model's 24 h only grows to the grid's
-    // border, so its preview is judged at 6 h.
-    const sixHours = (run: Run) => makeReport(grid, context!, run, Math.min(REPORT_MIN, run.durationMin))
-    const judged: Reports | undefined = reports && (runs.A.engine ? reports : { free: sixHours(runs.free), A: sixHours(runs.A), B: sixHours(runs.B) })
     // The recommended decision (fewer places reached, then less burned) is named as such on its side of the split.
-    const pick = judged && recommend(judged.A, judged.B).pick
+    const pick = reports && recommend(reports.A, reports.B).pick
     const label = (d: Decision) => (d.id === pick ? `${d.name} · recomendada` : d.name)
     const position = replay.split?.position
     replay.split?.destroy()
@@ -407,28 +414,43 @@ async function main() {
       overlay,
       grid,
       [{ name: label(a), arrival: runs.A.arrival }, { name: label(b), arrival: runs.B.arrival }],
-      runs.A.durationMin,
+      Math.max(endMinute(grid, runs.A), endMinute(grid, runs.B)),
     )
     if (position !== undefined) replay.split.setPosition(position)
     replay.split.set(replay.player.update(0).hours)
     replay.split.show(false) // the loop shows it in the director's shots, or on key A
-    editor.setRuns(runs, reports, judged)
+    editor.setRange(shownEndMin())
+    editor.setRuns(runs, reports, reports)
     alerts = prepareAlerts({ scenario, context, decisions: [a, b], runs })
-    void refreshDirector(runs, judged)
+    void refreshDirector(runs, reports, [a, b])
   }
 
-  // The engine (ELMFIRE by default, or the one picked in the settings) runs Livre, A and B through the API
-  // (docs/contracts.md). Its answers are kept by request for this fire, so a plan seen before comes back at once.
+  // ELMFIRE runs through the API (docs/contracts.md). Its answers are kept by request, so a layout seen before
+  // (or an empty one, which is the free run) comes back at once.
   const engineDone = new Map<string, EngineRun>()
   const enginePending = new Map<string, Promise<EngineRun>>()
-  let engineGen = 0 // the plan asked last: answers for an older one are not shown
-  let engineTimer: number | undefined
 
-  /** The scenario of a decision as the API takes it, over the runs' whole horizon: the same barriers the fast model
-   *  applied, from the same whole minutes (rounding them later moves where a line catches the head). */
-  function engineRequest(scenario: Scenario, d: Decision | null): ScenarioRequest {
+  function ask(request: ScenarioRequest, rows: number, cols: number): Promise<EngineRun> {
+    const key = JSON.stringify(request)
+    const done = engineDone.get(key)
+    if (done) return Promise.resolve(done)
+    let pending = enginePending.get(key)
+    if (!pending) {
+      pending = runScenario(request, rows, cols)
+      enginePending.set(key, pending)
+      pending.then(
+        (r) => engineDone.set(key, r),
+        () => undefined,
+      ).finally(() => enginePending.delete(key))
+    }
+    return pending
+  }
+
+  /** The scenario of a decision as the API takes it, over the runs' whole horizon (sent explicitly): the barriers
+   *  from the same whole minutes the editor draws (rounding them later moves where a line catches the head). */
+  function engineRequest(id: string, scenario: Scenario, d: Decision | null): ScenarioRequest {
     const barriers = d ? decisionBarriers(scenario, d) : []
-    return { fire: replay!.id, engine: hud.settings.engine, duration_min: scenario.durationMin, decision: { barriers } }
+    return { fire: id, engine: hud.settings.engine, duration_min: scenario.durationMin, decision: { barriers } }
   }
 
   const engineRun = (scenario: Scenario, r: EngineRun, decision: Decision | null): Run => ({
@@ -439,53 +461,78 @@ async function main() {
     engine: r.engine,
   })
 
-  /** Asks the engine for the three runs once the decisions have been still for a moment, and shows them if they are
-   *  still the ones on the screen. While the ILS searches B, Livre and A are asked ahead and B waits for its plan. */
-  function askEngine(scenario: Scenario, [a, b]: [Decision, Decision], requests: Record<'free' | 'A' | 'B', ScenarioRequest>) {
-    window.clearTimeout(engineTimer)
-    const gen = ++engineGen
-    const name = engineName(requests.free.engine)
-    const { rows, cols } = scenario.grid
-    const ask = (request: ScenarioRequest) => {
-      const key = JSON.stringify(request)
-      let pending = enginePending.get(key)
-      if (!pending) {
-        pending = runScenario(request, rows, cols)
-        enginePending.set(key, pending)
-        pending.then(
-          (r) => replay?.scenario === scenario && engineDone.set(key, r),
-          () => undefined,
-        ).finally(() => enginePending.delete(key))
+  /** The means layout as the engine would get it: each decision's points, lines, assignments and barriers. */
+  function layoutKey(): string {
+    if (!replay) return ''
+    const { scenario } = replay
+    return layoutHash({
+      engine: hud.settings.engine,
+      duration: scenario.durationMin,
+      decisions: editor.decisions.map((d) => ({ points: d.points, lines: d.lines, assignments: d.assignments, barriers: decisionBarriers(scenario, d) })),
+    })
+  }
+
+  /** The simulate button, in the drawer and in the HUD: lit only when the means differ from the last simulation's. */
+  function simulateState(): SimulateState {
+    if (!replay) return { label: 'Simular no ELMFIRE', enabled: false, note: '' }
+    if (editor.searching) return { label: 'À espera da proposta B…', enabled: false, note: 'O B está a ser procurado (até 10 s); depois podes simular.' }
+    const [a, b] = editor.decisions
+    if (layoutKey() === replay.simHash)
+      return {
+        label: replay.runs ? 'Simulação atualizada' : 'Sem meios para simular',
+        enabled: false,
+        note: replay.runs ? `A e B simulados no ${engineName(hud.settings.engine)} com os meios que estão no mapa.` : 'Põe meios no mapa (E) e carrega aqui para os simular no ELMFIRE.',
       }
-      return pending
+    return {
+      label: 'Simular no ELMFIRE',
+      enabled: true,
+      note: replay.runs
+        ? 'Os meios mudaram desde a última simulação.'
+        : a.assignments.length + b.assignments.length ? 'A e B ainda não simulados: o mapa mostra só a previsão sem meios.' : 'Os meios foram retirados.',
     }
+  }
+
+  let lastSimulate = ''
+  function refreshSimulate() {
+    const state = simulateState()
+    const key = `${state.label}|${state.enabled}|${state.note}`
+    if (key === lastSimulate) return
+    lastSimulate = key
+    hud.setSimulate(state)
+    editor.setSimulate(state)
+  }
+
+  /** Runs A and B on ELMFIRE as they stand now, behind the loading screen, and shows them. The free run is the cached one. */
+  async function simulate() {
+    if (!replay || busy.active || !simulateState().enabled) return
+    const { scenario } = replay
+    const { rows, cols } = scenario.grid
+    const decisions = editor.decisions.map((d) => structuredClone(d)) as [Decision, Decision]
+    const [a, b] = decisions
+    const hash = layoutKey()
+    const requests = [engineRequest(replay.id, scenario, a), engineRequest(replay.id, scenario, b)]
+    const name = engineName(requests[0].engine)
+    replay.player.playing = false
+    busy.start('A simular no ELMFIRE…', ['A', 'B'])
     editor.setEngine({ state: 'running', name })
-    engineTimer = window.setTimeout(async () => {
-      const t0 = performance.now()
-      try {
-        if (editor.searching) {
-          editor.setEngine({ state: 'waiting', name })
-          await Promise.all([ask(requests.free), ask(requests.A)])
-          // B is asked when the search is over. A search that ends with B's plan reruns by itself; one that fails or
-          // is stopped may not, so the flag is watched until it is down.
-          const watch = () => {
-            if (gen !== engineGen) return
-            if (editor.searching) engineTimer = window.setTimeout(watch, 500)
-            else rerun()
-          }
-          watch()
-          return
-        }
-        const [free, A, B] = await Promise.all([ask(requests.free), ask(requests.A), ask(requests.B)])
-        if (gen !== engineGen || replay?.scenario !== scenario) return
-        show({ free: engineRun(scenario, free, null), A: engineRun(scenario, A, a), B: engineRun(scenario, B, b) })
-        editor.setEngine({ state: 'done', name: free.engine, seconds: [free, A, B].some((r) => !r.cached) ? (performance.now() - t0) / 1000 : 0 })
-      } catch (e) {
-        if (gen !== engineGen) return
-        console.warn(`${name}: ${e instanceof Error ? e.message : e}; fica o modelo rápido`)
-        editor.setEngine({ state: 'down', name, reason: e instanceof Error ? e.message : String(e) })
-      }
-    }, ENGINE_WAIT_MS)
+    const t0 = performance.now()
+    try {
+      const [ra, rb] = await Promise.all(requests.map((r, i) => ask(r, rows, cols).then((run) => (busy.mark(i ? 'B' : 'A'), run))))
+      if (replay?.scenario !== scenario) return busy.hide() // another fire was opened meanwhile
+      // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.
+      const capHa = replay.data.referenceCapHa ?? CAP_HA
+      show({ free: replay.freeRun, A: capRun(scenario.grid, engineRun(scenario, ra, a), capHa), B: capRun(scenario.grid, engineRun(scenario, rb, b), capHa) }, decisions)
+      replay.simHash = hash
+      editor.setEngine({ state: 'done', name: ra.engine, seconds: [ra, rb].some((r) => !r.cached) ? (performance.now() - t0) / 1000 : 0 })
+      busy.hide()
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e)
+      console.warn(`${name}: ${reason}`)
+      const down = e instanceof ApiDown || (await fetchEngines()) === null
+      editor.setEngine({ state: 'down', name, reason })
+      busy.fail(down ? 'ELMFIRE indisponível — inicie api/serve.sh' : reason)
+    }
+    refreshSimulate()
   }
 
   /** The decisions A and B on and off the screen through every shot (key A). */
@@ -512,6 +559,7 @@ async function main() {
 
   let last = performance.now()
   let frameNo = 0
+  let searching = false
   let readout: CameraReadout = { heading: 0, pitch: 0, range: 0, centre: undefined }
   let revealed = new Set<string>()
   scene.preUpdate.addEventListener(() => {
@@ -520,14 +568,15 @@ async function main() {
     last = now
     if (!replay) return
     const { player, fire, free, split } = replay
-    scene.screenSpaceCameraController.enableInputs = !player.driving
+    scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     const frame = player.update(dt)
     // The split shows in the director's shots, or through every shot on key A.
     const splitOn = !!split && (replay.showSplit || !!frame.shot.split)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
-    const simulated = frame.shot.simulated || splitOn
-    fire.set(simulated ? { step: -1, fade: 1, untimed: false } : frame.fire)
-    free.show(frame.shot.simulated && !splitOn)
+    // With the drawer open and nothing simulated yet, the free run is what the means are up against.
+    const freeOn = !splitOn && (frame.shot.simulated || editor.open)
+    fire.set(freeOn || splitOn ? { step: -1, fade: 1, untimed: false } : frame.fire)
+    free.show(freeOn)
     free.set(frame.hours)
     split?.show(splitOn)
     split?.set(frame.hours)
@@ -554,6 +603,8 @@ async function main() {
       spotlight.set(centre, frame.driving ? frame.spot : frame.spot * (centre.range / Math.max(frame.pose.range, 1)))
     } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
     frameNo++
+    if (editor.searching !== searching) refreshSimulate() // the ILS ended: B is final and can be simulated
+    searching = editor.searching
     hud.update(frame, readout, splitOn)
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
@@ -571,7 +622,7 @@ async function main() {
   })
 
   document.addEventListener('keydown', (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (busy.active || e.metaKey || e.ctrlKey || e.altKey) return
     if (e.key === 'Escape' && hud.settings.open) return hud.settings.toggle(false)
     if (editor.handleKey(e)) return e.preventDefault()
     // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.

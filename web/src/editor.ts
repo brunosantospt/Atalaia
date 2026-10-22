@@ -72,15 +72,24 @@ type Tool = 'point' | 'line' | 'drops' | 'pma'
 export type Runs = Record<'free' | 'A' | 'B', Run>
 export type Reports = Record<'free' | 'A' | 'B', Report>
 
-/** Where the shown runs stand with the engine (main.ts): asked, waiting for the ILS's B, shown, or not there. */
+/** Where the shown runs stand with the engine (main.ts): running, shown, or not there. */
 export type EngineStatus =
-  | { state: 'running' | 'waiting'; name: string }
+  | { state: 'running'; name: string }
   | { state: 'done'; name: string; seconds: number } // 0: all from the API's cache
   | { state: 'down'; name: string; reason: string }
 
+/** The "Simular no ELMFIRE" button: lit only when the means differ from what the last simulation ran. */
+export interface SimulateState {
+  label: string
+  enabled: boolean
+  note: string
+}
+
 export interface EditorActions {
-  /** The decisions changed: simulate them again and show them. */
+  /** The decisions changed (nothing runs by itself: main.ts only updates the simulate button). */
   changed(): void
+  /** The simulate button was pressed. */
+  simulate(): void
   /** The drawer opened or closed. */
   editing(open: boolean): void
 }
@@ -124,6 +133,10 @@ const TEMPLATE = `
     <button type="button" data-tab="1"><b>B</b><span></span></button>
   </div>
   <input class="name" data-ref="name" maxlength="40" spellcheck="false" title="Nome da decisão">
+  <section class="simulate">
+    <button type="button" data-ref="simulate" class="primary-btn simulate-btn" title="Corre o ELMFIRE com os meios de A e de B. Só se acende quando os meios mudaram desde a última simulação."></button>
+    <p class="note" data-ref="simulateNote"></p>
+  </section>
   <section class="hour">
     <h3>Hora <span data-ref="hourText"></span></h3>
     <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
@@ -154,7 +167,7 @@ const TEMPLATE = `
   </section>
   <section class="ils">
     <h3>Proposta B</h3>
-    <button type="button" data-ref="ils" class="primary-btn" title="O B é procurado sozinho ao abrir o incêndio e sempre que o A muda: 10 s à procura de onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023). Este botão repete a procura."></button>
+    <button type="button" data-ref="ils" class="primary-btn" title="O B é procurado sozinho sempre que o A muda: 10 s à procura de onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023, no modelo rápido interno). Este botão repete a procura. O resultado só se vê depois de simular no ELMFIRE."></button>
     <p class="note" data-ref="ilsNote"></p>
     <ul class="assignments changes" data-ref="ilsChanges"></ul>
   </section>
@@ -300,9 +313,11 @@ export class Editor {
   /** Minute of the simulation the drawer shows: the split and the report follow it. */
   private minutes = 360
   private loaded: Loaded | undefined
-  private runs: Runs | undefined
+  private runs: Runs | undefined // the last ELMFIRE simulation of A and B (with Livre); none before the first
+  private free: Run | undefined // Livre, the cached ELMFIRE run: all there is before the first simulation
+  private maxMin = 360 // the clock and the slider stop here: the cut of the runs, or when the fires are out
   private reports: Reports | undefined
-  private judged: Reports | undefined // what the verdict compares: the reports, or at 6 h for the fast model
+  private judged: Reports | undefined
   private engine: EngineStatus | undefined
   private readonly source = new CustomDataSource('decisions')
   private readonly access = new CustomDataSource('access')
@@ -420,6 +435,7 @@ export class Editor {
         this.hideTip()
       }
     })
+    this.refs.simulate.addEventListener('click', () => this.actions.simulate())
     this.refs.ils.addEventListener('click', () => {
       if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
       this.stopIls(true)
@@ -491,8 +507,7 @@ export class Editor {
   }
 
   setHours(hours: number) {
-    const max = this.loaded?.scenario.durationMin ?? 360
-    this.setMinutes(Math.round((Math.min(Math.max(hours, 0), max / 60) * 60) / 5) * 5)
+    this.setMinutes(Math.round((Math.min(Math.max(hours, 0), this.maxMin / 60) * 60) / 5) * 5)
   }
 
   /** Synchronizes simulation hour with active playback or timeline, updating road cuts and tactical perimeters dynamically. */
@@ -553,11 +568,11 @@ export class Editor {
     this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
     this.decisions = [empty('A'), empty('B')]
     this.proposeB()
-    this.runs = this.reports = this.judged = this.engine = undefined
+    this.runs = this.reports = this.judged = this.engine = this.free = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
     this.updateStationDropdown()
-    ;(this.refs.hour as HTMLInputElement).max = String(scenario.durationMin)
+    this.setRange(scenario.durationMin)
     this.setMinutes(0)
     this.cancel()
     this.setCount(this.count)
@@ -594,7 +609,29 @@ export class Editor {
     this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica no mapa para os vértices da linha aérea de descargas (duplo clique ou Enter conclui).`
   }
 
-  /** The runs of Livre, A and B, their reports when the fire has OSM context, and those the verdict compares. */
+  /** The clock and the hour slider end at this minute (main.ts: the cut of the runs, or when they are out). */
+  setRange(minutes: number) {
+    this.maxMin = Math.max(5, Math.ceil(minutes / 5) * 5)
+    const hour = this.refs.hour as HTMLInputElement
+    hour.max = String(this.maxMin)
+    if (this.minutes > this.maxMin) this.setMinutes(this.maxMin)
+  }
+
+  /** Livre, the cached ELMFIRE run, before A and B have been simulated. */
+  setFree(free: Run | undefined) {
+    this.free = free
+    this.renderEnds()
+  }
+
+  /** The state of the simulate button (main.ts compares the means with the last simulation's). */
+  setSimulate({ label, enabled, note }: SimulateState) {
+    const button = this.refs.simulate as HTMLButtonElement
+    button.textContent = label
+    button.disabled = !enabled
+    this.refs.simulateNote.textContent = note
+  }
+
+  /** The runs of Livre, A and B of the last ELMFIRE simulation, their reports when the fire has OSM context, and those the verdict compares. */
   setRuns(runs: Runs | undefined, reports: Reports | undefined, judged = reports) {
     this.runs = runs
     this.reports = reports
@@ -1433,17 +1470,28 @@ export class Editor {
       ? ''
       : status.state === 'running'
         ? `${status.name} a correr…`
-        : status.state === 'waiting'
-          ? `${status.name} à espera do B…`
-          : status.state === 'done'
-            ? `${status.name} · ${status.seconds ? `${fmtNumber(status.seconds)} s` : 'cache'}`
-            : `${status.name} indisponível — modelo rápido`
+        : status.state === 'done'
+          ? `${status.name} · ${status.seconds ? `${fmtNumber(status.seconds)} s` : 'cache'}`
+          : `${status.name} indisponível`
     this.refs.engine.title = status?.state === 'down' ? status.reason : ''
     this.refs.engineNote.textContent = !runs
       ? ''
-      : runs.A.engine
-        ? `Corrido com ${runs.A.engine} (API). Só as linhas entram no motor; as descargas aéreas não.`
-        : 'Modelo rápido: uma pré-visualização. Às 24 h só cresce até à borda da grelha; a recomendação é às 6 h.'
+      : `Corrido com ${runs.A.engine ?? 'ELMFIRE'} (API). Só as linhas entram no motor; as descargas aéreas não. Cada fogo pára no corte da referência.`
+    if (!runs && this.free && this.loaded) {
+      // Before the first simulation: Livre is the cached run, A and B have not run.
+      const free = this.free
+      table.replaceChildren(
+        ...(['free', 'A', 'B'] as const).map((id) => {
+          const tr = document.createElement('tr')
+          tr.innerHTML = '<th></th><td class="end"></td><td></td>'
+          tr.children[0].textContent = id === 'free' ? 'Livre' : id
+          tr.children[1].textContent = id === 'free' ? describeEnd(fireEnd(this.loaded!.scenario.grid, free), this.loaded!.fire.start, free.durationMin) : 'ainda não simulado'
+          tr.children[2].textContent = id === 'free' ? `6 h: ${fmtHa(burnedHa(this.loaded!.scenario.grid, free, 360))}` : ''
+          return tr
+        }),
+      )
+      return
+    }
     if (!runs || !this.loaded) {
       table.innerHTML = '<tr><td class="none">Sem simulação ainda.</td></tr>'
       return
@@ -1650,13 +1698,14 @@ export class Editor {
     const table = this.refs.report
     const r = this.reports
     if (!r) {
-      table.innerHTML = `<tr><td class="none">${this.loaded?.context ? 'Sem simulação ainda.' : 'Sem dados OSM para este incêndio.'}</td></tr>`
+      table.innerHTML = `<tr><td class="none">${this.loaded?.context ? 'A e B ainda não simulados.' : 'Sem dados OSM para este incêndio.'}</td></tr>`
       this.refs.detail.textContent = ''
+      this.refs.verdict.textContent = ''
       return
     }
     const cols = ['free', 'A', 'B'] as const
     const at = this.reportsAt(this.minutes) ?? r
-    this.refs.reportAt.textContent = at.A.minutes >= r.A.minutes ? `às ${fmtNumber(r.A.minutes / 60, 1)} h` : `a ${fmtElapsed(at.A.minutes / 60)}`
+    this.refs.reportAt.textContent = at === r ? `no fim (${fmtNumber(Math.max(r.free.minutes, r.A.minutes, r.B.minutes) / 60, 1)} h)` : `a ${fmtElapsed(this.minutes / 60)}`
     const rows: [string, (x: Report) => string][] = [
       ['Área ardida', (x) => fmtHa(x.burnedHa)],
       ['Casas atingidas', (x) => String(x.homes)],
@@ -1688,7 +1737,7 @@ export class Editor {
   private reportsAt(minutes: number): Reports | undefined {
     const runs = this.runs
     const context = this.loaded?.context
-    if (!runs || !context || !this.reports || minutes >= this.reports.A.minutes) return undefined
+    if (!runs || !context || !this.reports || minutes >= Math.max(this.reports.free.minutes, this.reports.A.minutes, this.reports.B.minutes)) return undefined
     const { grid } = this.loaded!.scenario
     return { free: makeReport(grid, context, runs.free, minutes), A: makeReport(grid, context, runs.A, minutes), B: makeReport(grid, context, runs.B, minutes) }
   }

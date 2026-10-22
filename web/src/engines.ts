@@ -53,11 +53,21 @@ interface ApiResult {
 const NAMES: Record<string, string> = { elmfire: 'ELMFIRE', simfire: 'SimFire' }
 export const engineName = (id: string) => NAMES[id] ?? id
 
+/** The API does not answer (not started): the dev proxy then answers 5xx with no body of the API's. */
+export class ApiDown extends Error {
+  constructor() {
+    super('ELMFIRE indisponível — inicie api/serve.sh')
+  }
+}
+
 /** Runs a scenario on the API. Throws with the API's reason when it cannot (down, not ready, scenario refused). */
 export async function runScenario(request: ScenarioRequest, rows: number, cols: number): Promise<EngineRun> {
-  const res = await fetch('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) })
+  const res = await fetch('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }).catch(() => {
+    throw new ApiDown()
+  })
   if (!res.ok) {
     const detail = await res.json().then((b: { detail?: unknown }) => b.detail, () => undefined)
+    if (res.status >= 500 && detail === undefined) throw new ApiDown()
     throw new Error(`HTTP ${res.status}${typeof detail === 'string' ? `: ${detail}` : ''}`)
   }
   const r = (await res.json()) as ApiResult

@@ -1,0 +1,97 @@
+/* The loading screen of an ELMFIRE run (busy.ts): over everything, even the dispatch modal. */
+#busy {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 5, 6, 0.78);
+  backdrop-filter: blur(3px);
+  font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  color: #d9dcdf;
+  cursor: progress;
+  user-select: none;
+}
+#busy[hidden] {
+  display: none;
+}
+#busy .box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: min(520px, 90vw);
+  padding: 28px 36px;
+  border: 1px solid rgba(220, 224, 228, 0.22);
+  background: rgba(10, 11, 12, 0.85);
+  text-align: center;
+}
+#busy h2 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+#busy .spin {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(240, 163, 58, 0.25);
+  border-top-color: #f0a33a;
+  border-radius: 50%;
+  animation: busy-spin 0.9s linear infinite;
+}
+#busy.failed .spin {
+  display: none;
+}
+#busy .elapsed {
+  margin: 0;
+  font-size: 22px;
+  color: #f0a33a;
+}
+#busy.failed .elapsed {
+  display: none;
+}
+#busy .tasks {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+#busy.failed .tasks {
+  display: none;
+}
+#busy .tasks li {
+  color: #8b9096;
+}
+#busy .tasks li.done {
+  color: #d9dcdf;
+}
+#busy .tasks b {
+  margin-right: 6px;
+}
+#busy .error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f0a33a;
+  text-transform: none;
+  word-break: break-word;
+}
+#busy button {
+  cursor: pointer;
+  padding: 7px 28px;
+  font: inherit;
+  font-weight: 700;
+  background: #f0a33a;
+  color: #08090a;
+  border: 1px solid #f0a33a;
+}
+@keyframes busy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
