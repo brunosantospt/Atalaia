@@ -250,9 +250,9 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 
 | Incêndio | A | B | Melhor B no plano |
 |---|---|---|---|
-| Penha, Guimarães (simulado) | 5 lugares · 623,4 ha | 1 lugar · 247,7 ha | 599 |
+| Penha, Guimarães (simulado) | 3 lugares · 304,9 ha | 1 lugar · 204,0 ha | 31 |
 
-Estes valores batem com `web/scripts/ils-reference.json`. A Penha tem ~90 000 acessos e cada plano custa ~12 ms, por isso cabem ~700 planos em 10 s (`--time`, este Mac: B com 1 lugar · 259,6 ha, achado no plano 174 aos 3,9 s). A tabela e os exemplos seguintes, medidos no Chrome, são de Vieira e Cabeceiras com o modelo anterior.
+Estes valores batem com `web/scripts/ils-reference.json` (commit 8f3c6d4). Desde `b879350`, a cabeça do exemplo A fica a 350 m da ignição em vez de 600 m, ao alcance da frente mais lenta da demo de 3 h: o A passou de 5 lugares · 623,4 ha para 3 lugares · 304,9 ha, e o B de 247,7 ha para 204,0 ha. A Penha tem ~90 000 acessos e cada plano custa ~14 ms, por isso cabem ~700 planos em 10 s (`--time`, este Mac: 693 planos, o mesmo B, achado no plano 31 aos 2,2 s). A tabela e os exemplos seguintes, medidos no Chrome, são de Vieira e Cabeceiras com o modelo anterior.
 
 - **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m). Os terrestres ficam sempre ≥ 10 min antes do fogo livre; os aéreos só têm de chegar antes dele, contando o voo desde a sua base.
 - **Cabeceiras:** os meios do A mudam 275 m–2 km (VFCI 524 m, as ECIN 1030 m e 2045 m, os HEBL 275 m e 1560 m).
