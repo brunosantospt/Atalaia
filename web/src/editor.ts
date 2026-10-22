@@ -357,8 +357,8 @@ export class Editor {
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
       const hint = id === 'vttu' ? `Cisterna · ${spec.waterL?.toLocaleString('pt-PT')} L. Apoia VFCI num raio de 300 m e prolonga a autonomia indicada. Não cria linha de combate.`
-        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Linha de 200 m, ajustável por rotação. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
-        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Linha de 100 m, ajustável por rotação. Pode atuar fora das estradas.`
+        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Frente de 200 m por viatura; os meios juntos prolongam a mesma linha. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
+        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Frente de 100 m por equipa; os meios juntos prolongam a mesma linha. Pode atuar fora das estradas.`
         : `${spec.name} · apoio aéreo. Escolha a base e o ponto de intervenção; a chegada depende da distância e da mobilização.`
       button.addEventListener('mouseenter', () => this.showTip(button, hint))
       button.addEventListener('focus', () => this.showTip(button, hint))
@@ -1636,7 +1636,7 @@ export class Editor {
     const unit = this.sup.units[a.unit]
     if (isAerial(unit)) return `${unit.short}: apoio aéreo no modelo rápido. Água/autonomia são indicadores visuais.`
     if (a.unit === 'vttu' || a.task === 'shuttle') return 'Abastece VFCI num raio de 300 m; prolonga a autonomia visual, sem criar linha.'
-    return `Linha reta de ${demoLineLength(a)} m por ${a.unit === 'crew' ? 'equipa' : 'viatura'}, ativa desde a chegada. Sem extensão prevista.`
+    return `Linha de ${demoLineLength(a)} m por ${a.unit === 'crew' ? 'equipa' : 'viatura'}, ativa desde a chegada. Meios juntos e alinhados repartem uma frente contínua.`
   }
 
   private renderPalette() {

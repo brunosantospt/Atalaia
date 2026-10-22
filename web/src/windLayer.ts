@@ -1,6 +1,6 @@
 import { Cartesian2, Cartesian3, Cartographic, Ellipsoid, EllipsoidalOccluder, Math as CesiumMath, SceneTransforms, type Viewer } from 'cesium'
 import type { Weather } from './data'
-import { compass, type LonLat } from './geo'
+import { compass, destination, type LonLat } from './geo'
 import { fmtNumber } from './format'
 import './windWidget.css'
 
@@ -21,6 +21,10 @@ export class WindLayer {
   private readonly mapAnchor: LonLat
   private readonly world = new Cartesian3()
   private readonly pixel = new Cartesian2()
+  private readonly tailWorld = new Cartesian3()
+  private readonly tipWorld = new Cartesian3()
+  private readonly tailPixel = new Cartesian2()
+  private readonly tipPixel = new Cartesian2()
   private readonly ground: Cartographic
   private readonly occluder: EllipsoidalOccluder
   private readonly rose: SVGElement
@@ -63,7 +67,7 @@ export class WindLayer {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
       if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) this.position = { x: Math.max(0,Math.min(1,saved.x)), y: Math.max(0,Math.min(1,saved.y)) }
     } catch { /* A malformed saved position simply uses the default. */ }
-    this.mapAnchor = ignition
+    this.mapAnchor = destination(ignition,45,300)
     this.ground = Cartographic.fromDegrees(this.mapAnchor.lon, this.mapAnchor.lat)
     this.occluder = new EllipsoidalOccluder(Ellipsoid.WGS84, viewer.camera.positionWC)
     this.mapArrow.className = 'map-wind-arrow'
@@ -131,10 +135,19 @@ export class WindLayer {
     const visible = !!p && p.x >= 0 && p.y >= 0 && p.x <= this.parent.clientWidth && p.y <= this.parent.clientHeight
     this.mapArrow.hidden = !visible
     if (visible) {
-      // A fixed visual offset keeps the wind arrow clear of the ignition symbol at every zoom.
-      const x = p.x + (p.x+108 > this.parent.clientWidth ? -64 : 64)
-      const y = p.y + (p.y+76 > this.parent.clientHeight ? -32 : 32)
-      this.mapArrow.style.transform = `translate(${Math.round(x-44)}px, ${Math.round(y-44)}px)`
+      // The arrow occupies 300 m on the ground. Both its anchor and projected size follow
+      // the globe, instead of drifting a fixed number of screen pixels away from ignition.
+      const tail = destination(this.mapAnchor,this.to+180,150), tip = destination(this.mapAnchor,this.to,150)
+      Cartesian3.fromDegrees(tail.lon,tail.lat,h+8,undefined,this.tailWorld)
+      Cartesian3.fromDegrees(tip.lon,tip.lat,h+8,undefined,this.tipWorld)
+      const a = SceneTransforms.worldToWindowCoordinates(this.viewer.scene,this.tailWorld,this.tailPixel)
+      const b = SceneTransforms.worldToWindowCoordinates(this.viewer.scene,this.tipWorld,this.tipPixel)
+      if (!a || !b) { this.mapArrow.hidden=true; return }
+      const size = Math.max(12,Math.min(320,Math.hypot(b.x-a.x,b.y-a.y)*120/51))
+      const bearing = Math.atan2(b.x-a.x,a.y-b.y)*180/Math.PI
+      this.mapArrow.style.width = this.mapArrow.style.height = `${size}px`
+      this.mapArrow.style.transform = `translate(${p.x-size/2}px, ${p.y-size/2}px)`
+      this.mapNeedle.setAttribute('transform',`rotate(${bearing} 60 60)`)
     }
   }
 
@@ -162,7 +175,6 @@ export class WindLayer {
     this.heading=heading
     this.rose.setAttribute('transform',`rotate(${-heading} 60 60)`)
     this.needle.setAttribute('transform',`rotate(${this.to-heading} 60 60)`)
-    this.mapNeedle.setAttribute('transform',`rotate(${this.to-heading} 60 60)`)
   }
   update(weather: Weather,start: number,minute: number) {
     const key=`${start}:${Math.round(minute)}`

@@ -89,4 +89,31 @@ assert.equal(demoLines(scenario,{...supplied,assignments:[{...supplied.assignmen
 const calm={...scenario.weather,windFromDeg:[350,10,10],windKmh:[10,20,20]}
 assert.equal(windAt(calm,0,30).from,0,'wind wraps through north rather than reversing')
 assert.equal(windAt(calm,0,30).kmh,15)
+// Concentrated resources must add defended frontage, not duplicate parallel strips.
+const defence: Decision = {id:'A',name:'Front',points:{p},lines:{},assignments:[{unit:'vfci',count:1,from:'bv1',target:'p',task:'direct',dispatchMin:0,wetLineBearingDeg:0}]}
+const one = demoLines(scenario,defence)
+const reinforced = {...defence,assignments:[{...defence.assignments[0],count:6}]}
+const six = demoLines(scenario,reinforced)
+const heldSix = new Set(six.flatMap(w=>stripCells(grid,w.barrier)))
+assert.ok(one.flatMap(w=>stripCells(grid,w.barrier)).every(cell=>heldSix.has(cell)),'reinforcements preserve the already defended frontage')
+const reinforcedSeparately = {...defence,assignments:[{...defence.assignments[0],count:2},{...defence.assignments[0],count:4,from:'bv2'}]}
+const separate = demoLines(scenario,reinforcedSeparately)
+assert.deepEqual(separate.map(w=>JSON.stringify(w.barrier.path)).sort(),six.map(w=>JSON.stringify(w.barrier.path)).sort(),'separate orders/origins at the same access point also share the front')
+const xyP=toPTTM06(p)
+const endpoints=six.flatMap(w=>w.barrier.path.map(([lon,lat])=>toPTTM06({lon,lat})))
+assert.ok(Math.max(...endpoints.map(x=>x.y))-Math.min(...endpoints.map(x=>x.y))>1190,'six engines defend about 1200 m of connected front')
+const wallScenario={...scenario,durationMin:360}
+const freeWall=simulateFast(wallScenario,null), singleWall=simulateFast(wallScenario,defence), strongWall=simulateFast(wallScenario,reinforced)
+const pastFront=(run: typeof freeWall) => Array.from(run.arrival).filter((t,i)=>Number.isFinite(t) && (grid.xmin+(i%grid.cols+.5)*grid.cellsize)>xyP.x+60).length
+assert.ok(pastFront(freeWall)>0 && pastFront(singleWall)>0,'free fire and a short open flank can spread past the response')
+assert.equal(pastFront(strongWall),0,'enough timely sections close the front and block the fire rather than letting it flow between units')
+const late = {...reinforced,assignments:[{...reinforced.assignments[0],dispatchMin:350}]}
+assert.ok(pastFront(simulateFast(wallScenario,late))>0,'late reinforcements cannot undo fire that has already passed')
+const crewWall = {...reinforced,assignments:[{...reinforced.assignments[0],unit:'crew' as const,count:12}]}
+assert.equal(pastFront(simulateFast(wallScenario,crewWall)),0,'cooperating foot teams can close the same front')
+const turned = {...defence,assignments:[...defence.assignments,{...defence.assignments[0],wetLineBearingDeg:90}]}
+const turnedLine=demoLines(scenario,turned)[1]
+const mid={lon:(turnedLine.barrier.path[0][0]+turnedLine.barrier.path[1][0])/2,lat:(turnedLine.barrier.path[0][1]+turnedLine.barrier.path[1][1])/2}
+assert.ok(distanceM(mid,p)<1,'deliberately rotated sections remain at their selected point')
+console.log('COOPERATIVE FRONT:',{free:pastFront(freeWall),one:pastFront(singleWall),six:pastFront(strongWall)})
 console.log('OK: physical-unit BV IDs/renumbering, 100/200 m fixed lines, water/endurance display only, journeys, real fast propagation and timed barriers')
