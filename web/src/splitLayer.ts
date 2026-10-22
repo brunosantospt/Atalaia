@@ -210,7 +210,7 @@ export class SplitLayer {
     layer.colorToAlpha = KEY
     layer.colorToAlphaThreshold = 2 // nothing until set()
     layer.minificationFilter = TextureMinificationFilter.LINEAR // far away a cell is under a pixel: blur is fine
-    layer.magnificationFilter = TextureMagnificationFilter.NEAREST // close up the cells stay whole
+    layer.magnificationFilter = TextureMagnificationFilter.LINEAR // close up: smooth edges, not cell blocks (Tests na demo); an edge moves under a cell
     Object.assign(layer, RECOLOUR ? { ...look, gamma: GAMMA } : { alpha: look.alpha, brightness: look.brightness })
     return layer
   }
