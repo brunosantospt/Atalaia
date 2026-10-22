@@ -118,7 +118,7 @@ export function buildStory(
       badge: prefix,
       label: `${name.join(' ') || 'Bombeiros'} · ${fmtKm(s.km)}`,
       detail: 'em linha reta',
-      ringM: 220,
+      ringM: 0,
       persistent: true,
     })
   }

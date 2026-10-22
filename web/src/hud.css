@@ -954,7 +954,6 @@
 .markers .tag-hospital b { background: #6ee7b7; }
 .markers .tag-airbase b { background: #7dd3fc; }
 .markers .tag b {
-  grid-row: span 2;
   min-width: 18px;
   padding: 2px 4px;
   text-align: center;
@@ -979,10 +978,6 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
-}
-.markers .tag small {
-  font-size: 9px;
-  color: var(--ink-dim);
 }
 
 /* ---------- credits: the ion logo and a link under the card; the sources in a panel ---------- */

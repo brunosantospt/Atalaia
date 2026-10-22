@@ -89,10 +89,9 @@ export class MarkerLayer {
         : undefined
       const tag = document.createElement('div')
       tag.className = `tag tag-${spec.kind}`
-      tag.innerHTML = `<b></b><span></span><small></small>`
+      tag.innerHTML = `<b></b><span></span>`
       tag.querySelector('b')!.textContent = spec.badge
       tag.querySelector('span')!.textContent = spec.label
-      tag.querySelector('small')!.textContent = spec.detail
       const line = document.createElementNS(SVG, 'line')
       const dot = document.createElementNS(SVG, 'circle')
       line.setAttribute('class', `lead lead-${spec.kind}`)
