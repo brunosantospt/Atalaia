@@ -71,42 +71,35 @@ A corrida livre não tem combate. Num incêndio que o combate segurou, queimar d
 
 Ver `MULTIFIRE.md`, secção 2.
 
-### Porque falha *(a completar com todas as configurações)*
+### Porque falha
 
-O erro do ROS de cabeça por janela (corrida / observado), com o K3 em 33 janelas de 6 incêndios:
-- **O ROS observado** é o que mais explica o erro (ρ = −0,69): o modelo é lento nas janelas rápidas e rápido nas lentas. É o viés conhecido dos modelos de Rothermel em fogos de copas e eruptivos (Cruz & Alexander 2010, 2013).
-- **O combustível:** quanto mais pinhal e folhosas na área nova, mais lento (ρ = −0,49), e quanto mais mato, menos lento (ρ = +0,40).
-- **O vento, a temperatura, a humidade e o declive** quase não explicam o erro (|ρ| ≤ 0,13). O ERA5 é a 25 km e de hora a hora; as rajadas não ajudam mais do que a média.
-- **O erro da área persiste entre janelas curtas:** ρ = +0,58 nas janelas de até 2 h, +0,70 nas de até 6 h, +0,32 nas de até 24 h (K3, nove incêndios). Um primeiro olhar com cinco incêndios e o ROS de cabeça dava ρ = 0,06; com os nove e a área é outra coisa. Por isso testa-se uma correção em linha (K3as, K5as): o fator de cada janela vem do erro da janela anterior, reduzido a metade.
+O erro do ROS de cabeça por janela é log2(corrida / observado). O ROS de cabeça é o percentil 95 da distância que o crescimento vai além do perímetro de partida, por hora. Correlação de Spearman com as condições da janela, nas janelas com pelo menos 5 ha de crescimento observado (secção 3 do `MULTIFIRE.md`). Com o K3, 86 janelas de 9 incêndios, a mediana do erro é ×0,39. Com o K5, 74 janelas, é ×0,61.
 
-## Entradas em tempo real
+- **As corridas rápidas é que ficam curtas** (ρ = −0,79 no K3, −0,86 no K5). Nas janelas lentas o modelo acerta ou passa; nas rápidas fica a metade ou a um quarto.
+  - Parte disto é construção: o ROS observado está no denominador, e o erro de medida das horas dos perímetros puxa para aqui. O mesmo para a duração da janela (ρ = +0,59 e +0,67): as janelas curtas são as das corridas.
+  - Mas é também o viés conhecido dos modelos de Rothermel em fogo de copas e eruptivo (Cruz & Alexander 2010, 2013). Nada no modelo acelera o fogo como as corridas reais: nem projeções longas, nem convecção, nem o fogo de copas a 30 m de célula.
+- **O combustível é a condição que mais pesa:** quanto mais pinhal e folhosas na área nova, mais curto (ρ = −0,46 no K3, −0,30 no K5); quanto mais mato, menos (ρ = +0,28 no K3). Os modelos portugueses reduzem o viés das florestas mas não o apagam.
+- **O declive:** o modelo fica mais curto nas encostas suaves (ρ = +0,34 nos dois). O que o fogo real faz em terreno suave e o modelo não é vento e projeções, não o declive; nas encostas o Rothermel já acelera.
+- **O vento médio, a rajada, a temperatura e a humidade quase não explicam o erro** (|ρ| ≤ 0,20, nenhum significativo). O ERA5 é a 25 km e de hora a hora: não vê o vento local nem as rajadas, e por isso também não se vê o que o vento explicaria.
+- **Mais do que tudo, o modelo queima a borda toda.** No teste passo a passo a área nova da corrida é 1,7× (K3) e 2,5× (K5) a observada, mas a cabeça é lenta (×0,39 e ×0,61). Entre dois perímetros observados, 85–99 % da borda não cresce (combate, ou o fogo apagou-se ali). O modelo reacende-a toda em cada recomeço, e a área vai para os flancos em vez de para a cabeça (secção "A borda ativa").
+- **O erro da área persiste entre janelas curtas:** ρ = +0,58 nas janelas de até 2 h, +0,70 nas de até 6 h, +0,32 nas de até 24 h (K3, nove incêndios). Um primeiro olhar com cinco incêndios e o ROS de cabeça dava ρ = 0,06; com os nove e a área é outra coisa. Corrigir o fator de cada janela com o erro da anterior, reduzido a metade, baixa a mediana de |log2 área| de 1,61 para 1,15 no K5, fora de linha. A versão corrida é o K5as.
 
-| Entrada | Hoje no Atalaia | Fonte em tempo real | O que mudaria |
-|---|---|---|---|
-| Vento, temperatura, humidade | ERA5 (reanálise, 25 km) | Previsões: AROME do IPMA (2,5 km, por acordo), HARMONIE da AEMET, IFS e ICON-EU (dados abertos, Open-Meteo) | A rajada e a hora certas. No teste, o vento não explica o erro, mas o ERA5 não vê os picos locais. |
-| Vento no relevo | — (ramo do Carlos: TopoWind, CERRA) | WindNinja, TopoWind (a 30 m, a partir da previsão) | Pouco em Vieira (dentro do ruído das sementes); segundo a literatura, ajuda com vento forte e falha a sotavento (Forthofer et al. 2014) |
-| Humidade morta | Simard (1968) de hora a hora a partir de T e HR | O FFMC do IPMA ou do EFFIS → humidade da folhada fina (Van Wagner 1987) | Um controlo independente da humidade de 1 h |
-| Humidade viva | 60/90 % fixos (30/70 % "de seca" no K5) | Não há produto operacional em Portugal. Há investigação com Sentinel-2/MODIS (Yebra et al. 2013) e o DC do FWI como substituto. | Escolher 30/70 contra 60/90 muda a área em 20–30 % |
-| Combustível | COS 2015 → S&B ou modelos portugueses | COS 2018/2023 e as cartas anuais da DGT (Sentinel-2); o mapa europeu FirEUrisk (1 km, com tradução S&B; Aragoneses et al. 2023); as cartas de modelos dos PMDFCI (municipais, não há uma nacional aberta) | **É o fator que mais pesa.** A tradução floresta → modelo decide se o fogo anda 0,3× ou 3×. |
-| Copas | LiDAR da DGT (2 incêndios) | Mapa global da Meta/WRI (aberto, `canopy_open.py`), o LiDAR da DGT | Abriga o vento. Com o mapa da Meta a mediana das corridas livres sobe (0,60 → 0,69). |
-| Cicatrizes | SGIF/ICNF (40 dias antes) | Áreas ardidas do EFFIS (quase em tempo real, ≥ 30 ha) e do ICNF | Barreiras naturais |
-| Estado do fogo | perímetros do PT-FireSprd (no ensaio) | **MTG-FCI:** focos a cada 10 min a 1 km; o Fire Event Tracker já correu em tempo real em Portugal em 2025 com a VOST e a ANEPC (arXiv 2606.06016). Também o FRP do LSA SAF (demonstração desde 2025), o VIIRS/MODIS do FIRMS e o Copernicus EMS. | Recomeçar do fogo observado (o teste passo a passo) e medir a velocidade real |
-| Estabilidade da atmosfera | — | C-Haines a partir dos perfis da previsão | Indica os dias eruptivos, em que as projeções e o fogo de copas pesam |
-| Combate | linhas de ataque inferidas | ocorrências e meios da ANEPC (por exemplo, fogos.pt); as linhas reais não são abertas | Fecha flancos; sem isso, as corridas livres queimam de mais |
+## A borda ativa
 
-## Projeções
+Num recomeço, o ELMFIRE põe a arder todas as células do perímetro de partida (`burned`), e o fogo sai de toda a borda. No incêndio real, entre dois perímetros observados só uma parte pequena da borda cresce: o resto foi apagado pelo combate ou parou sozinho.
 
-O K6 e o K6d ficaram fora do teste passo a passo: nas corridas livres, as projeções de origem só acrescentam 0–4 % de área. Fica o K3x (projeções fortes por janela) para ver em que condições ajudam.
+**A parte da borda que não cresce até ao passo seguinte** (o oráculo: borda a mais de 2 células do crescimento observado) é **85–99 %** na maioria das janelas, e é 0 só no primeiro passo de cada incêndio. Se o modelo soubesse isto, deixaria de queimar os flancos. Em Vieira, ao recomeçar das 15:00, o Sørensen às 08:30 sobe de 0,761 para 0,833 e a área fora do oficial cai de 199 para 123 ha.
 
-Corridas livres sem Monchique (tabela "Projeções" do `MULTIFIRE.md`):
-- **As 5 sementes do K6 variam pouco:** o Sørensen dentro de 0,06 em cada incêndio, a área até +0,9× em Sever do Vouga e quase nada nos outros.
-- **Projeções fortes com os combustíveis portugueses (K6x)** estragam todos os incêndios.
-- **Projeções fortes com S&B (K3x, 3 sementes)** não salvam os fogos lentos: Oleiros fica em 0,29×, Vila de Rei em 0,23×. Faúlhas que caem em combustível lento não crescem. E pioram os que já queimavam de mais: Cerveira 0,60 → 0,52, Cabeceiras 0,73 → 0,61. Só ajudam um pouco em Guarda (0,73 → 0,77) e em Vieira (0,74 → 0,76).
+`run.py --active-edge` dá duas maneiras de o saber:
+- **`hotspots`:** é o que um sistema em tempo real sabe. A borda continua a arder só perto dos focos de satélite das últimas `--active-window-h` horas (raio do píxel, pelo menos 500 m); o resto fica seguro (não combustível). Sem focos na janela, fica a borda toda.
+  - Com o VIIRS e o MODIS segura-se muito menos do que o oráculo: 0–90 % da borda, em vez de 85–99 %.
+  - A causa é que as passagens são poucas por dia e os píxeis do MODIS têm 1 km.
+  - O MTG-FCI (10 min, 1 km), o FRP do LSA SAF e, sobretudo, a informação da ANEPC sobre os setores ativos e dominados fariam isto muito melhor.
+- **`oracle`:** a borda que de facto cresceu. Não é uma previsão, é o limite do que esta informação vale.
 
-- Com os parâmetros de origem, as projeções quase não contam (+0–4 % de área).
-- Fortes e sem condições, estragam tudo (K6x).
-- A literatura diz quando contam. As projeções longas dependem sobretudo do tamanho do fogo que as lança, e depois do vento forte, da floresta densa e do declive (Storey et al. 2020, 338 observações na Austrália). A probabilidade de uma faúlha acender segue a humidade do combustível fino (Schroeder 1969; Ellis 2015 para o eucalipto).
-- A proposta é um peso condicional das projeções: projeções longas só quando o fogo já é grande, com vento forte e combustível seco (FFMC alto), e a probabilidade de Schroeder em todos os casos. Mede-se como uma dimensão do ensemble (várias sementes, uma probabilidade de arder), e não com uma corrida só.
+As referências (regra dos 10 %, persistência, elipse com a área certa) crescem da mesma borda (`references.py --active-edge`), para que a comparação não seja ganha por construção.
+
+*(resultados do K5o, K5a: a completar)*
 
 ## O ponto de ignição em tempo real
 
