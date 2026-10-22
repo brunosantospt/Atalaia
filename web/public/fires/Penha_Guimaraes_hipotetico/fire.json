@@ -29,14 +29,14 @@
       "spotting": true,
       "seed": 2,
       "shiftedKmh": {
-        "13:00": 36.0,
-        "14:00": 38.0,
-        "15:00": 36.0,
-        "16:00": 32.0,
-        "17:00": 27.0,
-        "18:00": 20.0,
-        "19:00": 13.0,
-        "20:00": 10.0,
+        "13:00": 65.0,
+        "14:00": 62.0,
+        "15:00": 56.0,
+        "16:00": 48.0,
+        "17:00": 38.0,
+        "18:00": 28.0,
+        "19:00": 18.0,
+        "20:00": 12.0,
         "21:00": 8.0
       }
     }
@@ -56,15 +56,15 @@
     }
   ],
   "bbox": [
-    -8.377808,
-    41.365058,
-    -8.19694,
-    41.44829
+    -8.368425,
+    41.334562,
+    -8.192637,
+    41.448019
   ],
   "areaHa": {
-    "timed": 5205.8,
+    "timed": 4672.0,
     "untimed": 0.0,
-    "total": 5205.8
+    "total": 4672.0
   },
   "steps": [
     {
@@ -125,35 +125,35 @@
       "step": 3,
       "time": "2024-09-16T13:00",
       "hours": 3.0,
-      "areaHa": 657.3,
-      "addedHa": 449.3,
+      "areaHa": 693.4,
+      "addedHa": 485.4,
       "period": 3,
       "center": {
-        "lon": -8.272639,
-        "lat": 41.426137
+        "lon": -8.27179,
+        "lat": 41.425754
       },
       "bbox": [
-        -8.330151,
-        41.395042,
+        -8.330865,
+        41.385064,
         -8.239712,
-        41.439894
+        41.43991
       ]
     },
     {
       "step": 4,
       "time": "2024-09-16T14:00",
       "hours": 4.0,
-      "areaHa": 990.9,
-      "addedHa": 333.6,
+      "areaHa": 1008.1,
+      "addedHa": 314.7,
       "period": 4,
       "center": {
-        "lon": -8.26115,
-        "lat": 41.415062
+        "lon": -8.257353,
+        "lat": 41.415712
       },
       "bbox": [
-        -8.330867,
-        41.388563,
-        -8.236068,
+        -8.331225,
+        41.359146,
+        -8.23284,
         41.440428
       ]
     },
@@ -161,89 +161,89 @@
       "step": 5,
       "time": "2024-09-16T15:00",
       "hours": 5.0,
-      "areaHa": 1160.1,
-      "addedHa": 169.2,
+      "areaHa": 1136.6,
+      "addedHa": 128.5,
       "period": 5,
       "center": {
-        "lon": -8.259837,
-        "lat": 41.413439
+        "lon": -8.257192,
+        "lat": 41.412593
       },
       "bbox": [
-        -8.331583,
-        41.387482,
-        -8.233557,
-        41.4407
+        -8.331584,
+        41.357797,
+        -8.231765,
+        41.440698
       ]
     },
     {
       "step": 6,
       "time": "2024-09-16T16:00",
       "hours": 6.0,
-      "areaHa": 1324.2,
-      "addedHa": 164.1,
+      "areaHa": 1310.1,
+      "addedHa": 173.5,
       "period": 6,
       "center": {
-        "lon": -8.268348,
-        "lat": 41.418383
+        "lon": -8.245421,
+        "lat": 41.417907
       },
       "bbox": [
         -8.331586,
-        41.386402,
-        -8.23284,
-        41.441238
+        41.357524,
+        -8.218133,
+        41.441237
       ]
     },
     {
       "step": 7,
       "time": "2024-09-16T19:00",
       "hours": 9.0,
-      "areaHa": 2176.3,
-      "addedHa": 852.1,
+      "areaHa": 2126.7,
+      "addedHa": 816.6,
       "period": 7,
       "center": {
-        "lon": -8.248789,
-        "lat": 41.411865
+        "lon": -8.246917,
+        "lat": 41.404568
       },
       "bbox": [
-        -8.333748,
-        41.369984,
-        -8.205183,
-        41.442589
+        -8.333031,
+        41.340775,
+        -8.20196,
+        41.442588
       ]
     },
     {
       "step": 8,
       "time": "2024-09-16T22:00",
       "hours": 12.0,
-      "areaHa": 2788.9,
-      "addedHa": 612.6,
+      "areaHa": 2920.8,
+      "addedHa": 794.1,
       "period": 8,
       "center": {
-        "lon": -8.260664,
-        "lat": 41.404808
+        "lon": -8.247487,
+        "lat": 41.390844
       },
       "bbox": [
         -8.336974,
-        41.368091,
-        -8.202675,
-        41.44448
+        41.338348,
+        -8.199808,
+        41.44421
       ]
     },
     {
       "step": 9,
       "time": "2024-09-17T04:00",
       "hours": 18.0,
-      "areaHa": 4237.3,
-      "addedHa": 1448.4,
+      "areaHa": 4052.9,
+      "addedHa": 1132.1,
       "period": 9,
       "center": {
-        "lon": -8.270305,
-        "lat": 41.396479
+        "lon": -8.253297,
+        "lat": 41.394253
       },
       "bbox": [
-        -8.361632,
-        41.365058,
-        -8.200165,
+        -8.362349,
+        41.334562,
+        -8.196222,
         41.445833
       ]
     },
@@ -251,18 +251,18 @@
       "step": 10,
       "time": "2024-09-17T10:00",
       "hours": 24.0,
-      "areaHa": 5205.8,
-      "addedHa": 968.5,
+      "areaHa": 4672.0,
+      "addedHa": 619.1,
       "period": 10,
       "center": {
-        "lon": -8.278672,
-        "lat": 41.398681
+        "lon": -8.266094,
+        "lat": 41.401891
       },
       "bbox": [
-        -8.377808,
-        41.365058,
-        -8.19694,
-        41.44829
+        -8.368425,
+        41.334562,
+        -8.192637,
+        41.448019
       ]
     }
   ],
@@ -296,10 +296,10 @@
       "start": "2024-09-16T12:00",
       "end": "2024-09-16T13:00",
       "durationH": 1.0,
-      "areaHa": 449.3,
-      "growthHaPerH": 449.3,
-      "rosMPerH": 4085,
-      "maxRosMPerH": 4085,
+      "areaHa": 485.4,
+      "growthHaPerH": 485.4,
+      "rosMPerH": 5291,
+      "maxRosMPerH": 5291,
       "spreadTowardDeg": 174,
       "intensityKWPerM": null
     },
@@ -308,11 +308,11 @@
       "start": "2024-09-16T13:00",
       "end": "2024-09-16T14:00",
       "durationH": 1.0,
-      "areaHa": 333.6,
-      "growthHaPerH": 333.6,
-      "rosMPerH": 2824,
-      "maxRosMPerH": 2824,
-      "spreadTowardDeg": 154,
+      "areaHa": 314.7,
+      "growthHaPerH": 314.7,
+      "rosMPerH": 3067,
+      "maxRosMPerH": 3067,
+      "spreadTowardDeg": 159,
       "intensityKWPerM": null
     },
     {
@@ -320,11 +320,11 @@
       "start": "2024-09-16T14:00",
       "end": "2024-09-16T15:00",
       "durationH": 1.0,
-      "areaHa": 169.2,
-      "growthHaPerH": 169.2,
-      "rosMPerH": 1029,
-      "maxRosMPerH": 1029,
-      "spreadTowardDeg": 143,
+      "areaHa": 128.5,
+      "growthHaPerH": 128.5,
+      "rosMPerH": 1055,
+      "maxRosMPerH": 1055,
+      "spreadTowardDeg": 210,
       "intensityKWPerM": null
     },
     {
@@ -332,11 +332,11 @@
       "start": "2024-09-16T15:00",
       "end": "2024-09-16T16:00",
       "durationH": 1.0,
-      "areaHa": 164.1,
-      "growthHaPerH": 164.1,
-      "rosMPerH": 939,
-      "maxRosMPerH": 939,
-      "spreadTowardDeg": 160,
+      "areaHa": 173.5,
+      "growthHaPerH": 173.5,
+      "rosMPerH": 1306,
+      "maxRosMPerH": 1306,
+      "spreadTowardDeg": 103,
       "intensityKWPerM": null
     },
     {
@@ -344,11 +344,11 @@
       "start": "2024-09-16T16:00",
       "end": "2024-09-16T19:00",
       "durationH": 3.0,
-      "areaHa": 852.1,
-      "growthHaPerH": 284.0,
-      "rosMPerH": 1241,
-      "maxRosMPerH": 1241,
-      "spreadTowardDeg": 127,
+      "areaHa": 816.6,
+      "growthHaPerH": 272.2,
+      "rosMPerH": 1191,
+      "maxRosMPerH": 1191,
+      "spreadTowardDeg": 158,
       "intensityKWPerM": null
     },
     {
@@ -356,11 +356,11 @@
       "start": "2024-09-16T19:00",
       "end": "2024-09-16T22:00",
       "durationH": 3.0,
-      "areaHa": 612.6,
-      "growthHaPerH": 204.2,
-      "rosMPerH": 495,
-      "maxRosMPerH": 495,
-      "spreadTowardDeg": 269,
+      "areaHa": 794.1,
+      "growthHaPerH": 264.7,
+      "rosMPerH": 427,
+      "maxRosMPerH": 427,
+      "spreadTowardDeg": 209,
       "intensityKWPerM": null
     },
     {
@@ -368,10 +368,10 @@
       "start": "2024-09-16T22:00",
       "end": "2024-09-17T04:00",
       "durationH": 6.0,
-      "areaHa": 1448.4,
-      "growthHaPerH": 241.4,
-      "rosMPerH": 591,
-      "maxRosMPerH": 591,
+      "areaHa": 1132.1,
+      "growthHaPerH": 188.7,
+      "rosMPerH": 612,
+      "maxRosMPerH": 612,
       "spreadTowardDeg": 228,
       "intensityKWPerM": null
     },
@@ -380,11 +380,11 @@
       "start": "2024-09-17T04:00",
       "end": "2024-09-17T10:00",
       "durationH": 6.0,
-      "areaHa": 968.5,
-      "growthHaPerH": 161.4,
-      "rosMPerH": 272,
-      "maxRosMPerH": 272,
-      "spreadTowardDeg": 299,
+      "areaHa": 619.1,
+      "growthHaPerH": 103.2,
+      "rosMPerH": 173,
+      "maxRosMPerH": 173,
+      "spreadTowardDeg": 176,
       "intensityKWPerM": null
     }
   ],
@@ -405,7 +405,7 @@
     ],
     "kmh": [
       45.4,
-      36.0
+      65.0
     ],
     "gustKmh": [
       91.4,
@@ -414,7 +414,7 @@
     "until": "2024-09-16T21:00",
     "headTowardDeg": [
       267,
-      175
+      148
     ],
     "decisionAxisDeg": 265,
     "atShift": {
@@ -422,8 +422,8 @@
       "homesWithin100m": 133
     },
     "within6h": {
-      "areaHa": 1324.2,
-      "homesWithin100m": 411
+      "areaHa": 1310.1,
+      "homesWithin100m": 438
     },
     "villages": [
       {
@@ -435,27 +435,27 @@
         "noShiftMinutes": 136
       },
       {
-        "name": "Urgezes",
-        "kind": "village",
-        "lon": -8.29641,
-        "lat": 41.42647,
-        "minutes": 137,
-        "noShiftMinutes": 265
-      },
-      {
         "name": "Abação (São Tomé)",
         "kind": "village",
         "lon": -8.27202,
         "lat": 41.40984,
-        "minutes": 182,
+        "minutes": 180,
         "noShiftMinutes": 1358
+      },
+      {
+        "name": "Lapinha",
+        "kind": "hamlet",
+        "lon": -8.25209,
+        "lat": 41.41382,
+        "minutes": 185,
+        "noShiftMinutes": null
       },
       {
         "name": "Vila Nova das Infantas",
         "kind": "hamlet",
         "lon": -8.24261,
         "lat": 41.42275,
-        "minutes": 198,
+        "minutes": 191,
         "noShiftMinutes": null
       },
       {
@@ -463,15 +463,7 @@
         "kind": "village",
         "lon": -8.2421,
         "lat": 41.42329,
-        "minutes": 200,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Lapinha",
-        "kind": "hamlet",
-        "lon": -8.25209,
-        "lat": 41.41382,
-        "minutes": 201,
+        "minutes": 192,
         "noShiftMinutes": null
       },
       {
@@ -479,7 +471,7 @@
         "kind": "village",
         "lon": -8.24461,
         "lat": 41.40379,
-        "minutes": 235,
+        "minutes": 193,
         "noShiftMinutes": null
       },
       {
@@ -487,7 +479,7 @@
         "kind": "village",
         "lon": -8.23298,
         "lat": 41.40419,
-        "minutes": 273,
+        "minutes": 228,
         "noShiftMinutes": null
       },
       {
@@ -495,39 +487,23 @@
         "kind": "village",
         "lon": -8.28382,
         "lat": 41.41494,
-        "minutes": 297,
+        "minutes": 306,
         "noShiftMinutes": 813
-      },
-      {
-        "name": "São Faustino",
-        "kind": "village",
-        "lon": -8.2737,
-        "lat": 41.38856,
-        "minutes": 301,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Candoso",
-        "kind": "hamlet",
-        "lon": -8.33216,
-        "lat": 41.42209,
-        "minutes": 355,
-        "noShiftMinutes": 698
-      },
-      {
-        "name": "Fareja",
-        "kind": "village",
-        "lon": -8.23083,
-        "lat": 41.41545,
-        "minutes": 387,
-        "noShiftMinutes": null
       },
       {
         "name": "Bacelos",
         "kind": "hamlet",
         "lon": -8.2283,
         "lat": 41.41366,
-        "minutes": 388,
+        "minutes": 347,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Fareja",
+        "kind": "village",
+        "lon": -8.23083,
+        "lat": 41.41545,
+        "minutes": 349,
         "noShiftMinutes": null
       },
       {
@@ -535,47 +511,23 @@
         "kind": "village",
         "lon": -8.32241,
         "lat": 41.42681,
-        "minutes": 415,
+        "minutes": 413,
         "noShiftMinutes": 453
       },
       {
-        "name": "Jugueiros",
-        "kind": "village",
-        "lon": -8.21044,
-        "lat": 41.40131,
-        "minutes": 494,
-        "noShiftMinutes": null
+        "name": "Candoso",
+        "kind": "hamlet",
+        "lon": -8.33216,
+        "lat": 41.42209,
+        "minutes": 429,
+        "noShiftMinutes": 698
       },
       {
-        "name": "Pombeiro de Ribavizela",
+        "name": "Penacova",
         "kind": "village",
-        "lon": -8.21825,
-        "lat": 41.38467,
-        "minutes": 521,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Mascotelos",
-        "kind": "village",
-        "lon": -8.3155,
-        "lat": 41.4219,
-        "minutes": 576,
-        "noShiftMinutes": 470
-      },
-      {
-        "name": "Gémeos",
-        "kind": "village",
-        "lon": -8.25652,
-        "lat": 41.39849,
-        "minutes": 584,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Tagilde",
-        "kind": "village",
-        "lon": -8.27854,
-        "lat": 41.37734,
-        "minutes": 626,
+        "lon": -8.2503,
+        "lat": 41.37114,
+        "minutes": 483,
         "noShiftMinutes": null
       },
       {
@@ -583,71 +535,31 @@
         "kind": "village",
         "lon": -8.26303,
         "lat": 41.38822,
-        "minutes": 759,
+        "minutes": 515,
         "noShiftMinutes": null
       },
       {
-        "name": "Carvalhos",
-        "kind": "neighbourhood",
-        "lon": -8.29509,
-        "lat": 41.40894,
-        "minutes": 875,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Infias",
+        "name": "Pombeiro de Ribavizela",
         "kind": "village",
-        "lon": -8.31351,
-        "lat": 41.3962,
-        "minutes": 939,
+        "lon": -8.21825,
+        "lat": 41.38467,
+        "minutes": 518,
         "noShiftMinutes": null
       },
       {
-        "name": "Polvoreira",
+        "name": "Sousa",
         "kind": "village",
-        "lon": -8.30547,
-        "lat": 41.40935,
-        "minutes": 1030,
+        "lon": -8.24805,
+        "lat": 41.34752,
+        "minutes": 524,
         "noShiftMinutes": null
       },
       {
-        "name": "Tabuadelo",
+        "name": "Jugueiros",
         "kind": "village",
-        "lon": -8.29066,
-        "lat": 41.40051,
-        "minutes": 1083,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Vizela (São Jorge)",
-        "kind": "village",
-        "lon": -8.25214,
-        "lat": 41.381,
-        "minutes": 1103,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Penacova",
-        "kind": "village",
-        "lon": -8.2503,
-        "lat": 41.37114,
-        "minutes": 1111,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Crasto",
-        "kind": "hamlet",
-        "lon": -8.3654,
-        "lat": 41.40725,
-        "minutes": 1124,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Vizela",
-        "kind": "city",
-        "lon": -8.30837,
-        "lat": 41.37672,
-        "minutes": 1150,
+        "lon": -8.21044,
+        "lat": 41.40131,
+        "minutes": 566,
         "noShiftMinutes": null
       },
       {
@@ -655,7 +567,63 @@
         "kind": "village",
         "lon": -8.24188,
         "lat": 41.38697,
-        "minutes": 1225,
+        "minutes": 680,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Urgezes",
+        "kind": "village",
+        "lon": -8.29641,
+        "lat": 41.42647,
+        "minutes": 691,
+        "noShiftMinutes": 265
+      },
+      {
+        "name": "Gémeos",
+        "kind": "village",
+        "lon": -8.25652,
+        "lat": 41.39849,
+        "minutes": 732,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Vizela (São Jorge)",
+        "kind": "village",
+        "lon": -8.25214,
+        "lat": 41.381,
+        "minutes": 869,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Carvalhos",
+        "kind": "neighbourhood",
+        "lon": -8.29509,
+        "lat": 41.40894,
+        "minutes": 877,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Mascotelos",
+        "kind": "village",
+        "lon": -8.3155,
+        "lat": 41.4219,
+        "minutes": 966,
+        "noShiftMinutes": 470
+      },
+      {
+        "name": "Polvoreira",
+        "kind": "village",
+        "lon": -8.30547,
+        "lat": 41.40935,
+        "minutes": 1032,
+        "noShiftMinutes": null
+      },
+      {
+        "name": "Infias",
+        "kind": "village",
+        "lon": -8.31351,
+        "lat": 41.3962,
+        "minutes": 1282,
         "noShiftMinutes": null
       }
     ],
@@ -666,16 +634,16 @@
       },
       "areaHa24h": 1551.1
     },
-    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 2 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para O e só atinge 2 lugares em 6 h; com ela, roda para S e atinge 11. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
-    "alert": "Mudança brusca de vento: de E a 45 km/h para NNO a 36 km/h. A cabeça do incêndio roda de O para S, em direção a Abação (São Tomé), Infantas e Calvos.",
+    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 2 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para O e só atinge 2 lugares em 6 h; com ela, roda para SSE e atinge 10. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
+    "alert": "Mudança brusca de vento: de E a 45 km/h para NNO a 65 km/h. A cabeça do incêndio roda de O para SSE, em direção a Infantas, Calvos e Serzedo.",
     "compare": {
       "model": "fast",
       "note": "the same fire and weather in the other model, areas only",
       "areaHa": {
-        "3h": 226.8,
-        "6h": 1179.6,
-        "12h": 6034.9,
-        "24h": 12314.9
+        "3h": 342.8,
+        "6h": 2290.6,
+        "12h": 7652.6,
+        "24h": 15172.5
       },
       "noShiftAreaHa": {
         "3h": 185.1,

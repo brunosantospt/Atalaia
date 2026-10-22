@@ -91,14 +91,14 @@ HOMES_NEAR_M = 100  # homes this close to the front: OSM puts them in non-burnab
 # holds the afternoon, then eases and veers back to the observed light easterly by 22:00.
 SHIFT_FROM, SHIFT_TO = "2024-09-16T12:00", "2024-09-16T13:00"
 SHIFTED = {
-    "2024-09-16T13:00": (335, 36.0),
-    "2024-09-16T14:00": (335, 38.0),
-    "2024-09-16T15:00": (338, 36.0),
-    "2024-09-16T16:00": (340, 32.0),
-    "2024-09-16T17:00": (340, 27.0),
-    "2024-09-16T18:00": (345, 20.0),
-    "2024-09-16T19:00": (0, 13.0),
-    "2024-09-16T20:00": (25, 10.0),
+    "2024-09-16T13:00": (335, 65.0),
+    "2024-09-16T14:00": (335, 62.0),
+    "2024-09-16T15:00": (338, 56.0),
+    "2024-09-16T16:00": (340, 48.0),
+    "2024-09-16T17:00": (340, 38.0),
+    "2024-09-16T18:00": (345, 28.0),
+    "2024-09-16T19:00": (0, 18.0),
+    "2024-09-16T20:00": (25, 12.0),
     "2024-09-16T21:00": (55, 8.0),
 }
 # The tuning: defaults reproduce the shipped fire (see fire.json source and windShift.note).
@@ -108,7 +108,7 @@ DRY = 3.0  # points off the Simard equilibrium moisture: dead 1 h of 2-3 % at RH
 DEAD_FLOOR = 2.0
 FARMLAND_FUEL = 102  # S&B GR2 for COS 2.1.1.1 (dry fallow and stubble in September); 0 keeps it non-burnable
 SEED = 2
-GUST_FACTOR = 1.75  # gust/mean: the observed afternoon has ~2.0, a steadier flow a little less
+GUST_FACTOR = 1.4  # gust/mean: the observed afternoon has ~2.0, a steadier flow a little less
 
 PTTM06 = CRS.from_epsg(3763)
 TO_WGS84 = Transformer.from_crs(PTTM06, CRS.from_epsg(4326), always_xy=True)
