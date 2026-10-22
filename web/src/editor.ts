@@ -1618,7 +1618,7 @@ export class Editor {
 
     li.innerHTML = `
       <div class="who"><span class="unit-id"></span><b></b><span class="n"></span>
-        <div class="ctl"><button type="button" class="x" title="Retirar">×</button></div>
+        <div class="ctl"><button type="button" class="x unit-action" title="Retirar meio" aria-label="Retirar meio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button></div>
       </div>
       <div class="meta"><span class="from"></span>${routeBadge}${lateMin === undefined ? '' : '<span class="late-badge">chega tarde</span>'}<em></em></div>`
     li.querySelector('.unit-id')!.textContent = fieldIds(d, this.loaded?.stations ?? [])[k].join(' · ')
@@ -1636,9 +1636,11 @@ export class Editor {
     if(this.loaded) {
       const list=placements(this.loaded.scenario,d,k),history=document.createElement('ol')
       history.className='placement-history'
-      list.forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. Ordem ${fmtTime(wallClock(this.loaded!.fire.start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded!.fire.start,p.arrivalMin/60))}`;const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
+      list.forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. Ordem ${fmtTime(wallClock(this.loaded!.fire.start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded!.fire.start,p.arrivalMin/60))}`;const edit=document.createElement('button');edit.type='button';edit.className='unit-action edit-placement';edit.title=`Editar colocação ${index+1}`;edit.setAttribute('aria-label',edit.title);edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></svg>';edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
         edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Escolha o destino corrigido no mapa. Esc para cancelar.'})
-        item.append(edit);history.append(item)})
+        if(index===list.length-1) li.querySelector('.ctl')!.append(edit)
+        else item.append(edit)
+        history.append(item)})
       const move=document.createElement('button');move.type='button';move.textContent=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação'
       move.disabled=this.minutes<list.at(-1)!.arrivalMin || resourceAt(cachedCombatResources(this.loaded.scenario,d),k,this.playbackMinute).exhausted
       move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})

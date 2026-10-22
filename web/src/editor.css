@@ -643,3 +643,9 @@
 .placement-history li { margin-bottom: 6px; }
 .placement-history button { margin-left: 8px; padding: 3px 7px; font: inherit; color: #f4ad42; border: 1px solid #796039; background: transparent; cursor: pointer; }
 .placement-history button:hover, .placement-history button:focus-visible { background: #392c18; border-color: #f4ad42; }
+
+.assignment .ctl { display: flex; flex-direction: column; gap: 4px; align-self: flex-start; }
+.assignment .unit-action, .placement-history .unit-action { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 4px; margin: 0; background: transparent; border: 1px solid #796039; color: #f4ad42; cursor: pointer; }
+.assignment .unit-action svg { width: 16px; height: 16px; }
+.assignment .unit-action:hover, .assignment .unit-action:focus-visible { background: #392c18; border-color: #f4ad42; }
+.placement-history .unit-action { margin-left: 6px; vertical-align: middle; }
