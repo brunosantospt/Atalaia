@@ -637,3 +637,7 @@
 .hud .editor .ring-key .selected { color: white; font-weight: 650; }
 .hud .editor .ring-legend summary { cursor: pointer; font-size: 12px; color: #d8e6f3; }
 .hud .editor .ring-legend summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 4px; }
+.card-resources { display:grid; gap:5px; margin:8px 0; font:12px/1.4 system-ui,sans-serif; }
+.card-resources label { display:flex; align-items:center; gap:7px; }
+.card-resources meter { flex:1; min-width:45px; }
+.placement-history { padding-left:18px; font:12px/1.6 system-ui,sans-serif; color:#b8cad8; }

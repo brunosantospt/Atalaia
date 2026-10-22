@@ -630,7 +630,7 @@ async function main() {
       sim.hash = layoutKey() // geometry now uses this batch's free forecast
       if (phase === 'post') windShift.setResolved(true)
       editor.setEngine({ state: 'done', name: 'Modelo rápido · demo', seconds: (performance.now()-t0)/1000,
-        note: 'Água e autonomia são apenas indicadores visuais.' })
+        note: 'Água e autonomia limitam a proteção; o consumo pausa enquanto a frente está contida.' })
       busy.hide()
       refreshSimulate()
       return true
