@@ -569,12 +569,12 @@ async function main() {
   /** The simulate button, in the drawer and in the HUD: lit only when the means differ from the last simulation's,
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
-    if (!replay) return { label: 'Simular modelo rápido', enabled: false, note: '' }
-    if (editor.searching) return { label: 'À espera da proposta B…', enabled: false, note: 'Termine a procura opcional de B antes de simular.' }
+    if (!replay) return { label: 'Simular', enabled: false, note: '' }
+    if (editor.searching) return { label: 'Simular', enabled: false, note: 'Termine a procura opcional de B antes de simular.' }
     const sim = replay.sims[replay.phase]
     if (sim && layoutKey() === sim.hash)
-      return { label: 'Simulação atualizada', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
-    return { label: replay.phase === 'post' ? 'Simular com o vento novo' : 'Simular modelo rápido', enabled: true,
+      return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
+    return { label: 'Simular', enabled: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
   }
 
