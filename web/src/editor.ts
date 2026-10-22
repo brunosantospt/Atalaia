@@ -1954,19 +1954,12 @@ export class Editor {
       const holds = this.minutes >= w.barrier.from_min
 
       if (a.task === 'direct') {
-        // Active extinguished fire front trail in emerald green (#10b981)
+        // Active extinguished fire front trail in clean emerald green (#10b981)
         const green = Color.fromCssColorString('#10b981')
-        entities.add({
-          corridor: {
-            positions,
-            width: 14,
-            material: green.withAlpha(holds ? (w.grown ? 0.35 : 0.45) : 0.15),
-          },
-        })
         const strip = entities.add({
           polyline: {
             positions,
-            width: 4.5,
+            width: 3.5,
             clampToGround: true,
             material: holds ? green : new PolylineDashMaterialProperty({ color: green.withAlpha(0.6), dashLength: 10 }),
           },
@@ -1974,47 +1967,6 @@ export class Editor {
         const at = d.points[a.target]
         if (at) {
           (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-
-          // Draw tactical hose supply line from vehicle on road to the line
-          if (clean.length > 0) {
-            const midIdx = Math.floor(clean.length / 2)
-            const midPt = clean[midIdx]
-            entities.add({
-              polyline: {
-                positions: [
-                  Cartesian3.fromDegrees(at.lon, at.lat),
-                  Cartesian3.fromDegrees(midPt[0], midPt[1]),
-                ],
-                width: 2.5,
-                clampToGround: true,
-                material: Color.fromCssColorString('#38bdf8'),
-              },
-            })
-            if (holds) {
-              entities.add({
-                position: Cartesian3.fromDegrees(midPt[0], midPt[1]),
-                point: {
-                  pixelSize: 6,
-                  color: green,
-                  outlineColor: Color.WHITE,
-                  outlineWidth: 1.5,
-                  heightReference: HeightReference.CLAMP_TO_GROUND,
-                  disableDepthTestDistance: Infinity,
-                },
-                label: {
-                  text: `✓ Linha Extinta: ${Math.round(w.lengthM)} m`,
-                  font: 'bold 11px ui-monospace, Menlo, monospace',
-                  fillColor: Color.fromCssColorString('#6ee7b7'),
-                  outlineColor: Color.BLACK,
-                  outlineWidth: 3,
-                  style: 2,
-                  pixelOffset: new Cartesian2(0, -14),
-                  heightReference: HeightReference.CLAMP_TO_GROUND,
-                  disableDepthTestDistance: Infinity,
-                },
-              })
-            }
-          }
         }
       } else {
         // Crew handline / containment line
