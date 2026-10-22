@@ -56,6 +56,7 @@ const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
 const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on until the fire stops, or this long, or the cap
 const REPORT_MIN = 360 // the 6 h of the report, kept beside the end
 const FREE_WAIT_MS = 30_000 // the cached free run is waited for this long on load; then the reference's own progression stands in
+const SPOT_K = 0.35 // the light's radius as a share of the camera's distance: the same size on screen at any zoom
 const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
 /** Before the wind shift (plans made on the forecast without it) or after it (the incident has happened). */
@@ -692,8 +693,8 @@ async function main() {
     const centre = readPose(scene) ?? (frame.driving ? frame.pose : undefined)
     if (centre) {
       readout = { ...centre, centre }
-      // Free camera: the light widens as the mouse zooms out.
-      spotlight.set(centre, frame.driving ? frame.spot : frame.spot * (centre.range / Math.max(frame.pose.range, 1)))
+      // Only the director's cut sizes the light per shot; otherwise it keeps one size on screen, whatever the zoom.
+      spotlight.set(centre, replay.director && frame.driving ? frame.spot : SPOT_K * centre.range)
     } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
     frameNo++
     if (editor.searching !== searching) refreshSimulate() // the ILS ended: B is final and can be simulated
