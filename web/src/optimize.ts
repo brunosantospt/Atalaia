@@ -24,7 +24,7 @@ import { lineSchedule, simulate, type Run, type Scenario } from './fastModel'
 import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat } from './geo'
 import { cellHa, cellOf, lonLatAt, type Grid } from './grid'
 import type { Context } from './osm'
-import { arrivalMin, isAerial, type Assignment, type Decision, type Task, type UnitId } from './suppression'
+import { arrivalMin, isAerial, type Assignment, type Decision, type Suppression, type Task, type UnitId } from './suppression'
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
 export interface Ground {
@@ -86,7 +86,7 @@ const NEAR_M = 300 // the local search moves a unit to the spots within this of 
 const GAP_M = 200 // spots of one candidate list are this far apart, or they are one stretch of road
 const PLACE_M = 600 // roads that guard a place
 const PER_PLACE = 2
-const SAFETY_MIN = 10 // a ground unit is on its point at least this long before the fire can be there
+export const SAFETY_MIN = 10 // a ground unit is on its point at least this long before the fire can be there
 const AIR_STEP = 5 // aerial lattice: every 5th cell, 150 m
 const PROGRESS_MS = 250
 const SHIFT_M = [0, 100, 200, 300] // one of A's lines, moved this far away from the fire
@@ -146,14 +146,10 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
   const timeUp = () => performance.now() - t0 >= budget || memo.size >= maxPlans
   const random = mulberry32(options.seed ?? 1)
   const pick = <T>(list: T[]): T => list[Math.floor(random() * list.length)]
-  const { grid, stations, suppression: sup, durationMin } = scenario
+  const { grid, suppression: sup, durationMin } = scenario
   const ha = cellHa(grid)
-  const ecinGain = sup.dispatch.volunteerTurnoutMin - sup.dispatch.ecinTurnoutMin
-  /** Km from where a unit leaves to p, as fastModel.ts counts them: an aircraft from its air base, the rest by road from the station. */
-  const kmFrom = (unit: UnitId, from: string) => {
-    const origin = isAerial(sup.units[unit]) ? findAirBase(from) : stations.find((s) => s.id === from)
-    return (p: LonLat) => (origin ? distanceM(origin, p) / 1000 : sup.dispatch.airBaseKm)
-  }
+  const ecinGain = ecinGainOf(sup)
+  const kmFrom = (unit: UnitId, from: string) => kmFor(scenario, unit, from)
 
   const reached = (run: Run): number[] => {
     const out: number[] = []
@@ -239,7 +235,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const p = spots[s]
     if (s === u.home) return true
     if (u.aerial ? !p.air : !p.road) return false
-    return at(free, s) > u.eta[s] - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
+    return arrivesInTime(at(free, s), u.eta[s], ecin ? ecinGain : 0, u.aerial)
   }
   const isOpen = units.map((_, k) => Uint8Array.from(spots, (_, s) => (open(k, s) ? 1 : 0)))
   // Per unit, the spots it can take, the ones the fire reaches first in front.
@@ -314,7 +310,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const line = shapeAt(l, v)
     if (!line || !u.onLine || !(kinds[l].has(u.onLine) || u.home === -2 - l)) return false
     const cell = cellOf(grid, line[0])
-    return (cell < 0 ? Infinity : free[cell]) > etaLine(k, l, v) - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
+    return arrivesInTime(cell < 0 ? Infinity : free[cell], etaLine(k, l, v), ecin ? ecinGain : 0, u.aerial)
   }
   const workedBy = (pos: Int32Array, l: number): boolean => {
     for (let k = 0; k < n; k++) if (pos[k] === -2 - l) return true
@@ -660,6 +656,47 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
   const result = { decision, improved, best: improved ? found.score : aScore, a: aScore, plans: memo.size, elapsedMs: performance.now() - t0 }
   options.onProgress?.({ phase, plans: result.plans, elapsedMs: result.elapsedMs, best: result.best, a: aScore, decision })
   return result
+}
+
+/** Minutes sooner a station's ECIN is out than its volunteers (fastModel.ts: the first ground assignment of each station). */
+const ecinGainOf = (sup: Suppression) => sup.dispatch.volunteerTurnoutMin - sup.dispatch.ecinTurnoutMin
+
+/** Km from where a unit leaves to p, as fastModel.ts counts them: an aircraft from its air base, the rest by road from the station. */
+function kmFor({ stations, suppression: sup }: Scenario, unit: UnitId, from: string): (p: LonLat) => number {
+  const origin = isAerial(sup.units[unit]) ? findAirBase(from) : stations.find((s) => s.id === from)
+  return (p: LonLat) => (origin ? distanceM(origin, p) / 1000 : sup.dispatch.airBaseKm)
+}
+
+/**
+ * The rule of every unit B places, and of A's in the editor (lateAt): a ground unit is on its point
+ * SAFETY_MIN before the free run can be there, an aircraft over it before the fire. `etaMin` is from
+ * the call with the volunteers' turnout, as fastModel.ts counts it; an ECIN is out `ecinGain` sooner.
+ */
+export const arrivesInTime = (freeMin: number, etaMin: number, ecinGain: number, aerial: boolean): boolean =>
+  freeMin > etaMin - ecinGain + (aerial ? 0 : SAFETY_MIN)
+
+/**
+ * The minute the free run reaches each assignment of d whose units are not there in time, as B's
+ * are judged (arrivesInTime): at its point, or at the start of its line; undefined when in time.
+ * In order, each station's first ground assignment is its ECIN, as fastModel.ts has it.
+ */
+export function lateAt(scenario: Scenario, free: Float32Array, d: Decision): (number | undefined)[] {
+  const { grid, suppression: sup } = scenario
+  const first = new Set<string>()
+  return d.assignments.map((x) => {
+    const spec = sup.units[x.unit]
+    const aerial = isAerial(spec)
+    const ecin = !aerial && !first.has(x.from)
+    if (!aerial) first.add(x.from)
+    const line = x.task === 'line' || x.task === 'drops'
+    const p = line ? d.lines[x.target]?.[0] : d.points[x.target]
+    if (!p) return undefined
+    const cell = cellOf(grid, p)
+    const fire = cell < 0 ? Infinity : free[cell]
+    const eta = arrivalMin(sup, spec, kmFor(scenario, x.unit, x.from)(p), false)
+    // At a point, the eta as optimize() keeps it per spot (a Float32Array), so the edge falls the same way.
+    return arrivesInTime(fire, line ? eta : Math.fround(eta), ecin ? ecinGainOf(sup) : 0, aerial) ? undefined : fire
+  })
 }
 
 /** What became of A's units in B: kept, moved, on another task or line, left at the station; and B's units A did not have. */
