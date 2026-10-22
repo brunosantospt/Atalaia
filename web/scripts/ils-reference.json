@@ -1,5 +1,5 @@
 {
-  "measured": "2026-10-22 · 2000 plans · seed 1 · commit eac5deb + uncommitted changes",
+  "measured": "2026-10-22 · 2000 plans · seed 1 · commit 1b17b1b + uncommitted changes",
   "fires": [
     {
       "id": "VieiradoMinho_10082016",
@@ -23,9 +23,9 @@
       },
       "b": {
         "places": 1,
-        "ha": 237.1
+        "ha": 234.6
       },
-      "foundAt": 983
+      "foundAt": 1632
     }
   ]
 }

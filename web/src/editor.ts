@@ -29,6 +29,7 @@ import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
+import { fmtRingKm, inRing, outsideRing } from './stationRings'
 import { findSafeRoute } from './routing'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
@@ -565,7 +566,7 @@ export class Editor {
     const snapped = { ...clone(example), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
     this.stopIls()
     this.ilsDone = undefined
-    this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped) }
+    this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped, scenario, stations) }
     this.decisions = [empty('A'), empty('B')]
     this.proposeB()
     this.runs = this.reports = this.judged = this.engine = this.free = undefined
@@ -702,11 +703,17 @@ export class Editor {
 
   /** A decision within what the stations have (stored before the limit, or an example near a small
    *  station): counts are cut to the stock in order, and an assignment left with none goes. */
-  private fit(d: Decision): Decision {
+  private fit(d: Decision, scenario: Scenario, stations: NearStation[]): Decision {
     const used = new Map<string, number>()
     const assignments: Assignment[] = []
     const dropped = new Set<string>()
     for (const a of d.assignments) {
+      // Only the stations in play, and each one's means inside its ring (aircraft are exempt).
+      const ground = !isAerial(this.sup.units[a.unit])
+      if (ground && (!stations.some((s) => s.id === a.from) || outsideRing(scenario.rings, scenario.ignition, this.sup, d, a.unit, a.from, a.target))) {
+        dropped.add(a.target)
+        continue
+      }
       const key = `${a.unit}|${a.from}`
       const stock = this.stock(a.unit, a.from)
       const count = stock === undefined ? a.count : Math.min(a.count, stock - (used.get(key) ?? 0))
@@ -1002,6 +1009,41 @@ export class Editor {
     }
   }
 
+  /** Whether a ground unit of the chosen station may work at p (inside its ring); otherwise says so at p and in the hint. */
+  private checkRing(p: LonLat): boolean {
+    if (!this.loaded) return true
+    const { scenario, stations } = this.loaded
+    const from = this.from(stations)
+    if (inRing(scenario.rings, scenario.ignition, from, p)) return true
+    const station = stations.find((s) => s.id === from)
+    const text = `Fora do alcance do ${station?.short ?? from} (máx. ${fmtRingKm(scenario.rings?.[from] ?? 0)})`
+    if (this.dangerTimer !== undefined) window.clearTimeout(this.dangerTimer)
+    this.refs.hint.classList.add('danger')
+    this.refs.hint.textContent = text
+    this.hazards.entities.removeAll()
+    this.hazards.entities.add({
+      position: Cartesian3.fromDegrees(p.lon, p.lat),
+      label: {
+        text,
+        font: 'bold 12px ui-monospace, Menlo, monospace',
+        fillColor: Color.RED,
+        outlineColor: Color.BLACK,
+        outlineWidth: 3,
+        style: 2,
+        pixelOffset: new Cartesian2(0, -14),
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Infinity,
+      },
+    })
+    this.dangerTimer = window.setTimeout(() => {
+      this.refs.hint.classList.remove('danger')
+      this.hazards.entities.removeAll()
+      this.dangerTimer = undefined
+      this.refs.hint.textContent = '' // the line being drawn stays
+    }, 3000)
+    return false
+  }
+
   private showDangerWarning(point: LonLat, arrivalMin: number) {
     if (this.dangerTimer !== undefined) {
       window.clearTimeout(this.dangerTimer)
@@ -1071,6 +1113,7 @@ export class Editor {
     }
     const count = this.placeable()
     if (!count) return
+    if (!aerial && !this.checkRing(point)) return
     if (this.tool !== 'point') {
       if (this.drawing.length > 0) {
         const last = this.drawing[this.drawing.length - 1]
@@ -1112,6 +1155,10 @@ export class Editor {
     }
     const count = this.placeable()
     if (!count) return
+    if (!isAerial(this.sup.units[this.unit])) {
+      const bad = this.drawing.find((p) => !this.checkRing(p))
+      if (bad) return void (this.drawing = this.drawing.slice(0, this.drawing.indexOf(bad)), this.updateLineActionsUI(), this.draw())
+    }
     const d = this.decisions[this.active]
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing

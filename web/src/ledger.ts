@@ -90,7 +90,7 @@ export class Ledger {
       {
         layer: 'Quartéis',
         source: 'OSM',
-        at: () => ['on', nearest ? `${stations.length} a < 20 km · ${nearest.short} ${fmtKm(nearest.km)}` : 'nenhum a < 20 km'],
+        at: () => ['on', nearest ? `${stations.length} em jogo · ${nearest.short} ${fmtKm(nearest.km)}` : 'nenhum em jogo'],
       },
       {
         layer: 'Inventário',
