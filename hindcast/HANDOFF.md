@@ -31,6 +31,7 @@ Testar o ELMFIRE noutros incêndios do PT-FireSprd, perceber porque falha, que e
   - K5o e K5a nos oito sem Monchique.
 - **Referências sem modelo** para todas as janelas: com a borda toda (`references.py`, a correr quando isto foi escrito) e com a borda ativa (`--active-edge oracle` e `hotspots --active-window-h 6`).
 - **Calibração** por classe de combustível, deixando um incêndio de fora, sobre o K3 e o K5 (`fires/adj_all_K3.json`, `adj_all_K5.json`, `fires/<id>/adj_lofo_*.json`). Os fatores do K5 mudam até ×2 entre dobras: provavelmente não transferem.
+- **Grelhas por incêndio** (versões × horas, corridas livres): `fires/<id>/grid_multifire.png`, feitas com o `grid.py`. A figura de resumo é a `multifire_plots.png` (`multifire_plots.py`).
 - **Análises:**
   - porque falha (secção 3 do `MULTIFIRE.md`);
   - as primeiras horas;
