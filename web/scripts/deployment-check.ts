@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import type { NearStation } from '../src/data'
-import type { Scenario } from '../src/fastModel'
+import { params, type Scenario } from '../src/fastModel'
 import { bearingDeg, destination, distanceM, toPTTM06 } from '../src/geo'
 import { cellOf, lonLatAt, type Grid } from '../src/grid'
 import { approachIntercept, computeRings, deploymentBoundary } from '../src/stationRings'
 import { arrivalMin, type Decision, type Suppression } from '../src/suppression'
-import { lateAt } from '../src/optimize'
+import { lateAt, optimize } from '../src/optimize'
 import { arrivals, barriers, wetLines } from '../src/wetLine'
+import { findSafeRoute } from '../src/routing'
+import type { Road } from '../src/osm'
+import { prepareAlerts } from '../src/alerts'
 
 const sup: Suppression = JSON.parse(await readFile(new URL('../public/suppression.json', import.meta.url), 'utf8'))
 sup.dispatch.roadFactor = 1
@@ -101,4 +104,46 @@ for (const part of grown.filter((w) => w.grown).slice(0, 2)) {
   assert.ok(firstEnds.some((p) => distanceM(p, start) < 1), 'growing line starts at a rotated endpoint')
 }
 assert.ok(grown.some((w) => w.grown), 'growth regression exercises extension')
+// Unlimited supply keeps identical geometry/growth even if tank/refill values are changed.
+const dryTank = structuredClone(sup)
+dryTank.units.vfci.waterL = 1
+dryTank.units.vfci.flowLPerMin = 100000
+dryTank.units.vfci.refillMin = 100000
+assert.equal(sup.unlimitedWater, true)
+assert.deepEqual(wetLines({ ...scenario, suppression: dryTank }, oriented(0), fire), grown, 'tank capacity and refill time cannot weaken unlimited-water lines')
+assert.ok(grown.every((w) => Object.keys(w.barrier).sort().join() === 'from_min,path,width_m'), 'engine gets permanent strips, without drying or expiry')
+const dummyRun = { decision: null, arrival: fire, durationMin: scenario.durationMin, runtimeMs: 0 }
+const alertState = prepareAlerts({ scenario, context: undefined, decisions: [first, { ...first, id: 'B' }],
+  runs: { free: dummyRun, A: dummyRun, B: dummyRun } })
+assert.equal(alertState.runs.A.water.length, 0, 'unlimited supply has no low-water warnings')
+assert.equal(alertState.runs.A.shuttles.length, 0, 'unlimited supply has no tanker-empty warnings')
+const crewOnly: Decision = { id: 'A', name: 'Off-road crew', points: { outer }, lines: {}, assignments: [
+  { unit: 'crew', count: 1, from: station.id, target: 'outer', task: 'direct', dispatchMin: 10 },
+] }
+const hourly = <T>(value: T) => new Array<T>(7).fill(value)
+const offRoadScenario = { ...scenario, weather: { ...scenario.weather,
+  time: Array.from({ length: 7 }, (_, h) => `2024-09-16T${10 + h}:00`),
+  tempC: hourly(30), rhPct: hourly(30), precipMm: hourly(0), windKmh: hourly(0), windFromDeg: hourly(0), gustKmh: hourly(0),
+} }
+// Isolate placement policy with a flat, constant 1 m/min fire in this test process.
+const savedParams = { ...params }
+try {
+  params.useFWI = false
+  params.fuelScale = .4
+  const offRoadSearch = optimize(offRoadScenario, { access: [], places: [], placeCells: [] }, crewOnly,
+    { maxPlans: 8, budgetMs: Infinity, seed: 1 })
+  assert.ok(offRoadSearch.plans > 2, 'crew optimizer explores terrain locations without any road access')
+} finally { Object.assign(params, savedParams) }
+// Shortest safe road path and invalidation after the fire reaches a previously open segment.
+const routePoints = [destination(ignition, 270, 1000), ignition, destination(ignition, 90, 1000), destination(ignition, 0, 1500)]
+const roads: Road[] = [[0, 1], [1, 2], [0, 3], [3, 2]].map(([a, b], id) => ({
+  id, cls: 'paved', hw: 'residential', pts: [routePoints[a], routePoints[b]].map((p) => [p.lon, p.lat]),
+}))
+const openRoads = new Float32Array(n * n).fill(Infinity)
+openRoads[cellOf(grid, ignition)] = 10
+const direct = findSafeRoute(grid, roads, openRoads, 0, routePoints[0], routePoints[2])!
+assert.ok(direct.distanceKm < 2.1, 'heap route search chooses the shorter path')
+assert.equal(findSafeRoute(grid, roads, openRoads, 0, routePoints[0], routePoints[2]), direct, 'same-time badge and map reuse the route')
+const detour = findSafeRoute(grid, roads, openRoads, 15, routePoints[0], routePoints[2])!
+assert.ok(detour.distanceKm > direct.distanceKm && detour.isDetour, 'clock invalidates cache and routes around a newly burned road')
 console.log('OK: fire-shaped boundaries, planning time, asymmetric flanks, approach interception, ETAs and rotated ELMFIRE barriers/growth')

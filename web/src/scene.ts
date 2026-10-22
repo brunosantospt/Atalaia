@@ -50,6 +50,8 @@ export async function createViewer(container: string, center: LonLat): Promise<V
     fullscreenButton: false,
     infoBox: false,
     selectionIndicator: false,
+    requestRenderMode: true,
+    maximumRenderTimeChange: Infinity,
   })
 
   const { scene } = viewer
@@ -93,6 +95,7 @@ export function setQuality(viewer: Viewer, quality: Quality) {
   viewer.useBrowserRecommendedResolution = !sharp
   viewer.resolutionScale = sharp ? Math.min(1, 2 / window.devicePixelRatio) : 0.82
   viewer.scene.globe.maximumScreenSpaceError = sharp ? 2 : 3.5
+  viewer.scene.requestRender()
 }
 
 /** Direction the light travels, in Earth-fixed coordinates, for a light standing NW of `center`. */

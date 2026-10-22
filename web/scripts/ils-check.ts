@@ -29,7 +29,7 @@ import { loadInventory, type Inventory } from '../src/inventory'
 import { better, groundOf, optimize, type Options, type Score } from '../src/optimize'
 import { buildContext, loadOsm, snapToRoad, type Context } from '../src/osm'
 import { computeRings, stationsInPlay } from '../src/stationRings'
-import { isAerial, loadSuppression, type Assignment, type Decision, type Suppression, type UnitId } from '../src/suppression'
+import { isAerial, isRoadVehicle, loadSuppression, type Assignment, type Decision, type Suppression, type UnitId } from '../src/suppression'
 
 const DECISION_MIN = 360 // main.ts: the 6 h of the report
 const BUDGET_MS = 10_000 // editor.ts ILS_BUDGET_MS
@@ -74,7 +74,8 @@ globalThis.fetch = (async (input: RequestInfo | URL) => {
 function editorA(example: Decision, context: Context, inventory: Inventory | null, sup: Suppression, scenario: Scenario): Decision {
   const points = Object.fromEntries(
     Object.entries(example.points).map(([id, p]) => {
-      const { lon, lat } = snapToRoad(context, p, SNAP_M) ?? p
+      const { lon, lat } = example.assignments.some((a) => a.target === id && isRoadVehicle(sup.units[a.unit]))
+        ? (snapToRoad(context, p, SNAP_M) ?? p) : p
       return [id, { lon, lat }]
     }),
   )
@@ -168,7 +169,7 @@ for (const ref of reference.fires) {
   const rings = computeRings(grid, freeArrival(scenario), fire.ignition, near, suppression, detection)
   console.log(`  rings: ${rings.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} ${Math.round(r.radiusM)} m`).join(' · ')}`)
   const context = buildContext(grid, osm)
-  const a = editorA(demoDecision(fire, near), context, inventory, suppression, scenario)
+  const a = editorA(demoDecision(fire, near, suppression.unlimitedWater), context, inventory, suppression, scenario)
   let found = { plans: 0, elapsedMs: 0 }
   const result = optimize(scenario, groundOf(context), a, {
     ...stop,

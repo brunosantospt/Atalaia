@@ -63,7 +63,7 @@ export function wetLineLengthM(scenario: Scenario, decision: Decision, a: Assign
   const unit = sup.units[a.unit]
   if (!unit.wetLineLengthM) return 0
   let length = unit.wetLineLengthM * a.count
-  if (unit.waterL)
+  if (unit.waterL && !sup.unlimitedWater)
     for (const s of decision.assignments)
       if (s.task === 'shuttle' && s.target === a.target) length += (sup.units[s.unit].wetLineLengthM ?? 0) * s.count
   return unit.reachM ? Math.min(length, 2 * unit.reachM) : length
@@ -156,7 +156,8 @@ function growLines(
     const p = decision.points[a.target]
     const cell = cellOfXY(grid, toPTTM06(p).x, toPTTM06(p).y)
     const inside = cell.col >= 0 && cell.row >= 0 && cell.col < grid.cols && cell.row < grid.rows
-    const rate = inside ? attackMPerH(unit, grid.fuelClass[cell.row * grid.cols + cell.col]) * a.count * dutyCycle(unit, shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm) : 0
+    const rate = inside ? attackMPerH(unit, grid.fuelClass[cell.row * grid.cols + cell.col]) * a.count
+      * (sup.unlimitedWater ? 1 : dutyCycle(unit, shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm)) : 0
     if (!(rate > 0)) return
     const bearing = wetLineBearing(scenario, free, p, a)
     const key = `${a.target}|${bearing}`

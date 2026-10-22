@@ -132,6 +132,7 @@ export class SplitLayer {
     this.position = Math.min(Math.max(position, 0), 1)
     this.root.style.setProperty('--split', `${(this.position * 100).toFixed(2)}%`)
     this.viewer.scene.splitPosition = this.position
+    this.viewer.scene.requestRender()
   }
 
   show(on: boolean) {

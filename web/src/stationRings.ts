@@ -83,12 +83,28 @@ export function deploymentBoundary(
 ): { blocked: Uint8Array; paths: LonLat[][] } {
   const blocked = new Uint8Array(grid.cols * grid.rows)
   const cells: number[] = []
-  for (let i = 0; i < arrival.length; i++) {
-    if (!Number.isFinite(arrival[i])) continue
-    const p = lonLatAt(grid, i % grid.cols + .5, Math.floor(i / grid.cols) + .5)
-    const eta = dispatchMin + arrivalMin(sup, unit, distanceM(station, p) / 1000, ecin)
-    if (arrival[i] <= eta) { blocked[i] = 1; cells.push(i) }
+  // Travel times do not change as the planning clock advances. Cache fire-minus-travel once,
+  // rather than recomputing geodesic distances over the entire grid every simulated minute.
+  let cached = boundaryTimes.get(arrival)
+  if (!cached || cached.grid !== grid) {
+    cached = { grid, selections: new Map() }
+    boundaryTimes.set(arrival, cached)
   }
+  const key = `${station.lon}|${station.lat}|${unit.speedKmh}|${sup.dispatch.roadFactor}|${arrivalMin(sup, unit, 0, ecin)}`
+  let times = cached.selections.get(key)
+  if (!times) {
+    const indices: number[] = [], limits: number[] = []
+    for (let i = 0; i < arrival.length; i++) {
+      if (!Number.isFinite(arrival[i])) continue
+      const p = lonLatAt(grid, i % grid.cols + .5, Math.floor(i / grid.cols) + .5)
+      indices.push(i)
+      limits.push(arrival[i] - arrivalMin(sup, unit, distanceM(station, p) / 1000, ecin))
+    }
+    times = { indices, limits }
+    cached.selections.set(key, times)
+  }
+  for (let k = 0; k < times.indices.length; k++)
+    if (times.limits[k] <= dispatchMin) { const i = times.indices[k]; blocked[i] = 1; cells.push(i) }
   const stride = grid.cols + 1
   const edges = new Map<number, number[]>()
   const edge = (from: number, to: number) => edges.set(from, [...(edges.get(from) ?? []), to])
@@ -124,6 +140,11 @@ export function deploymentBoundary(
   }
   return { blocked, paths }
 }
+
+const boundaryTimes = new WeakMap<Float32Array, {
+  grid: Grid
+  selections: Map<string, { indices: number[]; limits: number[] }>
+}>()
 
 export interface DeploymentSelection {
   from: string

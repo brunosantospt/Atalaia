@@ -34,6 +34,7 @@ A API está em `api/`, em FastAPI. `api/setup.sh` cria o venv (uma vez), `api/se
 - **`moisture`:** humidades dos combustíveis em %, iguais em toda a grade.
   - **Mortas** (`dead_1h_pct`, `dead_10h_pct`, `dead_100h_pct`): por omissão seguem a meteo de cada momento (ver "O que a API junta ao cenário"), e no `scenario` do resultado vêm `null`. Se o cenário der as três, valem a corrida toda; dar só uma ou duas é um erro. Vão de mais de 0 a 60.
   - **Vivas** (`live_herb_pct`, `live_woody_pct`): 60/90 por omissão, um verão seco, durante toda a corrida. Vão de 30 a 300. Em seca o hindcast usa 30/70 (`hindcast/README.md`).
+- **Modo simplificado da demo:** `suppression.json` tem `unlimitedWater: true`. O frontend ignora tanques/reabastecimento e mantém as linhas terrestres eficazes até ao fim. Não acrescenta parâmetros ao motor: continua a enviar as faixas do contrato original. Equipas apeadas podem ser colocadas no terreno fora de estrada; as verificações de tempo de chegada continuam ativas.
 - **`decision.barriers`:** linhas onde nada arde a partir de um minuto, por exemplo um aceiro, uma linha molhada ou uma estrada defendida.
   - `path`: a linha em `[[lon, lat], ...]` (WGS84), com pelo menos 2 pontos.
   - `width_m`: a largura, de 0 a 1000 m. Com 0 (por omissão) contam só as células que a linha toca.

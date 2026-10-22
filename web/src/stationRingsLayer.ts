@@ -73,6 +73,7 @@ export class StationRingsLayer {
   private apply() {
     this.source.show = this.eligible && this.wanted && this.hasBoundary
     this.legend.hidden = !this.eligible || !this.key
+    this.viewer.scene.requestRender()
   }
 
   destroy() { this.viewer.dataSources.remove(this.source, true); this.legend.remove() }

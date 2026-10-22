@@ -34,6 +34,38 @@ interface Node {
   edges: Edge[]
 }
 
+/** Binary min-heap: route search must not re-sort the entire frontier at every junction. */
+class RouteQueue {
+  private values: [number, number][] = []
+  get size() { return this.values.length }
+  push(value: [number, number]) {
+    let i = this.values.length
+    this.values.push(value)
+    while (i > 0) {
+      const parent = (i - 1) >> 1
+      if (this.values[parent][0] <= value[0]) break
+      this.values[i] = this.values[parent]
+      i = parent
+    }
+    this.values[i] = value
+  }
+  pop(): [number, number] {
+    const first = this.values[0]
+    const last = this.values.pop()!
+    if (!this.values.length) return first
+    let i = 0
+    while (2 * i + 1 < this.values.length) {
+      let child = 2 * i + 1
+      if (child + 1 < this.values.length && this.values[child + 1][0] < this.values[child][0]) child++
+      if (last[0] <= this.values[child][0]) break
+      this.values[i] = this.values[child]
+      i = child
+    }
+    this.values[i] = last
+    return first
+  }
+}
+
 export interface RoadGraph {
   nodes: Node[]
   spatialBuckets: Map<string, number[]>
@@ -49,7 +81,7 @@ function bucketKey(lon: number, lat: number): string {
   return `${bx},${by}`
 }
 
-const graphCache = new WeakMap<Road[], RoadGraph>()
+const graphCache = new WeakMap<Road[], { grid: Grid; graph: RoadGraph }>()
 
 /**
  * Builds and caches a routable topological graph from OSM road polylines.
@@ -57,7 +89,7 @@ const graphCache = new WeakMap<Road[], RoadGraph>()
  */
 export function getOrCreateRoadGraph(grid: Grid, roads: Road[]): RoadGraph {
   const cached = graphCache.get(roads)
-  if (cached) return cached
+  if (cached?.grid === grid) return cached.graph
 
   const nodes: Node[] = []
   const spatialBuckets = new Map<string, number[]>()
@@ -128,7 +160,7 @@ export function getOrCreateRoadGraph(grid: Grid, roads: Road[]): RoadGraph {
   }
 
   const graph: RoadGraph = { nodes, spatialBuckets }
-  graphCache.set(roads, graph)
+  graphCache.set(roads, { grid, graph })
   return graph
 }
 
@@ -144,7 +176,7 @@ function findNearestNode(graph: RoadGraph, point: LonLat): { nodeId: number; dis
   const by = Math.floor(point.lat / BUCKET_LAT)
 
   // Expand search radius in bucket steps
-  for (let radius = 1; radius <= 20; radius++) {
+  for (let radius = 0; radius <= 20; radius++) {
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dy = -radius; dy <= radius; dy++) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) !== radius) continue
@@ -180,7 +212,7 @@ function findNearestNode(graph: RoadGraph, point: LonLat): { nodeId: number; dis
  * Computes a safe driving route along OSM roads from origin to destination,
  * dynamically detouring around roads cut by the wildfire at currentMinutes.
  */
-export function findSafeRoute(
+function calculateSafeRoute(
   grid: Grid,
   roads: Road[],
   arrival: Float32Array | undefined,
@@ -232,11 +264,11 @@ export function findSafeRoute(
   dist[start.nodeId] = 0
 
   // Priority queue: [cost, nodeId]
-  const pq: [number, number][] = [[0, start.nodeId]]
+  const pq = new RouteQueue()
+  pq.push([0, start.nodeId])
 
-  while (pq.length > 0) {
-    pq.sort((a, b) => a[0] - b[0])
-    const [d, u] = pq.shift()!
+  while (pq.size > 0) {
+    const [d, u] = pq.pop()
 
     if (d > dist[u]) continue
     if (u === end.nodeId) break
@@ -305,4 +337,28 @@ export function findSafeRoute(
     blockedRoadsCount: blockedCount,
     directDistKm,
   }
+}
+
+const routeCache = new WeakMap<Road[], {
+  grid: Grid; arrival: Float32Array | undefined; minute: number
+  queries: Map<string, RouteResult | null>
+}>()
+
+/** Share the route between list badges and map drawing; without a fire field, time is irrelevant. */
+export function findSafeRoute(
+  grid: Grid, roads: Road[], arrival: Float32Array | undefined, currentMinutes: number,
+  origin: LonLat, destination: LonLat,
+): RouteResult | null {
+  const minute = arrival ? currentMinutes : 0
+  let cache = routeCache.get(roads)
+  if (!cache || cache.grid !== grid || cache.arrival !== arrival || cache.minute !== minute) {
+    cache = { grid, arrival, minute, queries: new Map() }
+    routeCache.set(roads, cache)
+  }
+  const key = `${origin.lon}|${origin.lat}|${destination.lon}|${destination.lat}`
+  if (cache.queries.has(key)) return cache.queries.get(key)!
+  const result = calculateSafeRoute(grid, roads, arrival, minute, origin, destination)
+  if (cache.queries.size >= 128) cache.queries.clear()
+  cache.queries.set(key, result)
+  return result
 }

@@ -4,7 +4,7 @@ Este ramo responde à lista **"Tests na demo"** do Build Week Plan. Traz também
 
 A demo passa a ter **um só incêndio**, simulado na Penha. O fogo corre só no **ELMFIRE**, com um botão. Um **incidente de vento** obriga a realocar os meios.
 
-Verificações de 22 out 2026: `npm run build` (`tsc --noEmit` + Vite), `npm run ils:check`, `api/test.sh` com ELMFIRE real e o teste sintético `engines/elmfire/test.sh`. A API de tarefas da Penha foi verificada até ao resultado e à reutilização da cache: 521,01 ha às 6 h, contra 553,4 ha da referência (−5,85 %, dentro da tolerância de 10 %). Verificação em Firefox/WebGL: editor, rotação ao vivo/Auto, seleção do quartel e relógio, procura do B e resultados ELMFIRE de A/B passaram num cenário isolado de 120 min, sem erros na consola. A barreira rodada a 45° chegou à API com eixo de 45,002°. Os restantes passos da história completa continuam na lista de verificação abaixo.
+Verificações de 22 out 2026: build TypeScript/Vite, colocação real no handler do editor sem WebGL, regressões de contornos/rotas/ETA/água ilimitada e ILS. A verificação anterior em Firefox/WebGL confirmou 0 redraws em 2 s em pausa, atualização do relógio/reprodução e o fluxo editor → API → ELMFIRE para A/B num cenário isolado de 120 min com linha rodada a 45,002°. Os novos testes de colocação não lançam browser nem ELMFIRE. O adapter e os testes do motor foram repostos sem alterações, para não interferir com a calibração de outra sessão.
 
 ## Como correr
 
@@ -18,15 +18,15 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 
 ## O cenário: Penha, Guimarães (simulado)
 
-- **Ignição:** 41°25′42.8″N 8°16′17.4″W, a 16 set 2024 às 10:00.
-- **Meteo:** IFS real desse dia, com o vento ×2.
+- **Ignição:** 41°25′14.7″N 8°16′10.0″W, a 16 set 2024 às 10:00.
+- **Meteo:** IFS real desse dia, com o vento ×1,6 (antes ×2); redução da secura de 3 para 2 pontos e mínimo de humidade de 3 %, antes 2 %.
 - **Grelha:** 27 km × 27 km, 900 × 900 células de 30 m.
 - **Calibração:** à ordem de grandeza do incêndio de **Paredes, 17 set 2024** (PT-FireSprd v2, uso interno). Do v2 só se leram áreas e ROS; nenhuma geometria de 2024 está no repositório.
-- **Incidente de vento às 12:30 (T+150):** de E a 45 km/h para NNO a 65 km/h, com rajadas de 91 km/h. A cabeça roda de O para SE, sobre Abação, Pinheiro, Lapinha, Calvos e Tagilde.
-  - Às 6 h ardem 553 ha com a rotação e 178 ha sem ela.
-- **Referência cortada aos 2000 ha:** 400 anéis e 320 KB, contra os 1105 anéis e 1,6 MB de antes. Assim o browser não fica lento.
+- **Incidente de vento às 12:30 (T+150):** de E a 36 km/h para NNO a 48 km/h. Mantém-se a rotação sintética; a intensidade é menor.
+  - Às 6 h a nova referência tem 322,5 ha com a rotação, face a 553,4 ha no cenário anterior.
+- **Referência cortada aos 2000 ha:** 2000,6 ha aos T+1268 min; progressão com cerca de 282 KB.
 - **Deteção:** drone aos 10 min, satélite aos 30 min (`detection.json`).
-- **Construção:** reproduzível com `scripts/build_hypothetical.py`. Os outros incêndios continuam no disco, mas fora do `index.json`.
+- **Construção:** reproduzível com `scripts/.venv/bin/python -I scripts/build_hypothetical.py --keep-grid` (reutiliza a paisagem existente ao mover a ignição). Os outros incêndios continuam no disco, mas fora do `index.json`.
 
 ## Fluxo de decisão
 
@@ -49,7 +49,7 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 - **Wet lines:**
   - Cada meio terrestre põe uma faixa azul-clara que é exatamente o `decision.barriers` do ELMFIRE.
   - A faixa cresce pela frente do fogo ao ritmo de ataque do meio: VFCI ~240 m/h, brigadas pela NWCG.
-  - O crescimento é limitado pela água, pelos reabastecimentos e por um turno de 12 h.
+  - Água ilimitada: sem dependência de tanque, reabastecimento ou secagem; a linha mantém-se não combustível. O crescimento segue a taxa nominal durante o turno de 12 h.
   - Há no máximo 6 `from_min` por decisão.
 - **Só os 3 quartéis mais próximos:** BV Guimarães, Vizela e Fafe.
   - O mapa mostra apenas o quartel e o tipo de meio selecionados. O **contorno tracejado segue a forma do fogo** e delimita as células onde o fogo chega antes desse meio, contando a hora atual da ordem, a saída e a viagem até cada célula. Mudar o quartel, o meio ou o relógio atualiza o contorno. A explicação fica num cartão, sem rótulos sobrepostos na ignição.
@@ -103,7 +103,7 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 - A meteo sem rotação continua disponível e dá uma chave de cache diferente da meteo com rotação.
 - `api/test.sh` verifica o índice público real e usa os incêndios históricos como fixtures isoladas; já não depende de estes aparecerem na seleção da demo. Inclui regressões dos valores da Penha após o merge.
 - O gerador da Penha passa a usar diretamente `engines/elmfire/run.sh`. Foi removido o overlay duplicado, que ficou incompatível depois de o adapter principal incorporar combustíveis portugueses e projeções; a entrada antiga `scripts/elmfire_pt/run.sh` fica como encaminhamento.
-- ILS, 2000 planos, semente 1: Vieira A 128,9 ha / B 105,3 ha, ambos 0 lugares; Cabeceiras A 477,5 ha / B 158,3 ha, 5 / 1 lugares. Os valores batem com `web/scripts/ils-reference.json`. São resultados do modelo rápido usado na pesquisa, não do ELMFIRE.
+- ILS: referência atualizada para água ilimitada e equipas apeadas fora de estrada, com 2000 planos e semente 1. Os valores estão em `web/scripts/ils-reference.json` e `docs/ils.md`. São do modelo rápido, não do ELMFIRE.
 - SimFire não está instalado neste ambiente; as corridas reais da regressão API usaram ELMFIRE.
 - As edições de `pitch/` da outra sessão ficam fora deste ramo e do PR.
 
@@ -132,3 +132,16 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 - O teste detetou e corrigiu uma falha do worker do ILS (`global is not defined`): o desenho Cesium passou para `stationRingsLayer.ts`, separado dos cálculos puros usados pelo worker. A repetição completa terminou sem erros de consola.
 - Build, verificações de geometria/rotação/ETA e regressão ILS passaram. O resultado de Vieira foi A 128,9 ha / B 103,4 ha (dentro da tolerância da referência); Cabeceiras ficou A 477,5 ha / B 158,3 ha.
 - O frontend ficou disponível em `http://127.0.0.1:5173/` e a API ELMFIRE confirmou `ready` em `http://127.0.0.1:5181/api/engines`.
+
+
+## Desempenho, água ilimitada e equipas fora de estrada
+
+- Renderização a pedido: o mapa em pausa deixa de desenhar continuamente. Câmara, relógio, reprodução, tiles e alterações de meios pedem renderização; a qualidade visual mantém-se.
+- Dijkstra rodoviário usa um heap em vez de ordenar toda a fila em cada passo; lista e mapa reutilizam a rota. Relógio e resultados novos invalidam a cache. A busca do nó mais próximo inclui o próprio bucket.
+- Contornos reutilizam os tempos de viagem por célula; linhas não são recalculadas quando só avança o relógio.
+- A API serializa os seus motores entre tarefas e pedidos síncronos, reduzindo a memória de comparações A/B. Isto não modifica nem interrompe os processos de hindcast de outras sessões.
+- `unlimitedWater: true` em suppression.json mantém as faixas terrestres eficazes a partir da chegada/conclusão, sem secagem nem pausas de abastecimento. Crescem à taxa de ataque nominal; não há alertas de água. VTTU novos fazem ataque/proteção em vez de abastecimento.
+- As faixas usam o contrato original: `path`, `width_m`, `from_min`, sem humidade localizada ou novos parâmetros ELMFIRE. O adapter partilhado mantém-se byte a byte igual ao commit anterior. Não se iniciam novas corridas ELMFIRE para verificar estas alterações.
+- Equipas apeadas ficam nas coordenadas clicadas, incluindo os vértices de linhas desenhadas; não são aproximadas às estradas. O ILS também considera terreno para brigadas, mesmo sem acessos rodoviários. Veículos mantêm a aproximação a acessos; mantêm-se as verificações de chegada e de aproximação ao fogo.
+- A interface explica a água ilimitada e não mostra rotas rodoviárias fictícias para brigadas. O exemplo deixa o VTTU a proteger o ponto, em vez de reabastecer.
+- Uma faixa aberta continua a ter extremidades: o fogo pode contorná-las. As projeções do cenário ELMFIRE também podem saltar faixas. A simplificação mantém a linha eficaz, mas não fecha automaticamente um perímetro nem altera o modelo de projeções partilhado.

@@ -1,6 +1,6 @@
 """Build the demo's one fire: a hypothetical fire at Monte da Penha (Guimarães), with a wind shift.
 
-    scripts/.venv/bin/python -I scripts/build_hypothetical.py [--grid-km 27] [--wind-mult 1.6] [--dead-1h-pct 3.5] ...
+    scripts/.venv/bin/python -I scripts/build_hypothetical.py [--keep-grid] [--wind-mult 1.6] [--dry 2] ...
 
 Nothing burned here: the fire is the one the UE render tells (FireRenderer's Penha package,
 data/simfire/penha_2024-09-16: ignition and start, 16 Sep 2024 10:00, and the IFS weather), on a
@@ -94,26 +94,26 @@ HOMES_NEAR_M = 100  # homes this close to the front: OSM puts them in non-burnab
 # holds the afternoon, then eases and veers back to the observed light easterly by 22:00.
 SHIFT_FROM, SHIFT_TO = "2024-09-16T12:00", "2024-09-16T13:00"
 SHIFTED = {
-    "2024-09-16T13:00": (335, 65.0),
-    "2024-09-16T14:00": (335, 62.0),
-    "2024-09-16T15:00": (338, 56.0),
-    "2024-09-16T16:00": (340, 48.0),
-    "2024-09-16T17:00": (340, 38.0),
-    "2024-09-16T18:00": (345, 28.0),
+    "2024-09-16T13:00": (335, 48.0),
+    "2024-09-16T14:00": (335, 46.0),
+    "2024-09-16T15:00": (338, 42.0),
+    "2024-09-16T16:00": (340, 36.0),
+    "2024-09-16T17:00": (340, 30.0),
+    "2024-09-16T18:00": (345, 24.0),
     "2024-09-16T19:00": (0, 18.0),
     "2024-09-16T20:00": (25, 12.0),
     "2024-09-16T21:00": (55, 8.0),
 }
 # The tuning: defaults reproduce the shipped fire (see fire.json source and windShift.note).
 GRID_KM, CENTRE_E_KM, CENTRE_N_KM = 27.0, 0.0, 0.0
-WIND_MULT = 2.0  # the IFS 9 km wind is ~half the gusty wind of the real 15-17 Sep 2024 fires
-DRY = 3.0  # points off the Simard equilibrium moisture: dead 1 h of 2-3 % at RH 15-25 %, as 15-17 Sep 2024
-DEAD_FLOOR = 2.0
+WIND_MULT = 1.6  # synthetic demo wind, reduced from 2.0 for a less extreme initial attack
+DRY = 2.0  # points off equilibrium moisture; one point less drying than the original demo
+DEAD_FLOOR = 3.0
 FARMLAND_FUEL = 102  # S&B GR2 for COS 2.1.1.1 (dry fallow and stubble in September); 0 keeps it non-burnable
 SEED = 2
 CAP_HA = 2000.0  # the reference stops at the first step at or above this area; the web stops simulated runs there too
-# Monte da Penha, near the top: 41°25'42.8"N 8°16'17.4"W (the scenario's ignition; the UE package's is ~2 km east)
-IGN_LAT, IGN_LON = 41.428556, -8.2715
+# User-selected ignition: 41°25′14.7″N 8°16′10.0″W.
+IGN_LAT, IGN_LON = 41 + 25 / 60 + 14.7 / 3600, -(8 + 16 / 60 + 10 / 3600)
 GUST_FACTOR = 1.4  # gust/mean: the observed afternoon has ~2.0, a steadier flow a little less
 
 PTTM06 = CRS.from_epsg(3763)
@@ -127,7 +127,7 @@ SOURCE = {
     "dataset": "Incêndio hipotético na Penha (Guimarães): não aconteceu",
     "data": "Incêndio simulado na Penha, Guimarães ({model_pt}, sem combate), calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno). Meteorologia de 16/09/2024 (ECMWF IFS 9 km via Open-Meteo) com o vento multiplicado por {wind_mult}, combustíveis muito secos e uma rotação do vento sintética às 12h-13h",
     "cite": "Paisagem: COS2015 v2, DGT (CC BY 4.0), e Copernicus DEM GLO-30 (© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA); meteorologia ECMWF IFS via Open-Meteo (CC BY 4.0)",
-    "fire": "hypothetical: the ignition and start of the UE render's Penha fire (FireRenderer scenarios/penha_elmfire); no observed spread exists",
+    "fire": "hypothetical: user-selected ignition 41°25′14.7″N 8°16′10.0″W; start and IFS weather from the UE Penha package; no observed spread exists",
     "weather": "ECMWF IFS analysis of 16 Sep 2024 at the 9 km cell over Penha: temperature and humidity as is; wind and gusts x {wind_mult} (synthetic, tuned); the wind from 13:00 to 21:00 is wholly synthetic",
     "windShift": "synthetic, injected for the demo, not observed: the easterly backs to NNW between 12:00 and 13:00",
     "calibration": "calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno): áreas por período e velocidades lidas localmente, nenhuma geometria usada nem copiada. Ajustes sintéticos: {tuning}",
@@ -446,7 +446,14 @@ def build(model, compare, opts):
     folder.mkdir(parents=True, exist_ok=True)
     package = json.loads((PACKAGE / "fire.json").read_text())
     ign = {"lon": opts.ign_lon, "lat": opts.ign_lat}
-    g = make_grid(ign, opts.grid_km, (opts.centre_east_km * 1000, opts.centre_north_km * 1000))
+    if opts.keep_grid:
+        g = json.loads((folder / "grid.json").read_text())
+        x, y = TO_TM06.transform(ign["lon"], ign["lat"])
+        if not (g["xmin"] + CELL_M <= x < g["xmin"] + (g["cols"] - 1) * CELL_M
+                and g["ymin"] + CELL_M <= y < g["ymin"] + (g["rows"] - 1) * CELL_M):
+            raise SystemExit("the ignition must be inside the retained grid, one cell from its edge")
+    else:
+        g = make_grid(ign, opts.grid_km, (opts.centre_east_km * 1000, opts.centre_north_km * 1000))
     (OUT / "index.json").write_text("[]\n") if not (OUT / "index.json").exists() else None
     make_layers(folder, g)
     farmland_legend(folder, opts.farmland_fuel)
@@ -664,6 +671,7 @@ if __name__ == "__main__":
     parser.add_argument("--ign-lon", type=float, default=IGN_LON, help="ignition longitude (WGS84)")
     parser.add_argument("--cap-ha", type=float, default=CAP_HA, help="the reference ends at the first step at or above this area (ha)")
     parser.add_argument("--grid-km", type=float, default=GRID_KM, help="side of the square 30 m grid (cells: km*1000/30, keep under ~1000)")
+    parser.add_argument("--keep-grid", action="store_true", help="reuse the existing landscape grid when moving the ignition or tuning weather")
     parser.add_argument("--centre-east-km", type=float, default=CENTRE_E_KM, help="grid centre east of the ignition")
     parser.add_argument("--centre-north-km", type=float, default=CENTRE_N_KM, help="grid centre north of the ignition")
     parser.add_argument("--wind-mult", type=float, default=WIND_MULT, help="factor on the IFS wind and gusts, baked into weather.json")

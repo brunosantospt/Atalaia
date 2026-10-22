@@ -60,6 +60,7 @@ import {
   dropCycleMin,
   flameLengthM,
   isAerial,
+  isRoadVehicle,
   type Assignment,
   type Decision,
   type Suppression,
@@ -316,6 +317,7 @@ export class Editor {
   private loaded: Loaded | undefined
   private runs: Runs | undefined // the last ELMFIRE simulation of A and B (with Livre); none before the first
   private free: Run | undefined // Livre, the cached ELMFIRE run: all there is before the first simulation
+  private wetCache = new WeakMap<Decision, { scenario: Scenario; key: string; lines: WetLine[] }>()
   private maxMin = 360 // the clock and the slider stop here: the cut of the runs, or when the fires are out
   private reports: Reports | undefined
   private judged: Reports | undefined
@@ -496,7 +498,12 @@ export class Editor {
   private wetLinesOf(d: Decision): WetLine[] {
     if (!this.loaded) return []
     const { scenario } = this.loaded
-    return wetLines(scenario, d, freeArrival(scenario))
+    const key = JSON.stringify([d.points, d.lines, d.assignments])
+    const cached = this.wetCache.get(d)
+    if (cached?.scenario === scenario && cached.key === key) return cached.lines
+    const lines = wetLines(scenario, d, freeArrival(scenario))
+    this.wetCache.set(d, { scenario, key, lines })
+    return lines
   }
 
   /** "10:25 (T+25 min)": the wall clock and the minute of the run a barrier holds from. */
@@ -566,7 +573,8 @@ export class Editor {
     intensityKWPerM?: number,
   ) {
     const points = Object.fromEntries(
-      Object.entries(example.points).map(([id, p]) => [id, context ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
+      Object.entries(example.points).map(([id, p]) => [id, context && example.assignments.some((a) => a.target === id && isRoadVehicle(this.sup.units[a.unit]))
+        ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
     )
     const snapped = { ...clone(example), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
     this.stopIls()
@@ -749,7 +757,9 @@ export class Editor {
     } else if (tool === 'point') {
       this.refs.hint.textContent = isAerial(unit)
         ? `Clica no mapa onde o ${unit.short} descarrega. Escolhe outra vez o meio para parar.`
-        : `Clica no mapa: o ${unit.short} fica no ponto de acesso mais próximo (estrada, caminho ou trilho) e faz a sua linha molhada. Escolhe outra vez o meio para parar.`
+        : isRoadVehicle(unit)
+          ? `Clica no mapa: o ${unit.short} fica no ponto de acesso mais próximo e faz a sua linha molhada. Escolhe outra vez o meio para parar.`
+          : `Clica em qualquer ponto do terreno para colocar a equipa apeada, sem alinhar à estrada. Escolhe outra vez o meio para parar.`
     }
     this.drawAccess()
     this.draw()
@@ -1117,7 +1127,7 @@ export class Editor {
     const aerial = isAerial(this.sup.units[this.unit])
 
     // Ground vehicles snap to road. Aerial vehicles (planes/helis) have 100% free spatial allocation!
-    const access = (!aerial && context) ? snapToRoad(context, p, SNAP_M) : undefined
+    const access = (isRoadVehicle(this.sup.units[this.unit]) && context) ? snapToRoad(context, p, SNAP_M) : undefined
     const point = access ? { lon: access.lon, lat: access.lat } : p
 
     // Active fire safety check: reject placing ground crews inside active fire perimeter.
@@ -1166,7 +1176,8 @@ export class Editor {
       ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? point, point) / 1000)}) alocado nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
       : access
         ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
-        : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
+        : this.unit === 'crew' ? 'Equipa apeada no ponto escolhido, fora ou dentro da rede de acessos.'
+          : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
     this.commit()
   }
 
@@ -1439,7 +1450,7 @@ export class Editor {
     li.querySelector('.n')!.textContent = `×${c.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[c.task]
     li.querySelector('.from')!.textContent = isAerial(unit) ? 'Base aérea' : (this.loaded?.stations.find((s) => s.id === c.from)?.short ?? c.from)
-    const access = c.b && !isAerial(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
+    const access = c.b && isRoadVehicle(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
     const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
     let where = ''
     if (c.kind === 'same') where = c.line ? 'na mesma linha' : 'no mesmo sítio'
@@ -1531,7 +1542,7 @@ export class Editor {
       `
     } else if (this.unit === 'vttu') {
       task.innerHTML = `
-        <option value="shuttle">abastecimento (cisterna móvel)</option>
+        ${this.sup.unlimitedWater ? '<option value="direct">ataque direto (água ilimitada)</option>' : '<option value="shuttle">abastecimento (cisterna móvel)</option>'}
         <option value="protect">proteção de estruturas</option>
       `
     } else if (this.unit === 'crew') {
@@ -1669,7 +1680,7 @@ export class Editor {
     const station = !base ? this.loaded?.stations.find((s) => s.id === a.from) : undefined
 
     let routeBadge = ''
-    if (isGround && target && station && this.loaded?.context) {
+    if (isRoadVehicle(unit) && target && station && this.loaded?.context) {
       const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
       const route = findSafeRoute(this.loaded.scenario.grid, this.loaded.context.osm.roads, activeRun?.arrival, this.minutes, station, target)
       if (route?.isDetour) {
@@ -1792,7 +1803,8 @@ export class Editor {
       return `${fmtNumber(lineLengthM(d.lines[a.target] ?? []))} m · descarga a cada ~${fmtNumber(every)} min onde o fogo toca · ${stretches} troços de ${unit.dropM[0]} m seguros ${unit.holdMin} min`
     }
     if (a.task === 'shuttle')
-      return `abastece os veículos neste ponto: a linha molhada deles cresce ${fmtNumber((unit.wetLineLengthM ?? 0) * a.count)} m com a água do tanque`
+      return this.sup.unlimitedWater ? 'Água ilimitada: não é necessário abastecimento neste cenário.'
+        : `abastece os veículos neste ponto: a linha molhada deles cresce ${fmtNumber((unit.wetLineLengthM ?? 0) * a.count)} m com a água do tanque`
     if (isAerial(unit)) return `${a.count} × ${unit.waterL} L a cada ~${fmtNumber(dropCycleMin(unit, waterPointKm) / a.count)} min · abranda ${fmtNumber(aerialFrontM(unit, a.count, waterPointKm))} m de frente · chama até ${unit.holdFlameM} m`
     // Ground units at a point: the wet line across the spread, from their arrival.
     const w = mine[0]
@@ -1819,7 +1831,8 @@ export class Editor {
         const length = Math.min(unit.wetLineLengthM * this.count, unit.reachM ? 2 * unit.reachM : Infinity)
         parts.push(`num ponto, linha molhada de ${fmtNumber(length)} × ${fmtNumber(unit.wetLineWidthM ?? 0)} m atravessada ao fogo, a partir da chegada`)
       }
-      if (unit.waterL) parts.push(`${unit.waterL} L${this.unit === 'vttu' ? ' (em abastecimento, a linha dos veículos do ponto cresce com eles)' : ''}`)
+      if (this.sup.unlimitedWater) parts.push('água ilimitada · a linha mantém-se eficaz')
+      else if (unit.waterL) parts.push(`${unit.waterL} L${this.unit === 'vttu' ? ' (em abastecimento, a linha dos veículos do ponto cresce com eles)' : ''}`)
       if (unit.lineMPerH) parts.push(`linha apeada: ${unit.lineMPerH[1] * this.count} m/h em erva, ${unit.lineMPerH[2] * this.count} m/h em mato`)
     }
     this.currentCapacityText = parts.join(' · ')
@@ -1908,6 +1921,7 @@ export class Editor {
 
   /** The active decision on the ground: points, lines (built in time solid, late dashed), safe road routes, the line being drawn. */
   private draw() {
+    this.viewer.scene.requestRender()
     const { entities } = this.source
     entities.removeAll()
     this.routes.entities.removeAll()
@@ -1919,7 +1933,7 @@ export class Editor {
     if (context && scenario && stations) {
       for (const [id, p] of Object.entries(d.points)) {
         const units = d.assignments.filter((a) => a.target === id)
-        const groundUnits = units.filter((a) => !isAerial(this.sup.units[a.unit]))
+        const groundUnits = units.filter((a) => isRoadVehicle(this.sup.units[a.unit]))
         if (!groundUnits.length) continue
 
         const uniqueStations = [...new Set(groundUnits.map((a) => a.from))]
@@ -2269,7 +2283,7 @@ export class Editor {
   private drawAccess() {
     const { entities } = this.access
     entities.removeAll()
-    if (this.tool !== 'point' || !this.loaded?.context) return
+    if (this.tool !== 'point' || !this.loaded?.context || !isRoadVehicle(this.sup.units[this.unit])) return
     const ign = this.loaded.fire.ignition
     let shown = 0
     for (const a of this.loaded.context.access) {

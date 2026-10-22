@@ -131,6 +131,9 @@ async function main() {
         get replay() {
           return replay
         },
+        get editor() {
+          return editor
+        },
         simulate: () => void simulate(),
       },
     })
@@ -403,7 +406,7 @@ async function main() {
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
     hud.setDirector(replay.director)
-    editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near), reach.intensityKWPerM)
+    editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near, suppression.unlimitedWater), reach.intensityKWPerM)
     editor.setRange(freeEnd)
     editor.setFree(free)
     editor.setEngine({ state: 'done', name: source, seconds: 0, note: shiftNote })
@@ -626,6 +629,7 @@ async function main() {
 
   let lastSimulate = ''
   function refreshSimulate() {
+    scene.requestRender()
     if (!replay) return
     const state = simulateState()
     const key = `${state.label}|${state.enabled}|${state.note}`
@@ -705,6 +709,7 @@ async function main() {
   let last = performance.now()
   let frameNo = 0
   let searching = false
+  let renderedHours = NaN
   let readout: CameraReadout = { heading: 0, pitch: 0, range: 0, centre: undefined }
   let revealed = new Set<string>()
   scene.preUpdate.addEventListener(() => {
@@ -715,6 +720,10 @@ async function main() {
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     const frame = player.update(dt)
+    // Cesium handles camera/tile changes itself. A paused fire needs no continuous GPU redraw;
+    // playback and timeline changes still draw each new state.
+    if (frame.driving || frame.hours !== renderedHours) scene.requestRender()
+    renderedHours = frame.hours
     // The split shows in the director's shots, or through every shot on key A.
     const splitOn = !!split && (replay.showSplit || !!frame.shot.split)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.

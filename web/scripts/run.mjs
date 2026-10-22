@@ -4,4 +4,11 @@
 
 import { runnerImport } from 'vite'
 
-await runnerImport(process.argv[2])
+await runnerImport(process.argv[2], {
+  plugins: [{
+    name: 'script-style-stub',
+    enforce: 'pre',
+    resolveId(source) { if (source.endsWith('.css')) return '\0atalaia-script-style' },
+    load(id) { if (id === '\0atalaia-script-style') return 'export default {}' },
+  }],
+})

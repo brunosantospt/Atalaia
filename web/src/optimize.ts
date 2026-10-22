@@ -1,11 +1,11 @@
 // Decision B by iterated local search (Mendes & Alvelos, EJOR 2023; docs/ils.md): A's means on
-// the ground again, each unit on a road it reaches before the fire, so that the fire reaches fewer
+// the ground again, vehicles on roads and foot crews on terrain they reach before the fire, so the fire reaches fewer
 // places and then burns less by the end of the run. A is the starting solution, so B is never worse
 // than A in the fast model. No DOM: it runs in a Web Worker (optimize.worker.ts) and in node.
 //
 // Adaptations of the article (ils.md §5), for a 30 m grid and units that hold hundreds of metres:
-// - a unit stands on a road access point (osm.ts, one every 80 m), not on a cell; aerial units
-//   also on a lattice of every 5th cell, since they drop anywhere;
+// - vehicles stand on road access points (osm.ts, one every 80 m); foot crews and aircraft
+//   also use a terrain lattice of every 5th cell, without snapping to roads;
 // - the means are A's, unit by unit, with A's task: B moves them, stacks them or leaves one at
 //   the station; a crew or an aircraft can also go from one of A's lines to a point (direct
 //   attack) and back, or to another of A's lines of its kind;
@@ -26,7 +26,7 @@ import { cellHa, cellOf, lonLatAt, type Grid } from './grid'
 import type { Context } from './osm'
 import { arrivals, wetLines, stripCells } from './wetLine'
 import { approachIntercept } from './stationRings'
-import { arrivalMin, isAerial, type Assignment, type Decision, type Suppression, type Task, type UnitId } from './suppression'
+import { arrivalMin, isAerial, isRoadVehicle, type Assignment, type Decision, type Suppression, type Task, type UnitId } from './suppression'
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
 export interface Ground {
@@ -106,7 +106,7 @@ interface Spot extends LonLat {
   x: number
   y: number
   road: boolean // a ground unit can stand here
-  air: boolean // an aerial unit can work here
+  offRoad: boolean // foot crews and aircraft can work here
   id?: string // A's point id
 }
 
@@ -170,12 +170,12 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
 
   // A's units at points and on lines, one by one; anything B cannot place stays as it is.
   const spots: Spot[] = []
-  const spot = (p: LonLat, extra: Pick<Spot, 'road' | 'air' | 'id'>): number => {
+  const spot = (p: LonLat, extra: Pick<Spot, 'road' | 'offRoad' | 'id'>): number => {
     const { x, y } = toPTTM06(p)
     return spots.push({ lon: p.lon, lat: p.lat, cell: cellOf(grid, p), x, y, ...extra }) - 1
   }
   const homeOf = new Map<string, number>()
-  for (const [id, p] of Object.entries(a.points)) homeOf.set(id, spot(p, { road: false, air: false, id }))
+  for (const [id, p] of Object.entries(a.points)) homeOf.set(id, spot(p, { road: false, offRoad: true, id }))
   const lineIds = Object.keys(a.lines)
   const L = lineIds.length
   // What is done on each of A's lines: built by crews, or held by drops.
@@ -212,14 +212,14 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     return result
   }
 
-  // Where units can stand: A's points, the roads, and for aircraft a lattice over the free run.
+  // Vehicles use road access; foot crews and aircraft also use a terrain lattice over the forecast.
   const free = freeArrival(scenario) // no plan gets the fire anywhere sooner
   const at = (arrival: Float32Array, s: number) => (spots[s].cell < 0 ? Infinity : arrival[spots[s].cell])
-  for (const p of ground.access) if (cellOf(grid, p) >= 0) spot(p, { road: true, air: true })
-  if (seeds.some((u) => u.aerial))
+  for (const p of ground.access) if (cellOf(grid, p) >= 0) spot(p, { road: true, offRoad: true })
+  if (seeds.some((u) => !isRoadVehicle(sup.units[u.unit])))
     for (let row = AIR_STEP >> 1; row < grid.rows; row += AIR_STEP)
       for (let col = AIR_STEP >> 1; col < grid.cols; col += AIR_STEP)
-        if (free[row * grid.cols + col] <= durationMin) spot(lonLatAt(grid, col + 0.5, row + 0.5), { road: false, air: true })
+        if (free[row * grid.cols + col] <= durationMin) spot(lonLatAt(grid, col + 0.5, row + 0.5), { road: false, offRoad: true })
 
   // Minutes from the call to each spot, as fastModel.ts counts them: by road from the station, or from the air base.
   const etaCache = new Map<string, Float32Array>()
@@ -252,7 +252,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const u = units[k]
     const p = spots[s]
     if (s === u.home) return true
-    if (u.aerial ? !p.air : !p.road) return false
+    if (isRoadVehicle(sup.units[u.unit]) ? !p.road : !p.offRoad) return false
     return arrivesInTime(at(free, s), u.dispatchMin + u.eta[s], ecin ? ecinGain : 0, u.aerial) && safeApproach(u, p, ecin)
   }
   const isOpen = units.map((_, k) => Uint8Array.from(spots, (_, s) => (open(k, s) ? 1 : 0)))

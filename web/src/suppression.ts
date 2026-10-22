@@ -37,6 +37,7 @@ export interface UnitSpec {
 
 export interface Suppression {
   notes: string
+  unlimitedWater?: boolean // demo: ground lines stay supplied, without tank/refill limits
   flame: { byramA: number; byramB: number; heatYieldKJPerKg: number }
   hirsch: { a: number; b: number; c: number; d: number }
   dispatch: { ecinTurnoutMin: number; volunteerTurnoutMin: number; roadFactor: number; waterPointKm: number; airBaseKm: number }
@@ -119,6 +120,9 @@ export function aerialFrontM(unit: UnitSpec, count: number, waterKm: number): nu
 
 /** Whether a unit flies: its turnout is its own, not the station's. */
 export const isAerial = (unit: UnitSpec) => unit.turnoutMin !== undefined
+
+/** Foot crews can work off-road; only ground vehicles snap to the road network. */
+export const isRoadVehicle = (unit: UnitSpec) => !isAerial(unit) && !unit.lineMPerH
 
 /** Minutes from the call until the units work: turnout plus the road, or the flight, from `km` away. */
 export function arrivalMin(sup: Suppression, unit: UnitSpec, km: number, ecin: boolean): number {

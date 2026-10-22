@@ -124,13 +124,13 @@ export function prepareAlerts({ scenario, context, decisions, runs }: AlertInput
   const [a, b] = decisions
   const prepare = (run: Run, decision: Decision | null): RunAlerts => {
     const ecin = decision ? ecinOf(scenario, decision) : []
-    const water = decision ? waterTracks(scenario, decision, ecin) : []
+    const water = decision && !scenario.suppression.unlimitedWater ? waterTracks(scenario, decision, ecin) : []
     return {
       ...homesReached(homes, run),
       ...placesReached(context, run),
       ...headOf(grid, scenario.ignition, run),
       water,
-      shuttles: decision ? shuttles(scenario, decision, ecin, water) : [],
+      shuttles: decision && !scenario.suppression.unlimitedWater ? shuttles(scenario, decision, ecin, water) : [],
     }
   }
   return {

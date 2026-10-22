@@ -5,10 +5,10 @@
   "incidentId": null,
   "timeZone": "Europe/Lisbon",
   "start": "2024-09-16T10:00",
-  "end": "2024-09-16T22:51",
+  "end": "2024-09-17T07:08",
   "simulated": true,
   "simulation": {
-    "model": "ELMFIRE 2025.0717 (scripts/elmfire_pt: engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression",
+    "model": "ELMFIRE 2025.0717 (engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression",
     "runMin": 1440,
     "gridEdgeMin": null,
     "tuning": {
@@ -17,9 +17,9 @@
         900,
         900
       ],
-      "windMult": 2.0,
-      "deadFuelDryPoints": 3.0,
-      "deadFuelFloorPct": 2.0,
+      "windMult": 1.6,
+      "deadFuelDryPoints": 2.0,
+      "deadFuelFloorPct": 3.0,
       "liveHerbPct": 30.0,
       "liveWoodyPct": 70.0,
       "fuels": "pt",
@@ -29,12 +29,12 @@
       "spotting": true,
       "seed": 2,
       "shiftedKmh": {
-        "13:00": 65.0,
-        "14:00": 62.0,
-        "15:00": 56.0,
-        "16:00": 48.0,
-        "17:00": 38.0,
-        "18:00": 28.0,
+        "13:00": 48.0,
+        "14:00": 46.0,
+        "15:00": 42.0,
+        "16:00": 36.0,
+        "17:00": 30.0,
+        "18:00": 24.0,
         "19:00": 18.0,
         "20:00": 12.0,
         "21:00": 8.0
@@ -42,8 +42,8 @@
     }
   },
   "ignition": {
-    "lon": -8.2715,
-    "lat": 41.428556
+    "lon": -8.269444444444446,
+    "lat": 41.42075
   },
   "ignitions": [
     {
@@ -51,20 +51,20 @@
       "hours": 0.0,
       "chain": 1,
       "areaHa": 0.6,
-      "lon": -8.2715,
-      "lat": 41.428556
+      "lon": -8.269444444444446,
+      "lat": 41.42075
     }
   ],
   "bbox": [
-    -8.302767,
-    41.336195,
-    -8.221288,
-    41.436097
+    -8.362349,
+    41.37042,
+    -8.247217,
+    41.433122
   ],
   "areaHa": {
-    "timed": 2007.6,
+    "timed": 2000.6,
     "untimed": 0.0,
-    "total": 2007.6
+    "total": 2000.6
   },
   "steps": [
     {
@@ -75,176 +75,194 @@
       "addedHa": 0.6,
       "period": null,
       "center": {
-        "lon": -8.2715,
-        "lat": 41.428556
+        "lon": -8.269444,
+        "lat": 41.42075
       },
       "bbox": [
-        -8.272038,
-        41.428151,
-        -8.270962,
-        41.428961
+        -8.269983,
+        41.420345,
+        -8.268906,
+        41.421155
       ]
     },
     {
       "step": 1,
       "time": "2024-09-16T11:00",
       "hours": 1.0,
-      "areaHa": 56.2,
-      "addedHa": 55.6,
+      "areaHa": 37.4,
+      "addedHa": 36.8,
       "period": 1,
       "center": {
-        "lon": -8.281531,
-        "lat": 41.428505
+        "lon": -8.276339,
+        "lat": 41.420309
       },
       "bbox": [
-        -8.294976,
-        41.426093,
-        -8.270568,
-        41.430417
+        -8.282756,
+        41.418262,
+        -8.26804,
+        41.422049
       ]
     },
     {
       "step": 2,
       "time": "2024-09-16T12:00",
       "hours": 2.0,
-      "areaHa": 88.9,
-      "addedHa": 32.7,
+      "areaHa": 65.6,
+      "addedHa": 28.2,
       "period": 2,
       "center": {
-        "lon": -8.281834,
-        "lat": 41.428695
+        "lon": -8.278412,
+        "lat": 41.420273
       },
       "bbox": [
-        -8.29533,
-        41.424736,
-        -8.270208,
-        41.431496
+        -8.290284,
+        41.417454,
+        -8.26768,
+        41.423125
       ]
     },
     {
       "step": 3,
       "time": "2024-09-16T13:00",
       "hours": 3.0,
-      "areaHa": 282.1,
-      "addedHa": 193.2,
+      "areaHa": 198.1,
+      "addedHa": 132.5,
       "period": 3,
       "center": {
-        "lon": -8.275895,
-        "lat": 41.420353
+        "lon": -8.278484,
+        "lat": 41.415894
       },
       "bbox": [
-        -8.29533,
-        41.395844,
-        -8.267676,
-        41.431769
+        -8.298882,
+        41.40315,
+        -8.265517,
+        41.423665
       ]
     },
     {
       "step": 4,
       "time": "2024-09-16T14:00",
       "hours": 4.0,
-      "areaHa": 410.9,
-      "addedHa": 128.8,
+      "areaHa": 253.5,
+      "addedHa": 55.4,
       "period": 4,
       "center": {
-        "lon": -8.268352,
-        "lat": 41.414816
+        "lon": -8.275969,
+        "lat": 41.414736
       },
       "bbox": [
-        -8.29533,
-        41.389903,
-        -8.254738,
-        41.432041
+        -8.29924,
+        41.401523,
+        -8.260852,
+        41.424204
       ]
     },
     {
       "step": 5,
       "time": "2024-09-16T15:00",
       "hours": 5.0,
-      "areaHa": 469.5,
-      "addedHa": 58.6,
+      "areaHa": 292.6,
+      "addedHa": 39.1,
       "period": 5,
       "center": {
-        "lon": -8.266032,
-        "lat": 41.414167
+        "lon": -8.271391,
+        "lat": 41.415397
       },
       "bbox": [
-        -8.29533,
-        41.389631,
-        -8.251146,
-        41.43258
+        -8.29924,
+        41.401255,
+        -8.257617,
+        41.424477
       ]
     },
     {
       "step": 6,
       "time": "2024-09-16T16:00",
       "hours": 6.0,
-      "areaHa": 553.4,
-      "addedHa": 83.9,
+      "areaHa": 322.5,
+      "addedHa": 29.9,
       "period": 6,
       "center": {
-        "lon": -8.265411,
-        "lat": 41.408311
+        "lon": -8.273264,
+        "lat": 41.415632
       },
       "bbox": [
-        -8.29533,
-        41.381843,
-        -8.238909,
-        41.432852
+        -8.29924,
+        41.395042,
+        -8.256543,
+        41.425014
       ]
     },
     {
       "step": 7,
       "time": "2024-09-16T19:00",
       "hours": 9.0,
-      "areaHa": 1050.4,
-      "addedHa": 497.0,
+      "areaHa": 457.6,
+      "addedHa": 135.1,
       "period": 7,
       "center": {
-        "lon": -8.255415,
-        "lat": 41.387275
+        "lon": -8.269465,
+        "lat": 41.410749
       },
       "bbox": [
-        -8.29533,
-        41.339174,
-        -8.223091,
-        41.434203
+        -8.29924,
+        41.38478,
+        -8.252229,
+        41.426369
       ]
     },
     {
       "step": 8,
       "time": "2024-09-16T22:00",
       "hours": 12.0,
-      "areaHa": 1701.5,
-      "addedHa": 651.1,
+      "areaHa": 694.4,
+      "addedHa": 236.8,
       "period": 8,
       "center": {
-        "lon": -8.256126,
-        "lat": 41.381496
+        "lon": -8.269876,
+        "lat": 41.404324
       },
       "bbox": [
-        -8.298432,
-        41.337278,
-        -8.221647,
-        41.435556
+        -8.299962,
+        41.377755,
+        -8.250074,
+        41.427989
       ]
     },
     {
       "step": 9,
-      "time": "2024-09-16T22:51",
-      "hours": 12.85,
-      "areaHa": 2007.6,
-      "addedHa": 306.1,
+      "time": "2024-09-17T04:00",
+      "hours": 18.0,
+      "areaHa": 1597.9,
+      "addedHa": 903.5,
       "period": 9,
       "center": {
-        "lon": -8.261146,
-        "lat": 41.373818
+        "lon": -8.288644,
+        "lat": 41.398089
       },
       "bbox": [
-        -8.302767,
-        41.336195,
-        -8.221288,
-        41.436097
+        -8.335083,
+        41.372023,
+        -8.248635,
+        41.431767
+      ]
+    },
+    {
+      "step": 10,
+      "time": "2024-09-17T07:08",
+      "hours": 21.133333333333333,
+      "areaHa": 2000.6,
+      "addedHa": 402.7,
+      "period": 10,
+      "center": {
+        "lon": -8.311693,
+        "lat": 41.400597
+      },
+      "bbox": [
+        -8.362349,
+        41.37042,
+        -8.247217,
+        41.433122
       ]
     }
   ],
@@ -254,11 +272,11 @@
       "start": "2024-09-16T10:00",
       "end": "2024-09-16T11:00",
       "durationH": 1.0,
-      "areaHa": 55.6,
-      "growthHaPerH": 55.6,
-      "rosMPerH": 1904,
-      "maxRosMPerH": 1904,
-      "spreadTowardDeg": 272,
+      "areaHa": 36.8,
+      "growthHaPerH": 36.8,
+      "rosMPerH": 1060,
+      "maxRosMPerH": 1060,
+      "spreadTowardDeg": 277,
       "intensityKWPerM": null
     },
     {
@@ -266,11 +284,11 @@
       "start": "2024-09-16T11:00",
       "end": "2024-09-16T12:00",
       "durationH": 1.0,
-      "areaHa": 32.7,
-      "growthHaPerH": 32.7,
-      "rosMPerH": 266,
-      "maxRosMPerH": 266,
-      "spreadTowardDeg": 164,
+      "areaHa": 28.2,
+      "growthHaPerH": 28.2,
+      "rosMPerH": 649,
+      "maxRosMPerH": 649,
+      "spreadTowardDeg": 263,
       "intensityKWPerM": null
     },
     {
@@ -278,11 +296,11 @@
       "start": "2024-09-16T12:00",
       "end": "2024-09-16T13:00",
       "durationH": 1.0,
-      "areaHa": 193.2,
-      "growthHaPerH": 193.2,
-      "rosMPerH": 3203,
-      "maxRosMPerH": 3203,
-      "spreadTowardDeg": 176,
+      "areaHa": 132.5,
+      "growthHaPerH": 132.5,
+      "rosMPerH": 1680,
+      "maxRosMPerH": 1680,
+      "spreadTowardDeg": 163,
       "intensityKWPerM": null
     },
     {
@@ -290,11 +308,11 @@
       "start": "2024-09-16T13:00",
       "end": "2024-09-16T14:00",
       "durationH": 1.0,
-      "areaHa": 128.8,
-      "growthHaPerH": 128.8,
-      "rosMPerH": 1376,
-      "maxRosMPerH": 1376,
-      "spreadTowardDeg": 118,
+      "areaHa": 55.4,
+      "growthHaPerH": 55.4,
+      "rosMPerH": 535,
+      "maxRosMPerH": 535,
+      "spreadTowardDeg": 259,
       "intensityKWPerM": null
     },
     {
@@ -302,11 +320,11 @@
       "start": "2024-09-16T14:00",
       "end": "2024-09-16T15:00",
       "durationH": 1.0,
-      "areaHa": 58.6,
-      "growthHaPerH": 58.6,
-      "rosMPerH": 410,
-      "maxRosMPerH": 410,
-      "spreadTowardDeg": 156,
+      "areaHa": 39.1,
+      "growthHaPerH": 39.1,
+      "rosMPerH": 315,
+      "maxRosMPerH": 315,
+      "spreadTowardDeg": 115,
       "intensityKWPerM": null
     },
     {
@@ -314,11 +332,11 @@
       "start": "2024-09-16T15:00",
       "end": "2024-09-16T16:00",
       "durationH": 1.0,
-      "areaHa": 83.9,
-      "growthHaPerH": 83.9,
-      "rosMPerH": 2691,
-      "maxRosMPerH": 2691,
-      "spreadTowardDeg": 155,
+      "areaHa": 29.9,
+      "growthHaPerH": 29.9,
+      "rosMPerH": 677,
+      "maxRosMPerH": 677,
+      "spreadTowardDeg": 184,
       "intensityKWPerM": null
     },
     {
@@ -326,11 +344,11 @@
       "start": "2024-09-16T16:00",
       "end": "2024-09-16T19:00",
       "durationH": 3.0,
-      "areaHa": 497.0,
-      "growthHaPerH": 165.7,
-      "rosMPerH": 1612,
-      "maxRosMPerH": 1612,
-      "spreadTowardDeg": 168,
+      "areaHa": 135.1,
+      "growthHaPerH": 45.0,
+      "rosMPerH": 381,
+      "maxRosMPerH": 381,
+      "spreadTowardDeg": 170,
       "intensityKWPerM": null
     },
     {
@@ -338,36 +356,48 @@
       "start": "2024-09-16T19:00",
       "end": "2024-09-16T22:00",
       "durationH": 3.0,
-      "areaHa": 651.1,
-      "growthHaPerH": 217.0,
-      "rosMPerH": 575,
-      "maxRosMPerH": 575,
-      "spreadTowardDeg": 270,
+      "areaHa": 236.8,
+      "growthHaPerH": 78.9,
+      "rosMPerH": 331,
+      "maxRosMPerH": 331,
+      "spreadTowardDeg": 259,
       "intensityKWPerM": null
     },
     {
       "period": 9,
       "start": "2024-09-16T22:00",
-      "end": "2024-09-16T22:51",
-      "durationH": 0.8499999999999996,
-      "areaHa": 306.1,
-      "growthHaPerH": 360.1,
-      "rosMPerH": 2304,
-      "maxRosMPerH": 2304,
-      "spreadTowardDeg": 158,
+      "end": "2024-09-17T04:00",
+      "durationH": 6.0,
+      "areaHa": 903.5,
+      "growthHaPerH": 150.6,
+      "rosMPerH": 551,
+      "maxRosMPerH": 551,
+      "spreadTowardDeg": 244,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 10,
+      "start": "2024-09-17T04:00",
+      "end": "2024-09-17T07:08",
+      "durationH": 3.133333333333333,
+      "areaHa": 402.7,
+      "growthHaPerH": 128.5,
+      "rosMPerH": 723,
+      "maxRosMPerH": 723,
+      "spreadTowardDeg": 271,
       "intensityKWPerM": null
     }
   ],
   "referenceCapHa": 2000.0,
-  "referenceCapMin": 771,
+  "referenceCapMin": 1268,
   "engine": {
     "fuels": "pt",
     "spotting": true,
     "seed": 2,
     "canopy": "typical",
     "deadMoisture": {
-      "simardDryPoints": 3.0,
-      "floorPct": 2.0
+      "simardDryPoints": 2.0,
+      "floorPct": 3.0
     },
     "liveHerbPct": 30.0,
     "liveWoodyPct": 70.0
@@ -388,74 +418,58 @@
       335
     ],
     "kmh": [
-      45.4,
-      65.0
+      36.3,
+      48.0
     ],
     "gustKmh": [
-      91.4,
-      91.4
+      73.1,
+      73.1
     ],
     "until": "2024-09-16T21:00",
     "headTowardDeg": [
-      265,
-      145
+      250,
+      176
     ],
-    "decisionAxisDeg": 272,
+    "decisionAxisDeg": 277,
     "atShift": {
-      "areaHa": 88.9,
-      "homesWithin100m": 5
+      "areaHa": 65.6,
+      "homesWithin100m": 0
     },
     "within6h": {
-      "areaHa": 553.4,
-      "homesWithin100m": 130
+      "areaHa": 322.5,
+      "homesWithin100m": 98
     },
     "villages": [
       {
-        "name": "Urgezes",
+        "name": "Pinheiro",
         "kind": "village",
-        "lon": -8.29641,
-        "lat": 41.42647,
-        "minutes": 57,
-        "noShiftMinutes": 57
-      },
-      {
-        "name": "Penha",
-        "kind": "hamlet",
-        "lon": -8.26833,
-        "lat": 41.43091,
-        "minutes": 141,
-        "noShiftMinutes": 140
+        "lon": -8.28382,
+        "lat": 41.41494,
+        "minutes": 143,
+        "noShiftMinutes": 142
       },
       {
         "name": "Abação (São Tomé)",
         "kind": "village",
         "lon": -8.27202,
         "lat": 41.40984,
-        "minutes": 175,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Pinheiro",
-        "kind": "village",
-        "lon": -8.28382,
-        "lat": 41.41494,
-        "minutes": 259,
-        "noShiftMinutes": 803
+        "minutes": 162,
+        "noShiftMinutes": 782
       },
       {
         "name": "Lapinha",
         "kind": "hamlet",
         "lon": -8.25209,
         "lat": 41.41382,
-        "minutes": 279,
-        "noShiftMinutes": null
+        "minutes": 450,
+        "noShiftMinutes": 1427
       },
       {
-        "name": "Calvos",
+        "name": "São Faustino",
         "kind": "village",
-        "lon": -8.24461,
-        "lat": 41.40379,
-        "minutes": 350,
+        "lon": -8.2737,
+        "lat": 41.38856,
+        "minutes": 497,
         "noShiftMinutes": null
       },
       {
@@ -463,111 +477,31 @@
         "kind": "village",
         "lon": -8.27854,
         "lat": 41.37734,
-        "minutes": 388,
+        "minutes": 751,
         "noShiftMinutes": null
       },
       {
-        "name": "Sernande",
+        "name": "Urgezes",
         "kind": "village",
-        "lon": -8.23121,
-        "lat": 41.34105,
-        "minutes": 533,
-        "noShiftMinutes": null
+        "lon": -8.29641,
+        "lat": 41.42647,
+        "minutes": 806,
+        "noShiftMinutes": 359
       },
       {
-        "name": "Gémeos",
-        "kind": "village",
-        "lon": -8.25652,
-        "lat": 41.39849,
-        "minutes": 609,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Vizela (São Paio)",
-        "kind": "village",
-        "lon": -8.26303,
-        "lat": 41.38822,
-        "minutes": 612,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Vila Fria",
-        "kind": "village",
-        "lon": -8.24188,
-        "lat": 41.38697,
-        "minutes": 670,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Lagares",
-        "kind": "village",
-        "lon": -8.22253,
-        "lat": 41.36737,
-        "minutes": 687,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Torrados",
-        "kind": "village",
-        "lon": -8.23977,
-        "lat": 41.35539,
-        "minutes": 695,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Tabuadelo",
-        "kind": "village",
-        "lon": -8.29066,
-        "lat": 41.40051,
-        "minutes": 734,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Penacova",
-        "kind": "village",
-        "lon": -8.2503,
-        "lat": 41.37114,
-        "minutes": 734,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Sousa",
-        "kind": "village",
-        "lon": -8.24805,
-        "lat": 41.34752,
-        "minutes": 765,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Revinhade",
+        "name": "Penha",
         "kind": "hamlet",
-        "lon": -8.28211,
-        "lat": 41.35817,
-        "minutes": 771,
-        "noShiftMinutes": null
+        "lon": -8.26833,
+        "lat": 41.43091,
+        "minutes": 896,
+        "noShiftMinutes": 862
       },
       {
-        "name": "São Faustino",
-        "kind": "village",
-        "lon": -8.2737,
-        "lat": 41.38856,
-        "minutes": 788,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Vizela (São Jorge)",
-        "kind": "village",
-        "lon": -8.25214,
-        "lat": 41.381,
-        "minutes": 825,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Infias",
-        "kind": "village",
-        "lon": -8.31351,
-        "lat": 41.3962,
-        "minutes": 901,
+        "name": "Carvalhos",
+        "kind": "neighbourhood",
+        "lon": -8.29509,
+        "lat": 41.40894,
+        "minutes": 905,
         "noShiftMinutes": null
       },
       {
@@ -575,244 +509,52 @@
         "kind": "city",
         "lon": -8.30837,
         "lat": 41.37672,
-        "minutes": 994,
+        "minutes": 915,
         "noShiftMinutes": null
       },
       {
-        "name": "Samoça",
-        "kind": "hamlet",
-        "lon": -8.36374,
-        "lat": 41.3393,
-        "minutes": 1027,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Devesa",
-        "kind": "neighbourhood",
-        "lon": -8.34981,
-        "lat": 41.33356,
-        "minutes": 1032,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Bustelo",
-        "kind": "hamlet",
-        "lon": -8.39319,
-        "lat": 41.32782,
-        "minutes": 1088,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Palhães",
-        "kind": "neighbourhood",
-        "lon": -8.34714,
-        "lat": 41.33068,
-        "minutes": 1117,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Carrulho",
-        "kind": "neighbourhood",
-        "lon": -8.35019,
-        "lat": 41.33023,
-        "minutes": 1122,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Cabanas",
-        "kind": "hamlet",
-        "lon": -8.41322,
-        "lat": 41.33012,
-        "minutes": 1132,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Codessos",
+        "name": "Infias",
         "kind": "village",
-        "lon": -8.34788,
-        "lat": 41.32999,
-        "minutes": 1138,
+        "lon": -8.31351,
+        "lat": 41.3962,
+        "minutes": 976,
         "noShiftMinutes": null
       },
       {
-        "name": "Moreira de Cónegos",
-        "kind": "town",
-        "lon": -8.33615,
-        "lat": 41.38149,
-        "minutes": 1140,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Lustosa",
+        "name": "Polvoreira",
         "kind": "village",
-        "lon": -8.30854,
-        "lat": 41.3321,
-        "minutes": 1160,
+        "lon": -8.30547,
+        "lat": 41.40935,
+        "minutes": 1057,
         "noShiftMinutes": null
       },
       {
-        "name": "Conde",
+        "name": "Tabuadelo",
         "kind": "village",
-        "lon": -8.33321,
-        "lat": 41.39045,
-        "minutes": 1171,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Outeiro",
-        "kind": "neighbourhood",
-        "lon": -8.34942,
-        "lat": 41.32916,
-        "minutes": 1177,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Monte",
-        "kind": "neighbourhood",
-        "lon": -8.34332,
-        "lat": 41.32952,
-        "minutes": 1229,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Passal",
-        "kind": "neighbourhood",
-        "lon": -8.34367,
-        "lat": 41.32752,
-        "minutes": 1230,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "São João",
-        "kind": "neighbourhood",
-        "lon": -8.34436,
-        "lat": 41.32817,
-        "minutes": 1230,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Torre",
-        "kind": "neighbourhood",
-        "lon": -8.34505,
-        "lat": 41.32918,
-        "minutes": 1231,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Boavista",
-        "kind": "neighbourhood",
-        "lon": -8.34547,
-        "lat": 41.32822,
-        "minutes": 1232,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Quinta de Paredes",
-        "kind": "neighbourhood",
-        "lon": -8.34477,
-        "lat": 41.32743,
-        "minutes": 1232,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Ribel",
-        "kind": "neighbourhood",
-        "lon": -8.34703,
-        "lat": 41.3293,
-        "minutes": 1237,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Santa Eulália",
-        "kind": "town",
-        "lon": -8.29923,
-        "lat": 41.35546,
-        "minutes": 1241,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Sanfins de Ferreira",
-        "kind": "village",
-        "lon": -8.37218,
-        "lat": 41.32665,
-        "minutes": 1242,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Varziela",
-        "kind": "village",
-        "lon": -8.21596,
-        "lat": 41.34924,
-        "minutes": 1303,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Barreiras",
-        "kind": "neighbourhood",
-        "lon": -8.35098,
-        "lat": 41.32808,
-        "minutes": 1315,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Giestal",
-        "kind": "neighbourhood",
-        "lon": -8.34688,
-        "lat": 41.327,
-        "minutes": 1352,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Serzedo",
-        "kind": "village",
-        "lon": -8.23298,
-        "lat": 41.40419,
-        "minutes": 1430,
-        "noShiftMinutes": null
-      },
-      {
-        "name": "Cruz",
-        "kind": "neighbourhood",
-        "lon": -8.34855,
-        "lat": 41.32832,
-        "minutes": 1433,
+        "lon": -8.29066,
+        "lat": 41.40051,
+        "minutes": 1136,
         "noShiftMinutes": null
       }
     ],
     "noShift": {
       "within6h": {
-        "areaHa": 177.9,
-        "homesWithin100m": 46
+        "areaHa": 211.6,
+        "homesWithin100m": 14
       },
-      "areaHa24h": 610.3
+      "areaHa24h": 636.2
     },
-    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 2 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para OSO e só atinge 2 lugares em 6 h; com ela, roda para SE e atinge 6. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
-    "alert": "Mudança brusca de vento: de E a 45 km/h para NNO a 65 km/h. A cabeça do incêndio roda de O para SE, em direção a Pinheiro, Calvos e Tagilde.",
-    "compare": {
-      "model": "fast",
-      "note": "the same fire and weather in the other model, areas only",
-      "areaHa": {
-        "3h": 150.7,
-        "6h": 790.6,
-        "12h": 4542.0,
-        "24h": 10488.1
-      },
-      "noShiftAreaHa": {
-        "3h": 72.5,
-        "6h": 230.1,
-        "12h": 715.1,
-        "24h": 1822.3
-      }
-    }
+    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 1.6 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para O e só atinge 2 lugares em 6 h; com ela, roda para S e atinge 2. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
+    "alert": "Mudança brusca de vento: de E a 36 km/h para NNO a 48 km/h. A cabeça do incêndio roda de OSO para S, em direção a São Faustino, Tagilde e Carvalhos."
   },
   "source": {
     "dataset": "Incêndio hipotético na Penha (Guimarães): não aconteceu",
-    "data": "Incêndio simulado na Penha, Guimarães (ELMFIRE, sem combate), calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno). Meteorologia de 16/09/2024 (ECMWF IFS 9 km via Open-Meteo) com o vento multiplicado por 2, combustíveis muito secos e uma rotação do vento sintética às 12h-13h",
+    "data": "Incêndio simulado na Penha, Guimarães (ELMFIRE, sem combate), calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno). Meteorologia de 16/09/2024 (ECMWF IFS 9 km via Open-Meteo) com o vento multiplicado por 1.6, combustíveis muito secos e uma rotação do vento sintética às 12h-13h",
     "cite": "Paisagem: COS2015 v2, DGT (CC BY 4.0), e Copernicus DEM GLO-30 (© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA); meteorologia ECMWF IFS via Open-Meteo (CC BY 4.0)",
-    "fire": "hypothetical: the ignition and start of the UE render's Penha fire (FireRenderer scenarios/penha_elmfire); no observed spread exists",
-    "weather": "ECMWF IFS analysis of 16 Sep 2024 at the 9 km cell over Penha: temperature and humidity as is; wind and gusts x 2 (synthetic, tuned); the wind from 13:00 to 21:00 is wholly synthetic",
+    "fire": "hypothetical: user-selected ignition 41°25′14.7″N 8°16′10.0″W; start and IFS weather from the UE Penha package; no observed spread exists",
+    "weather": "ECMWF IFS analysis of 16 Sep 2024 at the 9 km cell over Penha: temperature and humidity as is; wind and gusts x 1.6 (synthetic, tuned); the wind from 13:00 to 21:00 is wholly synthetic",
     "windShift": "synthetic, injected for the demo, not observed: the easterly backs to NNW between 12:00 and 13:00",
-    "calibration": "calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno): áreas por período e velocidades lidas localmente, nenhuma geometria usada nem copiada. Ajustes sintéticos: vento do IFS x2; humidade do combustível morto fino 1 h reduzida de 3 pontos (mínimo 2 %) e vivo 30/70 %; modelos de combustível portugueses (Fernandes 2009), culturas temporárias como pousio seco (S&B 102); copado típico no eucaliptal e pinhal; projeções ligadas; grelha de 27 km",
-    "steps": "simulated, not observed: ELMFIRE 2025.0717 (scripts/elmfire_pt: engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression under that weather (scripts/build_hypothetical.py)"
+    "calibration": "calibrado para a ordem de grandeza do incêndio de Paredes, 17 set 2024 (PT-FireSprd v2, uso interno): áreas por período e velocidades lidas localmente, nenhuma geometria usada nem copiada. Ajustes sintéticos: vento do IFS x1.6; humidade do combustível morto fino 1 h reduzida de 2 pontos (mínimo 3 %) e vivo 30/70 %; modelos de combustível portugueses (Fernandes 2009), culturas temporárias como pousio seco (S&B 102); copado típico no eucaliptal e pinhal; projeções ligadas; grelha de 27 km",
+    "steps": "simulated, not observed: ELMFIRE 2025.0717 (engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression under that weather (scripts/build_hypothetical.py)"
   }
 }

@@ -244,12 +244,12 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 | Vieira do Minho 2016 | 3 lugares · 871,9 ha | 0 lugares · 138,4 ha | ~2000 |
 | Cabeceiras de Basto 2016 | 5 lugares · 449,0 ha | 3 lugares · 428,2 ha | ~2400 |
 
-**Referência atual (22 out, 2000 planos, semente 1, `npm run ils:check`):** com as linhas molhadas, no máximo 6 instantes de ativação os anéis de interceção dos 3 quartéis mais próximos e ETAs desde a deteção/ordem de saída:
+**Referência atual (22 out, 2000 planos, semente 1, `npm run ils:check`):** água terrestre ilimitada e faixas continuamente não combustíveis; equipas apeadas também podem usar a malha de terreno fora de estrada, enquanto veículos usam os acessos. As ETAs e as verificações de aproximação mantêm-se. O exemplo usa o VTTU em proteção, sem necessidade de abastecimento.
 
 | Incêndio | A | B | Melhor B no plano |
 |---|---|---|---|
-| Vieira do Minho 2016 | 0 lugares · 128,9 ha | 0 lugares · 105,3 ha | 348 |
-| Cabeceiras de Basto 2016 | 5 lugares · 477,5 ha | 1 lugar · 158,3 ha | 1651 |
+| Vieira do Minho 2016 | 3 lugares · 679,0 ha | 0 lugares · 91,4 ha | 518 |
+| Cabeceiras de Basto 2016 | 4 lugares · 424,7 ha | 1 lugar · 227,5 ha | 976 |
 
 Estes valores batem com `web/scripts/ils-reference.json`. São do modelo rápido da pesquisa, não de uma corrida ELMFIRE. A tabela e os exemplos seguintes medidos no Chrome são do modelo anterior.
 
