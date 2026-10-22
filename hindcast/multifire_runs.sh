@@ -16,7 +16,11 @@ declare -A CFG=(
   [K3s]="--fuels sb --scars --spotting --seed 1"                                 # K3 + spotting
   [K4]="--fuels pt --scars"                                                      # K3 + Portuguese fuels
   [K6]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --seed 1"   # Vieira's best data configuration
+  [K5]="--fuels pt --scars --live-herb 30 --live-woody 70"                       # K4 + drought live moisture, no spotting
+  [K6d]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --spotting-dynamic --seed 1"   # K5 + spotting whose
+                                                     # ignition probability follows the fine fuel moisture (Schroeder 1969)
   [K3m]="--fuels sb --scars --canopy-source meta"                                # K3 with the open canopy map
+  [K5m]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta"
   [K6m]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --seed 1 --canopy-source meta"
 )
 CONFIGS=${*:-${CONFIGS:-K0 K3 K3s K4 K6}}
