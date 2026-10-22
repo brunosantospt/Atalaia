@@ -2,7 +2,6 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
-  Cartesian2,
   Cartesian3,
   Cartographic,
   Credit,
@@ -38,6 +37,7 @@ import { Hud, type CameraReadout } from './hud'
 import { loadInventory } from './inventory'
 import { layoutHash } from './layout'
 import { MarkerLayer } from './markers'
+import { mapHover } from './mapHover'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { WindShiftWatch } from './windShift'
@@ -284,11 +284,8 @@ async function main() {
     else showFreeOnly(replay.freeRun)
     refreshSimulate()
   }
-  const mouseMovePixel = new Cartesian2()
-  scene.canvas.addEventListener('mousemove', (e) => {
-    mouseMovePixel.x = e.clientX
-    mouseMovePixel.y = e.clientY
-    const ray = viewer.camera.getPickRay(mouseMovePixel)
+  mapHover(scene.canvas, viewer.camera, (position) => {
+    const ray = viewer.camera.getPickRay(position)
     if (!ray) return
     const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
     if (cartesian) {
@@ -298,10 +295,9 @@ async function main() {
     } else {
       replay?.heat.hover(undefined)
     }
-  })
-  scene.canvas.addEventListener('mouseleave', () => {
+  }, () => {
     replay?.heat.hover(undefined)
-  })
+  }, () => !!replay && basemap.id === 'heat')
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return

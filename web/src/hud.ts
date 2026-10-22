@@ -341,6 +341,7 @@ export class Hud {
   }
 
   updateBriefings(dispatch: MultiAgencyDispatch) {
+    if (this.lastDispatch === dispatch) return
     this.lastDispatch = dispatch
     if (this.refs.pspBriefingBody) {
       const roads = dispatch.psp.roads

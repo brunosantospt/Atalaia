@@ -31,6 +31,7 @@ import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
+import { mapHover } from './mapHover'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
@@ -343,6 +344,9 @@ export class Editor {
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
   private cutTooltip: HTMLElement | null = null
+  private hoveredItem: unknown
+  private hoveredMinute = -1
+  private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; value: MultiAgencyDispatch } | undefined
   private readonly tip: HTMLElement
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
@@ -378,7 +382,10 @@ export class Editor {
     void viewer.dataSources.add(this.agency)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
-    this.handler.setInputAction((e: { endPosition: Cartesian2 }) => this.hover(e.endPosition), ScreenSpaceEventType.MOUSE_MOVE)
+    mapHover(viewer.scene.canvas, viewer.camera, (position) => this.hover(position), () => {
+      this.hideCutTooltip()
+      viewer.scene.canvas.style.cursor = 'default'
+    }, () => !!(this.source.entities.values.length || this.agency.entities.values.length || (this.open && this.tool && this.loaded)))
     this.handler.setInputAction(() => {
       if (this.open && (this.tool === 'line' || this.tool === 'drops') && this.drawing.length >= 2) {
         this.finishLine()
@@ -583,6 +590,7 @@ export class Editor {
     this.decisions = [empty('A'), empty('B')]
     this.proposeB()
     this.runs = this.reports = this.judged = this.engine = this.free = undefined
+    this.dispatchCache = undefined
     this.active = 0
     this.fromId = stations[0]?.id ?? 'none'
     this.updateStationDropdown()
@@ -845,10 +853,20 @@ export class Editor {
   /** Interactive cursor feedback and tooltips for road cuts, PMA, and active fire perimeter */
   private hover(position: Cartesian2) {
     // 1. Check if hovering over any road cut, PMA, or deployed firefighting unit
-    const picked = this.viewer.scene.pick(position)
+    const hasItems = this.source.entities.values.length || this.agency.entities.values.length
+    const picked = hasItems ? this.viewer.scene.pick(position) : undefined
     const cut: RoadCutItem | undefined = (picked?.id as any)?._roadCut
     const pma: MedicalPointItem | undefined = (picked?.id as any)?._pma
     const unitInfo = (picked?.id as any)?._unitInfo
+
+    const item = cut ?? pma ?? unitInfo
+    if (item && item === this.hoveredItem && this.minutes === this.hoveredMinute && this.cutTooltip && !this.cutTooltip.hidden) {
+      this.cutTooltip.style.left = `${position.x}px`
+      this.cutTooltip.style.top = `${position.y}px`
+      return
+    }
+    this.hoveredItem = item
+    this.hoveredMinute = this.minutes
 
     if (cut) {
       this.showCutTooltip(position, cut)
@@ -1019,6 +1037,7 @@ export class Editor {
   }
 
   private hideCutTooltip() {
+    this.hoveredItem = undefined
     if (this.cutTooltip && !this.cutTooltip.hidden) {
       this.cutTooltip.hidden = true
     }
@@ -2261,7 +2280,9 @@ export class Editor {
     const d = this.decisions[this.active]
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
     if (!activeRun) return undefined
-    return buildMultiAgencyDispatch(
+    const cached = this.dispatchCache
+    if (cached && cached.loaded === this.loaded && cached.run === activeRun && cached.minutes === this.minutes && cached.pma === this.pmaList) return cached.value
+    const value = buildMultiAgencyDispatch(
       this.loaded.fire.name,
       this.loaded.fire.start,
       this.minutes,
@@ -2270,6 +2291,8 @@ export class Editor {
       activeRun,
       this.pmaList,
     )
+    this.dispatchCache = { loaded: this.loaded, run: activeRun, minutes: this.minutes, pma: this.pmaList, value }
+    return value
   }
 
   openDispatchDialog() {
