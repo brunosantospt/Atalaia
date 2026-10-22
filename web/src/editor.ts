@@ -9,6 +9,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
+  ClassificationType,
   Color,
   CustomDataSource,
   HeightReference,
@@ -1954,14 +1955,17 @@ export class Editor {
       const holds = this.minutes >= w.barrier.from_min
 
       if (a.task === 'direct') {
-        // Active extinguished fire front trail in clean emerald green (#10b981)
+        // Rasto consolidado do que já foi apagado até ao minuto atual (hora do timeline).
+        // Não desenha linhas futuras pelo monte fora para não parecer ataque indireto/aceiro.
+        if (!holds) continue
+
         const green = Color.fromCssColorString('#10b981')
         const strip = entities.add({
           polyline: {
             positions,
-            width: 3.5,
+            width: 4.0,
             clampToGround: true,
-            material: holds ? green : new PolylineDashMaterialProperty({ color: green.withAlpha(0.6), dashLength: 10 }),
+            material: green,
           },
         })
         const at = d.points[a.target]
@@ -1970,7 +1974,7 @@ export class Editor {
         }
       } else {
         // Crew handline / containment line
-        entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2) } })
+        entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2), classificationType: ClassificationType.TERRAIN } })
         const strip = entities.add({
           polyline: {
             positions,
@@ -2029,46 +2033,43 @@ export class Editor {
       const primaryColor = originColor(units[0]?.from ?? '', stations ?? [])
 
       if (isProtect) {
-        // Village / structure defensive dome
+        // Perímetro defensivo de proteção de aldeia / estruturas
         const defR = 65 + (units.length > 1 ? 15 : 0)
-        entities.add({
-          position: Cartesian3.fromDegrees(p.lon, p.lat),
-          ellipse: {
-            semiMajorAxis: defR,
-            semiMinorAxis: defR,
-            material: Color.fromCssColorString('#1e40af').withAlpha(0.22),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-          },
-        })
         const ring = Array.from({ length: 33 }, (_, k) => destination(p, (k * 360) / 32, defR))
-        this.polyline(ring, Color.fromCssColorString('#fbbf24'), true, 3.5)
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
+        entities.add({
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString('#1e40af').withAlpha(0.25),
+            classificationType: ClassificationType.TERRAIN,
+          },
+        })
+        this.polyline(ring, Color.fromCssColorString('#fbbf24'), false, 0, 3.5)
       } else if (isShuttle) {
-        // Tanker parking and refill zone
-        entities.add({
-          position: Cartesian3.fromDegrees(p.lon, p.lat),
-          ellipse: {
-            semiMajorAxis: 30,
-            semiMinorAxis: 30,
-            material: Color.fromCssColorString('#0284c7').withAlpha(0.20),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-          },
-        })
+        // Ponto de abastecimento de água (VTTU)
         const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, 30))
-        this.polyline(ring, Color.fromCssColorString('#38bdf8'), true, 2)
-      } else {
-        // Direct attack immediate vehicle base perimeter (35-45m)
-        const baseR = 35 + Math.min(15, (units.length - 1) * 6)
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
         entities.add({
-          position: Cartesian3.fromDegrees(p.lon, p.lat),
-          ellipse: {
-            semiMajorAxis: baseR,
-            semiMinorAxis: baseR,
-            material: Color.fromCssColorString(primaryColor).withAlpha(0.20),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString('#0284c7').withAlpha(0.20),
+            classificationType: ClassificationType.TERRAIN,
           },
         })
+        this.polyline(ring, Color.fromCssColorString('#38bdf8'), true, 8, 2)
+      } else {
+        // Área operacional de combate imediato da viatura (35-45m)
+        const baseR = 35 + Math.min(15, (units.length - 1) * 6)
         const ring = Array.from({ length: 25 }, (_, k) => destination(p, (k * 360) / 24, baseR))
-        this.polyline(ring, Color.fromCssColorString(primaryColor), false)
+        const positions = Cartesian3.fromDegreesArray(ring.flatMap((pt) => [pt.lon, pt.lat]))
+        entities.add({
+          polygon: {
+            hierarchy: positions,
+            material: Color.fromCssColorString(primaryColor).withAlpha(0.22),
+            classificationType: ClassificationType.TERRAIN,
+          },
+        })
+        this.polyline(ring, Color.fromCssColorString(primaryColor), false, 0, 2.5)
       }
 
       for (const a of units) {
@@ -2215,13 +2216,13 @@ export class Editor {
     }
   }
 
-  private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12) {
+  private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12, width?: number) {
     const line = cleanLonLat(raw)
     if (!line.length) return
     this.source.entities.add({
       polyline: {
         positions: line.map((p) => Cartesian3.fromDegrees(p.lon, p.lat)),
-        width: dashed ? 2.5 : 4,
+        width: width ?? (dashed ? 2.5 : 4),
         clampToGround: true,
         material: dashed ? new PolylineDashMaterialProperty({ color, dashLength }) : color,
       },
