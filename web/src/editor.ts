@@ -26,7 +26,7 @@ import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './forma
 import { bearingDeg, compass, distanceM, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
-import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
+import { diffDecisions, diffLines, groundOf, ILS_NAME, lateAt, SAFETY_MIN, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeVerdict, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
@@ -307,6 +307,8 @@ export class Editor {
   private readonly hazards = new CustomDataSource('hazards')
   private readonly agency = new CustomDataSource('agency')
   private dangerTimer?: number
+  /** The assignments of a decision last shown late, so that only a new one warns. */
+  private lateShown: { id: string; keys: Set<string> } = { id: '', keys: new Set() }
   /** The search for B while it runs: what it says, its last word, its best plan on the map and the better one not yet there. */
   private ils: { worker: Worker; byHand: boolean; shownAt: number; note: string; last?: Progress; shown?: Progress; pending?: Progress } | undefined
   /** The last search's B and how it differs from A, while B is still that plan; stopped when ended by hand. */
@@ -582,7 +584,7 @@ export class Editor {
     }
     this.setTool('drops')
     const baseObj = findAirBase(this.fromId)
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica e arrasta no mapa para criar linha aérea de descargas ou clica no mapa.`
   }
 
@@ -674,7 +676,7 @@ export class Editor {
     this.viewer.scene.canvas.style.cursor = tool ? 'crosshair' : ''
     for (const button of this.el.querySelectorAll<HTMLElement>('[data-tool]'))
       button.classList.toggle('on', button.dataset.tool === tool)
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.updateLineActionsUI()
     if (!tool) {
       this.refs.hint.textContent = ''
@@ -699,7 +701,7 @@ export class Editor {
       finishBtn.disabled = true
       finishBtn.textContent = '✓ Concluir Linha'
       finishBtn.title = 'Uma linha precisa de pelo menos 2 pontos desenhados no mapa'
-      this.refs.hint.classList.remove('danger')
+      this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent =
         len === 1
           ? '📍 1º vértice colocado no mapa. Clica para colocar o próximo vértice da linha.'
@@ -721,7 +723,7 @@ export class Editor {
         rateInfo = ` · Estimativa: ~${hours < 1 ? `${Math.round(hours * 60)} min` : `${hours.toFixed(1)} h`} (${this.count} equipa${this.count > 1 ? 's' : ''} / ${pax} operacionais)`
       }
 
-      this.refs.hint.classList.remove('danger')
+      this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent = `📍 ${len} vértices · ${fmtNumber(lenM)} m de linha${rateInfo}. Clica em "✓ Concluir Linha", duplo clique no mapa, ou Enter.`
     }
   }
@@ -733,7 +735,7 @@ export class Editor {
       window.clearTimeout(this.dangerTimer)
       this.dangerTimer = undefined
     }
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
   }
 
   /** Interactive cursor feedback and tooltips for road cuts, PMA, and active fire perimeter */
@@ -932,7 +934,7 @@ export class Editor {
     })
 
     this.dangerTimer = window.setTimeout(() => {
-      this.refs.hint.classList.remove('danger')
+      this.refs.hint.classList.remove('danger', 'late')
       this.hazards.entities.removeAll()
       this.dangerTimer = undefined
       this.setTool(this.tool)
@@ -1049,7 +1051,7 @@ export class Editor {
       task: aerial ? 'direct' : this.task,
     })
 
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = aerial
       ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? targetPoint, targetPoint) / 1000)}) alocado no setor da frente de fogo!`
       : `✓ Meio colocado no acesso seguro mais próximo da frente! Rota rodoviária calculada no mapa.`
@@ -1107,7 +1109,7 @@ export class Editor {
       target: id,
       task: aerial ? 'direct' : this.task,
     })
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = aerial
       ? `✈️ Meio aéreo (${this.sup.units[this.unit].short}) de ${base?.short ?? 'Base Aérea'} (${fmtKm(distanceM(base ?? point, point) / 1000)}) alocado nas coordenadas (${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}).`
       : access
@@ -1119,7 +1121,7 @@ export class Editor {
   private finishLine() {
     if (!this.loaded || (this.tool !== 'line' && this.tool !== 'drops')) return
     if (this.drawing.length < 2) {
-      this.refs.hint.classList.remove('danger')
+      this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent = 'Uma linha precisa de pelo menos dois cliques.'
       return
     }
@@ -1133,9 +1135,9 @@ export class Editor {
     const lenM = lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
-    this.commit()
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = `✓ ${task === 'line' ? 'Linha apeada' : 'Linha aérea'} de ${fmtNumber(lenM)} m registada! Adicionada aos Meios no terreno.`
+    this.commit()
   }
 
   private from(stations: NearStation[]): string {
@@ -1160,6 +1162,7 @@ export class Editor {
   /** The decisions changed: remember them, show them and have them simulated again. By hand, a new
    *  A has B searched again; B changed by hand ends its search, and is no longer what it proposed. */
   private commit(byIls = false) {
+    const late = byIls ? -1 : this.newlyLate()
     if (!byIls) {
       if (planKey(this.decisions[0]) !== this.ilsFor) this.proposeB()
       else if (planKey(this.decisions[1]) !== this.ilsB) {
@@ -1168,8 +1171,41 @@ export class Editor {
       }
     }
     this.remember()
-    this.render()
+    this.render() // may drop the tool, and its hint, when the station runs out
+    if (late >= 0) this.warnLate(late)
     this.actions.changed()
+  }
+
+  /** Per assignment of d, the minute the free run gets to it when its units are not there in time, as B's are judged. */
+  private late(d: Decision): (number | undefined)[] {
+    return this.runs && this.loaded ? lateAt(this.loaded.scenario, this.runs.free.arrival, d) : []
+  }
+
+  /** The first assignment of the active decision late that was not shown late, or -1. */
+  private newlyLate(): number {
+    const d = this.decisions[this.active]
+    const late = this.late(d)
+    const seen = this.lateShown.id === d.id ? this.lateShown.keys : new Set<string>()
+    return d.assignments.findIndex((a, i) => late[i] !== undefined && !seen.has(lateKey(a)))
+  }
+
+  /** A change by hand left assignment k late: say so, without undoing it. */
+  private warnLate(k: number) {
+    const d = this.decisions[this.active]
+    const fireMin = this.late(d)[k]
+    if (fireMin === undefined) return
+    const a = d.assignments[k]
+    const unit = this.sup.units[a.unit]
+    const where = a.task === 'line' || a.task === 'drops' ? 'ao início da linha' : 'a este ponto'
+    const when = isAerial(unit) ? 'não chega antes dele' : `não está lá ${SAFETY_MIN} min antes`
+    if (this.dangerTimer !== undefined) {
+      window.clearTimeout(this.dangerTimer)
+      this.dangerTimer = undefined
+      this.hazards.entities.removeAll()
+    }
+    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.add('late')
+    this.refs.hint.innerHTML = `<span class="late-badge">chega tarde</span> O fogo livre chega ${where} aos <b>T+${Math.round(fireMin)} min</b> e o ${unit.short} ${when}. Fica no plano: é só um aviso.`
   }
 
   /** The decisions in this browser, with what the search left of B. */
@@ -1495,6 +1531,8 @@ export class Editor {
   /** "Meios no terreno", by kind of means: aerial, ground vehicles, crews on foot. */
   private renderList(d: Decision) {
     this.hideTip()
+    const late = this.late(d)
+    this.lateShown = { id: d.id, keys: new Set(d.assignments.filter((_, k) => late[k] !== undefined).map(lateKey)) }
     const rows = d.assignments.map((a, k) => ({ a, k, kind: kindOf(this.sup.units[a.unit]) }))
     this.refs.list.replaceChildren(
       ...GROUPS.flatMap(({ kind, name }) => {
@@ -1505,13 +1543,13 @@ export class Editor {
         head.innerHTML = '<span></span><b></b>'
         head.querySelector('span')!.textContent = name
         head.querySelector('b')!.textContent = String(mine.reduce((n, r) => n + r.a.count, 0))
-        return [head, ...mine.map(({ a, k }) => this.row(a, k))]
+        return [head, ...mine.map(({ a, k }) => this.row(a, k, late[k]))]
       }),
     )
     if (!d.assignments.length) this.refs.list.innerHTML = '<li class="none">Nada no terreno: o fogo corre livre.</li>'
   }
 
-  private row(a: Assignment, k: number): HTMLElement {
+  private row(a: Assignment, k: number, lateMin?: number): HTMLElement {
     const li = document.createElement('li')
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
@@ -1542,12 +1580,15 @@ export class Editor {
       <div class="who"><b></b><span class="n"></span><span class="task"></span>
         <div class="ctl"><button type="button" class="info" aria-label="O que faz">i</button><button type="button" class="x" title="Retirar">×</button></div>
       </div>
-      <div class="meta"><span class="from"></span>${routeBadge}<em></em></div>`
+      <div class="meta"><span class="from"></span>${routeBadge}${lateMin === undefined ? '' : '<span class="late-badge">chega tarde</span>'}<em></em></div>`
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
     li.querySelector('.from')!.textContent = fromText
     li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
+    const lateBadge = li.querySelector<HTMLElement>('.late-badge')
+    if (lateBadge)
+      lateBadge.title = `O fogo livre chega ${a.task === 'line' || a.task === 'drops' ? 'ao início da linha' : 'aqui'} aos T+${Math.round(lateMin!)} min: ${isGround ? `este meio não está lá ${SAFETY_MIN} min antes` : 'este meio não chega antes dele'}`
     const [info, x] = li.querySelectorAll('button')
     const what = this.whatText(a)
     info.addEventListener('mouseenter', () => this.showTip(info, what))
@@ -2093,7 +2134,7 @@ export class Editor {
       this.refs.hint.textContent = ''
     } else {
       this.setTool('pma')
-      this.refs.hint.classList.remove('danger')
+      this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent = 'Clica no mapa onde queres instalar o Posto Médico Avançado (PMA).'
     }
   }
@@ -2132,7 +2173,7 @@ export class Editor {
       },
     ]
 
-    this.refs.hint.classList.remove('danger')
+    this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
     this.draw()
     this.actions.changed()
@@ -2194,6 +2235,7 @@ const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decisi
 const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME })
 /** A plan without its name: what the search reads from A, and what it leaves in B. */
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
+const lateKey = (a: Assignment) => `${a.unit}|${a.from}|${a.target}|${a.task}`
 /** Whether the search has anything of A to move: units at a point. */
 const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points || x.target in a.lines)
 const scoreOf = ({ improved, best, a, plans, elapsedMs }: Result) => ({ improved, best, a, plans, elapsedMs })

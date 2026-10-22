@@ -488,6 +488,33 @@
   }
 }
 
+/* A unit placed where it does not get before the free run (optimize.ts arrivesInTime): a warning, not a block */
+.hud .editor .hint.late {
+  padding: 8px 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  border-radius: 4px;
+}
+
+.hud .editor .late-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  margin-right: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #08090a;
+  background: var(--amber);
+  border-radius: 2px;
+}
+
+.hud .editor .meta .late-badge {
+  margin-left: 6px;
+  margin-right: 0;
+  cursor: help;
+}
+
 .hud .editor .route-badge {
   display: inline-block;
   padding: 1px 5px;
