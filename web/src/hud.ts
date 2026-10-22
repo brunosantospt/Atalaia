@@ -512,7 +512,7 @@ export class Hud {
     const rect = (sel: string) => this.root.querySelector(sel)!.getBoundingClientRect()
     const rail = rect('.rail')
     const ledger = rect('.ledger')
-    const legend = this.root.querySelector('.heat-legend:not([hidden])')?.getBoundingClientRect()
+    const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
@@ -520,7 +520,7 @@ export class Hud {
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: rect('.bottom').top - pad,
-      avoid: [ledger, legend, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
+      avoid: [ledger, guidance, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }

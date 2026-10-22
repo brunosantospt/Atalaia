@@ -5,7 +5,7 @@
 //  - 'psp': Forças de Segurança & Trânsito (cut-order list, traffic barricades, evacuation perimeters)
 //  - 'inem': Emergência Médica (Advanced Medical Post / PMA, triage, safe ambulance evacuation corridors)
 
-import type { Run } from './fastModel'
+import type { Run } from './scenario'
 import { fmtKm, fmtTime, wallClock } from './format'
 import { distanceM, toPTTM06, type LonLat } from './geo'
 import type { Grid } from './grid'

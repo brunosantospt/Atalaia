@@ -1,6 +1,6 @@
 // The 30 m grid of a fire, as scripts/build_fires.py writes it: fuel, slope and aspect per cell,
-// row 0 on the north edge, in PT-TM06 metres. Read once into typed arrays for the fast model
-// (fastModel.ts) and drawn back on the terrain as an image (splitLayer.ts).
+// row 0 on the north edge, in PT-TM06 metres. Read once into typed arrays for deployment geometry
+// (scenario.ts) and drawn back on the terrain as an image (splitLayer.ts).
 
 import { toPTTM06, type LonLat } from './geo'
 

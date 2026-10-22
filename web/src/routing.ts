@@ -1,6 +1,6 @@
 // Dynamic Road Routing avoiding the active wildfire perimeter.
 // Uses the OpenStreetMap road network (osm.roads) and tests each road segment
-// against the fire arrival grid (fastModel.ts). Edges crossing cells where the fire
+// against the fire arrival grid (scenario.ts). Edges crossing cells where the fire
 // has arrived (arrival <= currentMinutes) are cut, and Dijkstra finds the safe detour.
 
 import { distanceM, type LonLat } from './geo'

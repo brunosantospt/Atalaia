@@ -4,13 +4,11 @@
 // across the local spread, centred on their access point, as long and wide as their kind
 // (suppression.json), and from then on keep extending it both ways along the fire edge at their
 // attack rate, in pieces that hold from the minute they are finished; a crew line is laid in
-// pieces as it is dug. The fast model (fastModel.ts)
-// applies these same barriers, so the preview and an ELMFIRE run see the same input. Aerial
-// units are not barriers: their drops only slow the fire for a while, and the contract has no
-// end minute. Pure: no DOM and no fastModel at run time, so it runs in the ILS worker too.
+// pieces as it is dug. ELMFIRE receives these same barriers. Aerial units have no suppression
+// effect in this barrier-only contract. Pure geometry shared by the editor and API payloads.
 
 import { findAirBase } from './airBases'
-import type { Scenario } from './fastModel'
+import type { Scenario } from './scenario'
 import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat } from './geo'
 import { cellOfXY, lonLatAt, type Grid } from './grid'
 import { arrivalMin, attackMPerH, dutyCycle, isAerial, type Assignment, type Decision } from './suppression'
@@ -41,7 +39,7 @@ const FIT_CELLS = [5, 8] // spread from the free run: least squares over the rea
 /** Minutes since ignition until each assignment is at work: its dispatch time plus turnout and the
  *  straight line × the road factor from its station (an aircraft flies from its air base), and the
  *  first ground assignment of each station is its ECIN, out in 2 min (a shuttle takes that place too). */
-export function arrivals(scenario: Scenario, decision: Decision): number[] {
+export function arrivals(scenario: Pick<Scenario, 'stations' | 'suppression' | 'dispatchMin'>, decision: Decision): number[] {
   const { stations, suppression: sup } = scenario
   const ecinUsed = new Set<string>()
   return decision.assignments.map((a) => {
@@ -77,7 +75,7 @@ export function wetLineBearing(scenario: Scenario, free: Float32Array, p: LonLat
 }
 
 /** The barriers of a decision, with what laid each one: the input an engine runs the decision with.
- *  `free` is the free run's arrival (fastModel.freeArrival), for the local direction of spread. */
+ *  `free` is the free run's arrival (ELMFIRE forecast), for the local direction of spread. */
 export function wetLines(scenario: Scenario, decision: Decision, free: Float32Array): WetLine[] {
   const { suppression: sup, durationMin } = scenario
   const eta = arrivals(scenario, decision)

@@ -6,7 +6,7 @@
 
 import type { Alert } from './alerts'
 import type { Fire, WindShift } from './data'
-import type { Run } from './fastModel'
+import type { Run } from './scenario'
 import { fmtNumber, fmtTime, wallClock } from './format'
 import { compass, type LonLat } from './geo'
 import { cellOf, lonLatAt, type Grid } from './grid'

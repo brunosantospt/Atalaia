@@ -9,6 +9,7 @@ import {
   CustomDataSource,
   Ellipsoid,
   EllipsoidalOccluder,
+  HeightReference,
   type Entity,
   SceneTransforms,
   type Viewer,
@@ -21,6 +22,8 @@ const RING_COLOR: Record<MarkerKind, Color> = {
   ignition: Color.fromCssColorString('#f0a33a'),
   step: Color.fromCssColorString('#f0a33a').withAlpha(0.8),
   station: Color.fromCssColorString('#d9dcdf').withAlpha(0.85),
+  hospital: Color.fromCssColorString('#6ee7b7'),
+  airbase: Color.fromCssColorString('#7dd3fc'),
   best: Color.fromCssColorString(BEST_CSS),
   tsat: Color.fromCssColorString('#f0a33a'),
 }
@@ -42,6 +45,7 @@ interface Marker {
   spec: MarkerSpec
   world: Cartesian3
   ring: Entity | undefined // none when the spec's ringM is 0
+  icon: Entity | undefined
   tag: HTMLElement
   line: SVGLineElement
   dot: SVGCircleElement
@@ -106,6 +110,13 @@ export class MarkerLayer {
         spec,
         world: Cartesian3.fromDegrees(spec.lon, spec.lat, spec.h + 2),
         ring,
+        icon: spec.persistent ? this.source.entities.add({
+          position: Cartesian3.fromDegrees(spec.lon, spec.lat, spec.h),
+          billboard: {
+            image: landmarkIcon(spec), width: 30, height: 30,
+            heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity,
+          },
+        }) : undefined,
         tag,
         line,
         dot,
@@ -123,8 +134,9 @@ export class MarkerLayer {
     const placed: { m: Marker; x: number; y: number; ty: number }[] = []
 
     for (const m of this.markers) {
-      const on = revealed.has(m.spec.id)
+      const on = !!m.spec.persistent || revealed.has(m.spec.id)
       if (m.ring) m.ring.show = on
+      if (m.icon) m.icon.show = on
       let visible = false
       if (on && occluder.isPointVisible(m.world)) {
         const p = SceneTransforms.worldToWindowCoordinates(scene, m.world, this.window)
@@ -191,4 +203,11 @@ function measure(tag: HTMLElement): { w: number; h: number } | undefined {
   const w = tag.offsetWidth
   const h = tag.offsetHeight
   return w > 0 && h > 0 ? { w, h } : undefined
+}
+
+/** A constant-size landmark remains readable even when its longer tag is hidden by a HUD panel. */
+function landmarkIcon(spec: MarkerSpec): string {
+  const color = spec.kind === 'hospital' ? '#6ee7b7' : spec.kind === 'airbase' ? '#7dd3fc' : '#d9dcdf'
+  const badge = spec.badge.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="17" fill="#0a0c0e" stroke="${color}" stroke-width="2"/><text x="20" y="25" text-anchor="middle" font-family="monospace" font-size="${badge.length > 2 ? 12 : 16}" font-weight="bold" fill="${color}">${badge}</text></svg>`)}`
 }

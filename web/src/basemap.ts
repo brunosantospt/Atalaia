@@ -1,8 +1,7 @@
 // The map under the fire, one profile at a time (settings drawer, key M). Each answers another
 // question: the satellite what is on the ground, the roads how to get there, the chart where the
-// paths, streams and ridges are, the contours how steep it is, the heat map who can hold the head
-// (heatLayer.ts). The satellite is the viewer's own base layer; the others are added under the fire
-// layers the first time they are picked and only shown or hidden after that.
+// paths, streams and ridges are, the contours how steep it is. The satellite is the viewer's own
+// base layer; the others are added under the fire the first time and shown or hidden after that.
 
 import {
   Color,
@@ -13,14 +12,13 @@ import {
   type Viewer,
 } from 'cesium'
 
-export type MapId = 'satellite' | 'roads' | 'topo' | 'contours' | 'heat'
+export type MapId = 'satellite' | 'roads' | 'topo' | 'contours'
 
 export const MAPS: { id: MapId; name: string; detail: string }[] = [
   { id: 'satellite', name: 'Satélite', detail: 'O que há no terreno: mato, eucalipto, casas' },
   { id: 'roads', name: 'Estradas', detail: 'Por onde se chega: rede viária e localidades' },
   { id: 'topo', name: 'Cartográfico', detail: 'A carta: caminhos, linhas de água, cotas' },
   { id: 'contours', name: 'Curvas de nível', detail: 'O relevo: de 20 em 20 m, mestras de 100 em 100 m' },
-  { id: 'heat', name: 'Mapa de calor', detail: 'Chama potencial: quem segura a cabeça, hora a hora' },
 ]
 
 export const DEFAULT_MAP: MapId = 'satellite'
@@ -57,11 +55,10 @@ interface Look {
 }
 
 // The satellite keeps most of its colour where the spotlight falls (spotlight.ts greys the rest).
-// Under the contours and the heat map it steps back, so the lines and the classes read first.
-const SATELLITE: Record<'satellite' | 'contours' | 'heat', Look> = {
+// Under the contours it steps back, so the lines read first.
+const SATELLITE: Record<'satellite' | 'contours', Look> = {
   satellite: { brightness: 0.92, contrast: 1.15, saturation: 0.62, gamma: 1.05 },
   contours: { brightness: 0.55, contrast: 1.1, saturation: 0.25, gamma: 1.0 },
-  heat: { brightness: 0.5, contrast: 1.1, saturation: 0.1, gamma: 1.0 },
 }
 // The maps are drawn for daylight; a touch darker, the HUD and the fire's amber still read over them.
 const MAP_LOOK: Look = { brightness: 0.9, contrast: 1.05, saturation: 0.95, gamma: 1.0 }

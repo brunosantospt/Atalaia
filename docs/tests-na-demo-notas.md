@@ -1,158 +1,57 @@
-# Tests na demo — mudanças e verificação (22 out 2026)
+# Demo Penha — estado atual e verificação (22 out 2026)
 
-Este ramo responde à lista **"Tests na demo"** do Build Week Plan. Traz também o `origin/main` até ao hindcast step 3.
+A demo tem um incêndio simulado na Penha. **Só o ELMFIRE simula a propagação.** A e B são planos manuais independentes; não há mapa de calor, modelo rápido, procura ILS, worker ou respetivos scripts/fixtures. Os tipos e cálculos partilhados de chegada/barreiras estão em `scenario.ts` e `deployment.ts`, sem simulação no browser. O FWI do painel de meteorologia continua a ser um índice meteorológico, não um motor de propagação.
 
-A demo passa a ter **um só incêndio**, simulado na Penha. O fogo corre só no **ELMFIRE**, com um botão. Um **incidente de vento** obriga a realocar os meios.
-
-Verificações de 22 out 2026: build TypeScript/Vite, colocação real no handler do editor sem WebGL, regressões de contornos/rotas/ETA/água ilimitada e ILS. A verificação anterior em Firefox/WebGL confirmou 0 redraws em 2 s em pausa, atualização do relógio/reprodução e o fluxo editor → API → ELMFIRE para A/B num cenário isolado de 120 min com linha rodada a 45,002°. Os novos testes de colocação não lançam browser nem ELMFIRE. O adapter e os testes do motor foram repostos sem alterações, para não interferir com a calibração de outra sessão.
-
-## Como correr
+## Executar
 
 ```bash
-api/setup.sh        # uma vez
-api/serve.sh        # porta 5181, precisa do Docker com atalaia/elmfire:2025.0717
-cd web && npm run dev
+api/setup.sh
+api/serve.sh               # 5181; Docker com atalaia/elmfire:2025.0717
+cd web && npm run dev      # 5173
 ```
 
-Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fica em cache para os dois ventos.
+Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula quando os meios mudam. A API usa tarefas consultadas a cada 1,5 s; o véu de carregamento mostra o progresso. Os motores pedidos à API são serializados. A previsão sem meios fica em cache; sem API, usa-se a progressão ELMFIRE guardada no repositório.
 
-## O cenário: Penha, Guimarães (simulado)
+## Cenário e vento
 
-- **Ignição:** 41°25′14.7″N 8°16′10.0″W, a 16 set 2024 às 10:00.
-- **Meteo:** IFS real desse dia, com o vento ×1,6 (antes ×2); redução da secura de 3 para 2 pontos e mínimo de humidade de 3 %, antes 2 %.
-- **Grelha:** 27 km × 27 km, 900 × 900 células de 30 m.
-- **Calibração:** à ordem de grandeza do incêndio de **Paredes, 17 set 2024** (PT-FireSprd v2, uso interno). Do v2 só se leram áreas e ROS; nenhuma geometria de 2024 está no repositório.
-- **Incidente de vento às 12:30 (T+150):** de E a 36 km/h para NNO a 48 km/h. Mantém-se a rotação sintética; a intensidade é menor.
-  - Às 6 h a nova referência tem 322,5 ha com a rotação, face a 553,4 ha no cenário anterior.
-- **Referência cortada aos 2000 ha:** 2000,6 ha aos T+1268 min; progressão com cerca de 282 KB.
-- **Deteção:** drone aos 10 min, satélite aos 30 min (`detection.json`).
-- **Construção:** reproduzível com `scripts/.venv/bin/python -I scripts/build_hypothetical.py --keep-grid` (reutiliza a paisagem existente ao mover a ignição). Os outros incêndios continuam no disco, mas fora do `index.json`.
+- Ignição **41°25′14.7″N 8°16′10.0″W** (41.420750, −8.269444), em 16 set 2024 às 10:00. Paisagem existente de 27 × 27 km, células de 30 m.
+- Todas as velocidades e rajadas foram reduzidas a metade da versão anterior, tanto em `weather.json` como em `weather_noshift.json`. Direções, temperaturas, humidade e precipitação mantêm-se.
+- IFS ×0,8, antes ×1,6. Vento sintético máximo **24 km/h**, antes 48. Secura reduzida de 2 pontos e mínimo de humidade de 3 % mantêm-se.
+- Referência ELMFIRE regenerada com `scripts/.venv/bin/python -I scripts/build_hypothetical.py --keep-grid`. O gerador só aceita ELMFIRE; saíram `--model fast` e `--compare`.
+- Abertura mais moderada: **37,4 → 11,3 ha à 1 h**, **65,6 → 27,2 ha às 2 h**. No novo cache sem rotação, T+10 tem 0,45 ha e ROS da cabeça de cerca de **3 m/min**, abaixo do limiar crítico existente de 50 m/min. Não foram alterados os limiares de aviso.
+- Com a rotação e projeções, a referência de 6 h é **341,1 ha**, antes 322,5 ha: reduzir o vento não garante menor área em todas as horas numa corrida com spotting. O pico e a propagação inicial são menores; não se ajustou outro parâmetro para forçar o resultado.
+- O incidente é anunciado às 12:30 (T+150); a rotação decorre das 12:00 às 13:00. A reprodução pausa para realocar e simular com o novo vento.
+- O replay começa no avistamento do drone (T+10); o fogo foi simulado desde T+0. Abrir o editor preserva o relógio, em vez de saltar para o fim das 24 h. Satélite aos T+30.
 
-## Fluxo de decisão
+## Meios e linhas
 
-- **ELMFIRE em vez do modelo rápido:** o modelo rápido já não aparece no ecrã. Fica só por dentro do ILS, para propor o B.
-- **Botão "Simular no ELMFIRE":** acende-se só quando a disposição dos meios mudou.
-  - Durante a corrida, um véu de ecrã inteiro bloqueia tudo. Mostra o tempo decorrido e o progresso Livre / A / B, troço k/n.
-- **API assíncrona:** `POST /api/jobs` e `GET /api/jobs/{id}`, com consultas a cada 1,5 s. Isto resolve o "NetworkError" das corridas com mais de um minuto. `/api/run` continua igual.
-- **Abertura e corte do diretor:**
-  - fogo ao avistamento do drone (T+10);
-  - fogo ao avistamento do satélite (T+30);
-  - previsão ELMFIRE sem meios.
-- **Incidente de vento:**
-  - Antes do incidente, os planos usam a previsão sem a rotação (`wind_shift: false`).
-  - Às 12:30 a reprodução pausa e aparece um só botão, "Realocar meios".
-  - Não se passa do incidente sem uma nova corrida ELMFIRE com o vento real.
-- **Fim do incêndio:** "Extinto às HH:MM · N ha", ou "corte aos 2000 ha".
+- Cada colocação guarda `dispatchMin`. A ETA soma despacho, saída e viagem; lista, mapa, contorno e barreiras seguem esse relógio. Planos A/B não se sobrescrevem ao editar; **Repor exemplo** atua na decisão selecionada.
+- Brigadas ficam nas coordenadas clicadas, fora de estradas, incluindo linhas. Veículos aproximam-se dos acessos rodoviários. Mantêm-se as verificações de chegada e aproximação ao fogo.
+- `unlimitedWater: true`: linhas terrestres permanentemente não combustíveis a partir da chegada/conclusão, sem secagem nem reabastecimento. Crescem à taxa nominal durante o turno de 12 h. VTTU fazem proteção/ataque.
+- **Rodar linha** (0–179°) e **Auto** alteram a geometria real enviada à API. A orientação automática e o crescimento usam agora a previsão livre **ELMFIRE**, não uma corrida oculta do modelo rápido. Mudar a previsão invalida a cache das linhas.
+- Contrato mantido: `path`, `width_m`, `from_min`, no máximo seis instantes por decisão. O adapter, testes partilhados e parâmetros de calibração ELMFIRE não foram alterados.
+- Meios aéreos mantêm colocação e ETA; o contrato de barreiras deste cenário não representa descargas aéreas. O tooltip declara essa limitação.
 
-## Meios
+## Interface e desempenho
 
-- **Wet lines:**
-  - Cada meio terrestre põe uma faixa azul-clara que é exatamente o `decision.barriers` do ELMFIRE.
-  - A faixa cresce pela frente do fogo ao ritmo de ataque do meio: VFCI ~240 m/h, brigadas pela NWCG.
-  - Água ilimitada: sem dependência de tanque, reabastecimento ou secagem; a linha mantém-se não combustível. O crescimento segue a taxa nominal durante o turno de 12 h.
-  - Há no máximo 6 `from_min` por decisão.
-- **Só os 3 quartéis mais próximos:** BV Guimarães, Vizela e Fafe.
-  - O mapa mostra apenas o quartel e o tipo de meio selecionados. O **contorno tracejado segue a forma do fogo** e delimita as células onde o fogo chega antes desse meio, contando a hora atual da ordem, a saída e a viagem até cada célula. Mudar o quartel, o meio ou o relógio atualiza o contorno. A explicação fica num cartão, sem rótulos sobrepostos na ignição.
-  - Não há um limite circular de colocação: um ponto seguro num flanco pode ficar à mesma distância da ignição que outro já atingido pela cabeça. A colocação e o ILS verificam os tempos reais da previsão ao longo da aproximação ao destino. O contorno é orientação visual, não uma barreira radial adicional.
-- **Colocação:** um botão por meio, e cada meio coloca-se com um clique no mapa. Saíram "+ colocar meio" e "clicar no mapa".
-- **Rotas:** a azul-escuro.
-- **Início vazio:** os cenários começam sem meios. "Repor exemplo" continua disponível.
-- **ILS do Bruno:** as linhas de A, com mover, deslocar e encurtar, estão integradas nas wet lines. O `ils:check` foi atualizado, e B continua a bater A nos dois incêndios de referência.
+- Descrições do realizador reduzidas: deteção, previsão, chegada dos meios, comparação e resultado em frases curtas. Os planos da decisão usam as mesmas ETAs do editor.
+- **Onde o fogo chega primeiro que qualquer resposta**: checkbox para mostrar o contorno e dropdown fechado por omissão para a explicação. A expansão mantém-se ao trocar quartel/meio/relógio. Os detalhes identificam a resposta selecionada e explicam a comparação dos tempos.
+- O contorno segue a forma do fogo e a chegada do meio selecionado; a aproximação é verificada em passos de 15 m. Não é um limite radial de colocação.
+- Ícones dos cinco botões centrados, sem compressão: saiu a altura herdada de 26 px; os botões passam a 58 px mínimos para conter ícone e nome.
+- Quartéis, hospital e três bases aéreas próximas persistem desde o primeiro plano. Há ícones de tamanho fixo no terreno, mesmo quando o HUD esconde um rótulo longo. Não dependem de chegar ao plano de visão geral. A legenda não se sobrepõe às coordenadas da câmara.
+- Mantém-se a renderização a pedido, sem redraw contínuo em pausa. Hover agrupado a cada 80 ms, sem picks durante arrasto/zoom/inércia, tooltip reutilizado, relatórios multiagência e respetivo DOM em cache.
+- Dijkstra usa heap e reutiliza rotas; não há procura automática de planos no background.
 
-## Visual e HUD
+## Verificação
 
-- **Fogo simulado:** liso, com o estilo do fogo observado: linha âmbar, últimos 30 min em âmbar suave e brasa escura.
-  - Aparece desde T+0, com um brilho mínimo enquanto é pequeno.
-  - As células batem com o minuto do relógio.
-- **Linhas brancas:** substituídas por uma linha verde, "Melhor caso · X ha".
-- **Anéis de 1/2/5 km e raio de ignição:** removidos.
-- **"Satélite deteta o fogo · HH:MM":** substitui o T_sat.
-- **Coordenadas:** são as da **mira**, no centro do ecrã.
-- **Luz de foco:**
-  - Segue a mira em cada frame.
-  - Tem tamanho fixo no ecrã; só o corte do diretor (D) a ajusta por plano.
-- **Painel de alertas:**
-  - habitações em risco em menos de 1 h;
-  - meios com pouca água;
-  - velocidade de propagação crítica: aviso a 16,8 m/min (Scott & Burgan 2005), crítico a 50 m/min (Tedim et al. 2018);
-  - o incidente de vento.
-- **Reprodução:**
-  - A animação começa em pausa.
-  - Há um só relógio para a reprodução e para o slider da hora.
-  - Remover um meio já não afasta a câmara.
-  - O relógio é partilhado com o reset (R); confirmar o comportamento visual no browser.
-- **Correção:** o Cesium deixava de renderizar ("normalized result is not a number"). Agora as linhas no chão descartam pontos repetidos (`cleanPath`).
+- `npm run build`, `npm run demo:check`, `npm run placement:check`, `npm run deployment:check` e `npm run interaction:check` passam.
+- Testes cobrem previsão ELMFIRE obrigatória (sem fallback de simulação), igualdade das barreiras enviadas/desenhadas, contornos assimétricos, aproximação, ETAs, rotação, água ilimitada, colocação apeada, independência A/B, rotas/cache, hover e relatórios.
+- Verificação de dados: todas as velocidades e rajadas correspondem à metade dos valores anteriores (tolerância de arredondamento 0,05 km/h); direções inalteradas. Cenário e meteorologia regenerados.
+- Firefox/WebGL isolado: perfil antigo de calor migra para satélite; três quartéis e hospital visíveis na abertura, sete ícones persistentes; dropdown expande e mantém-se; cinco ícones centrados; exemplo em A preserva B, rotação funciona e botão ELMFIRE fica disponível; realizador mostra descrições curtas. Sem erros de consola.
+- As corridas de regeneração foram sequenciais, em containers isolados limitados a 2 CPUs e 3 GB. No teste de browser os pedidos de simulação foram bloqueados. Nenhum processo da calibração de outra sessão foi interrompido; ficheiros do motor partilhado mantidos.
 
-## Verificação da história completa
+## Limites e integração
 
-1. Na abertura (T+10, T+30, Previsão), o fogo aparece desde T+0.
-2. Escolher quartel e meio atualiza o contorno; colocar num acesso aonde se chega antes do fogo no percurso acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
-3. Às 12:30 aparece "Realocar meios". Não se avança sem simular, e depois o split mostra o resultado com o vento novo.
-4. As wet lines crescem ao longo da frente. As rotas aparecem a azul-escuro.
-5. A luz e as coordenadas ficam na mira.
+Uma linha aberta pode ser contornada nas extremidades ou ultrapassada por spotting. As faixas ocupam células inteiras de 30 m. A ETA usa distância × fator rodoviário, sem modelo de marcha a pé; mudar o vento não retira automaticamente os meios que ficaram numa posição insegura.
 
-## Limitações conhecidas
-
-- **Referência vs API depois das 6 h:** o handoff relata grande variação entre as corridas de 24 h com projeções; essa comparação longa não foi repetida nesta recuperação. O teste atual confirmou apenas a tolerância às 6 h (−5,85 %).
-- **Anéis e mudança de vento:** os meios já colocados não são retirados automaticamente se o vento mudar a zona de interceção.
-
-## Merge do hindcast step 3 e recuperação do push
-
-- Integrado `origin/main` (`c910095`), incluindo os três commits que faltavam. Mantêm-se as humidades mortas calculadas de hora a hora, as copas LiDAR e as cicatrizes nos incêndios históricos.
-- A Penha não precisa de ficheiros LiDAR nem cicatrizes. O seu bloco `engine` continua a definir combustíveis portugueses, copas típicas, projeções, semente 2 e humidades vivas 30/70. As opções explícitas do pedido ganham aos valores do incêndio.
-- A meteo sem rotação continua disponível e dá uma chave de cache diferente da meteo com rotação.
-- `api/test.sh` verifica o índice público real e usa os incêndios históricos como fixtures isoladas; já não depende de estes aparecerem na seleção da demo. Inclui regressões dos valores da Penha após o merge.
-- O gerador da Penha passa a usar diretamente `engines/elmfire/run.sh`. Foi removido o overlay duplicado, que ficou incompatível depois de o adapter principal incorporar combustíveis portugueses e projeções; a entrada antiga `scripts/elmfire_pt/run.sh` fica como encaminhamento.
-- ILS: referência atualizada para água ilimitada e equipas apeadas fora de estrada, com 2000 planos e semente 1. Os valores estão em `web/scripts/ils-reference.json` e `docs/ils.md`. São do modelo rápido, não do ELMFIRE.
-- SimFire não está instalado neste ambiente; as corridas reais da regressão API usaram ELMFIRE.
-- As edições de `pitch/` da outra sessão ficam fora deste ramo e do PR.
-
-## Interceção e ETA ao colocar meios
-
-- As antigas circunferências foram substituídas por contornos célula a célula da zona onde o fogo chega primeiro. A aproximação ao ponto escolhido é verificada em passos de meia célula (15 m).
-- A viagem usa a estimativa do modelo: distância quartel–destino × fator rodoviário / velocidade do meio, mais o tempo de saída. Tanto o contorno como a verificação de colocação usam o meio escolhido e o instante atual da ordem, incluindo se a primeira equipa desse quartel já foi usada.
-- Cada meio colocado guarda `dispatchMin`, o minuto atual da ordem (nunca antes da deteção). A ETA é esse minuto + saída + viagem ao ponto ou ao primeiro vértice da linha. Os meios aéreos usam a base e a velocidade de voo.
-- A lista mostra a hora prevista, T+ e os minutos que faltam; passa a indicar chegada prevista cumprida quando o relógio a alcança. Avançar o relógio não desloca a ETA de meios já colocados.
-- As linhas enviadas ao ELMFIRE e a procura do B usam o mesmo relógio absoluto. O ILS conserva o instante de saída das unidades ao mudar os seus destinos; ordens de momentos diferentes não são agrupadas como se fossem a mesma.
-- `npm run deployment:check` cobre a interceção contra uma solução analítica, colocação por fora/por dentro, destino por trás do fogo, saída mais tarde, meios terrestres/aéreos/linhas e ativação das barreiras. `npm run build` e `npm run ils:check -- --update` passam; B continua melhor que A nas duas referências.
-
-## Orientação da linha molhada
-
-- Em **Meios no terreno**, cada meio terrestre num ponto de ataque/proteção tem **Rodar linha**: o deslizador roda a faixa ao vivo de 0° a 179° (0° norte–sul, 90° este–oeste).
-- **Auto** repõe a orientação transversal à propagação do fogo. O comprimento, a largura, a quantidade de meios e a ETA mantêm-se ao rodar.
-- O ângulo fica no plano (`wetLineBearingDeg`), altera as coordenadas das barreiras enviadas ao ELMFIRE e é conservado na proposta B. A linha que vai crescendo começa nas extremidades rodadas, não nas antigas.
-- A orientação não é só um efeito visual: mudar o ângulo torna o plano pendente de nova simulação.
-- Antes desta alteração foi feito `git pull` e resolvido o merge de `origin/main` em `031b7f6`: perfis de mapa, mapa de calor, qualidade de renderização e avisos de chegada tardia ficaram integrados com o fluxo ELMFIRE.
-
-## Verificação da rotação no browser (22 out)
-
-- Firefox com WebGL carregou o editor real. Foi reposto um exemplo, rodada uma linha para 45°, usado Auto e aplicado novamente o ângulo manual.
-- O cartão de orientação acompanhou o relógio em T+30 e a mudança para BV Vizela.
-- O botão de simulação enviou as barreiras reais à API; o eixo da linha de 45° mediu 45,002° no pedido. A e B devolveram `ELMFIRE 2025.0717` numa corrida isolada de 120 min; o B conservou o ângulo escolhido.
-- O teste detetou e corrigiu uma falha do worker do ILS (`global is not defined`): o desenho Cesium passou para `stationRingsLayer.ts`, separado dos cálculos puros usados pelo worker. A repetição completa terminou sem erros de consola.
-- Build, verificações de geometria/rotação/ETA e regressão ILS passaram. O resultado de Vieira foi A 128,9 ha / B 103,4 ha (dentro da tolerância da referência); Cabeceiras ficou A 477,5 ha / B 158,3 ha.
-- O frontend ficou disponível em `http://127.0.0.1:5173/` e a API ELMFIRE confirmou `ready` em `http://127.0.0.1:5181/api/engines`.
-
-
-## Desempenho, água ilimitada e equipas fora de estrada
-
-- Renderização a pedido: o mapa em pausa deixa de desenhar continuamente. Câmara, relógio, reprodução, tiles e alterações de meios pedem renderização; a qualidade visual mantém-se.
-- Dijkstra rodoviário usa um heap em vez de ordenar toda a fila em cada passo; lista e mapa reutilizam a rota. Relógio e resultados novos invalidam a cache. A busca do nó mais próximo inclui o próprio bucket.
-- Contornos reutilizam os tempos de viagem por célula; linhas não são recalculadas quando só avança o relógio.
-- A API serializa os seus motores entre tarefas e pedidos síncronos, reduzindo a memória de comparações A/B. Isto não modifica nem interrompe os processos de hindcast de outras sessões.
-- `unlimitedWater: true` em suppression.json mantém as faixas terrestres eficazes a partir da chegada/conclusão, sem secagem nem pausas de abastecimento. Crescem à taxa de ataque nominal; não há alertas de água. VTTU novos fazem ataque/proteção em vez de abastecimento.
-- As faixas usam o contrato original: `path`, `width_m`, `from_min`, sem humidade localizada ou novos parâmetros ELMFIRE. O adapter partilhado mantém-se byte a byte igual ao commit anterior. Não se iniciam novas corridas ELMFIRE para verificar estas alterações.
-- Equipas apeadas ficam nas coordenadas clicadas, incluindo os vértices de linhas desenhadas; não são aproximadas às estradas. O ILS também considera terreno para brigadas, mesmo sem acessos rodoviários. Veículos mantêm a aproximação a acessos; mantêm-se as verificações de chegada e de aproximação ao fogo.
-- A interface explica a água ilimitada e não mostra rotas rodoviárias fictícias para brigadas. O exemplo deixa o VTTU a proteger o ponto, em vez de reabastecer.
-- Uma faixa aberta continua a ter extremidades: o fogo pode contorná-las. As projeções do cenário ELMFIRE também podem saltar faixas. A simplificação mantém a linha eficaz, mas não fecha automaticamente um perímetro nem altera o modelo de projeções partilhado.
-
-## Atraso ao mover o rato e a câmara
-
-- Identificados no histórico do Carlos: `bc8ba676` passou a chamar `scene.pick` em cada movimento para os tooltips de cortes/PMA; `d5cba4fb` acrescentou meios; `f233130a` acrescentou outro raycast de terreno por movimento para as coordenadas. Esse segundo handler foi depois reutilizado pelo mapa de calor em `031b7f6`, mas continuava a procurar terreno mesmo com esse mapa desligado.
-- `scene.pick` faz uma passagem de renderização e leitura do framebuffer. Fazê-la sem limite durante um arrasto concorre com a própria renderização da câmara. Agora os dois handlers de hover partilham a mesma política: eventos agrupados em intervalos de 80 ms, sem picking durante botões premidos, movimento/inércia da câmara ou zoom; picking de calor só no perfil de calor, picking de objetos só se existirem entidades do editor.
-- Tooltips do mesmo objeto só mudam de posição; o conteúdo é reconstruído quando muda o objeto ou o minuto. Cliques de colocação continuam imediatos, com o handler Cesium existente.
-- O despacho multiagência reutiliza o relatório enquanto não mudarem o incêndio, a previsão, o minuto ou os PMA; o HUD não volta a reconstruir um briefing idêntico todos os segundos.
-- Os efeitos de chama mais recentes do ramo `origin/feature/flame-resolution-optimization` (`d51cdf8`) não estão neste checkout nem no Vite em execução. A qualidade Nítida com retina, de `031b7f6`, pode continuar a pesar na GPU; mantém-se disponível o perfil Leve nas definições.
-- Amostra da máquina: 24 CPUs lógicas, aproximadamente 13 GB de RAM disponível e 60–65 % de CPU idle, embora com trabalhos Python/GDAL/ELMFIRE e atividade de disco em paralelo. É uma amostra, não uma garantia de carga constante; não foram interrompidos esses trabalhos.
-- `npm run interaction:check` verifica 500 movimentos → 1 hover, 500 movimentos com botão premido → 0, inércia/zoom/saída do canvas, coordenadas relativas ao canvas, tooltips, invalidação da cache e reutilização do DOM do briefing. Build, colocação e deployment continuam a passar.
-- Firefox/WebGL isolado: câmara realmente deslocada com ações nativas, zero picks de hover durante o arrasto e um após estabilizar. Reproduzir 20 chamadas do handler anterior custou cerca de 202 ms; 500 eventos agrupados demoraram 6 ms síncronos, seguidos de um único pick. Os tempos são desse browser de teste e não medem os FPS da sessão do utilizador. A API de simulação foi bloqueada no teste, usando a referência local; o browser foi fechado no fim.
+Mantêm-se os defaults de humidade, copas LiDAR e cicatrizes do hindcast step 3 integrado de `main`. O bloco `engine` da Penha mantém os combustíveis portugueses, copas típicas, spotting, semente 2 e humidades vivas 30/70. As edições de `pitch/` e `docs/tests-na-demo-README.md` da outra sessão ficam fora deste trabalho. Os commits anteriores guardam o histórico de recuperação do merge e dos modelos entretanto retirados.

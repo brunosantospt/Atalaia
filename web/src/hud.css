@@ -951,6 +951,8 @@
 .markers .tag.on {
   opacity: 1;
 }
+.markers .tag-hospital b { background: #6ee7b7; }
+.markers .tag-airbase b { background: #7dd3fc; }
 .markers .tag b {
   grid-row: span 2;
   min-width: 18px;

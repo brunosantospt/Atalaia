@@ -49,3 +49,11 @@ body[data-error]::after {
 .ring-legend { left: auto; right: 26px; top: auto; bottom: 190px; max-width: min(38vw, 340px); font-size: 11px; padding: 10px 12px; cursor: default; }
 .ring-legend label { display: block; cursor: pointer; }
 .ring-legend p { margin: 6px 0 0; line-height: 1.5; color: #b7bdc3; }
+.ring-legend { display: flex; align-items: flex-start; gap: 7px; }
+.ring-legend input { flex: none; margin: 3px 0 0; cursor: pointer; }
+.ring-legend details { min-width: 0; flex: 1; }
+.ring-legend summary { cursor: pointer; font-weight: 600; }
+.ring-legend .ent { margin-top: 7px; }
+@media (min-width: 1100px) {
+  .ring-legend { right: 280px; }
+}

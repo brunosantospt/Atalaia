@@ -42,7 +42,7 @@ const TEMPLATE = `
   <section>
     <h3>Mapa</h3>
     <div class="choices" data-ref="maps"></div>
-    <p class="note">Cada mapa responde a outra pergunta. O de calor é o modelo rápido: a chama que a cabeça do incêndio teria em cada célula à hora do relógio, com o vento e a secura dessa hora. A tecla M passa ao seguinte.</p>
+    <p class="note">Satélite, estradas, carta ou curvas de nível. A tecla M muda de mapa.</p>
   </section>
   <section>
     <h3>Imagem</h3>

@@ -10,6 +10,8 @@ import type { Fire, NearStation, Progression, Step } from './data'
 import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock } from './format'
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLonLat, type BBox, type LonLat } from './geo'
 import { freeAreaHa, type Reach } from './reach'
+import { AIR_BASES } from './airBases'
+import { DEFAULT_HOSPITAL } from './reporting'
 
 export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
@@ -38,7 +40,7 @@ export interface Shot {
   area?: (hours: number) => string // the HUD's area line, when it is not the free run's
 }
 
-export type MarkerKind = 'ignition' | 'step' | 'station' | 'best' | 'tsat'
+export type MarkerKind = 'ignition' | 'step' | 'station' | 'hospital' | 'airbase' | 'best' | 'tsat'
 
 export interface MarkerSpec extends LonLat {
   id: string
@@ -48,6 +50,7 @@ export interface MarkerSpec extends LonLat {
   label: string
   detail: string
   ringM: number // 0 for no ring
+  persistent?: boolean // operational landmarks stay visible across every shot
 }
 
 export interface Story {
@@ -116,6 +119,18 @@ export function buildStory(
       label: `${name.join(' ') || 'Bombeiros'} · ${fmtKm(s.km)}`,
       detail: 'em linha reta',
       ringM: 220,
+      persistent: true,
+    })
+  }
+  markers.push({
+    id: 'hospital', kind: 'hospital', ...DEFAULT_HOSPITAL.location, h: 0,
+    badge: 'H', label: DEFAULT_HOSPITAL.name, detail: 'Hospital de retaguarda', ringM: 0, persistent: true,
+  })
+  for (const base of [...AIR_BASES].filter((b) => distanceM(ignition, b) < 50_000)
+    .sort((a, b) => distanceM(ignition, a) - distanceM(ignition, b)).slice(0, 3)) {
+    markers.push({
+      id: `airbase:${base.id}`, kind: 'airbase', lon: base.lon, lat: base.lat, h: 0,
+      badge: 'CMA', label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true,
     })
   }
   shots.push({
@@ -160,7 +175,7 @@ export function buildStory(
     kind: 'ignition',
     word: 'Ignição',
     title: `Ignição · ${fmtTime(clock(0))}`,
-    caption: `${sim ? 'Primeiro polígono simulado' : 'Primeiro polígono mapeado'}: ${fmtHa(steps[0].areaHa)}. A câmara olha para onde o fogo foi, para ${compass(headings[0])}.`,
+    caption: `${fmtHa(steps[0].areaHa)} na ignição · avanço para ${compass(headings[0])}.`,
     place: ignition,
     simulated: sim,
     step: 0,
@@ -187,9 +202,7 @@ export function buildStory(
       word: 'Conhecido',
       title: `Deteção pelo drone · ${fmtTime(clock(detection.droneMin / 60))} · ${minutes(detection.droneMin)}`,
       caption:
-        `O drone avista o fogo com ${fmtHa(reach.areaByMin[Math.min(detection.droneMin, reach.areaByMin.length - 1)])}. ` +
-        `Ponto de ignição, meteo da hora, combustível, relevo e quartéis: tudo o que há para decidir. ` +
-        `O satélite só deteta o fogo às ${satClock}.`,
+        `Drone: ${fmtHa(reach.areaByMin[Math.min(detection.droneMin, reach.areaByMin.length - 1)])}. Satélite às ${satClock}.`,
       place: ignition,
       simulated: true,
       step: -1,
@@ -223,8 +236,7 @@ export function buildStory(
       word: 'Melhor caso',
       title: `Melhor caso · ${fmtHa(best.areaHa)} · ${minutes(best.minutes)}`,
       caption:
-        `Se tudo corresse bem, com a deteção pelo drone e o primeiro meio a tempo (${best.unit} de ${best.from}, ${minutes(best.minutes)}), ` +
-        `arderiam no máximo ${fmtHa(best.areaHa)}: a linha verde. POC ${fmtPct(best.poc)}.`,
+        `${best.unit} de ${best.from} aos ${minutes(best.minutes)} · ${fmtHa(best.areaHa)}. Linha verde: chegada mais cedo.`,
       place: best.center,
       simulated: true,
       step: -1,
@@ -257,8 +269,7 @@ export function buildStory(
       word: 'Satélite',
       title: `Satélite deteta o fogo · ${satClock} · ${minutes(detection.satelliteMin)}`,
       caption:
-        `Sem o drone, o satélite só detetaria o fogo agora: ${fmtHa(tsat.areaHa)} livres, POC ${fmtPct(tsat.poc)}. ` +
-        `O tracejado fica como fantasma até ao fim; a linha verde é o melhor caso.`,
+        `Sem drone: deteção com ${fmtHa(tsat.areaHa)}. Tracejado: perímetro nessa hora.`,
       place: tsat.center,
       simulated: true,
       step: -1,
@@ -282,7 +293,7 @@ export function buildStory(
         kind: 'prediction',
         word: 'Previsão',
         title: `Previsão ELMFIRE · sem meios · ${fmtHa(final.areaHa)}`,
-        caption: `A primeira previsão do ELMFIRE, sem nenhum meio no terreno: ${prediction.text}. É o ponto de partida; põe meios no editor (E) e simula de novo.`,
+        caption: `${prediction.text}. Adiciona meios no editor (E) para comparar.`,
         place: final.center,
         simulated: true,
         step: -1,
@@ -314,7 +325,7 @@ export function buildStory(
       kind: 'incident',
       word: 'Incidente',
       title: `Incidente: vento roda · ${fmtTime(clock(shift!.minutes / 60))}`,
-      caption: shift!.alert,
+      caption: `Vento de ${compass(shift!.fromDeg[0])} a ${shift!.kmh[0]} km/h para ${compass(shift!.fromDeg[1])} a ${shift!.kmh[1]} km/h. Realoca os meios.`,
       place: at.center,
       simulated: false,
       step: at.step,

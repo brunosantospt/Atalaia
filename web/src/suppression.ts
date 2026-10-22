@@ -1,6 +1,5 @@
 // The suppression palette: what each kind of unit can do, from public/suppression.json
-// (every value has its source there), and the formulas the fast model (fastModel.ts) and
-// the decisions A/B apply with them. A decision is a list of assignments of units to a
+// (every value has its source there), and the deployment formulas used by decisions A/B. A decision is a list of assignments of units to a
 // point or a line; the model turns each one into attenuation of the fire on the ground.
 
 import type { LonLat } from './geo'

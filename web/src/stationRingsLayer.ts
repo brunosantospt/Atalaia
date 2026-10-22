@@ -1,4 +1,4 @@
-// Cesium drawing stays outside the pure timing module used by the ILS worker.
+// Cesium drawing for the deployment timing guidance.
 import { Cartesian3, Color, CustomDataSource, PolylineDashMaterialProperty, type Viewer } from 'cesium'
 import { cleanLonLat, type LonLat } from './geo'
 import type { Grid } from './grid'
@@ -18,6 +18,7 @@ export class StationRingsLayer {
   private key = ''
   private arrival?: Float32Array
   private hasBoundary = false
+  private detailsOpen = false
 
   constructor(private readonly viewer: Viewer, _ignition: LonLat, overlay: HTMLElement) {
     viewer.dataSources.add(this.source)
@@ -55,7 +56,11 @@ export class StationRingsLayer {
       } })
     }
     this.hasBoundary = paths.length > 0
-    this.legend.innerHTML = `<label><input type="checkbox" ${this.wanted ? 'checked' : ''}/><b>Onde o fogo chega primeiro</b></label><span class="ent"><span class="sw" style="border-color:${COLORS[stationIndex % COLORS.length]}"></span>${esc(station.short)} · ${esc(sup.units[selection.unit].short)} · saída T+${Math.round(selection.dispatchMin)} min</span><p>${paths.length ? 'Dentro do tracejado, este meio chega depois do fogo. Escolhe um acesso por fora, antes da frente prevista.' : 'O fogo não chega antes deste meio na previsão disponível.'} O percurso até ao ponto também é verificado.</p>`
+    this.legend.innerHTML = `<input type="checkbox" aria-label="Mostrar contorno de chegada do fogo" ${this.wanted ? 'checked' : ''}/><details ${this.detailsOpen ? 'open' : ''}><summary>Onde o fogo chega primeiro que qualquer resposta</summary><span class="ent"><span class="sw" style="border-color:${COLORS[stationIndex % COLORS.length]}"></span>${esc(station.short)} · ${esc(sup.units[selection.unit].short)} · saída T+${Math.round(selection.dispatchMin)} min</span><p>${paths.length ? 'Dentro do tracejado, a resposta selecionada chega depois do fogo. Escolhe um ponto por fora, antes da frente prevista.' : 'O fogo não chega antes da resposta selecionada na previsão disponível.'} O percurso até ao ponto também é verificado.</p></details>`
+    this.legend.querySelector('details')!.addEventListener('toggle', (e) => {
+      this.detailsOpen = (e.target as HTMLDetailsElement).open
+      this.viewer.scene.requestRender()
+    })
     this.legend.querySelector('input')!.addEventListener('change', (e) => {
       this.wanted = (e.target as HTMLInputElement).checked
       this.apply()

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import type { NearStation } from '../src/data'
-import { params, type Scenario } from '../src/fastModel'
+import { decisionBarriers, forecastArrival, type Scenario } from '../src/scenario'
 import { bearingDeg, destination, distanceM, toPTTM06 } from '../src/geo'
 import { cellOf, lonLatAt, type Grid } from '../src/grid'
 import { approachIntercept, computeRings, deploymentBoundary } from '../src/stationRings'
 import { arrivalMin, type Decision, type Suppression } from '../src/suppression'
-import { lateAt, optimize } from '../src/optimize'
+import { lateAt } from '../src/deployment'
 import { arrivals, barriers, wetLines } from '../src/wetLine'
 import { findSafeRoute } from '../src/routing'
 import type { Road } from '../src/osm'
@@ -52,6 +52,7 @@ assert.ok(computeRings(grid, fire, ignition, [station], sup, detection, 20)[0].r
 assert.equal(computeRings(grid, new Float32Array(n * n).fill(Infinity), ignition, [station], sup, detection)[0].radiusM, 0, 'no fire crossing imposes no boundary')
 const scenario: Scenario = {
   grid, ignition, stations: [station], suppression: sup, dispatchMin: 10, durationMin: 360, startIndex: 0,
+  fireArrival: fire,
   weather: { timeZone: 'Europe/Lisbon', time: ['2024-09-16T10:00'], tempC: [30], rhPct: [20], precipMm: [0], windKmh: [0], windFromDeg: [0], gustKmh: [0] },
 }
 const d: Decision = {
@@ -60,6 +61,9 @@ const d: Decision = {
     { unit: 'vfci', count: 1, from: station.id, target: 'inner', task: 'direct', dispatchMin: 70 },
   ],
 }
+assert.strictEqual(forecastArrival(scenario), fire, 'deployment uses the supplied ELMFIRE forecast without another spread model')
+assert.throws(() => forecastArrival({ ...scenario, fireArrival: undefined }), /ELMFIRE/, 'missing forecast cannot silently run a fallback model')
+assert.deepEqual(decisionBarriers(scenario, d), barriers(scenario, d, fire), 'API barriers use the same ELMFIRE arrival field as the preview')
 const boundary = deploymentBoundary(grid, fire, station, sup, sup.units.vfci, 10)
 assert.equal(boundary.blocked[cellOf(grid, outer)], 0, 'safe outer point remains deployable')
 assert.equal(boundary.blocked[cellOf(grid, inner)], 1, 'fire reaches inner point first')
@@ -117,23 +121,6 @@ const alertState = prepareAlerts({ scenario, context: undefined, decisions: [fir
   runs: { free: dummyRun, A: dummyRun, B: dummyRun } })
 assert.equal(alertState.runs.A.water.length, 0, 'unlimited supply has no low-water warnings')
 assert.equal(alertState.runs.A.shuttles.length, 0, 'unlimited supply has no tanker-empty warnings')
-const crewOnly: Decision = { id: 'A', name: 'Off-road crew', points: { outer }, lines: {}, assignments: [
-  { unit: 'crew', count: 1, from: station.id, target: 'outer', task: 'direct', dispatchMin: 10 },
-] }
-const hourly = <T>(value: T) => new Array<T>(7).fill(value)
-const offRoadScenario = { ...scenario, weather: { ...scenario.weather,
-  time: Array.from({ length: 7 }, (_, h) => `2024-09-16T${10 + h}:00`),
-  tempC: hourly(30), rhPct: hourly(30), precipMm: hourly(0), windKmh: hourly(0), windFromDeg: hourly(0), gustKmh: hourly(0),
-} }
-// Isolate placement policy with a flat, constant 1 m/min fire in this test process.
-const savedParams = { ...params }
-try {
-  params.useFWI = false
-  params.fuelScale = .4
-  const offRoadSearch = optimize(offRoadScenario, { access: [], places: [], placeCells: [] }, crewOnly,
-    { maxPlans: 8, budgetMs: Infinity, seed: 1 })
-  assert.ok(offRoadSearch.plans > 2, 'crew optimizer explores terrain locations without any road access')
-} finally { Object.assign(params, savedParams) }
 // Shortest safe road path and invalidation after the fire reaches a previously open segment.
 const routePoints = [destination(ignition, 270, 1000), ignition, destination(ignition, 90, 1000), destination(ignition, 0, 1500)]
 const roads: Road[] = [[0, 1], [1, 2], [0, 3], [3, 2]].map(([a, b], id) => ({

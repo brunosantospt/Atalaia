@@ -1,11 +1,11 @@
-// Special alerts for the commander, read from the fast model's runs at the clock: homes the fire
+// Special alerts for the commander, read from ELMFIRE runs at the clock: homes the fire
 // comes within 50 m of in the next hour (and villages, as the 6 h report counts them), units running
 // out of water, a head rate of spread past the thresholds of the literature. prepareAlerts() does
 // the work once per run (from rerun()); computeAlerts() only indexes it by minute, so the loop can
 // call it every frame. Pure: no DOM, no Cesium.
 
 import type { Station } from './data'
-import type { Run, Scenario } from './fastModel'
+import type { Run, Scenario } from './scenario'
 import { fmtNumber } from './format'
 import { distanceM, type LonLat } from './geo'
 import { cellOf, lonLatAt, type Grid } from './grid'
@@ -48,11 +48,11 @@ export const ROS_SOURCE =
   'além da capacidade de controlo. Scott J.H. & Burgan R.E. (2005) Standard fire behavior fuel models. ' +
   'USDA Forest Service RMRS-GTR-153, tabela 5 — ROS "muito alta" 50–150 ch/h (16,8–50 m/min), "extrema" > 150 ch/h ' +
   '(classes para vento a meia-chama de 5 mi/h, combustível seco D2L2, sem declive). ' +
-  'ROS da cabeça: avanço da frente mais distante da ignição nos últimos 15 min, no modelo rápido.'
+  'ROS da cabeça: avanço da frente mais distante da ignição nos últimos 15 min, na previsão ELMFIRE.'
 
 const WATER_SOURCE =
-  'Tanque e caudal de suppression.json (VFCI 3000 L a 200 L/min, VTTU 12 000 L a 400 L/min). Chegada como no modelo ' +
-  'rápido: saída do quartel e distância em linha reta × fator de estrada, sem o percurso OSM do editor. Dois ou mais ' +
+  'Tanque e caudal de suppression.json (VFCI 3000 L a 200 L/min, VTTU 12 000 L a 400 L/min). Chegada pela estimativa de deslocação: ' +
+  'saída do quartel e distância em linha reta × fator de estrada, sem o percurso OSM do editor. Dois ou mais ' +
   'meios revezam-se no reabastecimento; um VTTU em abastecimento poupa-lhes a viagem ao ponto de água e, com o ' +
   'tanque gasto nessas recargas, vai reabastecer (contabilidade aproximada, que o modelo não usa).'
 
@@ -61,7 +61,7 @@ const PLACES_SOURCE = 'Lugares do OpenStreetMap (aldeias, lugarejos), atingidos 
 const HOMES_SOURCE =
   'Habitações do OpenStreetMap. Em risco quando o fogo chega a menos de 50 m: a faixa de gestão de combustível ' +
   'à volta das edificações em espaço rural (DL 124/2006, art. 15.º; regime atual DL 82/2021). As casas em células ' +
-  'não combustíveis não ardem no modelo rápido; é o fogo à sua volta que conta.'
+  'não combustíveis não ardem no ELMFIRE; é o fogo à sua volta que conta.'
 
 interface RunAlerts {
   homeMin: Float32Array // minute the fire comes within homesBufferM of each home, ascending
@@ -376,7 +376,7 @@ function ecinOf({ suppression: sup }: Scenario, decision: Decision): boolean[] {
   })
 }
 
-/** The units with a tank at a point, their arrival as the fast model counts it (fastModel.ts apply()). */
+/** The units with a tank at a point, their arrival using the deployment arrival times. */
 function waterTracks(scenario: Scenario, decision: Decision, ecin: boolean[]): WaterTrack[] {
   const { grid: g, stations, suppression: sup } = scenario
   const shuttled = new Set(decision.assignments.filter((a) => a.task === 'shuttle').map((a) => a.target))

@@ -1,6 +1,6 @@
 """Build the demo's one fire: a hypothetical fire at Monte da Penha (Guimarães), with a wind shift.
 
-    scripts/.venv/bin/python -I scripts/build_hypothetical.py [--keep-grid] [--wind-mult 1.6] [--dry 2] ...
+    scripts/.venv/bin/python -I scripts/build_hypothetical.py [--keep-grid] [--wind-mult 0.8] [--dry 2] ...
 
 Nothing burned here: the fire is the one the UE render tells (FireRenderer's Penha package,
 data/simfire/penha_2024-09-16: ignition and start, 16 Sep 2024 10:00, and the IFS weather), on a
@@ -20,10 +20,7 @@ dead fuels, Portuguese fuel models and spotting in ELMFIRE. Writes:
 With no observed spread, the steps the story plays are ELMFIRE's (engines/elmfire in Docker, with Portuguese fuels, typical canopy and spotting;
 moistures from temperature and humidity less --dry) with nobody on the fire. Only the wind (--wind-mult) is baked into
 weather.json and the dry farmland into fuel.json; the canopy, the PT fuel models, the drier fuels and the spotting live
-in fire.json's engine block too, so the API's re-plans use the reference settings. The fast model remains an approximation.
---model fast uses the browser's fast model instead (web/src/fastModel.ts, run by Node through
-scripts/fastmodel/free_run.ts), which spreads this fire some 5x faster in its eucalyptus;
---compare records the other model's areas in windShift.compare. Steps are hourly through the 6 h decision window, then at 9 and 12 h, and further
+in fire.json's engine block too, so the API's re-plans use the reference settings. Steps are hourly through the 6 h decision window, then at 9 and 12 h, and further
 only while the fire stays off the grid's edge, and never past --cap-ha (default 2000 ha): the last step is the
 first at or above it, at the minute the reference gets there (fire.json referenceCapHa/referenceCapMin; the
 villages and windShift still read the whole run). The ignition is --ign-lat/--ign-lon (Monte da Penha, near the top);
@@ -38,7 +35,6 @@ import json
 import shutil
 import subprocess
 import sys
-import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -51,7 +47,6 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "data/simfire/penha_2024-09-16"  # symlink to FireRenderer/data/simfire/penha_2024-09-16: start, ignition, IFS weather
 CACHE = ROOT / "data/hypothetical"
 OUT = ROOT / "web/public/fires"
-FAST = ROOT / "scripts/fastmodel"
 ELMFIRE = ROOT / "engines/elmfire/run.sh"  # unified adapter: fuel_models, canopy, spotting and seed
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/elmfire_pt"))
@@ -89,24 +84,24 @@ PLACE_RADIUS_M = 250  # a village is reached when the fire gets this close (osm.
 HOMES_NEAR_M = 100  # homes this close to the front: OSM puts them in non-burnable cells
 
 # The shift: hourly values that replace the observed ones (from °, km/h). 12:00 stays observed
-# (89°, 22.7 km/h), so both readers (fastModel.ts, api/fires.py) turn the wind linearly through
+# (89°, with the scaled IFS speed), so the API (api/fires.py) turns the wind linearly through
 # 12:00-13:00, the short way: 114° anticlockwise, through the north-east. A dry nortada sets in and
 # holds the afternoon, then eases and veers back to the observed light easterly by 22:00.
 SHIFT_FROM, SHIFT_TO = "2024-09-16T12:00", "2024-09-16T13:00"
 SHIFTED = {
-    "2024-09-16T13:00": (335, 48.0),
-    "2024-09-16T14:00": (335, 46.0),
-    "2024-09-16T15:00": (338, 42.0),
-    "2024-09-16T16:00": (340, 36.0),
-    "2024-09-16T17:00": (340, 30.0),
-    "2024-09-16T18:00": (345, 24.0),
-    "2024-09-16T19:00": (0, 18.0),
-    "2024-09-16T20:00": (25, 12.0),
-    "2024-09-16T21:00": (55, 8.0),
+    "2024-09-16T13:00": (335, 24.0),
+    "2024-09-16T14:00": (335, 23.0),
+    "2024-09-16T15:00": (338, 21.0),
+    "2024-09-16T16:00": (340, 18.0),
+    "2024-09-16T17:00": (340, 15.0),
+    "2024-09-16T18:00": (345, 12.0),
+    "2024-09-16T19:00": (0, 9.0),
+    "2024-09-16T20:00": (25, 6.0),
+    "2024-09-16T21:00": (55, 4.0),
 }
 # The tuning: defaults reproduce the shipped fire (see fire.json source and windShift.note).
 GRID_KM, CENTRE_E_KM, CENTRE_N_KM = 27.0, 0.0, 0.0
-WIND_MULT = 1.6  # synthetic demo wind, reduced from 2.0 for a less extreme initial attack
+WIND_MULT = 0.8  # half the previous 1.6 factor; all demo wind speeds and gusts are halved
 DRY = 2.0  # points off equilibrium moisture; one point less drying than the original demo
 DEAD_FLOOR = 3.0
 FARMLAND_FUEL = 102  # S&B GR2 for COS 2.1.1.1 (dry fallow and stubble in September); 0 keeps it non-burnable
@@ -147,8 +142,7 @@ def parse(text):
 
 
 def scaled_weather(ifs, wind_mult):
-    """The IFS series with its wind and gusts scaled by wind_mult. Baked into weather.json: the fast
-    model and the API read that file, so ELMFIRE and the web see the same wind."""
+    """The IFS series with its wind and gusts scaled by wind_mult. Baked into weather.json so the API and the web read the same wind."""
     w = json.loads(json.dumps(ifs))
     w["windKmh"] = [round(v * wind_mult, 1) for v in ifs["windKmh"]]
     w["gustKmh"] = [round(v * wind_mult, 1) for v in ifs["gustKmh"]]
@@ -176,16 +170,6 @@ def shifted_weather(observed, wind_mult):
 
 
 # ---------- models ----------
-
-
-def fast_run(folder, weather, start, ignition, g):
-    """The browser's fast model, free run: arrival minute per cell, inf where it does not get."""
-    with tempfile.TemporaryDirectory() as tmp:
-        wpath, out = Path(tmp) / "weather.json", Path(tmp) / "arrival.f32"
-        wpath.write_text(json.dumps(weather))
-        args = [str(folder), str(wpath), iso(start), str(ignition["lon"]), str(ignition["lat"]), str(RUN_MIN), str(out)]
-        subprocess.run(["node", "--import", str(FAST / "register.mjs"), str(FAST / "free_run.ts"), *args], check=True, cwd=ROOT)
-        return np.fromfile(out, dtype="<f4").reshape(g["rows"], g["cols"]).astype(float)
 
 
 def emc_pct(temp_c, rh):
@@ -389,10 +373,9 @@ class Exposure:
 
 MODELS = {
     "elmfire": "ELMFIRE 2025.0717 (engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression",
-    "fast": "web/src/fastModel.ts, free run, no suppression",
 }
 
-MODEL_PT = {"elmfire": "ELMFIRE", "fast": "modelo rápido do Atalaia"}
+MODEL_PT = {"elmfire": "ELMFIRE"}
 
 
 def make_grid(ign, grid_km, centre_shift_m):
@@ -429,7 +412,7 @@ def make_layers(folder, g):
 
 
 def farmland_legend(folder, code):
-    """Make fuel.json say what the reference burns, so the map, the fast model and the API agree: temporary
+    """Make fuel.json say what the reference burns, so the map and the API agree: temporary
     crops (COS 2.1.1.1) as dry fallow, herbaceous class, the given S&B code (0 leaves the legend as built)."""
     path = folder / "fuel.json"
     fuel = json.loads(path.read_text())
@@ -441,7 +424,8 @@ def farmland_legend(folder, code):
     path.write_text(json.dumps(fuel, ensure_ascii=False, indent=2) + "\n")
 
 
-def build(model, compare, opts):
+def build(opts):
+    model = "elmfire"
     folder = OUT / FIRE_ID
     folder.mkdir(parents=True, exist_ok=True)
     package = json.loads((PACKAGE / "fire.json").read_text())
@@ -472,8 +456,7 @@ def build(model, compare, opts):
     quiet = {**observed, "utcOffsetH": 1.0, "source": {**observed["source"], "synthetic": f"windKmh and gustKmh are the IFS values x {opts.wind_mult} (tuned); no wind shift", "windMult": opts.wind_mult}}
     (folder / "weather_noshift.json").write_text(json.dumps(quiet, ensure_ascii=False, separators=(",", ":")) + "\n")
 
-    runs = {"elmfire": lambda w, *a: elmfire_run(w, *a, folder, opts), "fast": lambda w, *a: fast_run(folder, w, *a)}
-    arrival, baseline = (runs[model](w, start, ign, g) for w in (weather, observed))
+    arrival, baseline = (elmfire_run(w, start, ign, g, folder, opts) for w in (weather, observed))
     exposure = Exposure(build_osm(folder), g)
 
     # The steps, up to the last one whose perimeter stays off the grid's edge.
@@ -565,23 +548,13 @@ def build(model, compare, opts):
         "within6h": summary(arrival, WINDOW_MIN),
         "villages": villages,
         "noShift": {"within6h": summary(baseline, WINDOW_MIN), f"areaHa{full_hours[-1]}h": summary(baseline, until)["areaHa"]},
-        "note": f"sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por {opts.wind_mult:g} (já incluído no weather.json) e o das {SHIFT_TO[-5:]} às 21:00 é inventado. Sem a mudança, a cabeça segue para {compass(head(baseline, g, ign_xy, 0, WINDOW_MIN))} e só atinge {len(base_in6)} lugares em 6 h; com ela, roda para {compass(head_after)} e atinge {len(villages_in6)}. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
+        "note": f"sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por {opts.wind_mult:g} (já incluído no weather.json) e o das {SHIFT_TO[-5:]} às 21:00 é inventado. Sem a mudança, a cabeça segue para {compass(head(baseline, g, ign_xy, 0, WINDOW_MIN))} e só atinge {len(base_in6)} lugares em 6 h; com ela, roda para {compass(head_after)} e atinge {len(villages_in6)}. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (api/fires.py).",
         "alert": (
             f"Mudança brusca de vento: de {compass(weather['windFromDeg'][i_from])} a {weather['windKmh'][i_from]:.0f} km/h para "
             f"{compass(weather['windFromDeg'][i_to])} a {weather['windKmh'][i_to]:.0f} km/h. A cabeça do incêndio roda de "
             f"{compass(head_before)} para {compass(head_after)}" + (f", em direção a {', '.join(first[:-1]) + (' e ' if len(first) > 1 else '') + first[-1]}." if first else ".")
         ),
     }
-    if compare:
-        other = "fast" if model == "elmfire" else "elmfire"
-        elm, elm_base = (runs[other](w, start, ign, g) for w in (weather, observed))
-        wind_shift["compare"] = {
-            "model": other,
-            "note": "the same fire and weather in the other model, areas only",
-            "areaHa": {f"{h}h": round(float((elm <= h * 60).sum()) * cell_ha, 1) for h in (3, 6, 12, 24)},
-            "noShiftAreaHa": {f"{h}h": round(float((elm_base <= h * 60).sum()) * cell_ha, 1) for h in (3, 6, 12, 24)},
-        }
-
     fire = {
         "id": FIRE_ID,
         "name": NAME,
@@ -657,16 +630,13 @@ def report(fire, folder):
     for v in w["villages"]:
         print(f"  {v['name']}: T+{v['minutes']} min (no shift: {v['noShiftMinutes']})")
     print(f"  alert: {w['alert']}")
-    if "compare" in w:
-        print(f"  {w['compare']['model']}: {w['compare']['areaHa']}, no shift {w['compare']['noShiftAreaHa']}")
+
     for f in sorted(folder.iterdir()):
         print(f"  {f.relative_to(ROOT)}  {f.stat().st_size / 1024:.0f} KB")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--model", choices=MODELS, default="elmfire", help="the reference spread (default ELMFIRE, Docker)")
-    parser.add_argument("--compare", action="store_true", help="also run the other model and record its areas")
     parser.add_argument("--ign-lat", type=float, default=IGN_LAT, help="ignition latitude (WGS84)")
     parser.add_argument("--ign-lon", type=float, default=IGN_LON, help="ignition longitude (WGS84)")
     parser.add_argument("--cap-ha", type=float, default=CAP_HA, help="the reference ends at the first step at or above this area (ha)")
@@ -687,4 +657,4 @@ if __name__ == "__main__":
     parser.add_argument("--spotting", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--seed", type=int, default=SEED, help="ELMFIRE's spotting seed: it changes the area by ~20 %%")
     args = parser.parse_args()
-    build(args.model, args.compare, args)
+    build(args)

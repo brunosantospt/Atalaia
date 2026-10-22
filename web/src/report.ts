@@ -1,8 +1,8 @@
 // The report at the end of a run (or at a minute of it): what a decision left burned, from the
-// arrival grid of a run (the fast model or an engine) and the OSM context. Hectares, homes and villages reached
+// arrival grid of a run (ELMFIRE) and the OSM context. Hectares, homes and villages reached
 // with the minute the fire got there, and the roads it crossed.
 
-import type { Run } from './fastModel'
+import type { Run } from './scenario'
 import { fmtHa, fmtNumber, fmtTime, wallClock } from './format'
 import { cellHa, type Grid } from './grid'
 import { roadLabel, type Context, type RoadClass } from './osm'

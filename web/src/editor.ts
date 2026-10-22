@@ -2,8 +2,8 @@
 // button arms the map, then each click puts it on the nearest road (a point of attack, where it
 // lays its wet line), or, with a line task, clicks draw a crew line or an aerial water line.
 // Each assignment shows when it gets there and what it lays: the barriers the engines get.
-// B is the ILS's plan for A's means (optimize.ts), searched again whenever A changes. Every
-// fire opens with nothing on the ground; the 6 h report compares Livre, A and B.
+// A and B are independent plans, both simulated only by ELMFIRE. Every fire opens with
+// nothing on the ground; the 6 h report compares Livre, A and B.
 
 import {
   Cartesian2,
@@ -20,14 +20,13 @@ import {
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
-import { burnedHa, freeArrival, type Run, type Scenario } from './fastModel'
+import { burnedHa, forecastArrival, type Run, type Scenario } from './scenario'
 import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { bearingDeg, cleanLonLat, cleanPath, compass, destination, distanceM, type LonLat } from './geo'
+import { cleanLonLat, cleanPath, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
-import { diffDecisions, diffLines, groundOf, ILS_NAME, lateAt, SAFETY_MIN, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
-import type { IlsReply, IlsRequest } from './optimize.worker'
+import { lateAt, SAFETY_MIN } from './deployment'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
@@ -115,10 +114,6 @@ const GROUPS = [
 type Kind = (typeof GROUPS)[number]['kind']
 const UNIT_COLOR: Record<UnitId, string> = { vfci: '#dc2626', crew: '#f59e0b', vttu: '#0284c7', hebl: '#0d9488', avbp: '#4f46e5' }
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
-const ILS_BUDGET_MS = 10_000 // the search for B (optimize.ts): ~2000 plans
-const ILS_SHOW_MS = 1500 // while it runs, B on the map follows its best plan at most this often
-const ILS_AFTER_MS = 800 // A has to be still this long before B is searched again
-const ILS_HORIZON_MIN = 360 // the ILS judges its plans at 6 h of the fast model: ~5 ms a plan, where 24 h costs several times that
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
 const DIM = Color.fromCssColorString('#8b9096')
@@ -168,12 +163,6 @@ const TEMPLATE = `
     </div>
     <p class="note hint" data-ref="hint"></p>
   </section>
-  <section class="ils">
-    <h3>Proposta B</h3>
-    <button type="button" data-ref="ils" class="primary-btn" title="O B é procurado sozinho sempre que o A muda: 10 s à procura de onde pôr os meios do A para que o fogo atinja menos lugares e arda menos (ILS, Mendes &amp; Alvelos 2023, no modelo rápido interno). Este botão repete a procura. O resultado só se vê depois de simular no ELMFIRE."></button>
-    <p class="note" data-ref="ilsNote"></p>
-    <ul class="assignments changes" data-ref="ilsChanges"></ul>
-  </section>
   <section class="end">
     <h3>Fim do incêndio <span data-ref="engine"></span></h3>
     <table class="report ends" data-ref="ends"></table>
@@ -191,7 +180,7 @@ const TEMPLATE = `
   </section>
   <footer>
     <button type="button" data-ref="clear">Limpar esta decisão</button>
-    <button type="button" data-ref="reset" title="Volta o A ao exemplo e procura o B de novo">Repor exemplo</button>
+    <button type="button" data-ref="reset" title="Repõe o exemplo na decisão selecionada">Repor exemplo</button>
   </footer>
 `
 
@@ -318,7 +307,7 @@ export class Editor {
   private loaded: Loaded | undefined
   private runs: Runs | undefined // the last ELMFIRE simulation of A and B (with Livre); none before the first
   private free: Run | undefined // Livre, the cached ELMFIRE run: all there is before the first simulation
-  private wetCache = new WeakMap<Decision, { scenario: Scenario; key: string; lines: WetLine[] }>()
+  private wetCache = new WeakMap<Decision, { scenario: Scenario; arrival: Float32Array; key: string; lines: WetLine[] }>()
   private maxMin = 360 // the clock and the slider stop here: the cut of the runs, or when the fires are out
   private reports: Reports | undefined
   private judged: Reports | undefined
@@ -331,15 +320,6 @@ export class Editor {
   private dangerTimer?: number
   /** The assignments of a decision last shown late, so that only a new one warns. */
   private lateShown: { id: string; keys: Set<string> } = { id: '', keys: new Set() }
-  /** The search for B while it runs: what it says, its last word, its best plan on the map and the better one not yet there. */
-  private ils: { worker: Worker; byHand: boolean; shownAt: number; note: string; last?: Progress; shown?: Progress; pending?: Progress } | undefined
-  /** The last search's B and how it differs from A, while B is still that plan; stopped when ended by hand. */
-  private ilsDone: { result: Result; changes: Change[]; stopped?: boolean } | undefined
-  /** The timer of the search that starts once A has been still for ILS_AFTER_MS. */
-  private ilsDue: number | undefined
-  /** The A that B was searched for, and B as the search left it (planKey): B changed by hand differs. */
-  private ilsFor = ''
-  private ilsB = ''
   private readonly dispatchModal = new DispatchModal()
   pmaList: MedicalPointItem[] = []
   role: AgencyRole = 'cmd'
@@ -448,10 +428,6 @@ export class Editor {
       }
     })
     this.refs.simulate.addEventListener('click', () => this.actions.simulate())
-    this.refs.ils.addEventListener('click', () => {
-      if (!this.ils && this.ilsDue === undefined) return this.runIls(true)
-      this.stopIls(true)
-    })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
     this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
@@ -462,9 +438,9 @@ export class Editor {
     })
     this.refs.reset.addEventListener('click', () => {
       if (!this.loaded) return
-      this.decisions[0] = clone(this.loaded.example)
-      for (const a of this.decisions[0].assignments) a.dispatchMin = this.dispatchMinute()
-      this.ilsFor = '' // B is searched again even when A already was the example
+      const id = this.decisions[this.active].id
+      this.decisions[this.active] = { ...clone(this.loaded.example), id, name: `Decisão ${id}` }
+      for (const a of this.decisions[this.active].assignments) a.dispatchMin = this.dispatchMinute()
       this.commit()
     })
     const name = this.refs.name as HTMLInputElement
@@ -501,15 +477,16 @@ export class Editor {
     return this.wetLinesOf(this.decisions[i]).map((w) => w.barrier)
   }
 
-  /** A decision's barriers with what laid each one (wetLine.ts), the same the fast model applies. */
+  /** A decision's barriers with what laid each one (wetLine.ts), the same the ELMFIRE API receives. */
   private wetLinesOf(d: Decision): WetLine[] {
     if (!this.loaded) return []
     const { scenario } = this.loaded
     const key = JSON.stringify([d.points, d.lines, d.assignments])
+    const arrival = forecastArrival(scenario)
     const cached = this.wetCache.get(d)
-    if (cached?.scenario === scenario && cached.key === key) return cached.lines
-    const lines = wetLines(scenario, d, freeArrival(scenario))
-    this.wetCache.set(d, { scenario, key, lines })
+    if (cached?.scenario === scenario && cached.arrival === arrival && cached.key === key) return cached.lines
+    const lines = wetLines(scenario, d, arrival)
+    this.wetCache.set(d, { scenario, arrival, key, lines })
     return lines
   }
 
@@ -584,11 +561,8 @@ export class Editor {
         ? (snapToRoad(context, p, SNAP_M) ?? p) : p]),
     )
     const snapped = { ...clone(example), points: Object.fromEntries(Object.entries(points).map(([id, p]) => [id, { lon: p.lon, lat: p.lat }])) }
-    this.stopIls()
-    this.ilsDone = undefined
     this.loaded = { fireId, fire, stations, context, scenario, example: this.fit(snapped, scenario, stations) }
     this.decisions = [empty('A'), empty('B')]
-    this.proposeB()
     this.runs = this.reports = this.judged = this.engine = this.free = undefined
     this.dispatchCache = undefined
     this.active = 0
@@ -665,11 +639,6 @@ export class Editor {
   setEngine(status: EngineStatus) {
     this.engine = status
     this.renderEnds()
-  }
-
-  /** Whether B is being searched (or about to be): it changes every 1.5 s until the search ends. */
-  get searching(): boolean {
-    return this.ils !== undefined || this.ilsDue !== undefined
   }
 
   /** Keys while the drawer is open: Enter closes a line, Escape drops the tool or the drawer. */
@@ -1010,7 +979,7 @@ export class Editor {
         : []),
     ]
     const aerialRow = unitInfo.allUnits.some((u) => isAerial(this.sup.units[u.unit]))
-      ? `<div class="tooltip-detail" style="color:#5eead4;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Descargas: abrandam o fogo enquanto frescas (não são barreira no ELMFIRE)</div>`
+      ? `<div class="tooltip-detail" style="color:#5eead4;"><span style="display:inline-flex;vertical-align:middle;margin-right:4px;">${ICON_BOLT}</span> Meios aéreos: posição e ETA; sem efeito de descarga neste cenário ELMFIRE</div>`
       : ''
 
     this.cutTooltip.className = 'road-cut-tooltip unit'
@@ -1245,17 +1214,9 @@ export class Editor {
     this.commit()
   }
 
-  /** The decisions changed: show them and have them simulated again. By hand, a new
-   *  A has B searched again; B changed by hand ends its search, and is no longer what it proposed. */
-  private commit(byIls = false) {
-    const late = byIls ? -1 : this.newlyLate()
-    if (!byIls) {
-      if (planKey(this.decisions[0]) !== this.ilsFor) this.proposeB()
-      else if (planKey(this.decisions[1]) !== this.ilsB) {
-        this.stopIls()
-        this.ilsDone = undefined
-      }
-    }
+  /** Update the edited plan without changing the other decision. */
+  private commit() {
+    const late = this.newlyLate()
     this.render()
     if (late >= 0) this.warnLate(late)
     this.actions.changed()
@@ -1292,198 +1253,6 @@ export class Editor {
     this.refs.hint.classList.remove('danger')
     this.refs.hint.classList.add('late')
     this.refs.hint.innerHTML = `<span class="late-badge">chega tarde</span> O fogo livre chega ${where} aos <b>T+${Math.round(fireMin)} min</b> e o ${unit.short} ${when}. Fica no plano: é só um aviso.`
-  }
-
-  /** B as the search starts it: A's own plan. */
-  private setB(d: Decision) {
-    this.decisions[1] = d
-    this.ilsB = planKey(d)
-  }
-
-  /** A is new: B starts again as A, and is searched once A has been still for a moment. */
-  private proposeB() {
-    this.stopIls()
-    this.ilsDone = undefined
-    this.ilsFor = planKey(this.decisions[0])
-    this.setB(named(this.decisions[0]))
-    if (this.loaded?.context && movable(this.decisions[0])) this.ilsDue = window.setTimeout(() => this.runIls(), ILS_AFTER_MS)
-    this.renderIls()
-  }
-
-  /** Search B with A's means (optimize.ts) in a worker: B follows its best plan, and shows what moved.
-   *  By the button, B starts again from A and its tab opens at the end. */
-  private runIls(byHand = false) {
-    window.clearTimeout(this.ilsDue)
-    this.ilsDue = undefined
-    const loaded = this.loaded
-    if (!loaded?.context || this.ils) return
-    const worker = new Worker(new URL('./optimize.worker.ts', import.meta.url), { type: 'module' })
-    this.ils = { worker, byHand, shownAt: -Infinity, note: 'A preparar os pontos de acesso…' }
-    this.ilsDone = undefined
-    this.ilsFor = planKey(this.decisions[0])
-    if (byHand) {
-      this.setB(named(this.decisions[0]))
-      this.commit(true)
-    }
-    worker.onmessage = ({ data }: MessageEvent<IlsReply>) => {
-      const ils = this.ils
-      if (ils?.worker !== worker) return
-      if (data.type === 'error') {
-        this.stopIls()
-        this.refs.ilsNote.textContent = `A procura falhou: ${data.message}`
-        return
-      }
-      if (data.type === 'done') {
-        this.stopIls()
-        const { result } = data
-        this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision) }
-        this.setB(result.decision)
-        if (ils.byHand) {
-          this.active = 1
-          this.cancel()
-        }
-        this.commit(true)
-        return
-      }
-      const { progress } = data
-      ils.note = `${fmtNumber(progress.plans)} planos · ${fmtNumber(progress.elapsedMs / 1000, 1)} s · melhor ${scoreText(progress.best)} (A: ${scoreText(progress.a)})`
-      ils.last = progress
-      if (progress.decision) ils.pending = progress
-      if (ils.pending?.decision && performance.now() - ils.shownAt >= ILS_SHOW_MS) {
-        ils.shownAt = performance.now()
-        this.setB(ils.pending.decision)
-        ils.shown = ils.pending
-        ils.pending = undefined
-        this.commit(true)
-      } else this.renderIls()
-    }
-    worker.onerror = (e) => {
-      this.stopIls()
-      this.refs.ilsNote.textContent = `A procura falhou: ${e.message}`
-    }
-    const scenario = { ...loaded.scenario, durationMin: Math.min(loaded.scenario.durationMin, ILS_HORIZON_MIN) }
-    const request: IlsRequest = { scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), budgetMs: ILS_BUDGET_MS, seed: 1 }
-    worker.postMessage(request)
-    this.renderIls()
-  }
-
-  /** Ends the search, or the one due; by the button, B keeps the best plan it had shown, and says what it saves. */
-  private stopIls(byHand = false) {
-    window.clearTimeout(this.ilsDue)
-    this.ilsDue = undefined
-    const ils = this.ils
-    this.ils = undefined
-    ils?.worker.terminate()
-    const last = byHand ? ils?.last : undefined
-    if (last) {
-      const shown = ils?.shown
-      const result = shown?.decision
-        ? { decision: shown.decision, improved: true, best: shown.best, a: shown.a, plans: last.plans, elapsedMs: last.elapsedMs }
-        : { decision: this.decisions[1], improved: false, best: last.a, a: last.a, plans: last.plans, elapsedMs: last.elapsedMs }
-      this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision), stopped: true }
-    }
-    this.renderIls()
-  }
-
-  /** The search's button, its progress, and once done what B saves and where each of A's means went. */
-  private renderIls() {
-    const button = this.refs.ils as HTMLButtonElement
-    const canMove = movable(this.decisions[0])
-    const busy = this.ils !== undefined || this.ilsDue !== undefined
-    button.textContent = busy ? 'Parar' : 'Procurar B de novo'
-    button.disabled = !busy && (!this.loaded?.context || !canMove)
-    const note = this.refs.ilsNote
-    const list = this.refs.ilsChanges
-    list.replaceChildren()
-    if (busy) {
-      note.textContent = this.ils?.note ?? 'O A mudou: o B vai ser procurado com os mesmos meios.'
-      return
-    }
-    const done = this.ilsDone
-    if (!done) {
-      note.textContent = !this.loaded?.context
-        ? 'Sem dados OSM para este incêndio: sem acessos onde pôr os meios, o B fica igual ao A.'
-        : planKey(this.decisions[1]) !== this.ilsB
-          ? 'O B foi mudado à mão e já não é a proposta do ILS: "Procurar B de novo", ou mudar o A, volta a propô-lo.'
-          : canMove
-            ? 'Procura parada: o B ainda é igual ao A.'
-            : !this.decisions[0].assignments.length
-              ? 'O A ainda não tem meios: põe meios no mapa e o B é procurado com os mesmos.'
-              : 'O A não tem meios para mudar de sítio: o B fica igual ao A.'
-      return
-    }
-    const { result, changes } = done
-    const hours = fmtNumber(Math.min(this.loaded?.scenario.durationMin ?? ILS_HORIZON_MIN, ILS_HORIZON_MIN) / 60)
-    const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
-    if (!result.improved) {
-      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
-      return
-    }
-    const saved = [
-      result.a.places > result.best.places ? `${result.a.places - result.best.places} ${result.a.places - result.best.places === 1 ? 'lugar' : 'lugares'}` : '',
-      result.a.ha - result.best.ha >= 0.5 ? fmtHa(result.a.ha - result.best.ha) : '',
-    ].filter(Boolean)
-    const home = result.a.units - result.best.units
-    note.textContent =
-      (done.stopped ? 'Procura parada. ' : '') +
-      `Com os mesmos meios, B poupa ${saved.join(' e ') || 'pouco'} às ${hours} h` +
-      (home > 0 ? `, e deixa ${home} ${home === 1 ? 'meio' : 'meios'} no quartel` : '') +
-      ` · ${tested}.`
-    const lines = diffLines(this.decisions[0], result.decision)
-    list.replaceChildren(...lines.map((c) => this.lineRow(c)), ...changes.map((c) => this.changeRow(c)))
-  }
-
-  /** What B did with one of A's lines: moved, cut, built from the other end, or left with no one on it. */
-  private lineRow(c: LineChange): HTMLElement {
-    const li = document.createElement('li')
-    li.className = `line ${c.kind}`
-    li.innerHTML = `
-      <div class="who"><b></b><span class="task"></span></div>
-      <div class="meta"><em></em></div>`
-    li.querySelector('b')!.textContent = `linha ${c.id}`
-    li.querySelector('.task')!.textContent = TASK_NAME[c.task]
-    const cut = [c.startM ? `${fmtNumber(c.startM)} m no início` : '', c.endM ? `${fmtNumber(c.endM)} m no fim` : ''].filter(Boolean)
-    const what =
-      c.kind === 'removed'
-        ? ['sem meios no B']
-        : c.kind === 'redrawn'
-          ? ['redesenhada']
-          : [
-              c.shiftM ? `${fmtNumber(c.shiftM)} m para ${compass(c.awayDeg)}` : '',
-              cut.length ? `encurtada ${cut.join(' e ')}` : '',
-              c.reverse ? `${c.task === 'drops' ? 'descargas' : 'construída'} a partir do outro extremo` : '',
-            ]
-    li.querySelector('em')!.textContent = what.filter(Boolean).join(' · ')
-    return li
-  }
-
-  /** One line of what changed from A to B: which means, from where, and where it went. */
-  private changeRow(c: Change): HTMLElement {
-    const li = document.createElement('li')
-    li.className = c.kind
-    li.innerHTML = `
-      <div class="who"><b></b><span class="n"></span><span class="task"></span></div>
-      <div class="meta"><span class="from"></span><em></em></div>`
-    const unit = this.sup.units[c.unit]
-    li.querySelector('b')!.textContent = unit.short
-    li.querySelector('.n')!.textContent = `×${c.count}`
-    li.querySelector('.task')!.textContent = TASK_NAME[c.task]
-    li.querySelector('.from')!.textContent = isAerial(unit) ? 'Base aérea' : (this.loaded?.stations.find((s) => s.id === c.from)?.short ?? c.from)
-    const access = c.b && isRoadVehicle(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
-    const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
-    let where = ''
-    if (c.kind === 'same') where = c.line ? 'na mesma linha' : 'no mesmo sítio'
-    else if (c.kind === 'removed') where = 'fica no quartel'
-    else if (c.kind === 'added') where = 'novo'
-    else if (c.kind === 'retasked') {
-      // da linha apeada l1 para ataque direto, do ataque direto para a linha aérea l2
-      const article = c.task === 'direct' || c.task === 'shuttle' ? 'o' : 'a'
-      const was = `d${article} ${TASK_NAME[c.task]}${c.line ? ` ${c.line}` : ''}`
-      const now = c.lineB ? `a ${TASK_NAME[c.taskB!]} ${c.lineB}` : TASK_NAME[c.taskB!]
-      where = `${was} para ${now}${road}`
-    } else if (c.a && c.b) where = `${fmtNumber(distanceM(c.a, c.b))} m para ${compass(bearingDeg(c.a, c.b))}${road}`
-    li.querySelector('em')!.textContent = where
-    return li
   }
 
   private updateStationDropdown() {
@@ -1598,7 +1367,6 @@ export class Editor {
     ;(this.refs.name as HTMLInputElement).value = d.name
     this.renderList(d)
     this.setCount(this.count)
-    this.renderIls()
     this.renderEnds()
     this.renderReport()
     this.draw()
@@ -1748,7 +1516,7 @@ export class Editor {
       slider.type = 'range'; slider.min = '0'; slider.max = '179'; slider.step = '1'
       slider.setAttribute('aria-label', `Orientação da linha molhada de ${unit.short}`)
       slider.title = '0°: norte–sul · 90°: este–oeste'
-      slider.value = String(Math.round(wetLineBearing(this.loaded.scenario, freeArrival(this.loaded.scenario), target, a)) % 180)
+      slider.value = String(Math.round(wetLineBearing(this.loaded.scenario, forecastArrival(this.loaded.scenario), target, a)) % 180)
       const angle = document.createElement('output')
       angle.textContent = `${slider.value}°`
       const auto = document.createElement('button')
@@ -1756,7 +1524,6 @@ export class Editor {
       auto.title = 'Voltar à orientação transversal à propagação do fogo'
       auto.disabled = a.wetLineBearingDeg === undefined
       slider.addEventListener('input', () => {
-        this.stopIls()
         a.wetLineBearingDeg = Number(slider.value)
         angle.textContent = `${slider.value}°`; auto.disabled = false
         this.draw() // Keep this slider alive while dragging; rebuild the row when released.
@@ -2042,9 +1809,7 @@ export class Editor {
       ;(pointEntity as any)._unitInfo = unitInfo(mainUnit, p, units)
     }
 
-    // 4. Drawn lines: on B, A's lines it moved or left under them, dotted; aerial drops (white, dashed),
-    // crew lines (dashed grey where no piece of it is finished within the run; its pieces are the barriers above).
-    if (d.id === 'B') for (const c of diffLines(this.decisions[0], d)) this.polyline(this.decisions[0].lines[c.id], DIM, true, 3)
+    // 4. Drawn lines of this plan; crew pieces are the barriers above.
     for (const [id, line] of Object.entries(d.lines)) {
       const a = d.assignments.find((x) => x.target === id)
       if (!a) continue
@@ -2331,22 +2096,12 @@ export class Editor {
 
 const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' : 'Decisão B', points: {}, lines: {}, assignments: [] })
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
-/** B before the search has moved anything: A's own plan. */
-const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME })
-/** A plan without its name: what the search reads from A, and what it leaves in B. */
-const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
 const lateKey = (a: Assignment) => `${a.unit}|${a.from}|${a.target}|${a.task}`
-/** Whether the search has anything of A to move: units at a point. */
-const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points || x.target in a.lines)
-
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
   while (existing[`${prefix}${n}`]) n++
   return `${prefix}${n}`
 }
-
-/** A plan's score in the search's note: places reached, then hectares. */
-const scoreText = (s: Score) => `${s.places} ${s.places === 1 ? 'lugar' : 'lugares'}, ${fmtHa(s.ha)}`
 
 function roadName(context: Context, road: number): string {
   const r = context.osm.roads[road]

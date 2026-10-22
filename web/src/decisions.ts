@@ -1,6 +1,5 @@
 // The example decision A, laid out around the ignition and the observed spread axis: everything
-// at the head. B is not drawn by hand: it is the ILS's plan for A's means (optimize.ts), which
-// the editor searches whenever A changes. "Repor exemplo" in the decision editor brings A back.
+// at the head. A and B are independent manual plans, simulated with ELMFIRE.
 
 import type { Fire, NearStation } from './data'
 import { destination } from './geo'

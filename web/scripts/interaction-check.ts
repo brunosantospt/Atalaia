@@ -39,7 +39,7 @@ assert.deepEqual(positions.at(-1), new Cartesian2(90, 50), 'hover resumes at the
 enabled = false
 canvas.pointer('pointermove')
 await wait(110)
-assert.equal(positions.length, 2, 'disabled heat map or empty editor does no picking')
+assert.equal(positions.length, 2, 'disabled hover or empty editor does no picking')
 enabled = true
 canvas.pointer('pointermove')
 canvas.dispatchEvent(new Event('wheel'))
@@ -100,4 +100,4 @@ Object.assign(hud, { refs: { pspBriefingBody: { set innerHTML(_html: string) { w
 hud.updateBriefings(dispatch)
 hud.updateBriefings(dispatch)
 assert.equal(writes, 1, 'unchanged briefing does not rebuild DOM every second')
-console.log('OK: 500 moves → 1 hover pick; 500 drag moves → 0 picks; disabled heat/zoom/inertia/leave guarded; tooltips and dispatch reused')
+console.log('OK: 500 moves → 1 hover pick; 500 drag moves → 0 picks; disabled hover/zoom/inertia/leave guarded; tooltips and dispatch reused')

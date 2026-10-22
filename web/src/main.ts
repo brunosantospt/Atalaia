@@ -29,15 +29,14 @@ import { CUT, decisionShots } from './director'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
 import { engineName, fetchEngines, runScenario, type EngineRun, type ScenarioRequest } from './engines'
-import { burnedHa, computeFWISeries, decisionBarriers, params, type Run, type Scenario } from './fastModel'
+import { burnedHa, decisionBarriers, type Run, type Scenario } from './scenario'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
-import { HeatLayer } from './heatLayer'
+import { computeFWISeries } from './fwi'
 import { Hud, type CameraReadout } from './hud'
 import { loadInventory } from './inventory'
 import { layoutHash } from './layout'
 import { MarkerLayer } from './markers'
-import { mapHover } from './mapHover'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { WindShiftWatch } from './windShift'
@@ -80,12 +79,11 @@ interface Replay {
   fire: FireLayer // the observed fire
   markers: MarkerLayer
   player: Player
-  scenario: Scenario // the grid and the inputs of the barriers and the ILS (the fast model, never on screen)
+  scenario: Scenario // ELMFIRE inputs, forecast and deployment geometry
   free: SplitLayer // the free run (ELMFIRE, no forces), shown during the simulated shots
   freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   rings: StationRingsLayer // station approach interception boundaries; follows the free run shown
-  heat: HeatLayer // the heat map profile: who holds the head, cell by cell, at the hour on the clock
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
   split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
@@ -126,7 +124,6 @@ async function main() {
       atalaia: {
         viewer,
         spotlight,
-        params, // of the fast model (the ILS's, never on screen)
         runs: {},
         get replay() {
           return replay
@@ -232,11 +229,10 @@ async function main() {
   setMap(hud.settings.map)
   setQuality(viewer, hud.settings.quality)
 
-  /** The map under the fire (settings or key M); the heat map is the fire's own layer. */
+  /** The map under the fire (settings or key M). */
   function setMap(id: MapId) {
     basemap.set(id)
     hud.settings.setMap(id)
-    replay?.heat.show(id === 'heat')
   }
 
   // The decision editor: placing means runs nothing; the simulate button (here and in the HUD) runs A and B on ELMFIRE.
@@ -248,8 +244,8 @@ async function main() {
       if (!replay) return
       if (open) {
         replay.player.playing = false // the mouse has the camera and the map takes the clicks
-        // The drawer's hour is the replay's clock; before the replay starts, the clock goes to the end of the run.
-        if (!(replay.player.update(0).hours > 0)) replay.player.seek(shownEndMin() / 60)
+        // Start planning at detection, keeping the same clock as the replay.
+        if (!(replay.player.update(0).hours > 0)) replay.player.seek(detection.droneMin / 60)
         replay.showSplit = true // only draws once A and B have been simulated
       }
     },
@@ -284,21 +280,6 @@ async function main() {
     else showFreeOnly(replay.freeRun)
     refreshSimulate()
   }
-  mapHover(scene.canvas, viewer.camera, (position) => {
-    const ray = viewer.camera.getPickRay(position)
-    if (!ray) return
-    const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
-    if (cartesian) {
-      const c = Cartographic.fromCartesian(cartesian)
-      const at = { lon: CesiumMath.toDegrees(c.longitude), lat: CesiumMath.toDegrees(c.latitude), h: c.height }
-      replay?.heat.hover(at)
-    } else {
-      replay?.heat.hover(undefined)
-    }
-  }, () => {
-    replay?.heat.hover(undefined)
-  }, () => !!replay && basemap.id === 'heat')
-
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
     loading = id
@@ -313,11 +294,11 @@ async function main() {
     // Only the stations in play are available anywhere means come from (stationRings.ts).
     const near = stationsInPlay(stations, fire0.ignition, suppression)
     const regional = near
-    // The scenario of the barriers and of the ILS (the fast model, never on screen).
+    // The shared ELMFIRE inputs and deployment geometry.
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
     const durationMin = horizonMin(fire0.start, weather)
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, fwiSeries, dispatchMin: detection.droneMin }
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
     // The free run is the first ELMFIRE prediction, no forces: the API's cached run, or the reference's own
     // progression (the same ELMFIRE run) while the API is down. It is cut at the cap so the browser stays light.
     busy.start('A obter a previsão do ELMFIRE…', ['Livre'])
@@ -370,7 +351,6 @@ async function main() {
     replay?.free.destroy()
     replay?.reach.destroy()
     replay?.rings.destroy()
-    replay?.heat.destroy()
     replay?.split?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
@@ -388,7 +368,6 @@ async function main() {
       freeNow: free,
       reach: new ReachLayer(viewer, fire.ignition, reach),
       rings: new StationRingsLayer(viewer, fire.ignition, overlay),
-      heat: new HeatLayer(viewer, hud.root, scenario, fire.start),
       context,
       story,
       showSplit: false,
@@ -401,6 +380,7 @@ async function main() {
     replay.rings.set(ringList)
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
+    else replay.player.seek(story.shots[0].hours)
     hud.setDirector(replay.director)
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near, suppression.unlimitedWater), reach.intensityKWPerM)
     editor.setRange(freeEnd)
@@ -408,7 +388,6 @@ async function main() {
     editor.setEngine({ state: 'done', name: source, seconds: 0, note: shiftNote })
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
-    replay.heat.show(basemap.id === 'heat')
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
       known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
@@ -602,7 +581,6 @@ async function main() {
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
     if (!replay) return { label: 'Simular no ELMFIRE', enabled: false, note: '' }
-    if (editor.searching) return { label: 'À espera da proposta B…', enabled: false, note: 'O B está a ser procurado (até 10 s); depois podes simular.' }
     const [a, b] = editor.decisions
     const sim = replay.sims[replay.phase]
     if (replay.phase === 'post' && !sim)
@@ -704,7 +682,6 @@ async function main() {
 
   let last = performance.now()
   let frameNo = 0
-  let searching = false
   let renderedHours = NaN
   let readout: CameraReadout = { heading: 0, pitch: 0, range: 0, centre: undefined }
   let revealed = new Set<string>()
@@ -734,7 +711,6 @@ async function main() {
     split?.set(frame.hours)
     // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.
     editor.syncTime(frame.hours)
-    replay.heat.set(frame.hours)
     // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
     // the comparison starts with the split in the middle.
     if (frame.shot !== replay.shotShown) {
@@ -756,8 +732,6 @@ async function main() {
       spotlight.set(centre, replay.director && frame.driving ? frame.spot : SPOT_K * centre.range)
     } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
     frameNo++
-    if (editor.searching !== searching) refreshSimulate() // the ILS ended: B is final and can be simulated
-    searching = editor.searching
     hud.update(frame, readout, splitOn)
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'

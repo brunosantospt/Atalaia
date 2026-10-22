@@ -7,7 +7,7 @@ import type { Fire, NearStation } from './data'
 import type { Detection } from './detection'
 import { distanceM, type LonLat } from './geo'
 import { contours } from './contours'
-import type { Run } from './fastModel'
+import type { Run } from './scenario'
 import { cellHa, lonLatAt, type Grid } from './grid'
 import { arrivalMin, containmentProbability, type Suppression } from './suppression'
 

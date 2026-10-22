@@ -34,7 +34,7 @@ export interface ScenarioRequest {
   wind_shift?: boolean // the fire's synthetic wind shift: false plans on the forecast without it; left out for fires with none
 }
 
-/** What the web reads of the API's result: the arrival grid as the fast model keeps it, and where it came from. */
+/** What the web reads of the API's result: the arrival grid in north-to-south cell order, and where it came from. */
 export interface EngineRun {
   arrival: Float32Array // minute the fire reaches each cell, row 0 north, Infinity where it never does
   engine: string // "ELMFIRE 2025.0717"
