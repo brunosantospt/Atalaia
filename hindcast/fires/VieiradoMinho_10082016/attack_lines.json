@@ -12,14 +12,30 @@
   "earliest": 30.0,
   "step": 60.0,
   "width": 20.0,
+  "wind_spotting": true,
+  "spot_wind_threshold": 18.0,
+  "spot_base_dist": 20.0,
+  "spot_wind_gain": 1.5,
   "timing": "observed",
   "run": null,
   "preview": true
  },
  "official_boundary_km": 34.05,
  "boundary_along_scars_km": 3.01,
- "boundary_covered_km": 11.53,
+ "boundary_covered_km": 10.87,
  "crossings_left_out_km": 2.81,
+ "wind_spotting": true,
+ "spotting_breaches_km": 1.05,
+ "spotting_breached": [
+  {
+   "length_m": 1046,
+   "from_min": 120.0,
+   "wind_kmh": 21.3,
+   "cross_wind_kmh": 20.9,
+   "spot_dist_m": 24.4,
+   "reason": "wind-driven spotting: wind 21.3 km/h towards road (cross 20.9 km/h > 18.0 km/h), spark reach 24.4 m > road width 20.0 m"
+  }
+ ],
  "barriers": [
   {
    "label": "road 1",
@@ -874,114 +890,6 @@
   {
    "label": "road 24",
    "tier": "road",
-   "source": "road along the official perimeter, 73 m of a 1046 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -8.12461,
-     41.56438
-    ],
-    [
-     -8.12411,
-     41.56487
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 120.0,
-   "length_m": 69
-  },
-  {
-   "label": "road 25",
-   "tier": "road",
-   "source": "road along the official perimeter, 232 m of a 1046 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -8.123215,
-     41.566046
-    ],
-    [
-     -8.12418,
-     41.5658
-    ],
-    [
-     -8.12436,
-     41.56515
-    ],
-    [
-     -8.12399,
-     41.56463
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 120.0,
-   "length_m": 224
-  },
-  {
-   "label": "road 26",
-   "tier": "road",
-   "source": "road along the official perimeter, 613 m of a 1046 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -8.123872,
-     41.564126
-    ],
-    [
-     -8.1242,
-     41.56611
-    ],
-    [
-     -8.12407,
-     41.5663
-    ],
-    [
-     -8.12313,
-     41.56663
-    ],
-    [
-     -8.12213,
-     41.56638
-    ],
-    [
-     -8.12101,
-     41.56646
-    ],
-    [
-     -8.12051,
-     41.56635
-    ],
-    [
-     -8.120417,
-     41.56674
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 120.0,
-   "length_m": 602
-  },
-  {
-   "label": "road 27",
-   "tier": "road",
-   "source": "road along the official perimeter, 128 m of a 1046 m held line (track); time: observed arrival within reach",
-   "path": [
-    [
-     -8.120542,
-     41.565747
-    ],
-    [
-     -8.12099,
-     41.56621
-    ],
-    [
-     -8.12167,
-     41.56635
-    ]
-   ],
-   "width_m": 20.0,
-   "from_min": 120.0,
-   "length_m": 122
-  },
-  {
-   "label": "road 28",
-   "tier": "road",
    "source": "road along the official perimeter, 25 m of a 1692 m held line (track); time: observed arrival within reach",
    "path": [
     [
@@ -998,7 +906,7 @@
    "length_m": 23
   },
   {
-   "label": "road 29",
+   "label": "road 25",
    "tier": "road",
    "source": "road along the official perimeter, 1331 m of a 1692 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1036,7 +944,7 @@
    "length_m": 1329
   },
   {
-   "label": "road 30",
+   "label": "road 26",
    "tier": "road",
    "source": "road along the official perimeter, 75 m of a 1692 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1054,7 +962,7 @@
    "length_m": 75
   },
   {
-   "label": "road 31",
+   "label": "road 27",
    "tier": "road",
    "source": "road along the official perimeter, 205 m of a 1692 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1080,7 +988,7 @@
    "length_m": 205
   },
   {
-   "label": "road 32",
+   "label": "road 28",
    "tier": "road",
    "source": "road along the official perimeter, 56 m of a 1692 m held line (track); time: observed arrival within reach",
    "path": [
@@ -1098,7 +1006,7 @@
    "length_m": 56
   },
   {
-   "label": "connector 33",
+   "label": "connector 29",
    "tier": "connector",
    "source": "official perimeter between the ends of two road lines 162 m apart (no road in OpenStreetMap); time: the later of the two lines",
    "path": [

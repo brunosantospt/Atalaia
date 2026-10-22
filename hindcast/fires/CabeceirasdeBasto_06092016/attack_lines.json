@@ -12,6 +12,10 @@
   "earliest": 30.0,
   "step": 60.0,
   "width": 20.0,
+  "wind_spotting": true,
+  "spot_wind_threshold": 18.0,
+  "spot_base_dist": 20.0,
+  "spot_wind_gain": 1.5,
   "timing": "observed",
   "run": null,
   "preview": true
@@ -20,6 +24,9 @@
  "boundary_along_scars_km": 1.04,
  "boundary_covered_km": 12.55,
  "crossings_left_out_km": 2.97,
+ "wind_spotting": true,
+ "spotting_breaches_km": 0.0,
+ "spotting_breached": [],
  "barriers": [
   {
    "label": "road 1",

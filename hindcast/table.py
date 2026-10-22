@@ -28,7 +28,7 @@ def cell(values: list, fmt: str) -> str:
 
 def main():
     fire = sys.argv[1]
-    rows = [json.loads(p.read_text()) for p in sorted((HERE / "fires" / fire / "runs").glob("*/result.json"))]
+    rows = [json.loads(p.read_text(encoding='utf-8')) for p in sorted((HERE / "fires" / fire / "runs").glob("*/result.json"))]
     if not rows:
         raise SystemExit(f"{fire}: sem corridas em hindcast/fires/{fire}/runs/")
     groups: dict[str, list] = {}

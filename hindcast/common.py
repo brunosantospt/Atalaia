@@ -34,7 +34,7 @@ def evidence(fire_id: str) -> tuple[dict, list]:
     d = OUT / fire_id
     if not (d / 'evidence.json').exists():
         return {}, []
-    return json.loads((d / 'evidence.json').read_text()), json.loads((d / 'evidence.geojson').read_text())['features']
+    return json.loads((d / 'evidence.json').read_text(encoding='utf-8')), json.loads((d / 'evidence.geojson').read_text(encoding='utf-8'))['features']
 
 
 def official(features: list):

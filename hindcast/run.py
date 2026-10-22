@@ -85,7 +85,7 @@ def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict
     name = "weather.json" if args.weather == "era5" else "weather_cerra.json"
     if not (fire.folder / name).exists():
         raise SystemExit(f"falta web/public/fires/{fire.id}/{name} (scripts/build_weather_cerra.py)")
-    w = json.loads((fire.folder / name).read_text())
+    w = json.loads((fire.folder / name).read_text(encoding="utf-8"))
     hours = np.array([(fires.parse_time(t[:16]) - start).total_seconds() / 60 for t in w["time"]])
     if min(minutes) < hours[0] or max(minutes) > hours[-1]:
         raise SystemExit("a corrida sai da meteo do incêndio (weather.json)")
@@ -127,6 +127,12 @@ def main(argv=None):
     p.add_argument("--canopy-fill", action="store_true",
                    help="inside the burned area, the canopy of each COS class's median outside it (before the fire)")
     p.add_argument("--spotting", action="store_true")
+    p.add_argument("--spot-mean-dist", type=float, default=10.0,
+                   help="mean spotting distance (m) in ELMFIRE (SPOTTING namelist)")
+    p.add_argument("--wind-spotting", action="store_true",
+                   help="scale spotting distance with wind speed when winds exceed threshold")
+    p.add_argument("--spot-wind-threshold", type=float, default=18.0,
+                   help="minimum wind speed (km/h) to scale spotting distance")
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--weather", choices=["era5", "cerra"], default="era5",
                    help="weather.json (ERA5) or weather_cerra.json (CERRA 5.5 km, scripts/build_weather_cerra.py)")
@@ -145,7 +151,7 @@ def main(argv=None):
     step = fire.steps[args.start_step]
     duration = args.duration_min or (fire.steps[-1]["hours"] - step["hours"]) * 60
     start = fires.parse_time(step["time"])
-    legend = json.loads((fire.folder / "fuel.json").read_text())["legend"]
+    legend = json.loads((fire.folder / "fuel.json").read_text(encoding="utf-8"))["legend"]
     idx = fire.read("fuel.u8", "u1")
     layers = fire.layers()
     fuel = (fuels.codes(legend, args.shrub) if args.fuels == "pt" else
@@ -178,10 +184,20 @@ def main(argv=None):
     if args.adj != 1.0:
         base["adj"] = args.adj
     if args.spotting:
-        extra.update(spotting=SPOTTING, seed=args.seed)
+        spot_dict = dict(SPOTTING)
+        mean_dist = args.spot_mean_dist
+        if args.wind_spotting:
+            w_file = "weather.json" if args.weather == "era5" else "weather_cerra.json"
+            w_data = json.loads((fire.folder / w_file).read_text(encoding="utf-8"))
+            max_wind = max(w_data.get("windKmh", [args.spot_wind_threshold])) * args.wind_mult
+            if max_wind > args.spot_wind_threshold:
+                mean_dist = args.spot_mean_dist * (1.0 + 0.05 * (max_wind - args.spot_wind_threshold))
+        spot_dict["MEAN_SPOTTING_DIST_MIN"] = float(mean_dist)
+        spot_dict["MEAN_SPOTTING_DIST_MAX"] = float(mean_dist)
+        extra.update(spotting=spot_dict, seed=args.seed)
 
     # barriers and stretches exactly as the API (api/runs.py)
-    lines = json.loads(args.barriers.read_text())["barriers"] if args.barriers else []
+    lines = json.loads(args.barriers.read_text(encoding="utf-8"))["barriers"] if args.barriers else []
     late = [b for b in lines if b.get("from_min", 0) >= duration]
     lines = [b for b in lines if b.get("from_min", 0) < duration]   # the API refuses lines that hold after the end
     if late:
