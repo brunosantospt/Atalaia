@@ -4,8 +4,8 @@ import { cleanLonLat, type LonLat } from './geo'
 import type { Grid } from './grid'
 import type { Suppression } from './suppression'
 import { deploymentBoundary, type DeploymentSelection, type StationRing } from './stationRings'
+import { originColor } from './unitIdentity'
 
-const COLORS = ['#c3a6f5', '#f19ec2', '#d8d2a8'] // lilac, pink, sand: apart from the wet lines, the routes and the fire
 export const fmtRingKm = (m: number) => `${(m / 1000).toFixed(1).replace('.', ',')} km`
 
 /** Only the selected station's fire-shaped boundary is shown; its explanation stays in the legend. */
@@ -43,7 +43,8 @@ export class StationRingsLayer {
     if (this.key === key && this.arrival === arrival) return
     this.key = key; this.arrival = arrival
     const station = this.rings[stationIndex].station
-    const color = Color.fromCssColorString(COLORS[stationIndex % COLORS.length])
+    const colorCss = originColor(station.id, this.rings.map((r) => r.station))
+    const color = Color.fromCssColorString(colorCss)
     const { paths } = deploymentBoundary(grid, arrival, station, sup, sup.units[selection.unit], selection.dispatchMin, selection.ecin)
     this.source.entities.removeAll()
     for (const path of paths) {
@@ -56,7 +57,7 @@ export class StationRingsLayer {
       } })
     }
     this.hasBoundary = paths.length > 0
-    this.legend.innerHTML = `<input type="checkbox" aria-label="Mostrar contorno de chegada do fogo" ${this.wanted ? 'checked' : ''}/><details ${this.detailsOpen ? 'open' : ''}><summary>Onde o fogo chega primeiro que qualquer resposta</summary><span class="ent"><span class="sw" style="border-color:${COLORS[stationIndex % COLORS.length]}"></span>${esc(station.short)} · ${esc(sup.units[selection.unit].short)} · saída T+${Math.round(selection.dispatchMin)} min</span><p>${paths.length ? 'Dentro do tracejado, a resposta selecionada chega depois do fogo. Escolhe um ponto por fora, antes da frente prevista.' : 'O fogo não chega antes da resposta selecionada na previsão disponível.'} O percurso até ao ponto também é verificado.</p></details>`
+    this.legend.innerHTML = `<input type="checkbox" aria-label="Mostrar contorno de chegada do fogo" ${this.wanted ? 'checked' : ''}/><details ${this.detailsOpen ? 'open' : ''}><summary>Onde o fogo chega primeiro que qualquer resposta</summary><span class="ent"><span class="sw" style="border-color:${colorCss}"></span>${esc(station.short)} · ${esc(sup.units[selection.unit].short)} · saída T+${Math.round(selection.dispatchMin)} min</span><p>${paths.length ? 'Dentro do tracejado, a resposta selecionada chega depois do fogo. Escolhe um ponto por fora, antes da frente prevista.' : 'O fogo não chega antes da resposta selecionada na previsão disponível.'} O percurso até ao ponto também é verificado.</p></details>`
     this.legend.querySelector('details')!.addEventListener('toggle', (e) => {
       this.detailsOpen = (e.target as HTMLDetailsElement).open
       this.viewer.scene.requestRender()

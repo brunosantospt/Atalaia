@@ -9,7 +9,6 @@ import {
   CustomDataSource,
   Ellipsoid,
   EllipsoidalOccluder,
-  HeightReference,
   type Entity,
   SceneTransforms,
   type Viewer,
@@ -45,7 +44,7 @@ interface Marker {
   spec: MarkerSpec
   world: Cartesian3
   ring: Entity | undefined // none when the spec's ringM is 0
-  icon: Entity | undefined
+  icon: HTMLImageElement | undefined
   tag: HTMLElement
   line: SVGLineElement
   dot: SVGCircleElement
@@ -97,6 +96,12 @@ export class MarkerLayer {
       line.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('r', '3')
+      if (spec.color) {
+        tag.querySelector('b')!.style.background = spec.color
+        tag.style.borderColor = spec.color
+        line.style.stroke = spec.color
+        dot.style.fill = spec.color
+      }
       if (spec.kind === 'best') {
         // Green like its line on the ground (reachLayer.ts); hud.css colours the other kinds.
         tag.querySelector('b')!.style.background = BEST_CSS
@@ -105,17 +110,19 @@ export class MarkerLayer {
       }
       this.svg.append(line, dot)
       this.root.append(tag)
+      const icon = spec.persistent ? document.createElement('img') : undefined
+      if (icon) {
+        icon.className = 'landmark-icon'
+        icon.src = landmarkIcon(spec)
+        icon.alt = spec.label
+        icon.hidden = true
+        this.root.append(icon)
+      }
       this.markers.push({
         spec,
         world: Cartesian3.fromDegrees(spec.lon, spec.lat, spec.h + 2),
         ring,
-        icon: spec.persistent ? this.source.entities.add({
-          position: Cartesian3.fromDegrees(spec.lon, spec.lat, spec.h),
-          billboard: {
-            image: landmarkIcon(spec), width: 30, height: 30,
-            heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Infinity,
-          },
-        }) : undefined,
+        icon,
         tag,
         line,
         dot,
@@ -135,10 +142,13 @@ export class MarkerLayer {
     for (const m of this.markers) {
       const on = !!m.spec.persistent || revealed.has(m.spec.id)
       if (m.ring) m.ring.show = on
-      if (m.icon) m.icon.show = on
       let visible = false
-      if (on && occluder.isPointVisible(m.world)) {
-        const p = SceneTransforms.worldToWindowCoordinates(scene, m.world, this.window)
+      const p = on && occluder.isPointVisible(m.world) ? SceneTransforms.worldToWindowCoordinates(scene, m.world, this.window) : undefined
+      if (m.icon) {
+        m.icon.hidden = !p
+        if (p) m.icon.style.transform = `translate(${Math.round(p.x - 15)}px, ${Math.round(p.y - 15)}px)`
+      }
+      if (p) {
         // Points under a HUD panel keep their ring but get no tag: the leader would cross the panel.
         if (p && p.x > safe.left - IN_PX && p.x < safe.right + IN_PX && p.y > safe.top - IN_PX && p.y < safe.bottom + IN_PX) {
           // Change side only once the point is clearly across the centre, so tags do not flicker.
@@ -206,7 +216,7 @@ function measure(tag: HTMLElement): { w: number; h: number } | undefined {
 
 /** A constant-size landmark remains readable even when its longer tag is hidden by a HUD panel. */
 function landmarkIcon(spec: MarkerSpec): string {
-  const color = spec.kind === 'hospital' ? '#6ee7b7' : spec.kind === 'airbase' ? '#7dd3fc' : '#d9dcdf'
+  const color = spec.color ?? (spec.kind === 'hospital' ? '#6ee7b7' : spec.kind === 'airbase' ? '#7dd3fc' : '#d9dcdf')
   const badge = spec.badge.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="17" fill="#0a0c0e" stroke="${color}" stroke-width="2"/><text x="20" y="25" text-anchor="middle" font-family="monospace" font-size="${badge.length > 2 ? 12 : 16}" font-weight="bold" fill="${color}">${badge}</text></svg>`)}`
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#f8fafc" stroke="${color}" stroke-width="3"/><text x="20" y="25" text-anchor="middle" font-family="sans-serif" font-size="${badge.length > 2 ? 12 : 16}" font-weight="bold" fill="#0f172a">${badge}</text></svg>`)}`
 }

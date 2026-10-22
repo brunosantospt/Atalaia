@@ -170,6 +170,13 @@
   gap: 8px;
   align-items: center;
 }
+.hud .editor .unit-id {
+  flex: none;
+  color: var(--origin-color, #f8fafc);
+  font: 750 12px/1.35 system-ui, sans-serif;
+  letter-spacing: 0;
+}
+.hud .editor .assignment { border-left-color: var(--origin-color, var(--amber)); }
 .hud .editor .who b {
   font-size: 12px;
   font-weight: 600;

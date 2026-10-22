@@ -12,6 +12,7 @@ import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLo
 import { freeAreaHa, type Reach } from './reach'
 import { AIR_BASES } from './airBases'
 import { DEFAULT_HOSPITAL } from './reporting'
+import { originColor } from './unitIdentity'
 
 export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
@@ -51,6 +52,7 @@ export interface MarkerSpec extends LonLat {
   detail: string
   ringM: number // 0 for no ring
   persistent?: boolean // operational landmarks stay visible across every shot
+  color?: string // shared origin colour for the base/station and its deployed groups
 }
 
 export interface Story {
@@ -120,17 +122,18 @@ export function buildStory(
       detail: 'em linha reta',
       ringM: 0,
       persistent: true,
+      color: originColor(s.id, stations),
     })
   }
   markers.push({
     id: 'hospital', kind: 'hospital', ...DEFAULT_HOSPITAL.location, h: 0,
-    badge: 'H', label: DEFAULT_HOSPITAL.name, detail: 'Hospital de retaguarda', ringM: 0, persistent: true,
+    badge: 'H', label: DEFAULT_HOSPITAL.name, detail: 'Hospital de retaguarda', ringM: 0, persistent: true, color: '#6ee7b7',
   })
   for (const base of [...AIR_BASES].filter((b) => distanceM(ignition, b) < 50_000)
     .sort((a, b) => distanceM(ignition, a) - distanceM(ignition, b)).slice(0, 3)) {
     markers.push({
       id: `airbase:${base.id}`, kind: 'airbase', lon: base.lon, lat: base.lat, h: 0,
-      badge: 'CMA', label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true,
+      badge: 'CMA', label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true, color: originColor(base.id, stations),
     })
   }
   shots.push({

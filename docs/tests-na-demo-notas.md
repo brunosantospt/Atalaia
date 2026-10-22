@@ -38,7 +38,12 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 - **Onde o fogo chega primeiro que qualquer resposta**: checkbox para mostrar o contorno e dropdown fechado por omissão para a explicação. A expansão mantém-se ao trocar quartel/meio/relógio. Os detalhes identificam a resposta selecionada e explicam a comparação dos tempos.
 - O contorno segue a forma do fogo e a chegada do meio selecionado; a aproximação é verificada em passos de 15 m. Não é um limite radial de colocação.
 - Ícones dos cinco botões centrados, sem compressão: saiu a altura herdada de 26 px; os botões passam a 58 px mínimos para conter ícone e nome.
+- Cada grupo colocado tem um ID estável (`A-01`, `A-02`, `B-01`…), repetido no mapa, lista e tooltip. Remover grupos não renumera os restantes nem reutiliza os seus IDs; o exemplo e a limpeza conservam o contador da decisão.
+- Círculos dos meios têm 36 px, fundo claro, símbolo SVG e aro da origem. A mesma paleta identifica quartéis/bases aéreas, contorno de chegada e linhas de chamada. Grupos no mesmo local abrem-se em leque, ligados à posição real por uma linha da sua cor.
+- Ícones e etiquetas de meios/POI são desenhados como HTML/SVG fora da pós-produção escura do globo. Texto de mapa a 13 px, também nítido no perfil Leve; sem aumentar a resolução ou o custo da renderização do terreno. O picking continua no Cesium, alinhado com os círculos, com o hover agrupado existente.
+- Os helicópteros do exemplo saem agora das bases reais mais próximas, respeitando o stock, em vez da origem genérica `air`. As cores dos seus aros correspondem às bases identificadas no mapa.
 - Quartéis, hospital e três bases aéreas próximas persistem desde o primeiro plano. Há ícones de tamanho fixo no terreno, mesmo quando o HUD esconde um rótulo longo. Não dependem de chegar ao plano de visão geral. A legenda não se sobrepõe às coordenadas da câmara.
+- Não há texto cinzento secundário nos marcadores nem raio branco à volta dos BV. O hospital está em 41°26′31.7″N 8°18′20.0″W.
 - Mantém-se a renderização a pedido, sem redraw contínuo em pausa. Hover agrupado a cada 80 ms, sem picks durante arrasto/zoom/inércia, tooltip reutilizado, relatórios multiagência e respetivo DOM em cache.
 - Dijkstra usa heap e reutiliza rotas; não há procura automática de planos no background.
 
@@ -48,6 +53,7 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 - Testes cobrem previsão ELMFIRE obrigatória (sem fallback de simulação), igualdade das barreiras enviadas/desenhadas, contornos assimétricos, aproximação, ETAs, rotação, água ilimitada, colocação apeada, independência A/B, rotas/cache, hover e relatórios.
 - Verificação de dados: todas as velocidades e rajadas correspondem à metade dos valores anteriores (tolerância de arredondamento 0,05 km/h); direções inalteradas. Cenário e meteorologia regenerados.
 - Firefox/WebGL isolado: perfil antigo de calor migra para satélite; três quartéis e hospital visíveis na abertura, sete ícones persistentes; dropdown expande e mantém-se; cinco ícones centrados; exemplo em A preserva B, rotação funciona e botão ELMFIRE fica disponível; realizador mostra descrições curtas. Sem erros de consola.
+- Verificação posterior em Firefox: IDs mantidos ao mudar o relógio, remover e adicionar grupos; IDs e cores iguais na lista/mapa, incluindo equipas em linhas; stock e origem real das aeronaves; picking no círculo devolve o grupo correto; etiquetas a 13 px mesmo no perfil Leve. Ícones claros e texto verificados visualmente. Sem pedidos de simulação.
 - As corridas de regeneração foram sequenciais, em containers isolados limitados a 2 CPUs e 3 GB. No teste de browser os pedidos de simulação foram bloqueados. Nenhum processo da calibração de outra sessão foi interrompido; ficheiros do motor partilhado mantidos.
 
 ## Limites e integração

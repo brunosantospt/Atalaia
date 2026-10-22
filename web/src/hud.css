@@ -946,11 +946,17 @@
   background: var(--panel);
   border: 1px solid var(--ink-faint);
   opacity: 0;
+  font: 600 13px/1.35 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
   transition: opacity 0.4s;
 }
 .markers .tag.on {
   opacity: 1;
 }
+.markers .landmark-icon { position: absolute; left: 0; top: 0; width: 30px; height: 30px; }
+.markers .landmark-icon[hidden] { display: none; }
 .markers .tag-hospital b { background: #6ee7b7; }
 .markers .tag-airbase b { background: #7dd3fc; }
 .markers .tag b {

@@ -46,6 +46,7 @@ export interface Suppression {
 
 /** One line of a decision: `count` units of a kind, from a station, working a point or a line. */
 export interface Assignment {
+  id?: string // stable deployment group ID, displayed on the map and in the unit list
   unit: UnitId
   count: number
   from: string // station id (data.ts), or anything else for an air base
@@ -61,6 +62,7 @@ export interface Decision {
   points: Record<string, LonLat> // access points
   lines: Record<string, LonLat[]> // containment lines, as drawn by clicks
   assignments: Assignment[]
+  nextAssignmentId?: number // monotonic ID counter; removed groups are never renumbered/reused
 }
 
 export async function loadSuppression(): Promise<Suppression> {

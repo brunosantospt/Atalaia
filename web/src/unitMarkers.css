@@ -1,0 +1,24 @@
+.unit-markers { position: absolute; inset: 0; pointer-events: none; }
+.unit-marker { position: absolute; left: 0; top: 0; pointer-events: none; }
+.unit-marker[hidden] { display: none; }
+.unit-tether { position: absolute; left: 0; top: 0; height: 1.5px; background: var(--origin-color); transform-origin: 0 0; opacity: 0.8; }
+.unit-marker > img { position: absolute; width: 36px; height: 36px; left: -18px; top: -18px; }
+.unit-map-label {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 7px;
+  white-space: nowrap;
+  color: #f8fafc;
+  background: rgba(6, 12, 20, 0.94);
+  border: 1px solid var(--origin-color);
+  border-radius: 4px;
+  font: 600 13px/1.35 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+.unit-map-label b { color: var(--origin-color); font-weight: 800; }

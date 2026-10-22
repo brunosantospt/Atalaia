@@ -2,8 +2,9 @@
 // at the head. A and B are independent manual plans, simulated with ELMFIRE.
 
 import type { Fire, NearStation } from './data'
-import { destination } from './geo'
+import { destination, distanceM } from './geo'
 import type { Decision } from './suppression'
+import { airBasesForUnit } from './airBases'
 
 export function demoDecision(fire: Fire, stations: NearStation[], unlimitedWater = false): Decision {
   const ign = fire.ignition
@@ -14,6 +15,12 @@ export function demoDecision(fire: Fire, stations: NearStation[], unlimitedWater
   // holds from its access point and how fast it grows: with the tanker shuttling water the
   // vehicles stay on the flanks. In unlimited-water mode the tanker protects the point directly.
   const head = destination(ign, axis, 600)
+  let aircraft = 2
+  const air = airBasesForUnit('hebl').sort((a, b) => distanceM(ign, a) - distanceM(ign, b)).flatMap((base) => {
+    const count = Math.min(aircraft, base.units.hebl ?? 0)
+    aircraft -= count
+    return count ? [{ unit: 'hebl' as const, count, from: base.id, target: 'head', task: 'direct' as const }] : []
+  })
   return {
     id: 'A',
     name: 'Ataque direto à cabeça',
@@ -23,7 +30,7 @@ export function demoDecision(fire: Fire, stations: NearStation[], unlimitedWater
       { unit: 'vfci', count: 2, from: near, target: 'head', task: 'direct' },
       { unit: 'crew', count: 2, from: next, target: 'head', task: 'direct' },
       { unit: 'vttu', count: 1, from: near, target: 'head', task: unlimitedWater ? 'protect' : 'shuttle' },
-      { unit: 'hebl', count: 2, from: 'air', target: 'head', task: 'direct' },
+      ...air,
     ],
   }
 }

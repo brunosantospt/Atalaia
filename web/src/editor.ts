@@ -31,6 +31,9 @@ import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Repo
 import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
+import { ensureAssignmentIds, originColor } from './unitIdentity'
+import { unitIconUrl } from './unitIcons'
+import { UnitMarkers, type UnitMarker } from './unitMarkers'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
@@ -112,7 +115,6 @@ const GROUPS = [
   { kind: 'foot', name: 'Equipas apeadas' },
 ] as const
 type Kind = (typeof GROUPS)[number]['kind']
-const UNIT_COLOR: Record<UnitId, string> = { vfci: '#dc2626', crew: '#f59e0b', vttu: '#0284c7', hebl: '#0d9488', avbp: '#4f46e5' }
 const kindOf = (unit: UnitSpec): Kind => (isAerial(unit) ? 'air' : unit.waterL ? 'vehicle' : 'foot')
 const AMBER = Color.fromCssColorString('#f0a33a')
 const INK = Color.fromCssColorString('#d9dcdf')
@@ -183,67 +185,6 @@ const TEMPLATE = `
     <button type="button" data-ref="reset" title="Repõe o exemplo na decisão selecionada">Repor exemplo</button>
   </footer>
 `
-
-const UNIT_CANVASES = new Map<string, HTMLCanvasElement>()
-
-function getUnitTacticalCanvas(unitId: UnitId): HTMLCanvasElement {
-  const cached = UNIT_CANVASES.get(unitId)
-  if (cached) return cached
-
-  const canvas = document.createElement('canvas')
-  canvas.width = 48
-  canvas.height = 48
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-
-  const cx = 24
-  const cy = 24
-  const r = 20
-
-  const config: Record<UnitId, { bg: string; border: string; emoji: string }> = {
-    vfci: { bg: 'rgba(220, 38, 38, 0.95)', border: '#fca5a5', emoji: '🚒' },
-    vttu: { bg: 'rgba(2, 132, 199, 0.95)', border: '#7dd3fc', emoji: '💧' },
-    crew: { bg: 'rgba(217, 119, 6, 0.95)', border: '#fde047', emoji: '🥾' },
-    hebl: { bg: 'rgba(13, 148, 136, 0.95)', border: '#5eead4', emoji: '🚁' },
-    avbp: { bg: 'rgba(79, 70, 229, 0.95)', border: '#c7d2fe', emoji: '✈️' },
-  }
-
-  const { bg, border, emoji } = config[unitId] ?? config.vfci
-
-  // Drop shadow
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
-  ctx.shadowBlur = 4
-  ctx.shadowOffsetY = 1.5
-
-  // Dark outline
-  ctx.beginPath()
-  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
-  ctx.fillStyle = '#0f172a'
-  ctx.fill()
-
-  // Outer border ring
-  ctx.shadowBlur = 0
-  ctx.shadowOffsetY = 0
-  ctx.beginPath()
-  ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  ctx.fillStyle = border
-  ctx.fill()
-
-  // Inner circular badge
-  ctx.beginPath()
-  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
-  ctx.fillStyle = bg
-  ctx.fill()
-
-  // Crisp centered tactical icon
-  ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(emoji, cx, cy + 1)
-
-  UNIT_CANVASES.set(unitId, canvas)
-  return canvas
-}
 
 interface Loaded {
   fireId: string
@@ -328,6 +269,7 @@ export class Editor {
   private hoveredMinute = -1
   private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; value: MultiAgencyDispatch } | undefined
   private readonly tip: HTMLElement
+  private readonly unitMarkers: UnitMarkers
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
   private currentCapacityText = ''
@@ -360,6 +302,7 @@ export class Editor {
     void viewer.dataSources.add(this.routes)
     void viewer.dataSources.add(this.hazards)
     void viewer.dataSources.add(this.agency)
+    this.unitMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
     mapHover(viewer.scene.canvas, viewer.camera, (position) => this.hover(position), () => {
@@ -381,7 +324,7 @@ export class Editor {
       button.setAttribute('aria-pressed', 'false')
       const icon = document.createElement('img')
       icon.alt = ''
-      icon.src = getUnitTacticalCanvas(id as UnitId).toDataURL()
+      icon.src = unitIconUrl(id as UnitId)
       const label = document.createElement('span')
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
@@ -433,13 +376,13 @@ export class Editor {
     this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
     this.refs.clear.addEventListener('click', () => {
       const d = this.decisions[this.active]
-      this.decisions[this.active] = { ...empty(d.id), name: d.name }
+      this.decisions[this.active] = { ...empty(d.id), name: d.name, nextAssignmentId: d.nextAssignmentId }
       this.commit()
     })
     this.refs.reset.addEventListener('click', () => {
       if (!this.loaded) return
-      const id = this.decisions[this.active].id
-      this.decisions[this.active] = { ...clone(this.loaded.example), id, name: `Decisão ${id}` }
+      const { id, nextAssignmentId } = this.decisions[this.active]
+      this.decisions[this.active] = { ...clone(this.loaded.example), id, name: `Decisão ${id}`, nextAssignmentId }
       for (const a of this.decisions[this.active].assignments) a.dispatchMin = this.dispatchMinute()
       this.commit()
     })
@@ -990,7 +933,7 @@ export class Editor {
         <span class="icon">${ICON_PROTECAO_CIVIL}</span>
         <span class="title" style="color:#60a5fa;">MEIO NO TERRENO · SIOPS</span>
       </div>
-      <div class="tooltip-road">${spec.short} (${a.count > 1 ? `${a.count} veículos` : spec.name})</div>
+      <div class="tooltip-road">${a.id ?? ''} · ${spec.short} (${a.count > 1 ? `${a.count} ${isCrew ? 'equipas' : isAerialUnit ? 'aeronaves' : 'veículos'}` : spec.name})</div>
       <div class="tooltip-status">
         <span class="status-badge" style="background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.5);">
           Tarefa: ${taskLabel.toUpperCase()}
@@ -1216,6 +1159,7 @@ export class Editor {
 
   /** Update the edited plan without changing the other decision. */
   private commit() {
+    ensureAssignmentIds(this.decisions[this.active])
     const late = this.newlyLate()
     this.render()
     if (late >= 0) this.warnLate(late)
@@ -1435,6 +1379,7 @@ export class Editor {
 
   /** "Meios no terreno", by kind of means: aerial, ground vehicles, crews on foot. */
   private renderList(d: Decision) {
+    ensureAssignmentIds(d)
     this.hideTip()
     const late = this.late(d)
     this.lateShown = { id: d.id, keys: new Set(d.assignments.filter((_, k) => late[k] !== undefined).map(lateKey)) }
@@ -1457,6 +1402,8 @@ export class Editor {
   private row(a: Assignment, k: number, lateMin?: number): HTMLElement {
     const li = document.createElement('li')
     li.className = 'assignment'
+    li.dataset.unitId = a.id
+    li.style.setProperty('--origin-color', originColor(a.from, this.loaded?.stations ?? []))
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
@@ -1484,10 +1431,11 @@ export class Editor {
     }
 
     li.innerHTML = `
-      <div class="who"><b></b><span class="n"></span><span class="task"></span>
+      <div class="who"><span class="unit-id"></span><b></b><span class="n"></span><span class="task"></span>
         <div class="ctl"><button type="button" class="info" aria-label="O que faz">i</button><button type="button" class="x" title="Retirar">×</button></div>
       </div>
       <div class="meta"><span class="from"></span>${routeBadge}${lateMin === undefined ? '' : '<span class="late-badge">chega tarde</span>'}<em></em></div>`
+    li.querySelector('.unit-id')!.textContent = a.id ?? ''
     li.querySelector('b')!.textContent = unit.short
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
@@ -1712,6 +1660,7 @@ export class Editor {
     entities.removeAll()
     this.routes.entities.removeAll()
     const d = this.decisions[this.active]
+    ensureAssignmentIds(d)
     const { context, scenario, stations } = this.loaded ?? {}
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
 
@@ -1770,75 +1719,62 @@ export class Editor {
       if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
     }
 
-    // 3. Points of attack: the units' badge; aircraft over a point also show the front their drops slow
-    // (a dashed ring in their colour: it slows the fire for a while, it is not a barrier).
+    // One circle per assignment, with the same stable ID and origin colour as its list row.
+    const deployed: UnitMarker[] = []
+    const siteKey = (p: LonLat) => `${p.lon.toFixed(6)}|${p.lat.toFixed(6)}`
+    const atSite = new Map<string, number>()
+    const drawnAtSite = new Map<string, number>()
+    for (const a of d.assignments) {
+      const p = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (p) atSite.set(siteKey(p), (atSite.get(siteKey(p)) ?? 0) + 1)
+    }
+    const addUnitMarkers = (units: Assignment[], at: LonLat, suffix = '') => {
+      units.forEach((a) => {
+        const color = originColor(a.from, stations ?? [])
+        const key = siteKey(at)
+        const index = drawnAtSite.get(key) ?? 0
+        drawnAtSite.set(key, index + 1)
+        const row = Math.floor(index / 3)
+        const columns = Math.min((atSite.get(key) ?? 1) - row * 3, 3)
+        const offsetX = ((index % 3) - (columns - 1) / 2) * 160
+        const offsetY = row * 74
+        const spec = this.sup.units[a.unit]
+        deployed.push({ ...at, id: a.id!, unit: a.unit, color, offsetX, offsetY,
+          label: `${spec.short}${a.count > 1 ? ` ×${a.count}` : ''}${suffix}` })
+        // Keep Cesium's pick target under the HTML icon so the existing hover tooltip works.
+        const entity = entities.add({
+          position: Cartesian3.fromDegrees(at.lon, at.lat),
+          billboard: {
+            image: unitIconUrl(a.unit, color), width: 36, height: 36,
+            pixelOffset: new Cartesian2(offsetX, offsetY),
+            verticalOrigin: VerticalOrigin.CENTER,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Infinity,
+          },
+        })
+        ;(entity as any)._unitInfo = unitInfo(a, at, [a])
+      })
+    }
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
-      if (!units.length) continue
-      const mainUnit = units[0]
+      addUnitMarkers(units, p)
       for (const a of units) {
         const spec = this.sup.units[a.unit]
         if (!isAerial(spec)) continue
         const r = aerialFrontM(spec, a.count, this.sup.dispatch.waterPointKm) / 2
         if (r <= 0) continue
         const ring = Array.from({ length: 49 }, (_, k) => destination(p, (k * 360) / 48, r))
-        this.polyline(ring, Color.fromCssColorString(UNIT_COLOR[a.unit]), true)
+        this.polyline(ring, Color.fromCssColorString(originColor(a.from, stations ?? [])), true)
       }
-      const pointEntity = entities.add({
-        position: Cartesian3.fromDegrees(p.lon, p.lat),
-        billboard: {
-          image: getUnitTacticalCanvas(mainUnit.unit),
-          width: 22,
-          height: 22,
-          verticalOrigin: VerticalOrigin.CENTER,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Infinity,
-        },
-        label: {
-          text: units.map((a) => `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''}`).join(' '),
-          font: 'bold 10px ui-monospace, Menlo, monospace',
-          fillColor: INK,
-          outlineColor: Color.BLACK,
-          outlineWidth: 3,
-          style: 2, // FILL_AND_OUTLINE
-          pixelOffset: new Cartesian2(0, 16),
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Infinity,
-        },
-      })
-      ;(pointEntity as any)._unitInfo = unitInfo(mainUnit, p, units)
     }
-
-    // 4. Drawn lines of this plan; crew pieces are the barriers above.
+    // Drawn lines of this plan; crew pieces are the barriers above.
     for (const [id, line] of Object.entries(d.lines)) {
-      const a = d.assignments.find((x) => x.target === id)
-      if (!a) continue
-      const drops = a.task === 'drops'
-      if (drops) this.polyline(line, INK, true)
-      const lineEntity = entities.add({
-        position: Cartesian3.fromDegrees(line[0].lon, line[0].lat),
-        billboard: {
-          image: getUnitTacticalCanvas(a.unit),
-          width: 20,
-          height: 20,
-          verticalOrigin: VerticalOrigin.CENTER,
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Infinity,
-        },
-        label: {
-          text: `${this.sup.units[a.unit].short}${a.count > 1 ? `×${a.count}` : ''} (${Math.round(lineLengthM(line))} m)`,
-          font: 'bold 10px ui-monospace, Menlo, monospace',
-          fillColor: drops ? INK : WET,
-          outlineColor: Color.BLACK,
-          outlineWidth: 3,
-          style: 2,
-          pixelOffset: new Cartesian2(0, 16),
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Infinity,
-        },
-      })
-      ;(lineEntity as any)._unitInfo = unitInfo(a, line[0], [a])
+      const units = d.assignments.filter((a) => a.target === id)
+      if (!units.length || !line.length) continue
+      if (units.some((a) => a.task === 'drops')) this.polyline(line, INK, true)
+      addUnitMarkers(units, line[0], ` · ${Math.round(lineLengthM(line))} m`)
     }
+    this.unitMarkers.set(deployed)
 
     // 5. Line being drawn
     if (this.drawing.length) {
@@ -2096,7 +2032,7 @@ export class Editor {
 
 const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' : 'Decisão B', points: {}, lines: {}, assignments: [] })
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
-const lateKey = (a: Assignment) => `${a.unit}|${a.from}|${a.target}|${a.task}`
+const lateKey = (a: Assignment) => a.id ?? `${a.unit}|${a.from}|${a.target}|${a.task}`
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
   while (existing[`${prefix}${n}`]) n++
