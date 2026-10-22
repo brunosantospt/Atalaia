@@ -117,3 +117,9 @@ class Fire:
         wind_from = np.interp(minutes, hours, np.unwrap(np.radians(w['windFromDeg'])))
         direction = np.degrees(wind_from) % 360
         return [{'wind_kmh': round(float(s), 2), 'wind_from_deg': round(float(d), 1)} for s, d in zip(speed, direction)]
+
+    def series(self, start: datetime, minutes: list[float], name: str) -> list[float]:
+        """A column of weather.json (tempC, rhPct, ...) at each of `minutes` after `start`, linear between the hours."""
+        w = json.loads((self.folder / 'weather.json').read_text())
+        hours = np.array([(parse_time(t) - start).total_seconds() / 60 for t in w['time']])
+        return [float(v) for v in np.interp(minutes, hours, w[name])]

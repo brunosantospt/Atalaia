@@ -9,6 +9,6 @@ eng=$(cd "$here/../../engines/elmfire" && pwd)
 
 exec docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
   -v "$eng/adapter.py:/engine/atalaia_adapter.py:ro" \
-  -v "$eng/vendor/elmfire/build/source/fuel_models.csv:/engine/fuel_models_default.csv:ro" \
+  -v "${ELMFIRE_FUEL_TABLE:-$eng/vendor/elmfire/build/source/fuel_models.csv}:/engine/fuel_models_default.csv:ro" \
   -v "$here/adapter.py:/engine/adapter.py:ro" \
   "$ELMFIRE_IMAGE" python3 /engine/adapter.py

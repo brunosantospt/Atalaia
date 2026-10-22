@@ -10,8 +10,8 @@
    "file": "elevation.f32",
    "type": "float32",
    "unit": "m",
-   "min": 72.5,
-   "max": 887.1,
+   "min": 47.5,
+   "max": 887.2,
    "notes": "altitude do MDT, reamostrada bilinearmente para a célula"
   },
   "slope_deg": {
