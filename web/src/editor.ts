@@ -1250,8 +1250,8 @@ export class Editor {
     }
     const weather = loaded.scenario.demo && this.minutes < (loaded.fire.windShift?.minutes ?? Infinity)
       ? loaded.scenario.forecastWeather ?? loaded.scenario.weather : loaded.scenario.weather
-    const scenario = { ...loaded.scenario, weather, durationMin: Math.min(loaded.scenario.durationMin, ILS_HORIZON_MIN), fwiSeries: computeFWISeries(weather) }
-    const request: IlsRequest = { scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), budgetMs: ILS_BUDGET_MS, seed: 1 }
+    const scenario = { ...loaded.scenario, weather, windShiftMin: this.minutes >= (loaded.fire.windShift?.minutes ?? Infinity) ? loaded.scenario.windShiftMin : undefined, durationMin: Math.min(loaded.scenario.durationMin, ILS_HORIZON_MIN), fwiSeries: computeFWISeries(weather) }
+    const request: IlsRequest = { scenario, ground: groundOf(loaded.context), a: clone(this.decisions[0]), replanMin: loaded.scenario.demo ? this.minutes : undefined, budgetMs: ILS_BUDGET_MS, seed: 1 }
     worker.postMessage(request)
     this.renderIls()
   }
@@ -1292,7 +1292,7 @@ export class Editor {
       note.textContent = !this.loaded?.context
         ? 'Sem dados OSM para procurar uma proposta.'
         : !forecastReady ? 'Simule o modelo rápido antes de pedir uma proposta B.'
-        : canMove ? 'Opcional: procura B com os meios de A. O botão substitui B; editar não inicia a procura.'
+        : canMove ? 'Propõe novas colocações a partir da hora selecionada, mantendo o passado e os recursos. Substitui B.'
         : 'Adicione meios a A para poder pedir uma proposta B.'
       return
     }
@@ -1365,6 +1365,7 @@ export class Editor {
       const now = c.lineB ? `a ${TASK_NAME[c.taskB!]} ${c.lineB}` : TASK_NAME[c.taskB!]
       where = `${was} para ${now}${road}`
     } else if (c.a && c.b) where = `${fmtNumber(distanceM(c.a, c.b))} m para ${compass(bearingDeg(c.a, c.b))}${road}`
+    if(c.orderedMin!==undefined&&c.arrivalMin!==undefined&&this.loaded) where += ` · ordem ${fmtTime(wallClock(this.loaded.fire.start,c.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded.fire.start,c.arrivalMin/60))}`
     li.querySelector('em')!.textContent = where
     return li
   }

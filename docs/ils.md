@@ -261,3 +261,34 @@ Estes valores batem com `web/scripts/ils-reference.json`. A Penha tem ~90 000 ac
   - a maior parte aparece na construção, nos primeiros 0,5 s (A 871,9 → 172,7 ha);
   - a pesquisa local e a perturbação afinam no fim (→ 149,6 ha aos 8 s, → 138,4 ha aos 8,3 s).
 - **Cada plano custa ~5 ms** (`simulate()` + lugares + ha), por isso cabem ~2000–2400 planos em 10 s.
+
+
+## Demo timeline replanning
+
+In the demo, **Propor B** passes the selected timeline minute to the optimizer.
+The relocation search in `web/src/optimizeRelocations.ts` keeps A's initial
+placements, issued orders, unit counts, tasks and resource history. It proposes
+at most one new destination per available unit, starting at its actual position
+at that minute (including an in-progress journey). If a unit is redirected, its
+unissued future relocation orders are replaced; otherwise its complete schedule
+is retained. Units not yet ordered, not yet departed, or out of autonomy are not
+redirected. Empty tankers are not deployed again.
+
+Vehicle routes follow the supplied OSM network; foot crews and aircraft can use
+terrain destinations. ETAs use the saved route length and travel speed, without
+another base turnout delay. Ground routes are sampled against the fire at each
+passage time, and checked again against the candidate simulation after protection
+has been withdrawn. Candidates without a valid route are rejected.
+
+A fresh free run supplies resource contact under the same wind phase as
+**Simular**. Every candidate replays the whole preserved history through the same
+demo model, so relocating does not reset water or autonomy or change prior
+burning. Candidates may pair an attack unit with a tanker. The search retains A
+unless a candidate improves the places/area score; it does not promise a global
+optimum. Up to twelve nearby candidates per unit are visited round-robin in two
+passes, within the existing worker time budget. This is a bounded relocation
+search, not optimization of a multi-step future schedule.
+
+The non-demo initial-deployment ILS path remains unchanged.
+Run `npm --prefix web run relocation-optimizer:check` for chronology, resource,
+wind, road-route, score, and future-order regressions.

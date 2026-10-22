@@ -9,6 +9,7 @@ export interface IlsRequest {
   scenario: Scenario
   ground: Ground
   a: Decision
+  replanMin?: number
   budgetMs: number
   seed: number
 }
@@ -19,8 +20,8 @@ const post = (reply: IlsReply) => self.postMessage(reply)
 
 self.onmessage = ({ data }: MessageEvent<IlsRequest>) => {
   try {
-    const { scenario, ground, a, budgetMs, seed } = data
-    const result = optimize(scenario, ground, a, { budgetMs, seed, onProgress: (progress) => post({ type: 'progress', progress }) })
+    const { scenario, ground, a, budgetMs, seed, replanMin } = data
+    const result = optimize(scenario, ground, a, { budgetMs, seed, replanMin, onProgress: (progress) => post({ type: 'progress', progress }) })
     post({ type: 'done', result })
   } catch (e) {
     post({ type: 'error', message: e instanceof Error ? e.message : String(e) })

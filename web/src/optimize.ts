@@ -19,6 +19,7 @@
 //   roads around the places the fire reaches (the protection of values the article leaves for
 //   future work).
 
+import { optimizeRelocations } from './optimizeRelocations'
 import { findAirBase } from './airBases'
 import { arrivesInTime } from './deployment'
 import { freeArrival, simulate, type Run, type Scenario } from './fastModel'
@@ -30,12 +31,14 @@ import { arrivalMin, isAerial, isRoadVehicle, type Assignment, type Decision, ty
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
 export interface Ground {
+  roads?: Context['osm']['roads']
   access: LonLat[]
   places: LonLat[]
   placeCells: Int32Array[]
 }
 
 export const groundOf = (context: Context): Ground => ({
+  roads: context.osm.roads,
   access: context.access.map(({ lon, lat }) => ({ lon, lat })),
   places: context.osm.places.map(({ lon, lat }) => ({ lon, lat })),
   placeCells: context.placeCells,
@@ -67,6 +70,7 @@ export interface Result {
 }
 
 export interface Options {
+  replanMin?: number // preserve issued orders and optimize one new relocation per demo unit
   budgetMs?: number
   maxPlans?: number // and at most this many distinct plans: the same B on any machine (scripts/ils-check.ts)
   seed?: number
@@ -143,6 +147,7 @@ export function better(a: Score, b: Score): boolean {
 const named = (a: Decision): Decision => ({ ...(JSON.parse(JSON.stringify(a)) as Decision), id: 'B', name: ILS_NAME })
 
 export function optimize(scenario: Scenario, ground: Ground, a: Decision, options: Options = {}): Result {
+  if (scenario.demo && options.replanMin !== undefined) return optimizeRelocations(scenario,ground,a,options)
   const t0 = performance.now()
   const budget = options.budgetMs ?? 10_000
   const maxPlans = options.maxPlans ?? Infinity
@@ -712,11 +717,30 @@ export interface Change {
   a?: LonLat // where it works in A, for units at a point
   b?: LonLat // and in B
   line?: string // the line, for line crews and drops
+  orderedMin?: number // new relocation order in a timeline proposal
+  arrivalMin?: number
   taskB?: Task // retasked: what it does in B
   lineB?: string // and on which line
 }
 
 export function diffDecisions(a: Decision, b: Decision): Change[] {
+  // Timeline proposals retain physical identity and original targets. Compare orders before
+  // using the old destination-matching logic, which would call every relocation "unchanged".
+  if (a.assignments.length === b.assignments.length &&
+      b.assignments.some((x,i) => JSON.stringify(x.placements??[])!==JSON.stringify(a.assignments[i].placements??[])) &&
+      JSON.stringify(a.points)===JSON.stringify(b.points) && JSON.stringify(a.lines)===JSON.stringify(b.lines) &&
+      a.assignments.every((x,i) => {
+        const y=b.assignments[i]
+        return x.unit===y.unit && x.from===y.from && x.target===y.target && x.count===y.count && x.task===y.task
+      })) return a.assignments.map((x,i) => {
+        const y=b.assignments[i],last=y.placements?.at(-1)
+        const moved=JSON.stringify(x.placements??[])!==JSON.stringify(y.placements??[])
+        return {kind:moved?'moved':'same',unit:x.unit,from:x.from,task:x.task,count:x.count,
+          a:moved?last?.path?.[0]??x.placements?.at(-1)?.point??a.points[x.target]:a.points[x.target],
+          b:last?.point??b.points[y.target],orderedMin:moved?last?.orderedMin:undefined,
+          arrivalMin:moved?last?.arrivalMin:undefined}
+      })
+
   interface One {
     kind: string // unit and station
     unit: UnitId
