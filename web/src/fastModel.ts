@@ -20,6 +20,7 @@ import { arrivals, barriers, stripCells, type Barrier } from './wetLine'
  * the ~20 km/h wind of Vieira do Minho 2016 runs near the 875 m/h PT-FireSprd measured.
  */
 const FUEL: Record<number, [number, number]> = {
+  91: [0.8, 0.4], // Tecido edificado / Interface urbano-florestal (casas e jardins vulneraveis se desprotegidos)
   101: [1.5, 0.1],
   102: [2.5, 0.25],
   121: [1.8, 0.35],
@@ -243,15 +244,20 @@ function stepFactors(scenario: Scenario, fwiSeries: FWIHourly[], m: number, out:
   } else {
     head = (1 + params.windGain * kmh) * Math.exp((-params.rhGain * (rh - params.rhRef)) / 100)
   }
-  const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-0.03 * kmh), 2.155)
-  const e = Math.sqrt(1 - 1 / (lb * lb))
+  const lb = Math.max(1.15, 1.0 + 0.10 * kmh)
+  const back = head / (lb * lb)
+  const a = (head + back) / 2
+  const b = (head + back) / (2 * lb)
+  const c = a - back
   const to = fromDeg + 180
-  const back = (head * (1 - e)) / (1 + e)
-  const flank = (head + back) / (2 * lb)
   for (let k = 0; k < K; k++) {
-    const cos = Math.cos(((BEARING[k] - to) * Math.PI) / 180)
-    const dirRate = (head * (1 - e)) / (1 - e * cos)
-    out[at + k] = Math.max(flank * (1 + 0.4 * cos), dirRate)
+    const theta = (BEARING[k] - to) * Math.PI / 180
+    const cosT = Math.cos(theta)
+    const sinT = Math.sin(theta)
+    const A = cosT * cosT + (lb * lb) * sinT * sinT
+    const B = c * cosT
+    const C = b * b
+    out[at + k] = Math.max(0.05, (B + Math.sqrt(B * B + A * C)) / A)
   }
 }
 

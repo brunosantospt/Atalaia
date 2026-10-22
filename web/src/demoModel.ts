@@ -9,6 +9,7 @@ import { isAerial, type Decision } from './suppression'
 import { demoLines } from './demoLines'
 import { stripCells, arrivals } from './wetLine'
 const FUEL: Record<number, [number, number]> = {
+  91: [0.8, 0.4], // Tecido edificado / Interface urbano-florestal (casas e jardins vulneraveis se desprotegidos)
   101: [1.5, 0.1],
   102: [2.5, 0.25],
   121: [1.8, 0.35],
@@ -57,14 +58,20 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   for (let m = 0; m < minuteCount; m++) {
     const { kmh, fromDeg } = weatherAt(scenario, m)
     const head = Math.max(.05, fwiAt(series, scenario.startIndex, m).isi / 11.2 * 4.6)
-    const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-.03 * kmh), 2.155)
-    const e = Math.sqrt(1 - 1 / (lb * lb))
-    const back = head * (1 - e) / (1 + e)
-    const flank = (head + back) / (2 * lb)
+    const lb = Math.max(1.15, 1.0 + 0.10 * kmh)
+    const back = head / (lb * lb)
+    const a = (head + back) / 2
+    const b = (head + back) / (2 * lb)
+    const c = a - back
+    const toDeg = fromDeg + 180
     for (let k = 0; k < K; k++) {
-      const cos = Math.cos((BEARING[k] - fromDeg - 180) * Math.PI / 180)
-      const dirRate = head * (1 - e) / (1 - e * cos)
-      wind[m * K + k] = Math.max(flank * (1 + 0.4 * cos), dirRate)
+      const theta = (BEARING[k] - toDeg) * Math.PI / 180
+      const cosT = Math.cos(theta)
+      const sinT = Math.sin(theta)
+      const A = cosT * cosT + (lb * lb) * sinT * sinT
+      const B = c * cosT
+      const C = b * b
+      wind[m * K + k] = Math.max(0.05, (B + Math.sqrt(B * B + A * C)) / A)
     }
   }
   const cosUp = new Float32Array(360*K)
