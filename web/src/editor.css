@@ -614,3 +614,11 @@
 /* Keep the arrival clock and countdown readable below the origin on narrow drawers. */
 .hud .editor li.assignment .meta { flex-wrap: wrap; }
 .hud .editor li.assignment .meta em[data-eta] { flex-basis: 100%; }
+
+.hud .editor .wetline-rotation { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 10px; }
+.hud .editor .wetline-rotation label { display: flex; flex: 1; align-items: center; gap: 8px; white-space: nowrap; }
+.hud .editor .wetline-rotation input { flex: 1; min-width: 70px; margin: 0; accent-color: #7dd3fc; }
+.hud .editor .wetline-rotation output { min-width: 30px; text-align: right; color: #7dd3fc; }
+.hud .editor .wetline-rotation button { width: auto; padding: 3px 6px; font: inherit; }
+
+.hud .editor .line-actions[hidden] { display: none; }

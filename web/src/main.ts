@@ -49,7 +49,8 @@ import { createViewer, setQuality } from './scene'
 import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
-import { computeRings, radiiOf, stationsInPlay, StationRingsLayer } from './stationRings'
+import { computeRings, stationsInPlay } from './stationRings'
+import { StationRingsLayer } from './stationRingsLayer'
 import { containmentProbability, loadSuppression, type Decision } from './suppression'
 
 // Monte da Penha, Guimarães (617 m): the reference point for the whole twin.
@@ -347,7 +348,6 @@ async function main() {
     const reach = computeReach(grid, free, fire, near, suppression, detection)
     const ringList = computeRings(grid, free.arrival, fire0.ignition, near, suppression, detection)
     scenario.fireArrival = free.arrival
-    scenario.rings = radiiOf(ringList)
     console.info(`rings: ${ringList.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} min ${Math.round(r.radiusM)} m`).join(' · ')}`)
     console.info(
       `free run (${source}): ${(performance.now() - t0).toFixed(0)} ms · ${describeEnd(fireEnd(grid, free), fire.start, free.durationMin)} · ` +
@@ -529,7 +529,6 @@ async function main() {
     // Recompute where approaching units meet this forecast, from the incident time when replanning.
     const list = computeRings(replay.scenario.grid, free.arrival, replay.data.ignition, replay.stations, suppression, detection, replay.phase === 'post' ? Math.max(detection.droneMin, replay.data.windShift?.minutes ?? 0) : detection.droneMin)
     replay.scenario.fireArrival = free.arrival
-    replay.scenario.rings = radiiOf(list)
     replay.rings.set(list)
   }
 
@@ -724,7 +723,8 @@ async function main() {
     fire.set(freeOn || splitOn ? { step: -1, fade: 1, untimed: false } : frame.fire)
     free.show(freeOn)
     free.set(frame.hours)
-    replay.rings.setEligible(editor.open || DIRECTOR_KINDS.has(frame.shot.kind))
+    replay.rings.setEligible(editor.open)
+    replay.rings.update(replay.scenario.grid, replay.freeNow.arrival, suppression, editor.deploymentSelection)
     split?.show(splitOn)
     split?.set(frame.hours)
     // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.

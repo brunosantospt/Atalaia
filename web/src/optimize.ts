@@ -25,7 +25,7 @@ import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat }
 import { cellHa, cellOf, lonLatAt, type Grid } from './grid'
 import type { Context } from './osm'
 import { arrivals, wetLines, stripCells } from './wetLine'
-import { beyondRing, approachIntercept } from './stationRings'
+import { approachIntercept } from './stationRings'
 import { arrivalMin, isAerial, type Assignment, type Decision, type Suppression, type Task, type UnitId } from './suppression'
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
@@ -123,6 +123,7 @@ interface Unit {
   home: number // where A has it: a spot, or line l as -2 - l
   eta: Float32Array // minutes from the call to each spot, the station's crew out as volunteers
   dispatchMin: number // absolute T+ of this assignment
+  wetLineBearingDeg?: number // keep the user's wet-line axis when moving units
   etaIgnition: number
 }
 
@@ -200,7 +201,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const task = onLine ? 'direct' : x.task
     const lines = task !== 'shuttle' && kinds.some((k) => can && k.has(can)) ? can : undefined
     for (let c = 0; c < x.count; c++)
-      seeds.push({ unit: x.unit, from: x.from, task, onLine: lines, slot, ecin, aerial, water: !aerial && !!spec.waterL, home, dispatchMin, etaIgnition })
+      seeds.push({ unit: x.unit, from: x.from, task, onLine: lines, slot, ecin, aerial, water: !aerial && !!spec.waterL, home, dispatchMin, wetLineBearingDeg: x.wetLineBearingDeg, etaIgnition })
   })
   const n = seeds.length
   const aRun = simulate(scenario, a)
@@ -252,7 +253,6 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const p = spots[s]
     if (s === u.home) return true
     if (u.aerial ? !p.air : !p.road) return false
-    if (!u.aerial && !beyondRing(scenario.rings, scenario.ignition, u.from, p)) return false // inside its station's interception boundary
     return arrivesInTime(at(free, s), u.dispatchMin + u.eta[s], ecin ? ecinGain : 0, u.aerial) && safeApproach(u, p, ecin)
   }
   const isOpen = units.map((_, k) => Uint8Array.from(spots, (_, s) => (open(k, s) ? 1 : 0)))
@@ -327,7 +327,6 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     if (u.home === -2 - l && v === 0) return true
     const line = shapeAt(l, v)
     if (!line || !u.onLine || !(kinds[l].has(u.onLine) || u.home === -2 - l)) return false
-    if (!u.aerial && !line.every((p) => beyondRing(scenario.rings, scenario.ignition, u.from, p))) return false // every vertex outside the interception boundary
     const cell = cellOf(grid, line[0])
     return arrivesInTime(cell < 0 ? Infinity : free[cell], u.dispatchMin + etaLine(k, l, v), ecin ? ecinGain : 0, u.aerial) && safeApproach(u, line[0], ecin)
   }
@@ -372,13 +371,13 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
       const u = units[k]
       if (s >= 0 && !names.has(s)) names.set(s, spots[s].id ?? freshIds[fresh++])
       const task = s >= 0 ? u.task : u.onLine!
-      const key = `${s}|${u.unit}|${u.from}|${task}|${u.dispatchMin}`
+      const key = `${s}|${u.unit}|${u.from}|${task}|${u.dispatchMin}|${u.wetLineBearingDeg ?? "auto"}`
       const g = groups.get(key)
       if (g) {
         g.x.count++
         g.members.push(k)
         g.slot = Math.min(g.slot, u.slot)
-      } else groups.set(key, { x: { unit: u.unit, count: 1, from: u.from, target: s >= 0 ? names.get(s)! : lineIds[-2 - s], task, dispatchMin: u.dispatchMin }, slot: u.slot, members: [k], s })
+      } else groups.set(key, { x: { unit: u.unit, count: 1, from: u.from, target: s >= 0 ? names.get(s)! : lineIds[-2 - s], task, dispatchMin: u.dispatchMin, wetLineBearingDeg: u.wetLineBearingDeg }, slot: u.slot, members: [k], s })
     }
     const placed = [...groups.values()].sort((p, q) => p.slot - q.slot || q.x.count - p.x.count || p.s - q.s)
     const order = [...fixed.map((f) => ({ ...f, members: [] as number[] })), ...placed].sort((p, q) => p.slot - q.slot)

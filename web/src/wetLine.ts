@@ -69,6 +69,13 @@ export function wetLineLengthM(scenario: Scenario, decision: Decision, a: Assign
   return unit.reachM ? Math.min(length, 2 * unit.reachM) : length
 }
 
+/** Axis of the line itself: 0° north/south, 90° east/west. Auto is across the fire's spread. */
+export function wetLineBearing(scenario: Scenario, free: Float32Array, p: LonLat, a: Assignment): number {
+  const bearing = a.wetLineBearingDeg !== undefined && Number.isFinite(a.wetLineBearingDeg)
+    ? a.wetLineBearingDeg : spreadAt(scenario, free, p) + 90
+  return ((bearing % 180) + 180) % 180
+}
+
 /** The barriers of a decision, with what laid each one: the input an engine runs the decision with.
  *  `free` is the free run's arrival (fastModel.freeArrival), for the local direction of spread. */
 export function wetLines(scenario: Scenario, decision: Decision, free: Float32Array): WetLine[] {
@@ -92,7 +99,8 @@ export function wetLines(scenario: Scenario, decision: Decision, free: Float32Ar
     const lengthM = p ? wetLineLengthM(scenario, decision, a) : 0
     if (!p || lengthM <= 0 || !unit.wetLineWidthM) return
     const spreadDeg = spreadAt(scenario, free, p)
-    const ends = [destination(p, spreadDeg + 90, lengthM / 2), destination(p, spreadDeg - 90, lengthM / 2)]
+    const bearing = wetLineBearing(scenario, free, p, a)
+    const ends = [destination(p, bearing, lengthM / 2), destination(p, bearing + 180, lengthM / 2)]
     push({
       barrier: { path: ends.map((q) => [q.lon, q.lat]), width_m: unit.wetLineWidthM, from_min: eta[slot] },
       slot,
@@ -140,29 +148,28 @@ function growLines(
   const { grid, suppression: sup, durationMin } = scenario
   const shuttled = new Set(decision.assignments.filter((a) => a.task === 'shuttle').map((a) => a.target))
   interface Grower { slot: number; a: Assignment; rate: number; stop: number } // rate: m/h laid in all, stop: minute it stops
-  const groups = new Map<string, { growers: Grower[]; fronts: Front[]; seen: Set<number> }>()
-  const longest = new Map<string, number>() // the first line of a point that reaches furthest
+  const groups = new Map<string, { point: LonLat; bearing: number; longestM: number; growers: Grower[]; fronts: Front[]; seen: Set<number> }>() // the first line of a point that reaches furthest
   decision.assignments.forEach((a, slot) => {
     const unit = sup.units[a.unit]
     if (isAerial(unit) || (a.task !== 'direct' && a.task !== 'protect') || !decision.points[a.target]) return
-    longest.set(a.target, Math.max(longest.get(a.target) ?? 0, wetLineLengthM(scenario, decision, a)))
     if (!unit.followsEdge || !unit.wetLineWidthM || !(eta[slot] < durationMin)) return
     const p = decision.points[a.target]
     const cell = cellOfXY(grid, toPTTM06(p).x, toPTTM06(p).y)
     const inside = cell.col >= 0 && cell.row >= 0 && cell.col < grid.cols && cell.row < grid.rows
     const rate = inside ? attackMPerH(unit, grid.fuelClass[cell.row * grid.cols + cell.col]) * a.count * dutyCycle(unit, shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm) : 0
     if (!(rate > 0)) return
-    const g = groups.get(a.target) ?? { growers: [], fronts: [], seen: new Set<number>() }
+    const bearing = wetLineBearing(scenario, free, p, a)
+    const key = `${a.target}|${bearing}`
+    const g = groups.get(key) ?? { point: p, bearing, longestM: 0, growers: [], fronts: [], seen: new Set<number>() }
+    g.longestM = Math.max(g.longestM, wetLineLengthM(scenario, decision, a))
     g.growers.push({ slot, a, rate, stop: eta[slot] + (unit.maxWorkH ?? 12) * 60 })
-    groups.set(a.target, g)
+    groups.set(key, g)
   })
   if (!groups.size) return
-  for (const [target, g] of groups) {
-    const p = decision.points[target]
-    const spread = spreadAt(scenario, free, p)
+  for (const g of groups.values()) {
     for (const sign of [1, -1]) {
-      const brg = spread + 90 * sign
-      const end = destination(p, brg, (longest.get(target) ?? 0) / 2)
+      const brg = g.bearing + (sign === 1 ? 0 : 180)
+      const end = destination(g.point, brg, g.longestM / 2)
       const { x, y } = toPTTM06(end)
       const { col, row } = cellOfXY(grid, x, y)
       if (col < 0 || row < 0 || col >= grid.cols || row >= grid.rows) continue

@@ -44,3 +44,8 @@ body[data-error]::after {
 .ring-legend input { margin: 0 6px 0 0; vertical-align: middle; }
 .ring-legend .ent { display: block; }
 .ring-legend .sw { display: inline-block; width: 14px; height: 0; border-top: 2px dashed; margin-right: 6px; vertical-align: middle; }
+
+/* The selected station's guidance stays readable away from map labels and the editor. */
+.ring-legend { left: auto; right: 26px; top: auto; bottom: 190px; max-width: min(38vw, 340px); font-size: 11px; padding: 10px 12px; cursor: default; }
+.ring-legend label { display: block; cursor: pointer; }
+.ring-legend p { margin: 6px 0 0; line-height: 1.5; color: #b7bdc3; }

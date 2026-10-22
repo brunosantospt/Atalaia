@@ -52,6 +52,7 @@ export interface Assignment {
   target: string // id in Decision.points (direct, protect, shuttle) or Decision.lines (line, drops)
   task: Task
   dispatchMin?: number // T+ when ordered out; omitted in older examples
+  wetLineBearingDeg?: number // line axis clockwise from north, 0..179; omitted = across spread
 }
 
 export interface Decision {

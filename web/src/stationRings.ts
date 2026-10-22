@@ -1,12 +1,10 @@
-// Each station's ring marks where its first vehicle meets the spreading fire on its approach
-// to the ignition. It is an inner interception boundary, not a maximum deployment distance.
+// Deployment timing: approach interception and fire-shaped arrival boundaries for the selected station.
 
-import { Cartesian3, Cartesian2, Color, CustomDataSource, HeightReference, LabelStyle, PolylineDashMaterialProperty, type Viewer } from 'cesium'
 import type { NearStation, Station } from './data'
 import type { Detection } from './detection'
-import { cleanLonLat, destination, distanceM, lerpLonLat, type LonLat } from './geo'
-import { cellOf, type Grid } from './grid'
-import { arrivalMin, isAerial, type Decision, type Suppression, type UnitId, type UnitSpec } from './suppression'
+import { distanceM, lerpLonLat, type LonLat } from './geo'
+import { cellOf, lonLatAt, type Grid } from './grid'
+import { arrivalMin, type Suppression, type UnitId, type UnitSpec } from './suppression'
 
 /** How many stations are available for now, anywhere means come from; the rest of the map keeps its stations but none is used. */
 export const STATIONS_IN_PLAY = 3
@@ -77,105 +75,59 @@ export function computeRings(
   })
 }
 
-/** Interception radius by station id; retained in the worker's scenario too. */
-export const radiiOf = (rings: StationRing[]): Record<string, number> => Object.fromEntries(rings.map((r) => [r.station.id, r.radiusM]))
-
-/** Outside the interception boundary: farther out has no maximum deployment distance. */
-export function beyondRing(rings: Record<string, number> | undefined, ignition: LonLat, from: string, p: LonLat): boolean {
-  const r = rings?.[from]
-  return r === undefined || r === 0 || distanceM(ignition, p) > r
+/** Where the fire arrives before this station's selected means, comparing times at EACH cell.
+ *  This follows the fire's shape rather than extending a single approach radius in all directions. */
+export function deploymentBoundary(
+  grid: Grid, arrival: Float32Array, station: NearStation, sup: Suppression,
+  unit: UnitSpec, dispatchMin: number, ecin = true,
+): { blocked: Uint8Array; paths: LonLat[][] } {
+  const blocked = new Uint8Array(grid.cols * grid.rows)
+  const cells: number[] = []
+  for (let i = 0; i < arrival.length; i++) {
+    if (!Number.isFinite(arrival[i])) continue
+    const p = lonLatAt(grid, i % grid.cols + .5, Math.floor(i / grid.cols) + .5)
+    const eta = dispatchMin + arrivalMin(sup, unit, distanceM(station, p) / 1000, ecin)
+    if (arrival[i] <= eta) { blocked[i] = 1; cells.push(i) }
+  }
+  const stride = grid.cols + 1
+  const edges = new Map<number, number[]>()
+  const edge = (from: number, to: number) => edges.set(from, [...(edges.get(from) ?? []), to])
+  for (const i of cells) {
+    const x = i % grid.cols, y = Math.floor(i / grid.cols)
+    const a = y * stride + x, b = a + 1, c = b + stride, d = a + stride
+    if (y === 0 || !blocked[i - grid.cols]) edge(a, b)
+    if (x === grid.cols - 1 || !blocked[i + 1]) edge(b, c)
+    if (y === grid.rows - 1 || !blocked[i + grid.cols]) edge(c, d)
+    if (x === 0 || !blocked[i - 1]) edge(d, a)
+  }
+  const direction = (a: number, b: number) => b - a === 1 ? 0 : b - a === stride ? 1 : b - a === -1 ? 2 : 3
+  const paths: LonLat[][] = []
+  while (edges.size) {
+    const first = edges.keys().next().value!
+    const vertices = [first]
+    let at = first, heading = 0
+    do {
+      const next = edges.get(at)
+      if (!next?.length) break
+      // At diagonally touching cells keep each outline on its own side (right turn first).
+      const turn = (to: number) => [1, 0, 3, 2].indexOf((direction(at, to) - heading + 4) % 4)
+      next.sort((a, b) => turn(a) - turn(b))
+      const to = next.shift()!
+      if (!next.length) edges.delete(at)
+      heading = direction(at, to)
+      vertices.push(to)
+      at = to
+    } while (at !== first)
+    if (at !== first || vertices.length < 5) continue
+    const corners = vertices.filter((v, i) => i === 0 || i === vertices.length - 1 || direction(vertices[i - 1], v) !== direction(v, vertices[i + 1]))
+    paths.push(corners.map((v) => lonLatAt(grid, v % stride, Math.floor(v / stride))))
+  }
+  return { blocked, paths }
 }
 
-/** Whether a ground assignment puts any point inside its station's interception boundary. */
-export function blockedByRing(rings: Record<string, number> | undefined, ignition: LonLat, sup: Suppression, d: Decision, unit: UnitId, from: string, target: string): boolean {
-  if (isAerial(sup.units[unit])) return false
-  const where = d.points[target] ? [d.points[target]] : (d.lines[target] ?? [])
-  return where.some((p) => !beyondRing(rings, ignition, from, p))
+export interface DeploymentSelection {
+  from: string
+  unit: UnitId
+  dispatchMin: number
+  ecin: boolean
 }
-
-const COLORS = ['#c3a6f5', '#f19ec2', '#d8d2a8'] // lilac, pink, sand: apart from the wet lines, the routes and the fire
-export const fmtRingKm = (m: number) => `${(m / 1000).toFixed(1).replace('.', ',')} km`
-
-/** Interception boundaries, labelled with the meeting time and distance from the ignition. */
-export class StationRingsLayer {
-  private readonly source = new CustomDataSource('station-rings')
-  private readonly legend: HTMLElement
-  private wanted = true // the legend's checkbox
-  private eligible = false // the drawer or a decision shot
-  private rings: StationRing[] = []
-
-  constructor(
-    private readonly viewer: Viewer,
-    private readonly ignition: LonLat,
-    overlay: HTMLElement,
-  ) {
-    viewer.dataSources.add(this.source)
-    this.legend = document.createElement('label')
-    this.legend.className = 'ring-legend'
-    this.legend.hidden = true
-    overlay.appendChild(this.legend)
-  }
-
-  /** Draws these rings in place of the previous ones. */
-  set(rings: StationRing[]) {
-    this.rings = rings
-    this.source.entities.removeAll()
-    const parts: string[] = []
-    rings.forEach((r, k) => {
-      const color = Color.fromCssColorString(COLORS[k % COLORS.length])
-      const path = cleanLonLat(Array.from({ length: 97 }, (_, i) => destination(this.ignition, (i * 360) / 96, r.radiusM)), true)
-      if (path.length) {
-        const closed = [...path, path[0]]
-        this.source.entities.add({
-          polyline: {
-            positions: Cartesian3.fromDegreesArray(closed.flatMap((p) => [p.lon, p.lat])),
-            clampToGround: true,
-            width: 1.5,
-            material: new PolylineDashMaterialProperty({ color: color.withAlpha(0.9), dashLength: 14 }),
-          },
-        })
-        const at = destination(this.ignition, 30 + 120 * k, r.radiusM) // the three labels a third of a turn apart
-        this.source.entities.add({
-          position: Cartesian3.fromDegrees(at.lon, at.lat),
-          label: {
-            text: `${r.station.short} · fogo/meios T+${Math.round(r.arriveMin)} min · encontro a ${fmtRingKm(r.radiusM)}`,
-            font: '11px ui-monospace, Menlo, monospace',
-            fillColor: color,
-            outlineColor: Color.BLACK,
-            outlineWidth: 3,
-            style: LabelStyle.FILL_AND_OUTLINE,
-            pixelOffset: new Cartesian2(0, -10),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          },
-        })
-      }
-      parts.push(`<span class="sw" style="border-color:${COLORS[k % COLORS.length]}"></span>${esc(r.station.short)} ${fmtRingKm(r.radiusM)}`)
-    })
-    this.legend.innerHTML = `<input type="checkbox" ${this.wanted ? 'checked' : ''} /><b>Encontro fogo/meios · colocar por fora</b>${parts.map((p) => `<span class="ent">${p}</span>`).join('')}`
-    this.legend.querySelector('input')!.addEventListener('change', (e) => {
-      this.wanted = (e.target as HTMLInputElement).checked
-      this.apply()
-    })
-    this.apply()
-  }
-
-  /** Whether the drawer is open or a decision shot is on: the rings and their legend are there only then. */
-  setEligible(on: boolean) {
-    if (on === this.eligible) return
-    this.eligible = on
-    this.apply()
-  }
-
-  private apply() {
-    this.source.show = this.eligible && this.wanted
-    this.legend.hidden = !this.eligible || !this.rings.length
-  }
-
-  destroy() {
-    this.viewer.dataSources.remove(this.source, true)
-    this.legend.remove()
-  }
-}
-
-const esc = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;')

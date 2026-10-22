@@ -29,7 +29,7 @@ import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, lateAt, SAFETY_MIN, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
-import { fmtRingKm, beyondRing, blockedByRing, approachIntercept } from './stationRings'
+import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
@@ -54,7 +54,7 @@ import {
   ICON_SHIELD,
   ICON_BOLT,
 } from './icons'
-import { arrivals, stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
+import { wetLineBearing, arrivals, stripCells, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
   aerialFrontM,
   dropCycleMin,
@@ -708,14 +708,14 @@ export class Editor {
 
   /** A decision within what the stations have (stored before the limit, or an example near a small
    *  station): counts are cut to the stock in order, and an assignment left with none goes. */
-  private fit(d: Decision, scenario: Scenario, stations: NearStation[]): Decision {
+  private fit(d: Decision, _scenario: Scenario, stations: NearStation[]): Decision {
     const used = new Map<string, number>()
     const assignments: Assignment[] = []
     const dropped = new Set<string>()
     for (const a of d.assignments) {
-      // Only the stations in play, and each one's means outside its interception boundary (aircraft are exempt).
+      // Only the stations in play, and ground means from those stations (aircraft are exempt).
       const ground = !isAerial(this.sup.units[a.unit])
-      if (ground && (!stations.some((s) => s.id === a.from) || blockedByRing(scenario.rings, scenario.ignition, this.sup, d, a.unit, a.from, a.target))) {
+      if (ground && !stations.some((s) => s.id === a.from)) {
         dropped.add(a.target)
         continue
       }
@@ -1014,12 +1014,20 @@ export class Editor {
     }
   }
 
+  /** The map guidance follows the selected station, means and current planning clock. */
+  get deploymentSelection(): DeploymentSelection | undefined {
+    if (!this.loaded || isAerial(this.sup.units[this.unit])) return undefined
+    const from = this.from(this.loaded.stations)
+    return { from, unit: this.unit, dispatchMin: this.dispatchMinute(),
+      ecin: !this.decisions[this.active].assignments.some((a) => a.from === from && !isAerial(this.sup.units[a.unit])) }
+  }
+
   /** New orders leave at the current fire clock, never before detection. */
   private dispatchMinute(): number {
     return Math.max(this.loaded?.scenario.dispatchMin ?? 0, this.minutes)
   }
 
-  /** Ground units deploy outside the interception ring and must beat the fire along their approach. */
+  /** Ground units must beat the fire along their approach; no circular radius bans a destination. */
   private checkRing(p: LonLat): boolean {
     if (!this.loaded) return true
     const { scenario, stations } = this.loaded
@@ -1030,10 +1038,8 @@ export class Editor {
     const meeting = station && scenario.fireArrival
       ? approachIntercept(scenario.grid, scenario.fireArrival, station, p, this.sup, this.sup.units[this.unit], this.dispatchMinute(), ecin)
       : undefined
-    if (beyondRing(scenario.rings, scenario.ignition, from, p) && !meeting) return true
-    const text = meeting
-      ? `O fogo interceta os meios de ${station?.short ?? from} no percurso (T+${Math.round(meeting.arriveMin)} min). Escolhe um ponto antes desse encontro.`
-      : `Dentro da zona de encontro de ${station?.short ?? from}: coloca os meios por fora do anel (${fmtRingKm(scenario.rings?.[from] ?? 0)} da ignição).`
+    if (!meeting) return true
+    const text = `O fogo interceta os meios de ${station?.short ?? from} no percurso (T+${Math.round(meeting.arriveMin)} min). Escolhe um acesso antes da frente prevista.`
     if (this.dangerTimer !== undefined) window.clearTimeout(this.dangerTimer)
     this.refs.hint.classList.add('danger')
     this.refs.hint.textContent = text
@@ -1227,7 +1233,8 @@ export class Editor {
 
   /** Per assignment of d, the minute the free run gets to it when its units are not there in time, as B's are judged. */
   private late(d: Decision): (number | undefined)[] {
-    return this.runs && this.loaded ? lateAt(this.loaded.scenario, this.runs.free.arrival, d) : []
+    const free = this.runs?.free ?? this.free
+    return free && this.loaded ? lateAt(this.loaded.scenario, free.arrival, d) : []
   }
 
   /** The first assignment of the active decision late that was not shown late, or -1. */
@@ -1702,6 +1709,35 @@ export class Editor {
     info.addEventListener('mouseleave', () => this.hideTip())
     info.addEventListener('blur', () => this.hideTip())
     x.addEventListener('click', () => this.remove(k))
+    if (isGround && target && d.points[a.target] && unit.wetLineWidthM && (a.task === 'direct' || a.task === 'protect') && this.loaded) {
+      const rotation = document.createElement('div')
+      rotation.className = 'wetline-rotation'
+      const label = document.createElement('label')
+      label.textContent = 'Rodar linha'
+      const slider = document.createElement('input')
+      slider.type = 'range'; slider.min = '0'; slider.max = '179'; slider.step = '1'
+      slider.setAttribute('aria-label', `Orientação da linha molhada de ${unit.short}`)
+      slider.title = '0°: norte–sul · 90°: este–oeste'
+      slider.value = String(Math.round(wetLineBearing(this.loaded.scenario, freeArrival(this.loaded.scenario), target, a)) % 180)
+      const angle = document.createElement('output')
+      angle.textContent = `${slider.value}°`
+      const auto = document.createElement('button')
+      auto.type = 'button'; auto.textContent = 'Auto'
+      auto.title = 'Voltar à orientação transversal à propagação do fogo'
+      auto.disabled = a.wetLineBearingDeg === undefined
+      slider.addEventListener('input', () => {
+        this.stopIls()
+        a.wetLineBearingDeg = Number(slider.value)
+        angle.textContent = `${slider.value}°`; auto.disabled = false
+        this.draw() // Keep this slider alive while dragging; rebuild the row when released.
+        this.actions.changed()
+      })
+      slider.addEventListener('change', () => this.commit())
+      auto.addEventListener('click', () => { delete a.wetLineBearingDeg; this.commit() })
+      label.append(slider)
+      rotation.append(label, angle, auto)
+      li.append(rotation)
+    }
     return li
   }
 

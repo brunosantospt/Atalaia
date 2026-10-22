@@ -4,7 +4,7 @@ Este ramo responde à lista **"Tests na demo"** do Build Week Plan. Traz também
 
 A demo passa a ter **um só incêndio**, simulado na Penha. O fogo corre só no **ELMFIRE**, com um botão. Um **incidente de vento** obriga a realocar os meios.
 
-Verificações de 22 out 2026: `npm run build` (`tsc --noEmit` + Vite), `npm run ils:check`, `api/test.sh` com ELMFIRE real e o teste sintético `engines/elmfire/test.sh`. A API de tarefas da Penha foi verificada até ao resultado e à reutilização da cache: 521,01 ha às 6 h, contra 553,4 ha da referência (−5,85 %, dentro da tolerância de 10 %). **Falta a verificação visual num browser com WebGL** (ver o fim).
+Verificações de 22 out 2026: `npm run build` (`tsc --noEmit` + Vite), `npm run ils:check`, `api/test.sh` com ELMFIRE real e o teste sintético `engines/elmfire/test.sh`. A API de tarefas da Penha foi verificada até ao resultado e à reutilização da cache: 521,01 ha às 6 h, contra 553,4 ha da referência (−5,85 %, dentro da tolerância de 10 %). Verificação em Firefox/WebGL: editor, rotação ao vivo/Auto, seleção do quartel e relógio, procura do B e resultados ELMFIRE de A/B passaram num cenário isolado de 120 min, sem erros na consola. A barreira rodada a 45° chegou à API com eixo de 45,002°. Os restantes passos da história completa continuam na lista de verificação abaixo.
 
 ## Como correr
 
@@ -52,8 +52,8 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
   - O crescimento é limitado pela água, pelos reabastecimentos e por um turno de 12 h.
   - Há no máximo 6 `from_min` por decisão.
 - **Só os 3 quartéis mais próximos:** BV Guimarães, Vizela e Fafe.
-  - Cada um tem um **anel de interceção centrado na ignição**: a distância até ao primeiro encontro entre o fogo e os meios no percurso do quartel para a ignição, comparando o minuto de chegada do fogo com deteção + saída + viagem até cada ponto. Não se soma o alcance de mangueira. Os raios são atualizados com a previsão após o incidente de vento.
-  - **Colocar por fora do anel**: deixou de existir um limite máximo de distância à ignição. Pontos interiores são recusados; o percurso até ao destino também é verificado para não atravessar o fogo. O ILS usa as mesmas regras de interceção.
+  - O mapa mostra apenas o quartel e o tipo de meio selecionados. O **contorno tracejado segue a forma do fogo** e delimita as células onde o fogo chega antes desse meio, contando a hora atual da ordem, a saída e a viagem até cada célula. Mudar o quartel, o meio ou o relógio atualiza o contorno. A explicação fica num cartão, sem rótulos sobrepostos na ignição.
+  - Não há um limite circular de colocação: um ponto seguro num flanco pode ficar à mesma distância da ignição que outro já atingido pela cabeça. A colocação e o ILS verificam os tempos reais da previsão ao longo da aproximação ao destino. O contorno é orientação visual, não uma barreira radial adicional.
 - **Colocação:** um botão por meio, e cada meio coloca-se com um clique no mapa. Saíram "+ colocar meio" e "clicar no mapa".
 - **Rotas:** a azul-escuro.
 - **Início vazio:** os cenários começam sem meios. "Repor exemplo" continua disponível.
@@ -83,10 +83,10 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
   - O relógio é partilhado com o reset (R); confirmar o comportamento visual no browser.
 - **Correção:** o Cesium deixava de renderizar ("normalized result is not a number"). Agora as linhas no chão descartam pontos repetidos (`cleanPath`).
 
-## A verificar no browser
+## Verificação da história completa
 
 1. Na abertura (T+10, T+30, Previsão), o fogo aparece desde T+0.
-2. Colocar meios por fora dos anéis, com chegada antes do fogo no percurso, acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
+2. Escolher quartel e meio atualiza o contorno; colocar num acesso aonde se chega antes do fogo no percurso acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
 3. Às 12:30 aparece "Realocar meios". Não se avança sem simular, e depois o split mostra o resultado com o vento novo.
 4. As wet lines crescem ao longo da frente. As rotas aparecem a azul-escuro.
 5. A luz e as coordenadas ficam na mira.
@@ -109,9 +109,26 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 
 ## Interceção e ETA ao colocar meios
 
-- O anel já não representa onde o fogo estará depois da viagem completa à ignição. Compara a propagação com a viagem parcial até cada ponto da aproximação e marca o primeiro encontro, com resolução de meia célula (15 m).
-- A viagem usa a estimativa do modelo: distância quartel–destino × fator rodoviário / velocidade do meio, mais o tempo de saída. O anel de cada quartel toma como referência o primeiro VFCI; a verificação de colocação usa o meio escolhido e o instante da ordem.
+- As antigas circunferências foram substituídas por contornos célula a célula da zona onde o fogo chega primeiro. A aproximação ao ponto escolhido é verificada em passos de meia célula (15 m).
+- A viagem usa a estimativa do modelo: distância quartel–destino × fator rodoviário / velocidade do meio, mais o tempo de saída. Tanto o contorno como a verificação de colocação usam o meio escolhido e o instante atual da ordem, incluindo se a primeira equipa desse quartel já foi usada.
 - Cada meio colocado guarda `dispatchMin`, o minuto atual da ordem (nunca antes da deteção). A ETA é esse minuto + saída + viagem ao ponto ou ao primeiro vértice da linha. Os meios aéreos usam a base e a velocidade de voo.
 - A lista mostra a hora prevista, T+ e os minutos que faltam; passa a indicar chegada prevista cumprida quando o relógio a alcança. Avançar o relógio não desloca a ETA de meios já colocados.
 - As linhas enviadas ao ELMFIRE e a procura do B usam o mesmo relógio absoluto. O ILS conserva o instante de saída das unidades ao mudar os seus destinos; ordens de momentos diferentes não são agrupadas como se fossem a mesma.
 - `npm run deployment:check` cobre a interceção contra uma solução analítica, colocação por fora/por dentro, destino por trás do fogo, saída mais tarde, meios terrestres/aéreos/linhas e ativação das barreiras. `npm run build` e `npm run ils:check -- --update` passam; B continua melhor que A nas duas referências.
+
+## Orientação da linha molhada
+
+- Em **Meios no terreno**, cada meio terrestre num ponto de ataque/proteção tem **Rodar linha**: o deslizador roda a faixa ao vivo de 0° a 179° (0° norte–sul, 90° este–oeste).
+- **Auto** repõe a orientação transversal à propagação do fogo. O comprimento, a largura, a quantidade de meios e a ETA mantêm-se ao rodar.
+- O ângulo fica no plano (`wetLineBearingDeg`), altera as coordenadas das barreiras enviadas ao ELMFIRE e é conservado na proposta B. A linha que vai crescendo começa nas extremidades rodadas, não nas antigas.
+- A orientação não é só um efeito visual: mudar o ângulo torna o plano pendente de nova simulação.
+- Antes desta alteração foi feito `git pull` e resolvido o merge de `origin/main` em `031b7f6`: perfis de mapa, mapa de calor, qualidade de renderização e avisos de chegada tardia ficaram integrados com o fluxo ELMFIRE.
+
+## Verificação da rotação no browser (22 out)
+
+- Firefox com WebGL carregou o editor real. Foi reposto um exemplo, rodada uma linha para 45°, usado Auto e aplicado novamente o ângulo manual.
+- O cartão de orientação acompanhou o relógio em T+30 e a mudança para BV Vizela.
+- O botão de simulação enviou as barreiras reais à API; o eixo da linha de 45° mediu 45,002° no pedido. A e B devolveram `ELMFIRE 2025.0717` numa corrida isolada de 120 min; o B conservou o ângulo escolhido.
+- O teste detetou e corrigiu uma falha do worker do ILS (`global is not defined`): o desenho Cesium passou para `stationRingsLayer.ts`, separado dos cálculos puros usados pelo worker. A repetição completa terminou sem erros de consola.
+- Build, verificações de geometria/rotação/ETA e regressão ILS passaram. O resultado de Vieira foi A 128,9 ha / B 103,4 ha (dentro da tolerância da referência); Cabeceiras ficou A 477,5 ha / B 158,3 ha.
+- O frontend ficou disponível em `http://127.0.0.1:5173/` e a API ELMFIRE confirmou `ready` em `http://127.0.0.1:5181/api/engines`.
