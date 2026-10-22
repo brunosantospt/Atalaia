@@ -17,8 +17,10 @@ dead fuels, Portuguese fuel models and spotting in ELMFIRE. Writes:
     web/public/fires/<id>/osm.json             through fetch_osm.py (once) and build_osm.py
     web/public/fires/index.json                this fire only: the demo shows one
 
-With no observed spread, the steps the story plays are ELMFIRE's (engines/elmfire in Docker, as
-the API runs it: no canopy, moistures from temperature and humidity) with nobody on the fire.
+With no observed spread, the steps the story plays are ELMFIRE's (scripts/elmfire_pt in Docker: engines/elmfire plus Portuguese fuels, typical canopy and spotting;
+moistures from temperature and humidity less --dry) with nobody on the fire. Only the wind (--wind-mult) is baked into
+weather.json and the dry farmland into fuel.json; the canopy, the PT fuel models, the drier fuels and the spotting live
+only in this reference, so the web's fast model and the API's re-plans run a tamer fire.
 --model fast uses the browser's fast model instead (web/src/fastModel.ts, run by Node through
 scripts/fastmodel/free_run.ts), which spreads this fire some 5x faster in its eucalyptus;
 --compare records the other model's areas in windShift.compare. Steps are hourly through the 6 h decision window, then at 9 and 12 h, and further
@@ -189,7 +191,7 @@ def emc_pct(temp_c, rh):
 
 
 def elmfire_run(weather, start, ignition, g, folder, opts):
-    """ELMFIRE through scripts/elmfire_pt (Docker), no canopy; Portuguese fuel models, spotting; dead 1 h
+    """ELMFIRE through scripts/elmfire_pt (Docker), typical canopy; Portuguese fuel models, spotting; dead 1 h
     moisture from the hourly temperature and humidity less opts.dry points (floor opts.dead_floor), live
     30/70 %. Cached by request in data/hypothetical/."""
     rows, cols = g["rows"], g["cols"]
@@ -399,6 +401,19 @@ def make_layers(folder, g):
     (ROOT / "data/osm" / f"{FIRE_ID}.json").unlink(missing_ok=True)  # the OSM answer is per grid
 
 
+def farmland_legend(folder, code):
+    """Make fuel.json say what the reference burns, so the map, the fast model and the API agree: temporary
+    crops (COS 2.1.1.1) as dry fallow, herbaceous class, the given S&B code (0 leaves the legend as built)."""
+    path = folder / "fuel.json"
+    fuel = json.loads(path.read_text())
+    names = {101: "GR1", 102: "GR2", 121: "GS1", 122: "GS2"}
+    for e in fuel["legend"]:
+        if e["cos"] == "2.1.1.1" and code:
+            e.update({"class": 1, "scottBurgan": code, "scottBurganName": names.get(code, f"S&B {code}"),
+                      "why": "pousio e restolho secos em setembro de seca, não regados: erva seca (afinação sintética do incêndio hipotético, build_hypothetical.py)"})
+    path.write_text(json.dumps(fuel, ensure_ascii=False, indent=2) + "\n")
+
+
 def build(model, compare, opts):
     folder = OUT / FIRE_ID
     folder.mkdir(parents=True, exist_ok=True)
@@ -407,6 +422,7 @@ def build(model, compare, opts):
     g = make_grid(ign, opts.grid_km, (opts.centre_east_km * 1000, opts.centre_north_km * 1000))
     (OUT / "index.json").write_text("[]\n") if not (OUT / "index.json").exists() else None
     make_layers(folder, g)
+    farmland_legend(folder, opts.farmland_fuel)
     rows, cols, cs = g["rows"], g["cols"], g["cellsize"]
     cell_ha = cs * cs / HA
     start = parse(package["start"])
@@ -502,7 +518,7 @@ def build(model, compare, opts):
         "within6h": summary(arrival, WINDOW_MIN),
         "villages": villages,
         "noShift": {"within6h": summary(baseline, WINDOW_MIN), f"areaHa{step_hours[-1]}h": summary(baseline, until)["areaHa"]},
-        "note": f"sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por {opts.wind_mult:g} (já incluído no weather.json) e o das {SHIFT_TO[-5:]} às 21:00 é inventado. Sem a mudança, a cabeça segue para oeste e só atinge {len(base_in6)} lugares em 6 h; com ela, roda para sul e atinge {len(villages_in6)}. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
+        "note": f"sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por {opts.wind_mult:g} (já incluído no weather.json) e o das {SHIFT_TO[-5:]} às 21:00 é inventado. Sem a mudança, a cabeça segue para {compass(head(baseline, g, ign_xy, 0, WINDOW_MIN))} e só atinge {len(base_in6)} lugares em 6 h; com ela, roda para {compass(head_after)} e atinge {len(villages_in6)}. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
         "alert": (
             f"Mudança brusca de vento: de {compass(weather['windFromDeg'][i_from])} a {weather['windKmh'][i_from]:.0f} km/h para "
             f"{compass(weather['windFromDeg'][i_to])} a {weather['windKmh'][i_to]:.0f} km/h. A cabeça do incêndio roda de "

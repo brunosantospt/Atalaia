@@ -666,8 +666,24 @@
       },
       "areaHa24h": 1551.1
     },
-    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 2 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para oeste e só atinge 2 lugares em 6 h; com ela, roda para sul e atinge 11. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
-    "alert": "Mudança brusca de vento: de E a 45 km/h para NNO a 36 km/h. A cabeça do incêndio roda de O para S, em direção a Abação (São Tomé), Infantas e Calvos."
+    "note": "sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por 2 (já incluído no weather.json) e o das 13:00 às 21:00 é inventado. Sem a mudança, a cabeça segue para O e só atinge 2 lugares em 6 h; com ela, roda para S e atinge 11. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
+    "alert": "Mudança brusca de vento: de E a 45 km/h para NNO a 36 km/h. A cabeça do incêndio roda de O para S, em direção a Abação (São Tomé), Infantas e Calvos.",
+    "compare": {
+      "model": "fast",
+      "note": "the same fire and weather in the other model, areas only",
+      "areaHa": {
+        "3h": 226.8,
+        "6h": 1179.6,
+        "12h": 6034.9,
+        "24h": 12314.9
+      },
+      "noShiftAreaHa": {
+        "3h": 185.1,
+        "6h": 684.8,
+        "12h": 1934.5,
+        "24h": 3911.2
+      }
+    }
   },
   "source": {
     "dataset": "Incêndio hipotético na Penha (Guimarães): não aconteceu",
