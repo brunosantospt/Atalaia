@@ -70,8 +70,9 @@ def rule10(fire, start_mask: np.ndarray, to_deg: float, speed_kmh: float) -> np.
     rows, cols = np.indices(start_mask.shape)
     cell = np.stack([rows.ravel(), cols.ravel()], -1).astype(float)
     t = np.full(len(cell), np.inf)
-    for k in range(0, len(edge), 128):
-        v = (cell[:, None, :] - edge[None, k:k + 128, :]) * fire.cellsize
+    chunk = int(np.clip(2e7 // len(cell), 8, 128))          # edge points at a time: ~1 GB at most on a large grid
+    for k in range(0, len(edge), chunk):
+        v = (cell[:, None, :] - edge[None, k:k + chunk, :]) * fire.cellsize
         x, y = v @ u, v @ n
         q = x * c / (a * a)
         tt = (-q + np.sqrt(q * q + A * (x * x / (a * a) + y * y / (b * b)))) / A

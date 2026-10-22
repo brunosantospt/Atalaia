@@ -212,6 +212,10 @@ def main(argv=None):
     p.add_argument("--spotting-dynamic", action="store_true",
                    help="with --spotting: the embers' ignition probability (PIGN) from the run's fine fuel moisture and "
                         "temperature (Schroeder 1969, Rothermel 1983, as BehavePlus), instead of a fixed 55 %%")
+    p.add_argument("--spotting-dist-mult", type=float, default=1.0,
+                   help="with --spotting: the mean spotting distance times this (eucalyptus bark goes far further than "
+                        "ELMFIRE's template, which lands most embers within a few cells)")
+    p.add_argument("--spotting-embers", type=int, default=1, help="with --spotting: embers per spotting event (max)")
     p.add_argument("--wind-mult", type=float, default=1.0)
     p.add_argument("--barriers", type=Path)
     p.add_argument("--wet-lines", type=Path,
@@ -276,6 +280,13 @@ def main(argv=None):
             pign = ignition_probability(weather_at(fire, start, list(np.arange(0, duration + 1, 30)), args), start)
             extra["spotting"] = {**SPOTTING, "PIGN_MIN": pign, "PIGN_MAX": pign}
             notes.append(f"projeções: probabilidade de ignição {pign:.0f} %")
+        if args.spotting_dist_mult != 1.0 or args.spotting_embers != 1:
+            sp = dict(extra["spotting"])
+            for key in ("MEAN_SPOTTING_DIST_MIN", "MEAN_SPOTTING_DIST_MAX"):
+                sp[key] = SPOTTING[key] * args.spotting_dist_mult
+            sp["NEMBERS_MAX_LO"] = sp["NEMBERS_MAX_HI"] = args.spotting_embers
+            extra["spotting"] = sp
+            notes.append(f"projeções: distância ×{args.spotting_dist_mult:g}, até {args.spotting_embers} faúlhas")
 
     # barriers and stretches exactly as the API (api/runs.py)
     lines = json.loads(args.barriers.read_text())["barriers"] if args.barriers else []

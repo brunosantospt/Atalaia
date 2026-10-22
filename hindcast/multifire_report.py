@@ -13,7 +13,12 @@ writes:
      windows within a factor of 2, the growth Sørensen, the head ROS bias; rule10 (10 % of the wind) alongside;
   3. why it fails: the log of the head ROS ratio (run / observed) per window against the conditions (wind, gust,
      temperature, humidity, day or night, slope, fuel, the observed ROS itself): Spearman correlations and the
-     median ratio per bin.
+     median ratio per bin;
+  4. the calibration per fuel class (calibrate.py: fires/adj_all_<cfg>.json) and the ensembles (ensemble.py:
+     hindcast/ensemble*.json), when they exist.
+
+The per-fire step table shows the base configurations only (MAIN); the ensemble members, the calibrated and the
+gust runs are in the summary table.
 """
 
 import json
@@ -26,6 +31,9 @@ from scipy.stats import spearmanr
 
 HERE = Path(__file__).resolve().parent
 FIRES = HERE / "fires"
+FREE = ["K0", "K3", "K3m", "K4", "K5", "K5m", "K3s", "K6", "K6m", "K6d"]
+MAIN = ["K3", "K3m", "K5", "K5m", "K6", "K6d"]
+DRIVERS = ["K3", "K3m", "K5", "K5m", "K6"]
 
 
 def load_free():
@@ -63,11 +71,36 @@ def short(fire):
     return fire.split("_")[0]
 
 
+def fires_table(ids):
+    """The fires: when, how big, how many observed steps, the fuel classes of the final perimeter, the wind."""
+    sys.path.insert(0, str(HERE))
+    from common import fires   # noqa: E402  (api/fires.py through common)
+    out = ["## 0. Os incêndios (PT-FireSprd v2, 2015–2021)", "",
+           "| Incêndio | Início | Passos observados | Horas | Área no último passo (ha) | Combustível ardido (COS): herbáceo · mato · eucalipto · pinhal e folhosas · não combustível | Vento médio (km/h) · rajada máx. |",
+           "|---|---|---|---|---|---|---|"]
+    for fid in ids:
+        f = fires.Fire(fid)
+        legend = json.loads((f.folder / "fuel.json").read_text())["legend"]
+        cls = np.array([entry["class"] for entry in legend])[f.read("fuel.u8", "u1")]
+        last = f.perimeter(len(f.steps) - 1)
+        share = [float((cls[last] == c).mean()) for c in (1, 2, 3, 4, 0)]
+        w = json.loads((f.folder / "weather.json").read_text())
+        hrs = f.steps[-1]["hours"]
+        t0 = fires.parse_time(f.steps[0]["time"])
+        on = [i for i, t in enumerate(w["time"]) if 0 <= (fires.parse_time(t[:16]) - t0).total_seconds() / 3600 <= hrs]
+        w = {k: [w[k][i] for i in on] for k in ("windKmh", "gustKmh") if k in w}
+        out.append(f"| {f.meta['name'] if hasattr(f, 'meta') else short(fid)} | {f.steps[0]['time'][:16].replace('T', ' ')} | {len(f.steps)} | "
+                   f"{hrs:.1f} | {last.sum() * f.cellsize ** 2 / 1e4:.0f} | " + " · ".join(f"{x:.0%}" for x in share) +
+                   f" | {np.mean(w['windKmh']):.0f} · {max(w.get('gustKmh') or [0]):.0f} |")
+    return out + [""]
+
+
 def main():
     lines = ["# O ELMFIRE em nove incêndios", "",
              "Gerado por `hindcast/multifire_report.py` a partir de `multifire_runs.sh` (corridas livres e passo a passo).", ""]
     free = load_free()
-    configs = [c for c in ["K0", "K3", "K3m", "K4", "K3s", "K6", "K6m"] if any(c in r for r in free.values())]
+    lines += fires_table(sorted(free))
+    configs = [c for c in FREE if any(c in r for r in free.values())]
     result = {"free": {}, "steps": {}, "drivers": {}}
 
     # 1. free runs
@@ -105,7 +138,8 @@ def main():
         for c in configs:
             if c in runs and obs:
                 st = runs[c]
-                row.append(f"{st['by_hour'][-1]['run_ha'] / obs:.2f}× · {st.get('outside_official_ha', float('nan')):.0f} ha")
+                out_ha = st.get("outside_official_ha")
+                row.append(f"{st['by_hour'][-1]['run_ha'] / obs:.2f}× · " + ("—" if out_ha is None or out_ha != out_ha else f"{out_ha:.0f} ha"))
             else:
                 row.append("")
         lines.append("| " + " | ".join(row) + " |")
@@ -124,7 +158,8 @@ def main():
             ws = [w for v in by_fire.values() for w in v if "model" in w]
             for f, v in by_fire.items():
                 for w in v:
-                    seen_rule[(f, w["k"])] = w["rule10"]
+                    if "rule10" in w:
+                        seen_rule[(f, w["k"])] = w["rule10"]
             if not ws:
                 continue
             ratio = np.array([w["model"]["ratio"] for w in ws])
@@ -143,7 +178,7 @@ def main():
                          f"{np.median([w['sorensen_growth'] for w in rr]):.2f} | {np.median(ros):.2f} |")
         # per fire
         lines += ["", "Por incêndio (mediana das janelas): área corrida/obs. · Sørensen do crescimento", ""]
-        cfgs = sorted(steps)
+        cfgs = [c for c in MAIN if c in steps]
         lines.append("| Incêndio | Janelas | " + " | ".join(cfgs) + " | regra dos 10 % |")
         lines.append("|---|---|" + "---|" * (len(cfgs) + 1))
         allf = sorted({f for v in steps.values() for f in v})
@@ -151,10 +186,10 @@ def main():
             row = [short(f)]
             nwin = max(len(steps[c].get(f, [])) for c in cfgs)
             row.append(str(nwin))
+            rr = list({w["k"]: w["rule10"] for c in cfgs for w in steps[c].get(f, []) if "rule10" in w}.values())
             for c in cfgs:
                 ws = [w for w in steps[c].get(f, []) if "model" in w]
                 row.append(f"{np.median([w['model']['ratio'] for w in ws]):.2f} · {np.median([w['model']['sorensen_growth'] for w in ws]):.2f}" if ws else "")
-            rr = [seen_rule[(f, w["k"])] for c in cfgs for w in steps[c].get(f, [])][:nwin]
             row.append(f"{np.median([w['ratio'] for w in rr]):.2f} · {np.median([w['sorensen_growth'] for w in rr]):.2f}" if rr else "")
             lines.append("| " + " | ".join(row) + " |")
 
@@ -162,7 +197,7 @@ def main():
         lines += ["", "## 3. Porque falha: o erro do ROS de cabeça contra as condições", "",
                   "log2(ROS corrida / ROS observado) por janela: 0 é certo, −1 é metade, +1 o dobro. Correlação de Spearman "
                   "(ρ) com cada condição, e a mediana do erro por classe. Janelas com crescimento observado de pelo menos 5 ha.", ""]
-        for cfg in [c for c in ("K3", "K6", "K3m", "K6m") if c in steps]:
+        for cfg in [c for c in DRIVERS if c in steps]:
             ws = [(f, w) for f, v in steps[cfg].items() for w in v if "model" in w and w["model"]["growth_obs_ha"] >= 5
                   and w["model"]["ros_obs"] > 0]
             if len(ws) < 8:
@@ -198,6 +233,38 @@ def main():
                              f"| {name} | {rho:+.2f} | {pv:.3f} | |")
             result["drivers"][cfg] = drv
             lines.append("")
+
+    # 4. calibration and ensembles
+    cal = sorted(FIRES.glob("adj_all_*.json"))
+    if cal:
+        lines += ["## 4. Calibração por classe de combustível (deixando um incêndio de fora)", "",
+                  "Fator de ajuste do ROS por classe, ajustado ao erro do ROS de cabeça nas janelas dos outros incêndios "
+                  "(`calibrate.py`). Intervalo = o menor e o maior fator entre as dobras.", "",
+                  "| Sobre | Janelas | Todos os incêndios | Intervalo entre dobras | |ln erro| antes → depois (na amostra) |",
+                  "|---|---|---|---|---|"]
+        for f in cal:
+            d = json.loads(f.read_text())
+            rng = ", ".join(f"{k} {a:.2f}–{b:.2f}" for k, (a, b) in d.get("fold_range", {}).items())
+            lines.append(f"| {d['steps']} | {d['windows']} | {d['adj_class']} | {rng} | "
+                         f"{d.get('residual_ln_before', '')} → {d.get('residual_ln_after', '')} |")
+        lines.append("")
+    ens = sorted(HERE.glob("ensemble*.json"))
+    if ens:
+        lines += ["## 5. Ensembles (probabilidade de arder por janela)", "",
+                  "| Ensemble | Membros | Janelas | Brier: ensemble · melhor membro · regra 10 % | Sørensen P≥0,5 · membro mediano · "
+                  "oráculo · regra 10 % | Cobertura P≥0,5 · envelope | Área observada dentro do leque | Ganha à regra 10 % (Brier · Sørensen) |",
+                  "|---|---|---|---|---|---|---|---|"]
+        for f in ens:
+            sm = json.loads(f.read_text())["summary"]
+            best_member = min(sm["brier_member_medians"].values())
+            lines.append(f"| {f.stem} | {' '.join(sm['members'])} | {sm['windows']} | {sm['brier_ensemble_median']:.3f} · "
+                         f"{best_member:.3f} · {sm.get('brier_rule10_median', float('nan')):.3f} | {sm['sorensen_p50_median']:.2f} · "
+                         f"{sm['sorensen_median_member_median']:.2f} · {sm['sorensen_best_member_median (oracle)']:.2f} · "
+                         f"{sm.get('sorensen_rule10_median', float('nan')):.2f} | {sm['hit_p50_median']:.0%} · {sm['hit_any_median']:.0%} | "
+                         f"{sm['bracket_share']:.0%} | {sm.get('ensemble_beats_rule10_brier_share', float('nan')):.0%} · "
+                         f"{sm.get('ensemble_beats_rule10_sorensen_share', float('nan')):.0%} |")
+            result.setdefault("ensembles", {})[f.stem] = sm
+        lines.append("")
     (HERE / "MULTIFIRE.md").write_text("\n".join(lines) + "\n")
     (HERE / "multifire.json").write_text(json.dumps(result, indent=1, ensure_ascii=False))
     print("\n".join(lines))
