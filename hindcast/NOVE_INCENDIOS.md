@@ -223,7 +223,12 @@ Nas mesmas janelas (passo a passo):
 
 ## Ensemble
 
-Seis membros: K3m e K5m, cada um com o vento × 0,8, × 1 e × 1,25, nos oito incêndios sem Monchique. `ensemble.py` → `hindcast/ensemble.json`, secção 5 do `MULTIFIRE.md`. *(estava a correr na passagem; ver o `HANDOFF.md`)*
+Seis membros: K3m e K5m, cada um com o vento × 0,8, × 1 e × 1,25, nos oito incêndios sem Monchique. `ensemble.py` → `hindcast/ensemble.json`, secção 5 do `MULTIFIRE.md`. São 74 janelas.
+
+- **O "fogo mediano"** (P ≥ 0,5) tem Sørensen 0,17. O membro mediano tem 0,14, e o melhor membro de cada janela, se se soubesse qual, teria 0,20. Ganha à regra dos 10 % em 61 % das janelas.
+- **Mas o leque não contém o observado:** a área observada fica entre o menor e o maior membro em só 16 % das janelas. A área de P ≥ 0,5 é 2,5× a observada.
+- **O Brier do ensemble** (0,56) é pior do que o dos membros K3m (0,51–0,56). Os membros K5m, que queimam de mais, puxam-no para cima.
+- **Conclusão:** um ensemble que só mexe no vento (±25 %) e no combustível não cobre o erro principal, que é a borda que continua a arder. Para dar um leque útil, os membros têm de variar também a borda ativa (focos recentes com raios diferentes, ou setores dominados da ANEPC sim/não) e o ponto de ignição nas primeiras horas. Os membros devem partir do K5 com a borda ativa, não do K5m com a borda toda.
 
 ## Literatura
 

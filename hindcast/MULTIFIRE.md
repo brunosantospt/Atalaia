@@ -76,8 +76,8 @@ Só conta o crescimento entre os dois perímetros. Uma janela acerta "no fator 2
 | K3x | 75 (8 incêndios) | 1.65 | 28% | 0.12 | 0.46 |
 | K5 | 87 (9 incêndios) | 3.89 | 28% | 0.19 | 0.75 |
 | K5a | 75 (8 incêndios) | 1.65 | 40% | 0.18 | 0.60 |
-| K5as | 52 (7 incêndios) | 2.26 | 37% | 0.26 | 0.66 |
-| K5c | 33 (6 incêndios) | 2.83 | 27% | 0.33 | 0.99 |
+| K5as | 75 (8 incêndios) | 2.13 | 35% | 0.17 | 0.40 |
+| K5c | 52 (7 incêndios) | 3.40 | 27% | 0.28 | 0.95 |
 | K5m | 87 (9 incêndios) | 3.08 | 28% | 0.18 | 0.74 |
 | K5m_w08 | 75 (8 incêndios) | 2.58 | 33% | 0.17 | 0.51 |
 | K5m_w125 | 75 (8 incêndios) | 3.16 | 24% | 0.19 | 0.76 |
@@ -114,8 +114,8 @@ Lado a lado: cada referência contra o modelo **nas mesmas janelas** (as que as 
 | K5m | 87 | 0.12 · 0.18 (n=87; 67%) | 0.21 · 0.34 (n=8; 62%) | 0.32 · 0.38 (n=11; 91%) |  |
 | K5o | 75 | 0.32 · 0.41 (n=75; 64%) | 0.35 · 0.40 (n=67; 61%) | 0.56 · 0.41 (n=75; 21%) |  |
 | K5a | 75 | 0.14 · 0.18 (n=75; 61%) | 0.09 · 0.17 (n=67; 63%) | 0.15 · 0.18 (n=75; 64%) |  |
-| K5as | 52 | 0.12 · 0.26 (n=52; 73%) | 0.21 · 0.32 (n=8; 50%) | 0.32 · 0.38 (n=11; 73%) |  |
-| K5c | 33 | 0.12 · 0.33 (n=33; 85%) | 0.21 · 0.33 (n=8; 50%) | 0.32 · 0.38 (n=11; 82%) |  |
+| K5as | 75 | 0.12 · 0.17 (n=75; 60%) | 0.21 · 0.32 (n=8; 50%) | 0.32 · 0.38 (n=11; 73%) |  |
+| K5c | 52 | 0.12 · 0.28 (n=52; 75%) | 0.21 · 0.33 (n=8; 50%) | 0.32 · 0.38 (n=11; 82%) |  |
 | K3x | 75 | 0.12 · 0.12 (n=75; 52%) | 0.21 · 0.29 (n=8; 62%) | 0.32 · 0.33 (n=11; 55%) |  |
 
 ## 3. Porque falha: o erro do ROS de cabeça contra as condições
@@ -232,4 +232,10 @@ Fator de ajuste do ROS por classe, ajustado ao erro do ROS de cabeça nas janela
 |---|---|---|---|---|
 | K3 | 86 | herb=0.88,shrub=1.42,euc=1.30,forest=2.20 | herb 0.74–1.12, shrub 1.00–1.84, euc 1.12–1.51, forest 2.20–2.20 | 1.127 → 0.511 |
 | K5 | 86 | herb=0.71,shrub=1.12,euc=0.66,forest=2.20 | herb 0.59–1.22, shrub 0.71–1.45, euc 0.59–0.90, forest 1.32–2.20 | 0.72 → 0.602 |
+
+## 5. Ensembles (probabilidade de arder por janela)
+
+| Ensemble | Membros | Janelas | Brier: ensemble · melhor membro | Sørensen P≥0,5 · membro mediano · oráculo · regra 10 % | Cobertura P≥0,5 · envelope | Área observada dentro do leque | Ganha à regra 10 % (Sørensen) | Ensemble ganha a todos os membros (Brier) |
+|---|---|---|---|---|---|---|---|---|
+| ensemble | K3m K3m_w08 K3m_w125 K5m K5m_w08 K5m_w125 | 74 | 0.563 · 0.515 | 0.17 · 0.14 · 0.20 · 0.12 | 40% · 48% | 16% | 61% | 31% |
 

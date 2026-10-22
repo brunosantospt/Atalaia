@@ -417,11 +417,11 @@
    }
   },
   "K5as": {
-   "windows": 52,
-   "median_ratio": 2.2555,
-   "within2": 0.36538461538461536,
-   "median_sorensen_growth": 0.258,
-   "median_ros_ratio": 0.6551862636810926,
+   "windows": 75,
+   "median_ratio": 2.128,
+   "within2": 0.3466666666666667,
+   "median_sorensen_growth": 0.172,
+   "median_ros_ratio": 0.40476190476190477,
    "fires": [
     "CabeceirasdeBasto_06092016",
     "CastroMarim_16082021",
@@ -429,11 +429,12 @@
     "Oleiros_25072020",
     "SeverdoVouga_09082016",
     "VieiradoMinho_10082016",
-    "VilaNovadeCerveira_08082015"
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
    ],
    "vs_rule10": {
-    "n": 52,
-    "model_win": 0.7307692307692307
+    "n": 75,
+    "model_win": 0.6
    },
    "vs_ref_persist": {
     "n": 8,
@@ -445,13 +446,14 @@
    }
   },
   "K5c": {
-   "windows": 33,
-   "median_ratio": 2.825,
-   "within2": 0.2727272727272727,
-   "median_sorensen_growth": 0.334,
-   "median_ros_ratio": 0.9861495844875346,
+   "windows": 52,
+   "median_ratio": 3.405,
+   "within2": 0.2692307692307692,
+   "median_sorensen_growth": 0.276,
+   "median_ros_ratio": 0.9530499325236168,
    "fires": [
     "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
     "Guarda_23082017",
     "Oleiros_25072020",
     "SeverdoVouga_09082016",
@@ -459,8 +461,8 @@
     "VilaNovadeCerveira_08082015"
    ],
    "vs_rule10": {
-    "n": 33,
-    "model_win": 0.8484848484848485
+    "n": 52,
+    "model_win": 0.75
    },
    "vs_ref_persist": {
     "n": 8,
@@ -961,6 +963,48 @@
     "rho": 0.5491810952562196,
     "p": 4.0468731362325833e-07
    }
+  }
+ },
+ "ensembles": {
+  "ensemble": {
+   "members": [
+    "K3m",
+    "K3m_w08",
+    "K3m_w125",
+    "K5m",
+    "K5m_w08",
+    "K5m_w125"
+   ],
+   "windows": 74,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "brier_ensemble_median": 0.5626,
+   "brier_member_medians": {
+    "K3m": 0.5274,
+    "K3m_w08": 0.5147,
+    "K3m_w125": 0.5561,
+    "K5m": 0.8366,
+    "K5m_w08": 0.8018,
+    "K5m_w125": 0.8818
+   },
+   "ensemble_beats_every_member_brier_share": 0.311,
+   "sorensen_p50_median": 0.173,
+   "sorensen_median_member_median": 0.141,
+   "sorensen_best_member_median (oracle)": 0.196,
+   "hit_p50_median": 0.402,
+   "hit_any_median": 0.484,
+   "bracket_share": 0.162,
+   "ratio_p50_median": 2.502,
+   "sorensen_rule10_median": 0.121,
+   "ensemble_beats_rule10_sorensen_share": 0.608
   }
  }
 }
