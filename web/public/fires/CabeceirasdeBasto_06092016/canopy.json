@@ -1,0 +1,51 @@
+{
+ "source": "DGT national LiDAR 2024-25, MDS-2m minus MDT-2m (canopy height model), aggregated to the 30 m cells by hindcast/canopy.py",
+ "cells": "um valor por célula, linha a linha a partir da borda norte, little-endian",
+ "layers": {
+  "canopy_cover_pct": {
+   "file": "canopy_cover.u8",
+   "type": "uint8",
+   "unit": "%",
+   "per": 1,
+   "min": 0,
+   "max": 100,
+   "notes": "cobertura das copas: a parte da célula com vegetação de 4 m ou mais"
+  },
+  "canopy_height_m": {
+   "file": "canopy_height.u16",
+   "type": "uint16",
+   "unit": "dm",
+   "per": 10,
+   "min": 0,
+   "max": 600,
+   "notes": "altura das copas: o percentil 90 dessa vegetação"
+  },
+  "canopy_base_m": {
+   "file": "canopy_base.u16",
+   "type": "uint16",
+   "unit": "dm",
+   "per": 10,
+   "min": 0,
+   "max": 210,
+   "notes": "altura da base das copas: estimada, 0,30 (eucalipto) ou 0,35 (as outras) da altura, pelo menos 1,5 m"
+  },
+  "canopy_bulk_kgm3": {
+   "file": "canopy_bulk.u8",
+   "type": "uint8",
+   "unit": "centésimas de kg/m³",
+   "per": 100,
+   "min": 0,
+   "max": 20,
+   "notes": "densidade aparente das copas: estimada, a cobertura vezes 0,08 a 0,20 kg/m³ consoante a espécie"
+  }
+ },
+ "method": {
+  "cover": "share of the cell's 2 m pixels with vegetation >= 4 m",
+  "height": "90th percentile of those pixels",
+  "base": "assumed, not measured: 0.30 (eucalyptus) or 0.35 (others) x height, >= 1.5 m",
+  "bulk": "assumed: cover x 0.20 kg/m3 (pine), 0.15 (eucalyptus, acacia), 0.08 (oak, other broadleaves), 0.12 (others)",
+  "gaps": "cells without LiDAR take their COS class's median; non-burnable cells have no canopy"
+ },
+ "caveat": "today's canopy (2024-25), not the year of the fire: burn scars have regrown since",
+ "notes": "o valor da camada do motor é o do ficheiro a dividir por `per` (canopy_height_m = canopy_height.u16 / 10)"
+}

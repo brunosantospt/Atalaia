@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 import fuels
 from engines import Engine
@@ -33,6 +33,7 @@ SPOTTING = {'ENABLE_SPOTTING': True, 'ENABLE_SURFACE_FIRE_SPOTTING': True, 'USE_
             'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MIN': 0.065, 'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MAX': 0.065,
             'CROWN_FIRE_SPOTTING_PERCENT_MIN': 0.65, 'CROWN_FIRE_SPOTTING_PERCENT_MAX': 0.65,
             'PIGN_MIN': 55.0, 'PIGN_MAX': 55.0}
+CANOPY = ('canopy_cover_pct', 'canopy_height_m', 'canopy_base_m', 'canopy_bulk_kgm3')
 
 
 class ScenarioError(ValueError):
@@ -44,13 +45,46 @@ class Strict(BaseModel):
 
 
 class Moisture(Strict):
-    """Fuel moistures in %, the same over the grid and the run. Provisional until they are estimated
-    from the weather."""
-    dead_1h_pct: float = Field(6, gt=0, le=60)
-    dead_10h_pct: float = Field(8, gt=0, le=60)
-    dead_100h_pct: float = Field(10, gt=0, le=60)
+    """Fuel moistures in %, the same over the grid. The dead ones follow the weather hour by hour
+    (dead_moistures) unless the scenario gives all three, which then hold for the whole run, as the
+    live ones do."""
+    dead_1h_pct: float | None = Field(None, gt=0, le=60)
+    dead_10h_pct: float | None = Field(None, gt=0, le=60)
+    dead_100h_pct: float | None = Field(None, gt=0, le=60)
     live_herb_pct: float = Field(60, ge=30, le=300)
     live_woody_pct: float = Field(90, ge=30, le=300)
+
+    @model_validator(mode='after')
+    def all_dead_or_none(self):
+        given = [m is not None for m in (self.dead_1h_pct, self.dead_10h_pct, self.dead_100h_pct)]
+        if any(given) and not all(given):
+            raise ValueError('as três humidades mortas, ou nenhuma para que sigam a meteo')
+        return self
+
+    def at(self, weather: dict) -> dict:
+        """The moistures at a moment of Fire.weather."""
+        given = self.model_dump()
+        if self.dead_1h_pct is None:
+            given.update(dead_moistures(weather['temp_c'], weather['rh_pct']))
+        return given
+
+
+def emc_pct(temp_c: float, rh_pct: float) -> float:
+    """The equilibrium moisture content of fine dead fuel, %: Simard (1968), as the US NFDRS uses it
+    (the temperature in °F)."""
+    t = temp_c * 9 / 5 + 32
+    if rh_pct < 10:
+        return 0.03229 + 0.281073 * rh_pct - 0.000578 * rh_pct * t
+    if rh_pct < 50:
+        return 2.22749 + 0.160107 * rh_pct - 0.01478 * t
+    return 21.0606 + 0.005565 * rh_pct**2 - 0.00035 * rh_pct * t - 0.483199 * rh_pct
+
+
+def dead_moistures(temp_c: float, rh_pct: float) -> dict:
+    """The dead fuel moistures, %, at a temperature and relative humidity: 1 h at the equilibrium
+    moisture and at least 2 %, 10 h and 100 h 1.5 and 3 points above it (hindcast/README.md)."""
+    m1 = max(2.0, emc_pct(temp_c, rh_pct))
+    return {'dead_1h_pct': round(m1, 1), 'dead_10h_pct': round(m1 + 1.5, 1), 'dead_100h_pct': round(m1 + 3.0, 1)}
 
 
 class WeatherMoisture(Strict):
@@ -192,23 +226,13 @@ def weather_file(scenario: Scenario) -> str:
     return 'weather.json' if scenario.wind_shift else 'weather_noshift.json'
 
 
-def emc_pct(temp_c: float, rh: float) -> float:
-    """Equilibrium moisture of fine dead fuel (%), Simard (1968) as NFDRS uses it (scripts/build_hypothetical.py)."""
-    t = temp_c * 9 / 5 + 32
-    if rh < 10:
-        return 0.03229 + 0.281073 * rh - 0.000578 * rh * t
-    if rh < 50:
-        return 2.22749 + 0.160107 * rh - 0.01478 * t
-    return 21.0606 + 0.005565 * rh**2 - 0.00035 * rh * t - 0.483199 * rh
-
-
-def moisture(scenario: Scenario, fire: Fire, start, minute: float) -> dict:
-    """The fuel moistures of a request's weather entry at `minute` after `start`."""
+def moisture(scenario: Scenario, w: dict) -> dict:
+    """The fuel moistures at a moment of Fire.weather: the fire's own `weather_moisture` (its `engine` block)
+    if the scenario has one, else the scenario's `moisture` (dead ones from the weather unless given)."""
     wm = scenario.weather_moisture
     if wm is None:
-        return scenario.moisture.model_dump()
-    temp, rh = (fire.series(start, [minute], name, weather_file(scenario))[0] for name in ('tempC', 'rhPct'))
-    m1 = max(wm.floor_pct, emc_pct(temp, rh) - wm.dry)
+        return scenario.moisture.at(w)
+    m1 = max(wm.floor_pct, emc_pct(w['temp_c'], w['rh_pct']) - wm.dry)
     return {'dead_1h_pct': round(m1, 1), 'dead_10h_pct': round(m1 + 1.5, 1), 'dead_100h_pct': round(m1 + 3.0, 1),
             'live_herb_pct': wm.live_herb_pct, 'live_woody_pct': wm.live_woody_pct}
 
@@ -223,7 +247,8 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine, progress=None) -> d
     extra = {}
     if scenario.fuels == 'pt':
         legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
-        layers['fuel'] = fuels.codes(legend)[fire.read('fuel.u8', 'u1')]
+        pt = fuels.codes(legend)[fire.read('fuel.u8', 'u1')]
+        layers['fuel'] = np.where(fire.scars() & (pt > 99), np.int16(NONBURNABLE), pt)  # the scars stay out
         extra['fuel_models'] = fuels.elmfire_rows()
     if scenario.canopy:
         legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
@@ -255,13 +280,14 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine, progress=None) -> d
             'duration_min': t1 - t0,
             'ignitions': [{'x': x, 'y': y, 't_min': t - t0} for x, y, t in ignitions if t0 <= t < t1],
             'burned': burned.astype(np.uint8).tolist(),
-            'weather': [{'t_min': t - t0, **w, **moisture(scenario, fire, start, t)} for t, w in zip(times, weather)],
+            'weather': [{'t_min': t - t0, 'wind_kmh': w['wind_kmh'], 'wind_from_deg': w['wind_from_deg'],
+                         **moisture(scenario, w)} for t, w in zip(times, weather)],
             'layers': {
                 'fuel': fuel.tolist(),
                 'elevation_m': np.round(layers['elevation_m'], 1).tolist(),
                 'slope_deg': layers['slope_deg'].tolist(),
                 'aspect_deg': layers['aspect_deg'].tolist(),
-                **{k: layers[k].tolist() for k in fuels.CANOPY if k in layers},
+                **{name: layers[name].tolist() for name in CANOPY if name in layers},
             },
             **extra,
         }

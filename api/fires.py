@@ -16,7 +16,9 @@ FIRES = ROOT / 'web/public/fires'
 GRID_KEYS = ('cols', 'rows', 'cellsize', 'xmin', 'ymin', 'srs')
 # Everything a run reads from the folder, so a change to any of them changes the cache key.
 FILES = ('fire.json', 'grid.json', 'progression.geojson', 'weather.json', 'fuel.json', 'fuel.u8',
-         'elevation.f32', 'slope.u8', 'aspect.u16')
+         'elevation.f32', 'slope.u8', 'aspect.u16', 'scars.geojson', 'canopy_cover.u8', 'canopy_height.u16',
+         'canopy_base.u16', 'canopy_bulk.u8')
+OPTIONAL_FILES = FILES[9:]
 TIME = '%Y-%m-%dT%H:%M'  # local time, as in fire.json and weather.json
 NONBURNABLE = 91  # Scott & Burgan NB1
 
@@ -49,7 +51,9 @@ class Fire:
         self.to_grid = Transformer.from_crs('EPSG:4326', grid['srs'], always_xy=True)
 
     def file_hashes(self) -> dict:
-        names = [*FILES, *(['weather_noshift.json'] if self.has_noshift else [])]
+        # scars and LiDAR canopy are optional: a fire without them (the hypothetical one) has the plain layers
+        names = [n for n in FILES if n not in OPTIONAL_FILES or (self.folder / n).exists()]
+        names += ['weather_noshift.json'] if self.has_noshift else []
         return {name: hashlib.sha256((self.folder / name).read_bytes()).hexdigest() for name in names}
 
     def read(self, name: str, dtype: str) -> np.ndarray:
@@ -57,15 +61,41 @@ class Fire:
         return np.fromfile(self.folder / name, dtype=dtype).reshape(self.rows, self.cols)
 
     def layers(self) -> dict:
-        """The engines' layers: the Scott & Burgan code of each cell's fuel, and the relief."""
+        """The engines' layers: the Scott & Burgan code of each cell's fuel, non-burnable in the scars,
+        the relief, and the canopy from the LiDAR (canopy.json) where the fire has one."""
         legend = json.loads((self.folder / 'fuel.json').read_text())['legend']
         codes = np.array([entry['scottBurgan'] for entry in legend], dtype=np.int16)
-        return {
-            'fuel': codes[self.read('fuel.u8', 'u1')],
+        fuel = codes[self.read('fuel.u8', 'u1')]
+        layers = {
+            'fuel': np.where(self.scars() & (fuel > 99), np.int16(NONBURNABLE), fuel),
             'elevation_m': self.read('elevation.f32', '<f4'),
             'slope_deg': self.read('slope.u8', 'u1'),
             'aspect_deg': self.read('aspect.u16', '<u2'),
         }
+        if self.has_canopy():
+            layers |= {
+                'canopy_cover_pct': self.read('canopy_cover.u8', 'u1'),
+                'canopy_height_m': self.read('canopy_height.u16', '<u2') / 10,
+                'canopy_base_m': self.read('canopy_base.u16', '<u2') / 10,
+                'canopy_bulk_kgm3': self.read('canopy_bulk.u8', 'u1') / 100,
+            }
+        return layers
+
+    def has_canopy(self) -> bool:
+        """Whether the folder has the LiDAR canopy (the hypothetical fire has none)."""
+        return all((self.folder / n).exists() for n in FILES[10:])
+
+    def scars(self) -> np.ndarray:
+        """The cells whose centre is inside the burn perimeter of a fire put out shortly before this
+        one (scars.geojson): its fuel was gone."""
+        found = np.zeros((self.rows, self.cols), dtype=bool)
+        if not (self.folder / 'scars.geojson').exists():
+            return found
+        for feature in json.loads((self.folder / 'scars.geojson').read_text())['features']:
+            shape = self.project(shapely.from_geojson(json.dumps(feature['geometry'])))
+            shapely.prepare(shape)
+            found |= shapely.contains_xy(shape, *self.centres())
+        return found
 
     def project(self, geometry):
         """A shape in longitude and latitude, in the grid's metres."""
@@ -108,8 +138,9 @@ class Fire:
         return touched
 
     def weather(self, start: datetime, minutes: list[float], file: str = 'weather.json') -> list[dict]:
-        """Wind at 10 m at each of `minutes` after `start`, linear between the hours of
-        weather.json, the direction turning the short way round."""
+        """Wind at 10 m, temperature and relative humidity at 2 m at each of `minutes` after `start`,
+        linear between the hours of weather.json (or `file`, e.g. weather_noshift.json), the direction
+        turning the short way round."""
         w = json.loads((self.folder / file).read_text())
         hours = np.array([(parse_time(t) - start).total_seconds() / 60 for t in w['time']])
         if min(minutes) < hours[0] or max(minutes) > hours[-1]:
@@ -119,10 +150,6 @@ class Fire:
         # Unwound, two hours never differ by more than 180°, so the line between them is the short way.
         wind_from = np.interp(minutes, hours, np.unwrap(np.radians(w['windFromDeg'])))
         direction = np.degrees(wind_from) % 360
-        return [{'wind_kmh': round(float(s), 2), 'wind_from_deg': round(float(d), 1)} for s, d in zip(speed, direction)]
-
-    def series(self, start: datetime, minutes: list[float], name: str, file: str = 'weather.json') -> list[float]:
-        """A column of weather.json (tempC, rhPct, ...) at each of `minutes` after `start`, linear between the hours."""
-        w = json.loads((self.folder / file).read_text())
-        hours = np.array([(parse_time(t) - start).total_seconds() / 60 for t in w['time']])
-        return [float(v) for v in np.interp(minutes, hours, w[name])]
+        temp, rh = np.interp(minutes, hours, w['tempC']), np.interp(minutes, hours, w['rhPct'])
+        return [{'wind_kmh': round(float(s), 2), 'wind_from_deg': round(float(d), 1), 'temp_c': float(t), 'rh_pct': float(h)}
+                for s, d, t, h in zip(speed, direction, temp, rh)]

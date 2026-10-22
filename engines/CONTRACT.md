@@ -36,12 +36,18 @@ Cada motor vive em `engines/<motor>/` e corre um incêndio com `run.sh`: o pedid
   - os restantes valem 0 se faltarem: `elevation_m`, `slope_deg`, `aspect_deg`, `canopy_cover_pct`, `canopy_height_m`, `canopy_base_m`, `canopy_bulk_kgm3`.
   - `slope_deg` é o declive em graus a partir da horizontal; `aspect_deg` é para onde a encosta está virada, a descer, em graus a partir do norte (0 = norte, 90 = este), como no LANDFIRE. Cada incêndio traz os três na sua pasta, descritos em `web/public/fires/<id>/terrain.json`.
 
-- **Só no ELMFIRE, opcionais** (do ramo `hindcast-registos`; sem eles corre como antes):
-  - `fuel_models`: linhas a mais para a tabela de combustíveis do ELMFIRE, nas colunas e unidades dela (`api/fuels.py`), com códigos que ela não tem (211–237, os modelos portugueses). Precisa do `vendor/` do `setup.sh`;
-  - `spotting`: o grupo `&SPOTTING` do ELMFIRE (projeções), nome → valor;
-  - `seed`: a semente das projeções.
-
 Cada valor de `burned`, de `layers` e de cada momento de `weather` pode ser um número para a grade toda ou uma matriz `rows` × `cols`, com a linha 0 no bordo norte.
+
+### Campos só do ELMFIRE
+
+Quatro campos opcionais que só o ELMFIRE lê (o SimFire ignora-os). Sem eles, o pedido corre como antes de existirem, célula a célula.
+- **`fuel_models`:** modelos de combustível a juntar à tabela do ELMFIRE, para a camada `fuel` os poder usar (por exemplo os modelos portugueses, `hindcast/fuels.py`).
+  - Cada modelo é uma lista de 14 valores, nas colunas e unidades do `fuel_models.csv` do ELMFIRE: código, nome, dinâmico (`true`/`false`), as cargas 1 h, 10 h, 100 h, herbáceas vivas e lenhosas vivas (lb/ft²), as razões superfície/volume 1 h, herbáceas vivas e lenhosas vivas (1/ft), a altura do leito (ft), a humidade de extinção das mortas (%) e o calor (BTU/lb).
+  - Os códigos vão de 1 a 303 e não podem estar já na tabela padrão (que tem os 13 de Anderson e os 40 de Scott & Burgan); 211 a 237 estão livres.
+  - A tabela padrão vem de `vendor/` (`setup.sh`). Sem ela, um pedido com `fuel_models` dá erro.
+- **`layers.adj`:** o fator de ajuste da velocidade de propagação do ELMFIRE, um número ou uma matriz (1 por omissão, sem ajuste).
+- **`spotting`:** as opções do grupo `&SPOTTING` do ELMFIRE (nome → valor), que ligam as projeções, por exemplo `{"ENABLE_SPOTTING": true, "PIGN_MIN": 55.0, ...}`. Os nomes e os valores vão tal como estão para o `elmfire.data`.
+- **`seed`:** a semente das projeções (`&MONTE_CARLO SEED`). A mesma semente dá o mesmo resultado na mesma máquina; entre máquinas (arm64 e x86) o Sørensen varia cerca de ±0,015.
 
 ## Resultado
 
@@ -64,5 +70,5 @@ Cada valor de `burned`, de `layers` e de cada momento de `weather` pode ser um n
 
 | Motor | Estado | Notas |
 |---|---|---|
-| `elmfire/` | P5 | ELMFIRE 2025.0717 num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. A meteo entra como rasters com uma banda por momento, e as humidades vivas também, por isso podem variar por célula e no tempo |
+| `elmfire/` | P5 | ELMFIRE 2025.0717 num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. A meteo entra como rasters com uma banda por momento, e as humidades vivas também, por isso podem variar por célula e no tempo. Lê também os quatro campos acima |
 | `simfire/` | P5 | SimFire 2.0.1 (MITRE) num contentor Docker. `./setup.sh` uma vez por máquina, `./test.sh` para validar. Converte os códigos Scott & Burgan para os 13 modelos originais (Anderson), por isso 102 = GR2 corre como o modelo 2. Só usa `dead_1h_pct`, não tem fogo de copas e tira o declive de `elevation_m` (ignora `slope_deg` e `aspect_deg`). Espalha o fogo célula a célula para os 8 vizinhos, por isso os perímetros são octógonos. O SimFire só aceita uma meteo para a simulação toda; o adapter muda-a a cada passo. `SIMFIRE_STOCK=1` corre o ciclo do próprio SimFire, só com meteo constante |
