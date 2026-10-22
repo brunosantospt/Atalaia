@@ -106,9 +106,9 @@ const SNAP_M = 400 // a click further than this from any road stays where it is
 const ACCESS_SHOWN_M = 2500 // access dots are shown this far from the ignition while a point tool is on
 const TASK_NAME: Record<Task, string> = {
   direct: 'ataque direto',
-  line: 'linha apeada',
+  line: 'faixa contenção',
   drops: 'linha aérea',
-  protect: 'proteção',
+  protect: 'proteção de aldeia',
   shuttle: 'abastecimento',
 }
 /** How "Meios no terreno" is grouped, in this order. */
@@ -952,8 +952,9 @@ export class Editor {
       const last = Math.max(...ws.map((w) => w.barrier.from_min))
       return `${this.sup.units[this.decisions[this.active].assignments[first.slot]?.unit ?? a.unit].short}: ${fmtNumber(ws.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(first.barrier.width_m)} m, segura a partir das ${this.holdsFrom(first.barrier.from_min)}${grown.length ? `, cresce ao longo da orla até às ${this.holdsFrom(last)}` : ''}${this.minutes >= first.barrier.from_min ? '' : ' · a caminho'}`
     }
+    const isProtect = a.task === 'protect'
     const barrierRows = [
-      ...[...wetBySlot.values()].map((ws) => `Linha molhada ${lineText(ws)}`),
+      ...[...wetBySlot.values()].map((ws) => isProtect ? `Perímetro defensivo de aldeia: raio de 65 m, assegurado a partir das ${this.holdsFrom(ws[0].barrier.from_min)}` : `Frente extinta ${lineText(ws)}`),
       ...(dug.length
         ? [`Linha apeada: ${dug.length} troço${dug.length > 1 ? 's' : ''}, ${fmtNumber(dug.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(dug[0].barrier.width_m)} m, feita até às ${this.holdsFrom(Math.max(...dug.map((w) => w.barrier.from_min)))}`]
         : []),
@@ -1944,18 +1945,103 @@ export class Editor {
       if (!clean.length) continue // zero-length strip
       const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const holds = this.minutes >= w.barrier.from_min
-      // pieces grown along the edge a bit fainter than the first line
-      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2) } })
-      const strip = entities.add({
-        polyline: {
-          positions,
-          width: 3,
-          clampToGround: true,
-          material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
-        },
-      })
-      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-      if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+
+      if (a.task === 'protect') {
+        // Defensive perimeter corridor & ring around village dwellings
+        entities.add({
+          corridor: {
+            positions,
+            width: Math.max(w.barrier.width_m, 12),
+            material: Color.fromCssColorString('#1e40af').withAlpha(holds ? 0.35 : 0.12),
+          },
+        })
+        const strip = entities.add({
+          polyline: {
+            positions,
+            width: 3.5,
+            clampToGround: true,
+            material: holds ? Color.fromCssColorString('#fbbf24') : new PolylineDashMaterialProperty({ color: Color.fromCssColorString('#fbbf24').withAlpha(0.6), dashLength: 10 }),
+          },
+        })
+        const at = d.points[a.target]
+        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+      } else if (a.task === 'direct') {
+        // Active extinguished fire front trail in emerald green (#10b981)
+        const green = Color.fromCssColorString('#10b981')
+        entities.add({
+          corridor: {
+            positions,
+            width: 14,
+            material: green.withAlpha(holds ? (w.grown ? 0.35 : 0.45) : 0.15),
+          },
+        })
+        const strip = entities.add({
+          polyline: {
+            positions,
+            width: 4.5,
+            clampToGround: true,
+            material: holds ? green : new PolylineDashMaterialProperty({ color: green.withAlpha(0.6), dashLength: 10 }),
+          },
+        })
+        const at = d.points[a.target]
+        if (at) {
+          (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+
+          // Draw tactical hose supply line from vehicle on road to the line
+          if (clean.length > 0) {
+            const midIdx = Math.floor(clean.length / 2)
+            const midPt = clean[midIdx]
+            entities.add({
+              polyline: {
+                positions: [
+                  Cartesian3.fromDegrees(at.lon, at.lat),
+                  Cartesian3.fromDegrees(midPt[0], midPt[1]),
+                ],
+                width: 2.5,
+                clampToGround: true,
+                material: Color.fromCssColorString('#38bdf8'),
+              },
+            })
+            if (holds) {
+              entities.add({
+                position: Cartesian3.fromDegrees(midPt[0], midPt[1]),
+                point: {
+                  pixelSize: 6,
+                  color: green,
+                  outlineColor: Color.WHITE,
+                  outlineWidth: 1.5,
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  disableDepthTestDistance: Infinity,
+                },
+                label: {
+                  text: `✓ Linha Extinta: ${Math.round(w.lengthM)} m`,
+                  font: 'bold 11px ui-monospace, Menlo, monospace',
+                  fillColor: Color.fromCssColorString('#6ee7b7'),
+                  outlineColor: Color.BLACK,
+                  outlineWidth: 3,
+                  style: 2,
+                  pixelOffset: new Cartesian2(0, -14),
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  disableDepthTestDistance: Infinity,
+                },
+              })
+            }
+          }
+        }
+      } else {
+        // Crew handline / containment line
+        entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2) } })
+        const strip = entities.add({
+          polyline: {
+            positions,
+            width: 3,
+            clampToGround: true,
+            material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
+          },
+        })
+        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
+      }
     }
 
     // One circle per assignment, with the same stable ID and origin colour as its list row.
@@ -1997,6 +2083,57 @@ export class Editor {
     for (const [id, p] of Object.entries(d.points)) {
       const units = d.assignments.filter((a) => a.target === id)
       addUnitMarkers(units, p)
+
+      const isProtect = units.some((a) => a.task === 'protect')
+      const isShuttle = units.every((a) => a.task === 'shuttle')
+      const primaryColor = originColor(units[0]?.from ?? '', stations ?? [])
+
+      if (isProtect) {
+        // Village / structure defensive dome
+        const defR = 65 + (units.length > 1 ? 15 : 0)
+        entities.add({
+          position: Cartesian3.fromDegrees(p.lon, p.lat),
+          ellipse: {
+            semiMajorAxis: defR,
+            semiMinorAxis: defR,
+            material: Color.fromCssColorString('#1e40af').withAlpha(0.22),
+            outline: true,
+            outlineColor: Color.fromCssColorString('#fbbf24'),
+            outlineWidth: 3,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+          },
+        })
+      } else if (isShuttle) {
+        // Tanker parking and refill zone
+        entities.add({
+          position: Cartesian3.fromDegrees(p.lon, p.lat),
+          ellipse: {
+            semiMajorAxis: 30,
+            semiMinorAxis: 30,
+            material: Color.fromCssColorString('#0284c7').withAlpha(0.20),
+            outline: true,
+            outlineColor: Color.fromCssColorString('#38bdf8'),
+            outlineWidth: 2,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+          },
+        })
+      } else {
+        // Direct attack immediate vehicle base perimeter (35-45m)
+        const baseR = 35 + Math.min(15, (units.length - 1) * 6)
+        entities.add({
+          position: Cartesian3.fromDegrees(p.lon, p.lat),
+          ellipse: {
+            semiMajorAxis: baseR,
+            semiMinorAxis: baseR,
+            material: Color.fromCssColorString(primaryColor).withAlpha(0.20),
+            outline: true,
+            outlineColor: Color.fromCssColorString(primaryColor),
+            outlineWidth: 2,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+          },
+        })
+      }
+
       for (const a of units) {
         const spec = this.sup.units[a.unit]
         if (!isAerial(spec)) continue

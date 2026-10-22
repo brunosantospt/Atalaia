@@ -59,11 +59,16 @@ export function arrivals(scenario: Pick<Scenario, 'stations' | 'suppression' | '
 export function wetLineLengthM(scenario: Scenario, decision: Decision, a: Assignment): number {
   const sup = scenario.suppression
   const unit = sup.units[a.unit]
+  if (a.task === 'protect') {
+    const r = Math.min(65 * Math.sqrt(a.count), 100)
+    return Math.round(2 * Math.PI * r)
+  }
   if (!unit.wetLineLengthM) return 0
-  let length = unit.wetLineLengthM * a.count
+  const baseM = Math.min(unit.wetLineLengthM, 75)
+  let length = baseM * a.count
   if (unit.waterL && !sup.unlimitedWater)
     for (const s of decision.assignments)
-      if (s.task === 'shuttle' && s.target === a.target) length += (sup.units[s.unit].wetLineLengthM ?? 0) * s.count
+      if (s.task === 'shuttle' && s.target === a.target) length += Math.min(sup.units[s.unit].wetLineLengthM ?? 0, 100) * s.count
   return unit.reachM ? Math.min(length, 2 * unit.reachM) : length
 }
 
@@ -94,8 +99,23 @@ export function wetLines(scenario: Scenario, decision: Decision, free: Float32Ar
     }
     if (a.task !== 'direct' && a.task !== 'protect') return
     const p = decision.points[a.target]
-    const lengthM = p ? wetLineLengthM(scenario, decision, a) : 0
-    if (!p || lengthM <= 0 || !unit.wetLineWidthM) return
+    if (!p || !unit.wetLineWidthM) return
+
+    if (a.task === 'protect') {
+      const r = Math.min(65 * Math.sqrt(a.count), 100)
+      const ring = Array.from({ length: 9 }, (_, k) => destination(p, (k * 360) / 8, r))
+      push({
+        barrier: { path: ring.map((q) => [q.lon, q.lat]), width_m: unit.wetLineWidthM, from_min: eta[slot] },
+        slot,
+        kind: 'wet',
+        lengthM: Math.round(2 * Math.PI * r),
+        spreadDeg: 0,
+      })
+      return
+    }
+
+    const lengthM = wetLineLengthM(scenario, decision, a)
+    if (lengthM <= 0) return
     const spreadDeg = spreadAt(scenario, free, p)
     const bearing = wetLineBearing(scenario, free, p, a)
     const ends = [destination(p, bearing, lengthM / 2), destination(p, bearing + 180, lengthM / 2)]
@@ -149,7 +169,7 @@ function growLines(
   const groups = new Map<string, { point: LonLat; bearing: number; longestM: number; growers: Grower[]; fronts: Front[]; seen: Set<number> }>() // the first line of a point that reaches furthest
   decision.assignments.forEach((a, slot) => {
     const unit = sup.units[a.unit]
-    if (isAerial(unit) || (a.task !== 'direct' && a.task !== 'protect') || !decision.points[a.target]) return
+    if (isAerial(unit) || a.task !== 'direct' || !decision.points[a.target]) return
     if (!unit.followsEdge || !unit.wetLineWidthM || !(eta[slot] < durationMin)) return
     const p = decision.points[a.target]
     const cell = cellOfXY(grid, toPTTM06(p).x, toPTTM06(p).y)
