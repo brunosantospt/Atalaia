@@ -1,0 +1,37 @@
+{
+  "fire": "VieiradoMinho_10082016",
+  "colleague_original": {
+    "panel1": {
+      "ha_15h": 294,
+      "ha_22h": 2299,
+      "sorensen": 0.731
+    },
+    "panel2": {
+      "ha_15h": 367,
+      "ha_22h": 2337,
+      "sorensen": 0.729
+    },
+    "panel3": {
+      "ha_15h": 370,
+      "ha_22h": 2209,
+      "sorensen": 0.757
+    }
+  },
+  "new_conditions_cerra": {
+    "panel1": {
+      "ha_15h": 188,
+      "ha_22h": 2148,
+      "sorensen": 0.742
+    },
+    "panel2": {
+      "ha_15h": 201,
+      "ha_22h": 2252,
+      "sorensen": 0.729
+    },
+    "panel3": {
+      "ha_15h": 200,
+      "ha_22h": 2116,
+      "sorensen": 0.754
+    }
+  }
+}
