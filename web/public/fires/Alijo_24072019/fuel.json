@@ -1,0 +1,71 @@
+{
+  "source": {
+    "dataset": "DGT COS2018 / ICNF SGIF / OpenStreetMap",
+    "licence": "CC BY 4.0",
+    "url": "https://fogos.icnf.pt/sgif2010/ficheiroskml/AA_TM119616.kml"
+  },
+  "cells": "fuel.u8: um byte por célula, linha a linha a partir da borda norte, índice na legenda",
+  "classes": [
+    "Não combustível",
+    "Herbáceo",
+    "Mato",
+    "Eucalipto e acácia",
+    "Pinhal e folhosas"
+  ],
+  "legend": [
+    {
+      "cos": "6.1.1.1",
+      "label": "Matos (tojo, urze e giesta)",
+      "class": 2,
+      "scottBurgan": 145,
+      "scottBurganName": "SH5",
+      "ha": 3873.4,
+      "why": "matos de tojo e giesta típicos de Trás-os-Montes e Alto Douro"
+    },
+    {
+      "cos": "5.1.2.1",
+      "label": "Pinhal-bravo e eucaliptal",
+      "class": 4,
+      "scottBurgan": 165,
+      "scottBurganName": "TU5",
+      "ha": 298.6,
+      "why": "povoamentos florestais com sub-bosque de mato denso"
+    },
+    {
+      "cos": "2.1.1.1",
+      "label": "Culturas temporárias e forrageiras",
+      "class": 0,
+      "scottBurgan": 93,
+      "scottBurganName": "NB3",
+      "ha": 58.9,
+      "why": "culturas de regadio e pousios verdes"
+    },
+    {
+      "cos": "1.1.1.1",
+      "label": "Não combustível (vinhas do Douro, rocha nua, estradas, aldeias)",
+      "class": 0,
+      "scottBurgan": 91,
+      "scottBurganName": "NB1",
+      "ha": 19130.5,
+      "why": "vinhas em socalcos/patamares, afloramentos rochosos e povoações"
+    },
+    {
+      "cos": "2.2.3.1",
+      "label": "Olival e pomar tradicional",
+      "class": 1,
+      "scottBurgan": 121,
+      "scottBurganName": "GS1",
+      "ha": 2108.6,
+      "why": "olival espaçado com sub-bosque de erva baixa"
+    },
+    {
+      "cos": "9.1.1.1",
+      "label": "Água (Rio Tua e albufeiras)",
+      "class": 0,
+      "scottBurgan": 98,
+      "scottBurganName": "NB8",
+      "ha": 0.0,
+      "why": "linhas de água e planos de água permanentes"
+    }
+  ]
+}

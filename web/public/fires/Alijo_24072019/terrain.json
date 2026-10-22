@@ -1,0 +1,33 @@
+{
+ "source": {
+  "dataset": "Copernicus DEM GLO-30, 1 arc second (DSM, TanDEM-X 2011-2015)",
+  "licence": "© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
+  "url": "https://registry.opendata.aws/copernicus-dem/"
+ },
+ "cells": "um valor por célula, linha a linha a partir da borda norte, little-endian",
+ "layers": {
+  "elevation_m": {
+   "file": "elevation.f32",
+   "type": "float32",
+   "unit": "m",
+   "min": 179.4,
+   "max": 1022.9,
+   "notes": "altitude do MDT, reamostrada bilinearmente para a célula"
+  },
+  "slope_deg": {
+   "file": "slope.u8",
+   "type": "uint8",
+   "unit": "°",
+   "min": 0,
+   "max": 52,
+   "notes": "declive em graus a partir da horizontal, pelo método de Horn"
+  },
+  "aspect_deg": {
+   "file": "aspect.u16",
+   "type": "uint16",
+   "unit": "°",
+   "notes": "para onde a encosta está virada, a descer: 0 = norte, 90 = este; 0 onde é plano"
+  }
+ },
+ "notes": "MDT de superfície: em floresta fica em parte sobre as copas. O norte é o da grade PT-TM06, a menos de 0,2° do norte geográfico."
+}

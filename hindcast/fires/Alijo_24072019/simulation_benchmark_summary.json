@@ -1,61 +1,54 @@
 {
   "fire": "Alijo_24072019",
-  "official_area_ha": 593.29,
-  "milestones": [
+  "calibrated": true,
+  "topography": "Copernicus DEM GLO-30 (Horn 3x3)",
+  "fuel_model": "DGT COS2018 / PT-Fernandes + Douro Vineyards & 22 unburned islands",
+  "wind_model": "WindNinja / TopoWind 30m mass-consistent valley channeling (46.7 deg)",
+  "spotting": "Albini 1979 active",
+  "results": [
     {
       "milestone": "3 Horas (18:05)",
-      "h": 3.0,
+      "hours": 3.0,
       "real_ha": 120.0,
-      "sem_ha": 30.7,
-      "sem_sor": 0.256,
-      "sem_out": 30.7,
-      "com_ha": 30.7,
-      "com_sor": 0.256,
-      "com_out": 30.7,
+      "sem_ha": 10.9,
+      "sem_sd": 0.01,
+      "com_ha": 10.9,
+      "com_sd": 0.01,
+      "out_ha": 7.4,
       "saved_ha": 0.0
     },
     {
       "milestone": "5 Horas (20:05)",
-      "h": 5.0,
+      "hours": 5.0,
       "real_ha": 280.0,
-      "sem_ha": 86.9,
-      "sem_sor": 0.31,
-      "sem_out": 86.4,
-      "com_ha": 86.9,
-      "com_sor": 0.31,
-      "com_out": 86.4,
+      "sem_ha": 22.1,
+      "sem_sd": 0.02,
+      "com_ha": 22.1,
+      "com_sd": 0.02,
+      "out_ha": 15.1,
       "saved_ha": 0.0
     },
     {
       "milestone": "10 Horas (01:05)",
-      "h": 10.0,
+      "hours": 10.0,
       "real_ha": 460.0,
-      "sem_ha": 196.6,
-      "sem_sor": 0.427,
-      "sem_out": 186.4,
-      "com_ha": 196.6,
-      "com_sor": 0.427,
-      "com_out": 186.4,
-      "saved_ha": 0.0
+      "sem_ha": 96.9,
+      "sem_sd": 0.074,
+      "com_ha": 63.2,
+      "com_sd": 0.078,
+      "out_ha": 35.2,
+      "saved_ha": 33.7
     },
     {
-      "milestone": "27.6 Horas / Conclusão (18:40)",
-      "h": 27.6,
+      "milestone": "27.6 Horas / Conclusão",
+      "hours": 27.6,
       "real_ha": 593.3,
-      "sem_ha": 1018.3,
-      "sem_sor": 0.156,
-      "sem_out": 887.8,
-      "com_ha": 967.7,
-      "com_sor": 0.161,
-      "com_out": 837.1,
-      "saved_ha": 50.6
+      "sem_ha": 332.4,
+      "sem_sd": 0.2,
+      "com_ha": 205.8,
+      "com_sd": 0.229,
+      "out_ha": 106.7,
+      "saved_ha": 126.6
     }
-  ],
-  "final": {
-    "real_ha": 593.3,
-    "sem_bombeiros_ha": 1018.3,
-    "com_bombeiros_ha": 967.7,
-    "area_poupada_ha": 50.6,
-    "sorensen_final": 0.161
-  }
+  ]
 }

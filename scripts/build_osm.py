@@ -116,7 +116,7 @@ def main():
     homes = sum(b[2] for b in buildings)
     print(
         f"{len(roads)} roads, {len(buildings)} buildings ({homes} homes), {len(places)} places, {len(water)} water lines"
-        f" → {path.relative_to(ROOT)} ({path.stat().st_size // 1024} kB)"
+        f" -> {path.relative_to(ROOT)} ({path.stat().st_size // 1024} kB)"
     )
 
 

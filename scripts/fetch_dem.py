@@ -56,7 +56,7 @@ def fetch(name: str):
     if part.stat().st_size != size:
         raise SystemExit(f"{name}: got {part.stat().st_size} of {size} bytes")
     part.rename(path)
-    print(f"{name}: {size / 1e6:.1f} MB → {path.relative_to(ROOT)}")
+    print(f"{name}: {size / 1e6:.1f} MB -> {path.relative_to(ROOT)}")
 
 
 def main():

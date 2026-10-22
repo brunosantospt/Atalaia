@@ -94,7 +94,7 @@ def main():
         tag = "highway" if "highway" in e.get("tags", {}) else "building" if "building" in e.get("tags", {}) else "other"
         kinds[tag] = kinds.get(tag, 0) + 1
     print(f"{len(data['elements'])} elements {kinds}, OSM as of {data['osm3s']['timestamp_osm_base']}")
-    print(f"→ {out.relative_to(ROOT)}")
+    print(f"-> {out.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
