@@ -122,7 +122,7 @@ export function buildStory(
       h: 0,
       badge: originLetter(s.id, stations),
       symbol: 'helmet',
-      label: `${s.short} · ${fmtKm(s.km)}`,
+      label: s.short,
       detail: 'em linha reta',
       ringM: 0,
       persistent: true,

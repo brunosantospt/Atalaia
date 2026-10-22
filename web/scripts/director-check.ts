@@ -70,4 +70,16 @@ assert.equal(player.shots[player.index].kind, 'incident', 'manual seek selects t
 assert.equal(player.update(0).hours, 2.5)
 player.playing = true
 assert.equal(player.update(.1).hours, 2.5, 'resuming at the wind gate must not rewind')
+// Director growth timelapse is accelerated without consuming arrival or wind gates faster.
+const growthShot = { ...pre[0], hours:0, hoursTo:5/60, moveS:.1, holdS:4, gate:undefined }
+const clock = (shot: ReturnType<typeof incidentShots>[number]) => {
+  const p = new Player({camera:{lookAt(){},lookAtTransform(){}},globe:{getHeight:()=>undefined}} as never,[shot],shot.path[0])
+  p.playing=true; p.userMoved=false
+  return p
+}
+assert.equal(clock(growthShot).update(.4).hours,clock(growthShot).update(.1,4).hours,'four times the growth playback for the same real elapsed time')
+const arrivalShot = {...growthShot,gate:'arrival' as const}
+assert.equal(clock(arrivalShot).update(.1).hours,clock(arrivalShot).update(.1,4).hours,'arrival gates keep their timing')
+const windShot = {...growthShot,gate:'wind' as const}
+assert.equal(clock(windShot).update(.1).hours,clock(windShot).update(.1,4).hours,'wind decisions keep their timing')
 console.log('OK: chronological five-minute blocks, ignition/arrival/satellite/control/wind gates, honest containment, three-footprint ranking, complete editor pause')

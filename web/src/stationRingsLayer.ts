@@ -28,9 +28,8 @@ export class StationRingsLayer {
     this.legend.hidden = true
     this.legend.innerHTML = `
       <label class="ring-toggle"><input type="checkbox" checked><span>Onde o fogo chega primeiro que qualquer resposta</span></label>
-      <p class="ring-selection"></p>
       <ul class="ring-key" aria-label="Cores dos quartéis"></ul>
-      <details><summary>Como interpretar o contorno</summary><p class="ring-explanation"></p>
+      <details><summary>Como interpretar</summary><p class="ring-selection"></p><p class="ring-explanation"></p>
         <p>Compara a chegada prevista do fogo com a mobilização e a deslocação do meio selecionado. A cor identifica o quartel; ao mudar a origem, muda o contorno. O percurso até ao ponto também é verificado.</p>
       </details>`
     this.selectionText = this.legend.querySelector('.ring-selection')!

@@ -142,7 +142,6 @@ const TEMPLATE = `
     <h3>Hora <span data-ref="hourText"></span></h3>
     <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
   </section>
-  <section class="deployment-guidance" data-ref="arrivalGuidance" aria-label="Chegada do fogo e cores dos quartéis"></section>
   <section>
     <h3>Meios no terreno</h3>
     <ul class="assignments" data-ref="list"></ul>
@@ -166,6 +165,7 @@ const TEMPLATE = `
     </div>
     <p class="note hint" data-ref="hint"></p>
   </section>
+  <section class="deployment-guidance" data-ref="arrivalGuidance" aria-label="Chegada do fogo e cores dos quartéis"></section>
   <section class="ils">
     <h3>Proposta B</h3>
     <button type="button" data-ref="ils" class="primary-btn" title="Procura uma proposta B com os meios de A durante até 10 s. Substitui o plano B apenas ao carregar neste botão; depois carregue em Simular modelo rápido."></button>
@@ -355,8 +355,8 @@ export class Editor {
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
       const hint = id === 'vttu' ? `Cisterna · ${spec.waterL?.toLocaleString('pt-PT')} L. Apoia VFCI num raio de 300 m e prolonga a autonomia indicada. Não cria linha de combate.`
-        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Linha de 100 m, ajustável por rotação. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
-        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Linha de 50 m, ajustável por rotação. Pode atuar fora das estradas.`
+        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Linha de 200 m, ajustável por rotação. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
+        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Linha de 100 m, ajustável por rotação. Pode atuar fora das estradas.`
         : `${spec.name} · apoio aéreo. Escolha a base e o ponto de intervenção; a chegada depende da distância e da mobilização.`
       button.addEventListener('mouseenter', () => this.showTip(button, hint))
       button.addEventListener('focus', () => this.showTip(button, hint))
@@ -765,10 +765,10 @@ export class Editor {
         len === 1
           ? '📍 1º vértice colocado no mapa. Clica para colocar o próximo vértice da linha.'
           : this.tool === 'line'
-            ? '📍 Primeiro clique: posição da equipa. Segundo clique: direção da sua linha de 50 m.'
+            ? '📍 Primeiro clique: posição da equipa. Segundo clique: direção da sua linha de 100 m.'
             : '📍 Clica no mapa para colocar os vértices da linha aérea de descargas.'
     } else {
-      const lenM = this.tool === 'line' ? 50 : lineLengthM(this.drawing)
+      const lenM = this.tool === 'line' ? demoLineLength({ unit: 'crew' }) : lineLengthM(this.drawing)
       finishBtn.disabled = false
       finishBtn.textContent = '✓ Concluir Linha'
       finishBtn.title = 'Concluir traçado e registar linha nos meios no terreno'
@@ -1092,7 +1092,7 @@ export class Editor {
     d.lines[id] = this.drawing
     const task = this.tool
     d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task, dispatchMin: this.dispatchMinute() })
-    const lenM = task === 'line' ? 50 : lineLengthM(this.drawing)
+    const lenM = task === 'line' ? demoLineLength({ unit: 'crew' }) : lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
     this.refs.hint.classList.remove('danger', 'late')
@@ -1859,7 +1859,7 @@ export class Editor {
     if (this.drawing.length) {
       const first = this.drawing[0]
       const axis = this.drawing.length > 1 ? bearingDeg(first, this.drawing.at(-1)!) : 0
-      const preview = this.tool === 'line' && this.drawing.length > 1 ? [destination(first, axis, 25), destination(first, axis+180, 25)] : this.drawing
+      const preview = this.tool === 'line' && this.drawing.length > 1 ? [destination(first, axis, demoLineLength({ unit: 'crew' })/2), destination(first, axis+180, demoLineLength({ unit: 'crew' })/2)] : this.drawing
       this.polyline(preview, this.tool === 'drops' ? INK : AMBER, true)
       for (let i = 0; i < this.drawing.length; i++) {
         const pt = this.drawing[i]

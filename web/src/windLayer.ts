@@ -2,7 +2,7 @@ import { Math as CesiumMath, type Viewer } from 'cesium'
 import type { Weather } from './data'
 import { compass } from './geo'
 import { fmtNumber } from './format'
-import './windCompass.css'
+import './windWidget.css'
 
 /** Meteorological direction is where wind comes FROM; the needle points where it blows TO. */
 export function windAt(weather: Weather, startIndex: number, minutes: number) {
@@ -19,7 +19,7 @@ export class WindLayer {
   private readonly rose: SVGElement
   private readonly needle: SVGElement
   private readonly speed: HTMLElement
-  private readonly detail: HTMLElement
+  private readonly mapToggle: HTMLInputElement
   private readonly handle: HTMLButtonElement
   private readonly resize: ResizeObserver
   private readonly remove: () => void
@@ -34,7 +34,7 @@ export class WindLayer {
     this.el.className = 'wind-compass'
     this.el.setAttribute('aria-label', 'Bússola do vento')
     this.el.innerHTML = `
-      <button type="button" class="wind-drag" aria-label="Mover bússola do vento. Use as setas para deslocar ou Home para repor." title="Arraste para mover · duplo clique para repor"><span>Vento</span><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="wind-drag" aria-label="Mover bússola do vento. Use as setas para deslocar ou Home para repor." title="Arraste para mover · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
       <svg class="wind-dial" viewBox="0 0 120 120" aria-hidden="true">
         <circle cx="60" cy="60" r="52" class="wind-bezel"/>
         <g class="wind-rose">
@@ -44,20 +44,29 @@ export class WindLayer {
         <g class="wind-needle"><path d="M60 36 71 55 64 52V87H56V52L49 55Z"/><circle cx="60" cy="60" r="4"/></g>
         <circle cx="60" cy="60" r="2" class="wind-centre"/>
       </svg>
-      <div class="wind-speed"><strong>—</strong><span>km/h</span></div>
-      <p class="wind-detail"></p><p class="wind-caption">Seta: para onde sopra</p>`
+      <div class="wind-speed"><strong>—</strong></div>
+      <label class="wind-map-toggle"><input type="checkbox">Mapa</label>`
     this.rose = this.el.querySelector('.wind-rose')!
     this.needle = this.el.querySelector('.wind-needle')!
     this.speed = this.el.querySelector('.wind-speed strong')!
-    this.detail = this.el.querySelector('.wind-detail')!
+    this.mapToggle = this.el.querySelector('.wind-map-toggle input')!
     this.handle = this.el.querySelector('.wind-drag')!
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
       if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) this.position = { x: Math.max(0,Math.min(1,saved.x)), y: Math.max(0,Math.min(1,saved.y)) }
     } catch { /* A malformed saved position simply uses the default. */ }
+    try { this.mapToggle.checked = localStorage.getItem('atalaia.wind-map') === 'true' } catch { /* Optional preference. */ }
+    const setMap = () => {
+      this.el.classList.toggle('map-mode', this.mapToggle.checked)
+      if (this.mapToggle.checked) this.mapToggle.blur()
+      try { localStorage.setItem('atalaia.wind-map', String(this.mapToggle.checked)) } catch { /* Optional preference. */ }
+      this.viewer.scene.requestRender()
+    }
+    this.mapToggle.addEventListener('change', setMap)
+    setMap()
     parent.append(this.el)
-    this.handle.addEventListener('pointerdown', e => {
-      if (e.button !== 0 || this.drag) return
+    this.el.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || this.drag || (e.target as Element).closest('.wind-map-toggle')) return
       e.preventDefault(); e.stopPropagation()
       this.handle.focus({preventScroll:true})
       this.drag = { pointer:e.pointerId, x:e.clientX, y:e.clientY, left:this.el.offsetLeft, top:this.el.offsetTop }
@@ -73,6 +82,7 @@ export class WindLayer {
       if (this.drag?.pointer !== e.pointerId) return
       this.drag = undefined
       this.el.classList.remove('dragging')
+      if (this.mapToggle.checked) this.handle.blur()
       if (this.handle.hasPointerCapture(e.pointerId)) this.handle.releasePointerCapture(e.pointerId)
       this.save()
     }
@@ -129,8 +139,8 @@ export class WindLayer {
     const wind=windAt(weather,start,Math.round(minute))
     this.to=(wind.from+180)%360
     this.el.dataset.from=String(wind.from);this.el.dataset.to=String(this.to)
-    this.speed.textContent=fmtNumber(wind.kmh)
-    this.detail.textContent=`De ${compass(wind.from)} · rajadas ${fmtNumber(wind.gust)} km/h`
+    this.speed.textContent=`${fmtNumber(wind.kmh)} km/h ${compass(wind.from)}`
+    this.el.title=`Vento de ${compass(wind.from)} · rajadas ${fmtNumber(wind.gust)} km/h · seta aponta para onde sopra`
     this.el.setAttribute('aria-label',`Vento ${fmtNumber(wind.kmh)} km/h de ${compass(wind.from)}; rajadas ${fmtNumber(wind.gust)} km/h`)
     this.heading=NaN;this.orient()
   }

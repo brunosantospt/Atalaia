@@ -132,19 +132,6 @@ const TEMPLATE = `
       </span>
       <span class="nav-label">Ignição</span>
     </button>
-    <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (0°)">
-      <span class="nav-icon" data-ref="compassNeedle">
-        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
-          <circle cx="12" cy="12" r="10.5" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2" fill="none"/>
-          <polygon points="12,3.5 15,12 12,10" fill="#f8fafc" />
-          <polygon points="12,3.5 9,12 12,10" fill="#94a3b8" />
-          <polygon points="12,20.5 15,12 12,10" fill="#475569" />
-          <polygon points="12,20.5 9,12 12,10" fill="#334155" />
-          <circle cx="12" cy="12" r="1.5" fill="#0f172a" />
-        </svg>
-      </span>
-      <span class="nav-label">Norte</span>
-    </button>
     <div class="bottom-compass" data-ref="bottomCompass" title="Rosa dos Ventos: Aponta para o Norte Geográfico em tempo real. Clica para reorientar a 0°">
       <div class="compass-dial" data-ref="compassDial">
         <svg class="compass-svg" viewBox="0 0 56 56" width="52" height="52" fill="none">
@@ -203,7 +190,7 @@ type Refs = Record<
   | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
-  | 'btnReports' | 'simulate' | 'editorToggle' | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
+  | 'btnReports' | 'simulate' | 'editorToggle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
@@ -277,7 +264,6 @@ export class Hud {
 
     this.refs.editorToggle?.addEventListener('click', () => this.actions.toggleEditor?.())
     this.refs.simulate.addEventListener('click', () => this.actions.simulate?.())
-    this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.bottomCompass?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.btnReports.addEventListener('click', () => this.actions.toggleReports?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
@@ -529,7 +515,7 @@ export class Hud {
     const rail = rect('.rail')
     const ledger = rect('.ledger')
     const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
-    const wind = this.root.querySelector('.wind-compass')?.getBoundingClientRect()
+    const wind = this.root.querySelector('.wind-compass.map-mode .wind-needle, .wind-compass:not(.map-mode)')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.root.classList.contains('reporting')) right = Math.min(right, rect('.reports-panel').left - pad)
@@ -590,9 +576,6 @@ export class Hud {
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))
     this.set('rng', fmtRange(camera.range))
 
-    if (this.refs.compassNeedle) {
-      this.refs.compassNeedle.style.transform = `rotate(${-camera.heading}deg)`
-    }
     if (this.refs.compassDial) {
       this.refs.compassDial.style.transform = `rotate(${-camera.heading}deg)`
     }

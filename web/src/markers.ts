@@ -14,7 +14,7 @@ import {
   type Viewer,
 } from 'cesium'
 import { cleanLonLat, destination } from './geo'
-import { landmarkGlyph, landmarkIconUrl, landmarkColor } from './landmarkIcons'
+import { landmarkIconUrl, landmarkColor } from './landmarkIcons'
 import { BEST_CSS } from './reachLayer'
 import type { MarkerKind, MarkerSpec } from './shots'
 
@@ -89,13 +89,7 @@ export class MarkerLayer {
         : undefined
       const tag = document.createElement('div')
       tag.className = `tag tag-${spec.kind}`
-      tag.innerHTML = `<b></b><span></span>`
-      if (spec.symbol) {
-        tag.classList.add('has-symbol')
-        tag.style.setProperty('--landmark-color', landmarkColor(spec.symbol))
-        tag.querySelector('b')!.innerHTML = landmarkGlyph(spec.symbol)
-      }
-      else tag.querySelector('b')!.textContent = spec.badge
+      tag.innerHTML = '<span></span>'
       tag.querySelector('span')!.textContent = spec.label
       const line = document.createElementNS(SVG, 'line')
       const dot = document.createElementNS(SVG, 'circle')
@@ -103,14 +97,11 @@ export class MarkerLayer {
       dot.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('r', '3')
       if (spec.color) {
-        if (!spec.symbol) tag.querySelector('b')!.style.background = spec.color
-        tag.style.borderColor = spec.color
         line.style.stroke = spec.color
         dot.style.fill = spec.color
       }
       if (spec.kind === 'best') {
         // Green like its line on the ground (reachLayer.ts); hud.css colours the other kinds.
-        tag.querySelector('b')!.style.background = BEST_CSS
         line.style.stroke = BEST_CSS
         dot.style.fill = BEST_CSS
       }

@@ -938,7 +938,7 @@
   left: 0;
   top: 0;
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   column-gap: 7px;
   align-items: center;
   white-space: nowrap;
@@ -1435,13 +1435,9 @@
 .hud.reporting .bottom-nav-cluster { right: min(492px, calc(100vw - 105px)); }
 @media (max-width: 760px) { .hud .ledger { display: none; } }
 
-.hud .bottom-nav-cluster .reports-btn { width: 76px; height: 48px; }
-.hud .bottom-nav-cluster .reports-btn .nav-label { font-size: 9px; letter-spacing: .035em; color: #b8c6d6; }
+.hud .bottom-nav-cluster .nav-btn { width: 76px; height: 48px; }
+.hud .bottom-nav-cluster .nav-btn .nav-label { font-size: 9px; letter-spacing: .035em; color: #b8c6d6; }
 .hud .bottom-nav-cluster .reports-btn[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }
 
-/* Give category symbols their own light tile, independent of origin-coloured label borders. */
-.markers .tag.has-symbol { grid-template-columns: 36px auto; padding: 4px 10px 4px 4px; gap: 9px; }
-.markers .tag.has-symbol b { display: grid; place-items: center; width: 36px; height: 36px; min-width: 36px; box-sizing: border-box; padding: 0; background: #fff4ed; color: var(--landmark-color); border: 1px solid currentColor; border-radius: 5px; }
-.markers .tag-hospital.has-symbol b { background: #edfff5; }
-.markers .tag-airbase.has-symbol b { background: #edfaff; }
-.markers .tag.has-symbol b svg { position: static; display: block; width: 25px; height: 25px; overflow: visible; }
+/* Point symbols stay on the map; labels carry just the place name. */
+.markers .tag { color: #f0a33a; border-color: #f0a33acc; padding: 6px 10px; }

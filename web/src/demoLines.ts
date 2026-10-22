@@ -4,7 +4,7 @@ import type { Scenario } from './scenario'
 import { isAerial, type Assignment, type Decision } from './suppression'
 import { arrivals, wetLineBearing, type WetLine } from './wetLine'
 
-export const demoLineLength = (a: Pick<Assignment, 'unit'>) => a.unit === 'crew' ? 50 : 100
+export const demoLineLength = (a: Pick<Assignment, 'unit'>) => a.unit === 'crew' ? 100 : 200
 
 export function demoLineBearing(scenario: Scenario, decision: Decision, a: Assignment): number {
   const drawn = decision.lines[a.target], point = decision.points[a.target] ?? drawn?.[0]
