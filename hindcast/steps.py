@@ -23,7 +23,8 @@ Online correction (what a real-time system can do with the last two perimeters):
 arguments after "--", window k runs with --adj (ratio_{k-1})^-beta, where ratio_{k-1} is the growth area ratio (run /
 observed) of the uncorrected run CFG in the previous window (fires/<id>/steps/<CFG>.json), beta from
 --assimilate-beta (0.5 by default: the error carries over only partly, rho ~0.6 between windows of up to 6 h), the
-factor kept within [0.3, 2.2]. With no previous window the factor is 1.
+factor kept within [0.3, 2.2]. With no previous window, or one with less than 5 ha of observed growth, the factor
+is 1. Offline, on the K5 windows, this takes the median |log2 area ratio| from 1.61 to 1.15.
 
 The run.py arguments after "--" are the configuration (the same in every window). Writes
 hindcast/fires/<id>/steps/<name>.json; the runs go to fires/<id>/runs/st_<name>_<k>/ and data/hindcast/<id>/.
@@ -151,8 +152,10 @@ def main(argv=None):
     fire = fires.Fire(args.fire)
     prev = {}
     if assim:
+        # only after a window that grew enough to say something (5 ha, as the persistence analysis)
         prev = {w["k"]: w["model"]["ratio"] for w in
-                json.loads((fire_dir(args.fire) / "steps" / f"{assim}.json").read_text())["windows"] if "model" in w}
+                json.loads((fire_dir(args.fire) / "steps" / f"{assim}.json").read_text())["windows"]
+                if "model" in w and w["model"]["growth_obs_ha"] >= 5}
     legend = json.loads((fire.folder / "fuel.json").read_text())["legend"]
     idx = fire.read("fuel.u8", "u1")
     slope = fire.read("slope.u8", "u1").astype(float)
