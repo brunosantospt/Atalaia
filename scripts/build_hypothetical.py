@@ -461,6 +461,10 @@ def build(model, compare, opts):
         raise SystemExit("weather.json ends before the run does")
     (folder / "weather.json").write_text(json.dumps(weather, ensure_ascii=False, separators=(",", ":")) + "\n")
 
+    # the forecast before the shift: the IFS wind x wind_mult throughout; /api/run with wind_shift false reads it
+    quiet = {**observed, "utcOffsetH": 1.0, "source": {**observed["source"], "synthetic": f"windKmh and gustKmh are the IFS values x {opts.wind_mult} (tuned); no wind shift", "windMult": opts.wind_mult}}
+    (folder / "weather_noshift.json").write_text(json.dumps(quiet, ensure_ascii=False, separators=(",", ":")) + "\n")
+
     runs = {"elmfire": lambda w, *a: elmfire_run(w, *a, folder, opts), "fast": lambda w, *a: fast_run(folder, w, *a)}
     arrival, baseline = (runs[model](w, start, ign, g) for w in (weather, observed))
     exposure = Exposure(build_osm(folder), g)
