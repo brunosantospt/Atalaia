@@ -20,13 +20,15 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { findAirBase } from '../src/airBases'
-import { loadFire, loadStations, loadWeather, nearestStations } from '../src/data'
+import { loadFire, loadStations, loadWeather } from '../src/data'
+import { loadDetection } from '../src/detection'
 import { demoDecision } from '../src/decisions'
-import { computeFWISeries, type Scenario } from '../src/fastModel'
+import { computeFWISeries, freeArrival, type Scenario } from '../src/fastModel'
 import { loadGrid } from '../src/grid'
 import { loadInventory, type Inventory } from '../src/inventory'
 import { better, groundOf, optimize, type Options, type Score } from '../src/optimize'
 import { buildContext, loadOsm, snapToRoad, type Context } from '../src/osm'
+import { computeRings, outsideRing, radiiOf, stationsInPlay } from '../src/stationRings'
 import { isAerial, loadSuppression, type Assignment, type Decision, type Suppression, type UnitId } from '../src/suppression'
 
 const DECISION_MIN = 360 // main.ts: the 6 h of the report
@@ -69,7 +71,7 @@ globalThis.fetch = (async (input: RequestInfo | URL) => {
 
 /** A as the editor first holds it (Editor.setFire): the example's points on the nearest road, and
  *  its counts cut in order to what each station or air base has (Editor.fit). */
-function editorA(example: Decision, context: Context, inventory: Inventory | null, sup: Suppression): Decision {
+function editorA(example: Decision, context: Context, inventory: Inventory | null, sup: Suppression, scenario: Scenario): Decision {
   const points = Object.fromEntries(
     Object.entries(example.points).map(([id, p]) => {
       const { lon, lat } = snapToRoad(context, p, SNAP_M) ?? p
@@ -86,6 +88,11 @@ function editorA(example: Decision, context: Context, inventory: Inventory | nul
   const assignments: Assignment[] = []
   const dropped = new Set<string>()
   for (const x of example.assignments) {
+    // Editor.fit: only the stations in play, each one's ground means inside its ring.
+    if (!isAerial(sup.units[x.unit]) && (!scenario.stations.some((s) => s.id === x.from) || outsideRing(scenario.rings, scenario.ignition, sup, { ...example, points }, x.unit, x.from, x.target))) {
+      dropped.add(x.target)
+      continue
+    }
     const key = `${x.unit}|${x.from}`
     const have = stock(x.unit, x.from)
     const count = have === undefined ? x.count : Math.min(x.count, have - (used.get(key) ?? 0))
@@ -134,7 +141,7 @@ const update = process.argv.includes('--update')
 if (byTime && update) throw new Error('--update takes the figures of the plan run: leave out --time')
 const stop: Options = byTime ? { budgetMs: BUDGET_MS } : { budgetMs: Infinity, maxPlans: PLANS }
 const reference = JSON.parse(await readFile(REFERENCE, 'utf8')) as Reference
-const [stations, suppression, inventory] = await Promise.all([loadStations(), loadSuppression(), loadInventory()])
+const [stations, suppression, inventory, detection] = await Promise.all([loadStations(), loadSuppression(), loadInventory(), loadDetection()])
 const next: Reference = { measured: `${new Date().toISOString().slice(0, 10)} · ${PLANS} plans · seed ${SEED} · ${commit()}`, fires: [] }
 const broken: string[] = [] // B worse than A
 const moved: string[] = [] // A or B further than DRIFT from the reference
@@ -143,8 +150,8 @@ console.log(`reference: ${reference.measured}`)
 for (const ref of reference.fires) {
   const [fire, grid, weather, osm] = await Promise.all([loadFire(ref.id), loadGrid(ref.id), loadWeather(ref.id), loadOsm(ref.id)])
   if (!osm) throw new Error(`${ref.id}: no osm.json, so no access points for B`)
-  const near = nearestStations(stations, fire.ignition)
-  const regional = nearestStations(stations, fire.ignition, 30, 65)
+  const near = stationsInPlay(stations, fire.ignition, suppression)
+  const regional = near
   const startIndex = Math.max(0, weather.time.indexOf(fire.start.slice(0, 16)))
   const scenario: Scenario = {
     grid,
@@ -156,8 +163,12 @@ for (const ref of reference.fires) {
     durationMin: DECISION_MIN,
     fwiSeries: computeFWISeries(weather),
   }
+  // The rings from the fast model's free run (the app uses the ELMFIRE one).
+  const rings = computeRings(grid, freeArrival(scenario), fire.ignition, near, suppression, detection, inventory)
+  scenario.rings = radiiOf(rings)
+  console.log(`  rings: ${rings.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} ${Math.round(r.radiusM)} m`).join(' · ')}`)
   const context = buildContext(grid, osm)
-  const a = editorA(demoDecision(fire, near), context, inventory, suppression)
+  const a = editorA(demoDecision(fire, near), context, inventory, suppression, scenario)
   let found = { plans: 0, elapsedMs: 0 }
   const result = optimize(scenario, groundOf(context), a, {
     ...stop,

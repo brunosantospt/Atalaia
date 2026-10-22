@@ -33,7 +33,7 @@ export interface WetLine {
 }
 
 const LINE_PIECE_MIN = 30 // a crew line holds piece by piece, each one this much work
-const MAX_FROM = 12 // distinct from_min per decision: each one splits the ELMFIRE run into one more stretch
+const MAX_FROM = 6 // distinct from_min per decision: each one splits the ELMFIRE run into one more stretch
 const GROW_MIN_SLICE = 30 // a unit's growth holds in slices of at least this much work (min), on one grid for all units
 const GROW_LEAD_MIN = 20 // a growing line is laid on the free run's isochrone this far ahead of the minute it holds
 const FIT_CELLS = [5, 8] // spread from the free run: least squares over the reached cells this many around (150 m; 240 m if too few)

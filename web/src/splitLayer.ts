@@ -4,16 +4,21 @@
 // left or right of a split the mouse drags.
 //
 // Each look is an imagery layer keyed on a field of minutes (encode), so moving the clock only moves the
-// layers' colour-to-alpha thresholds and no pixel is uploaded again. Linear filtering interpolates the
-// minutes between cell centres: edges are the smooth isolines of the field, not the cells. Per side,
-// from the bottom up:
+// layers' colour-to-alpha thresholds and no pixel is uploaded again. Magnified texels are not filtered:
+// a cell is lit exactly when its minute is reached, never half a cell early. Per side, from the bottom up:
 //   line   arrival <= t               the layers above cover all of it but its rim
 //   front  inside  <= t               inside: the latest arrival over the cell's 3×3, so a cell is covered
 //   scar   inside  <= t − FRONT_MIN    once its neighbours have all burned, and the line stays one cell
 //                                     wide wherever the fire meets unburned ground, held edges included
 
 import {
+  Cartesian3,
+  Cartographic,
   Color,
+  ConstantPositionProperty,
+  type Entity,
+  HeightReference,
+  type PerspectiveFrustum,
   type ImageryLayer,
   Rectangle,
   SingleTileImageryProvider,
@@ -25,11 +30,15 @@ import {
 import type { Grid } from './grid'
 import './split.css'
 
-// A cell is drawn (R, G, k) with k = 1 + SPAN × minute / duration, 255 where the fire never comes. Cesium
-// hides a texel whose largest channel difference from colorToAlpha (R, G, 255) is under the threshold, so
-// one threshold shows exactly the cells reached by a minute. SPAN stays under half of 255: between a
-// burned cell and one that never burns, the edge then stops halfway, on the cell's border.
-const SPAN = 126 // ~2.9 min a level over 6 h
+// A cell is drawn (R, G, k) with k = 1 + ceil(level(minute)), 255 where the fire never comes. Cesium
+// hides a texel whose largest channel difference from colorToAlpha (R, G, 255) is under the threshold
+// (strictly), so one threshold shows the cells whose level is reached by a minute. The level is finer in
+// the first FINE_MIN, where the detections and the first decisions are (HEAD levels a minute), then spread
+// over the rest of the run: ceil on the cell and floor on the clock mean a cell never shows early, and
+// late by under a level (1/HEAD min in the first hour, ~2.3 min a level in a 6 h run after it).
+const SPAN = 253 // levels 1..254; 255 is the ground that never burns
+const FINE_MIN = 60
+const HEAD = 2
 const FRONT_MIN = 30
 
 // The colours come from the globe shader, not the texel: R and G at 255 and a tiny gamma (texel^100) leave
@@ -40,6 +49,7 @@ const RECOLOUR = true
 const RG = RECOLOUR ? [255, 255] : [240, 163]
 const KEY = new Color(RG[0] / 255, RG[1] / 255, 1)
 const GAMMA = 0.01
+const GLOW_PX = 10 // a fire under this radius on screen gets the glowing spot
 
 interface Look {
   alpha: number
@@ -60,7 +70,10 @@ export interface Side {
 }
 
 export class SplitLayer {
-  private readonly layers: { layer: ImageryLayer; lagMin: number }[] = [] // line, front and scar of A, then of B
+  private readonly layers: { layer: ImageryLayer; lagMin: number; scale: Scale }[] = [] // line, front and scar of A, then of B
+  private glow: Entity | undefined // a spot for a fire too small to read on screen (one side only)
+  private burned: { minute: Float32Array; lon: Float64Array; lat: Float64Array; cell: number } | undefined
+  private on = true
   private root: HTMLElement | undefined // the handle and labels, only with two sides
   /** Where the split stands, 0 (all B) to 1 (all A). */
   position = 0.5
@@ -70,21 +83,23 @@ export class SplitLayer {
     parent: HTMLElement,
     grid: Grid,
     sides: Side[], // one, or A and B
-    private readonly durationMin: number,
+    durationMin: number,
   ) {
     const rect = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
     const split = sides.length > 1
     sides.forEach((side, s) => {
       const { line, inside } = shape(grid, side.arrival, durationMin)
-      const lineUrl = encode(grid, line, durationMin)
-      const insideUrl = encode(grid, inside, durationMin)
+      const scale = scaleOf(line)
+      const lineUrl = encode(grid, line, scale, durationMin)
+      const insideUrl = encode(grid, inside, scale, durationMin)
       const direction = !split ? SplitDirection.NONE : s === 0 ? SplitDirection.LEFT : SplitDirection.RIGHT
       this.layers.push(
-        { layer: this.add(lineUrl, grid, rect, direction, LINE), lagMin: 0 },
-        { layer: this.add(insideUrl, grid, rect, direction, FRONT), lagMin: 0 },
-        { layer: this.add(insideUrl, grid, rect, direction, SCAR), lagMin: FRONT_MIN },
+        { layer: this.add(lineUrl, grid, rect, direction, LINE), lagMin: 0, scale },
+        { layer: this.add(insideUrl, grid, rect, direction, FRONT), lagMin: 0, scale },
+        { layer: this.add(insideUrl, grid, rect, direction, SCAR), lagMin: FRONT_MIN, scale },
       )
     })
+    if (!split) this.burned = burnedCells(grid, sides[0].arrival, durationMin)
     this.set(0)
     if (!split) return
 
@@ -120,17 +135,69 @@ export class SplitLayer {
   }
 
   show(on: boolean) {
+    this.on = on
     for (const { layer } of this.layers) layer.show = on
     if (this.root) this.root.hidden = !on
+    if (!on && this.glow) this.glow.show = false
   }
 
   /** Show both fires as they stand `hours` after the ignition. */
   set(hours: number) {
-    for (const { layer, lagMin } of this.layers) layer.colorToAlphaThreshold = threshold(hours * 60 - lagMin, this.durationMin)
+    for (const { layer, lagMin, scale } of this.layers) layer.colorToAlphaThreshold = threshold(hours * 60 - lagMin, scale)
+    this.updateGlow(hours * 60)
+  }
+
+  /** A fire of a few cells is a speck: below GLOW_PX of radius on screen, a glowing spot marks where it burns. */
+  private updateGlow(t: number) {
+    const b = this.burned
+    if (!b || !this.on) return
+    let n = 0 // cells with arrival <= t (minutes are sorted)
+    for (let lo = 0, hi = b.minute.length; ; ) {
+      if (lo >= hi) {
+        n = lo
+        break
+      }
+      const mid = (lo + hi) >> 1
+      if (b.minute[mid] <= t) lo = mid + 1
+      else hi = mid
+    }
+    let show = false
+    if (n > 0) {
+      let lon = 0
+      let lat = 0
+      for (let i = 0; i < n; i++) {
+        lon += b.lon[i]
+        lat += b.lat[i]
+      }
+      lon /= n
+      lat /= n
+      const scene = this.viewer.scene
+      const h = scene.globe.getHeight(Cartographic.fromDegrees(lon, lat)) ?? 0
+      const pos = Cartesian3.fromDegrees(lon, lat, h)
+      const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy
+      const metres = Math.sqrt((n * b.cell * b.cell) / Math.PI)
+      const px = fovy ? (metres * scene.drawingBufferHeight) / (2 * Cartesian3.distance(scene.camera.positionWC, pos) * Math.tan(fovy / 2)) : 0
+      show = px < GLOW_PX
+      if (show) {
+        this.glow ??= this.viewer.entities.add({
+          point: {
+            pixelSize: 18,
+            color: Color.fromCssColorString('#f0a33a').withAlpha(0.6),
+            outlineColor: Color.fromCssColorString('#ffd9a0').withAlpha(0.9),
+            outlineWidth: 2,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        })
+        this.glow.position = new ConstantPositionProperty(pos)
+      }
+    }
+    if (this.glow) this.glow.show = show
   }
 
   destroy() {
     for (const { layer } of this.layers) this.viewer.imageryLayers.remove(layer, true)
+    if (this.glow) this.viewer.entities.remove(this.glow)
     if (!this.root) return
     this.root.remove()
     this.viewer.scene.splitPosition = 0
@@ -142,26 +209,61 @@ export class SplitLayer {
     layer.splitDirection = splitDirection
     layer.colorToAlpha = KEY
     layer.colorToAlphaThreshold = 2 // nothing until set()
-    layer.minificationFilter = TextureMinificationFilter.LINEAR
-    layer.magnificationFilter = TextureMagnificationFilter.LINEAR
+    layer.minificationFilter = TextureMinificationFilter.LINEAR // far away a cell is under a pixel: blur is fine
+    layer.magnificationFilter = TextureMagnificationFilter.LINEAR // close up: smooth edges, not cell blocks (Tests na demo); an edge moves under a cell
     Object.assign(layer, RECOLOUR ? { ...look, gamma: GAMMA } : { alpha: look.alpha, brightness: look.brightness })
     return layer
   }
 }
 
-/** The colour-to-alpha threshold that shows the cells reached by minute `t` (see encode), none before 0. */
-function threshold(t: number, durationMin: number): number {
-  return t > 0 ? 1 - (1.5 + (SPAN * Math.min(t, durationMin)) / durationMin) / 255 : 2
+/** Levels a minute: `head` up to FINE_MIN, `tail` after it; the last finite arrival fills SPAN levels. */
+interface Scale {
+  head: number
+  tail: number
 }
 
-/** The arrival grid as drawn: never-burned specks inside the fire closed, the minutes smoothed over
- *  burned cells only (held edges stay sharp), and `inside`, the latest minute over each cell's 3×3.
- *  Drawing only: hectares and reports keep the model's own grid. */
+function scaleOf(minutes: Float32Array): Scale {
+  let last = 0
+  for (const m of minutes) if (m !== Infinity && m > last) last = m
+  if (last <= FINE_MIN) return { head: Math.min(4 * HEAD, SPAN / Math.max(last, 1)), tail: 0 }
+  return { head: HEAD, tail: (SPAN - HEAD * FINE_MIN) / (last - FINE_MIN) }
+}
+
+const level = (s: Scale, m: number) => (m <= FINE_MIN ? s.head * m : s.head * FINE_MIN + s.tail * (m - FINE_MIN))
+
+/** The colour-to-alpha threshold that shows the cells reached by minute `t` (see encode): level k = 1 + ceil(level(arrival)) is
+ *  lit when k <= 1 + floor(level(t)), i.e. its difference (255 − k) / 255 is at least (254 − floor) / 255. Nothing before 0. */
+export function threshold(t: number, scale: Scale): number {
+  if (t < 0) return 2
+  const reached = Math.min(SPAN, Math.floor(level(scale, t) + 1e-9))
+  return (253.5 - reached) / 255
+}
+
+/** The burning cells by arrival, with their centres, for the glow. */
+function burnedCells(grid: Grid, arrival: Float32Array, durationMin: number) {
+  const order: number[] = []
+  arrival.forEach((m, i) => m < durationMin && order.push(i))
+  order.sort((a, b) => arrival[a] - arrival[b])
+  const { west, east, south, north } = grid.rect
+  const minute = new Float32Array(order.length)
+  const lon = new Float64Array(order.length)
+  const lat = new Float64Array(order.length)
+  order.forEach((i, k) => {
+    const r = Math.floor(i / grid.cols)
+    minute[k] = arrival[i]
+    lon[k] = west + ((i - r * grid.cols + 0.5) / grid.cols) * (east - west)
+    lat[k] = north - ((r + 0.5) / grid.rows) * (north - south)
+  })
+  return { minute, lon, lat, cell: grid.cellsize }
+}
+
+/** The arrival grid as drawn, the model's own minutes (no closing, no smoothing: a cell shows exactly when it
+ *  burns), and `inside`, the latest minute over each cell's 3×3. */
 function shape(grid: Grid, arrival: Float32Array, durationMin: number): { line: Float32Array; inside: Float32Array } {
   const { cols, rows } = grid
   const line = arrival.map((m) => (m < durationMin ? m : Infinity))
   const inside = new Float32Array(line.length).fill(Infinity)
-  // Only the box around what burns has work to do; 3 cells out covers the two passes that grow it.
+  // Only the box around what burns has work to do; 1 cell out covers the 3×3.
   let r0 = rows
   let r1 = -1
   let c0 = cols
@@ -176,56 +278,10 @@ function shape(grid: Grid, arrival: Float32Array, durationMin: number): { line: 
     c1 = Math.max(c1, c)
   }
   if (r1 < 0) return { line, inside }
-  r0 = Math.max(r0 - 3, 0)
-  r1 = Math.min(r1 + 3, rows - 1)
-  c0 = Math.max(c0 - 3, 0)
-  c1 = Math.min(c1 + 3, cols - 1)
-
-  // A cell the fire never reaches but burns on 6 of its 8 sides (a stream, a road, one built-up cell)
-  // would show as a hole ringed by the line: it closes with its last neighbour.
-  for (let pass = 0; pass < 2; pass++) {
-    const src = line.slice()
-    for (let r = r0; r <= r1; r++)
-      for (let c = c0; c <= c1; c++) {
-        if (src[r * cols + c] !== Infinity) continue
-        let burned = 0
-        let last = 0
-        for (let dr = -1; dr <= 1; dr++)
-          for (let dc = -1; dc <= 1; dc++) {
-            const rr = r + dr
-            const cc = c + dc
-            if (rr < 0 || cc < 0 || rr >= rows || cc >= cols) continue
-            const m = src[rr * cols + cc]
-            if (m !== Infinity) {
-              burned++
-              last = Math.max(last, m)
-            }
-          }
-        if (burned >= 6) line[r * cols + c] = last
-      }
-  }
-
-  // Smooth the minutes (1 2 1 binomial), over burned cells only.
-  const raw = line.slice()
-  for (let r = r0; r <= r1; r++)
-    for (let c = c0; c <= c1; c++) {
-      const i = r * cols + c
-      if (raw[i] === Infinity) continue
-      let sum = 0
-      let weight = 0
-      for (let dr = -1; dr <= 1; dr++)
-        for (let dc = -1; dc <= 1; dc++) {
-          const rr = r + dr
-          const cc = c + dc
-          if (rr < 0 || cc < 0 || rr >= rows || cc >= cols) continue
-          const m = raw[rr * cols + cc]
-          if (m === Infinity) continue
-          const w = (2 - Math.abs(dr)) * (2 - Math.abs(dc))
-          sum += w * m
-          weight += w
-        }
-      line[i] = sum / weight
-    }
+  r0 = Math.max(r0 - 1, 0)
+  r1 = Math.min(r1 + 1, rows - 1)
+  c0 = Math.max(c0 - 1, 0)
+  c1 = Math.min(c1 + 1, cols - 1)
 
   // Inside: the latest minute around, never next to ground that never burns or past the grid's edge.
   for (let r = r0; r <= r1; r++)
@@ -244,7 +300,7 @@ function shape(grid: Grid, arrival: Float32Array, durationMin: number): { line: 
 }
 
 /** A field of minutes as a PNG data URL, one pixel per cell, row 0 on the north edge. */
-function encode(grid: Grid, minutes: Float32Array, durationMin: number): string {
+function encode(grid: Grid, minutes: Float32Array, scale: Scale, durationMin: number): string {
   const canvas = document.createElement('canvas')
   canvas.width = grid.cols
   canvas.height = grid.rows
@@ -257,7 +313,7 @@ function encode(grid: Grid, minutes: Float32Array, durationMin: number): string 
     d[o] = RG[0]
     d[o + 1] = RG[1]
     // Never 0: the gamma's pow(0, 100) is the one value a GPU may get wrong.
-    d[o + 2] = m < durationMin ? 1 + Math.round((SPAN * m) / durationMin) : 255
+    d[o + 2] = m < durationMin ? 1 + Math.min(SPAN, Math.ceil(level(scale, m) - 1e-9)) : 255
     d[o + 3] = 255
   }
   ctx.putImageData(image, 0, 0)

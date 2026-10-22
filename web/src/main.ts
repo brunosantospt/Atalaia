@@ -18,7 +18,6 @@ import {
   loadProgression,
   loadStations,
   loadWeather,
-  nearestStations,
   type Fire,
   type NearStation,
   type Weather,
@@ -47,6 +46,7 @@ import { createViewer } from './scene'
 import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
+import { computeRings, radiiOf, stationsInPlay, StationRingsLayer } from './stationRings'
 import { containmentProbability, loadSuppression, type Decision } from './suppression'
 
 // Monte da Penha, Guimarães (617 m): the reference point for the whole twin.
@@ -56,6 +56,7 @@ const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
 const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on until the fire stops, or this long, or the cap
 const REPORT_MIN = 360 // the 6 h of the report, kept beside the end
 const FREE_WAIT_MS = 30_000 // the cached free run is waited for this long on load; then the reference's own progression stands in
+const SPOT_K = 0.35 // the light's radius as a share of the camera's distance: the same size on screen at any zoom
 const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
 /** Before the wind shift (plans made on the forecast without it) or after it (the incident has happened). */
@@ -79,6 +80,7 @@ interface Replay {
   free: SplitLayer // the free run (ELMFIRE, no forces), shown during the simulated shots
   freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
+  rings: StationRingsLayer // how far from the ignition each station in play may put its means; follows the free run shown
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
   split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
@@ -273,8 +275,9 @@ async function main() {
       loadOsm(id),
     ])
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
-    const near = nearestStations(stations, fire0.ignition)
-    const regional = nearestStations(stations, fire0.ignition, 30, 65)
+    // Only the stations in play are available anywhere means come from (stationRings.ts).
+    const near = stationsInPlay(stations, fire0.ignition, suppression)
+    const regional = near
     // The scenario of the barriers and of the ILS (the fast model, never on screen).
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
@@ -307,6 +310,9 @@ async function main() {
     // The story and the observed layer stop where the run does.
     const { fire, progression } = cutSteps(fire0, progression0, fireEnd(grid, free).cutMin ?? Infinity)
     const reach = computeReach(grid, free, fire, near, suppression, detection)
+    const ringList = computeRings(grid, free.arrival, fire0.ignition, near, suppression, detection, inventory)
+    scenario.rings = radiiOf(ringList)
+    console.info(`rings: ${ringList.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} min ${Math.round(r.radiusM)} m`).join(' · ')}`)
     console.info(
       `free run (${source}): ${(performance.now() - t0).toFixed(0)} ms · ${describeEnd(fireEnd(grid, free), fire.start, free.durationMin)} · ` +
         reach.etas.map((e) => `${e.unit} ${e.from} T+${e.minutes} min ${e.areaHa.toFixed(1)} ha POC ${(e.poc * 100).toFixed(0)} %`).join(' · ') +
@@ -328,6 +334,7 @@ async function main() {
     replay?.markers.destroy()
     replay?.free.destroy()
     replay?.reach.destroy()
+    replay?.rings.destroy()
     replay?.split?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
@@ -344,6 +351,7 @@ async function main() {
       freeRun: free,
       freeNow: free,
       reach: new ReachLayer(viewer, fire.ignition, reach),
+      rings: new StationRingsLayer(viewer, fire.ignition, overlay),
       context,
       story,
       showSplit: false,
@@ -353,6 +361,7 @@ async function main() {
       phase: 'pre',
       sims: {},
     }
+    replay.rings.set(ringList)
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
     hud.setDirector(replay.director)
@@ -478,6 +487,10 @@ async function main() {
     replay.free.set(replay.player.update(0).hours)
     replay.free.show(false) // the loop shows it in its shots
     replay.freeNow = free
+    // The free run changed (the shifted one after the incident): the rings are where it has got by each arrival.
+    const list = computeRings(replay.scenario.grid, free.arrival, replay.data.ignition, replay.stations, suppression, detection, inventory)
+    replay.scenario.rings = radiiOf(list)
+    replay.rings.set(list)
   }
 
   /** Only Livre is simulated (the start, or the pre-incident results were never run): A and B are "ainda não simulado". */
@@ -501,13 +514,13 @@ async function main() {
   const engineDone = new Map<string, EngineRun>()
   const enginePending = new Map<string, Promise<EngineRun>>()
 
-  function ask(request: ScenarioRequest, rows: number, cols: number): Promise<EngineRun> {
+  function ask(request: ScenarioRequest, rows: number, cols: number, onProgress?: (stretch?: string) => void): Promise<EngineRun> {
     const key = JSON.stringify(request)
     const done = engineDone.get(key)
     if (done) return Promise.resolve(done)
     let pending = enginePending.get(key)
     if (!pending) {
-      pending = runScenario(request, rows, cols)
+      pending = runScenario(request, rows, cols, onProgress)
       enginePending.set(key, pending)
       pending.then(
         (r) => engineDone.set(key, r),
@@ -603,7 +616,7 @@ async function main() {
     editor.setEngine({ state: 'running', name })
     const t0 = performance.now()
     try {
-      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols).then((x) => (busy.mark(task), x))
+      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols, (s) => busy.detail(task, s)).then((x) => (busy.mark(task), x))
       const [ra, rb, rf] = await Promise.all([run(requests[0], 'A'), run(requests[1], 'B'), freeRequest ? run(freeRequest, 'Livre') : Promise.resolve(undefined)])
       if (replay?.scenario !== scenario) return busy.hide() // another fire was opened meanwhile
       // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.
@@ -671,6 +684,7 @@ async function main() {
     fire.set(freeOn || splitOn ? { step: -1, fade: 1, untimed: false } : frame.fire)
     free.show(freeOn)
     free.set(frame.hours)
+    replay.rings.setEligible(editor.open || DIRECTOR_KINDS.has(frame.shot.kind))
     split?.show(splitOn)
     split?.set(frame.hours)
     // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.
@@ -692,8 +706,8 @@ async function main() {
     const centre = readPose(scene) ?? (frame.driving ? frame.pose : undefined)
     if (centre) {
       readout = { ...centre, centre }
-      // Free camera: the light widens as the mouse zooms out.
-      spotlight.set(centre, frame.driving ? frame.spot : frame.spot * (centre.range / Math.max(frame.pose.range, 1)))
+      // Only the director's cut sizes the light per shot; otherwise it keeps one size on screen, whatever the zoom.
+      spotlight.set(centre, replay.director && frame.driving ? frame.spot : SPOT_K * centre.range)
     } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
     frameNo++
     if (editor.searching !== searching) refreshSimulate() // the ILS ended: B is final and can be simulated

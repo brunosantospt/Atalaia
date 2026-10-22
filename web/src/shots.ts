@@ -123,10 +123,10 @@ export function buildStory(
     word: 'Visão geral',
     title: `${fire.name} · ${fmtDate(clock(0))}`,
     caption: stations.length
-      ? `${stations.length === 1 ? 'Um quartel' : `${stations.length} quartéis`} a menos de 20 km da ignição, em linha reta.`
-      : 'Nenhum quartel a menos de 20 km da ignição.',
+      ? `${stations.length === 1 ? 'Um quartel' : `${stations.length} quartéis`} em jogo, os mais próximos da ignição em linha reta.`
+      : 'Nenhum quartel em jogo perto da ignição.',
     place: bboxCenter(all),
-    simulated: false,
+    simulated: sim, // a simulated fire is the free run from the first frame, the ignition's cells included
     step: -1,
     hours: 0,
     areaHa: 0,
@@ -162,7 +162,7 @@ export function buildStory(
     title: `Ignição · ${fmtTime(clock(0))}`,
     caption: `${sim ? 'Primeiro polígono simulado' : 'Primeiro polígono mapeado'}: ${fmtHa(steps[0].areaHa)}. A câmara olha para onde o fogo foi, para ${compass(headings[0])}.`,
     place: ignition,
-    simulated: false,
+    simulated: sim,
     step: 0,
     hours: steps[0].hours,
     areaHa: steps[0].areaHa,

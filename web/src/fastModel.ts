@@ -104,6 +104,7 @@ export interface Scenario {
   suppression: Suppression
   durationMin: number
   fwiSeries?: FWIHourly[]
+  rings?: Record<string, number> // by station id: how far from the ignition its ground means may be put (stationRings.ts)
 }
 
 export function simulate(scenario: Scenario, decision: Decision | null): Run {
