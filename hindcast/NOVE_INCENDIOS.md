@@ -76,7 +76,7 @@ O erro do ROS de cabeça por janela (corrida / observado), com o K3 em 33 janela
 - **O ROS observado** é o que mais explica o erro (ρ = −0,69): o modelo é lento nas janelas rápidas e rápido nas lentas. É o viés conhecido dos modelos de Rothermel em fogos de copas e eruptivos (Cruz & Alexander 2010, 2013).
 - **O combustível:** quanto mais pinhal e folhosas na área nova, mais lento (ρ = −0,49), e quanto mais mato, menos lento (ρ = +0,40).
 - **O vento, a temperatura, a humidade e o declive** quase não explicam o erro (|ρ| ≤ 0,13). O ERA5 é a 25 km e de hora a hora; as rajadas não ajudam mais do que a média.
-- **O erro não persiste de uma janela para a seguinte** (ρ = 0,06 entre janelas seguidas, 27 pares). Recalibrar cada janela com a anterior não ajuda: piorou no K3.
+- **O erro da área persiste entre janelas curtas:** ρ = +0,58 nas janelas de até 2 h, +0,70 nas de até 6 h, +0,32 nas de até 24 h (K3, nove incêndios). Um primeiro olhar com cinco incêndios e o ROS de cabeça dava ρ = 0,06; com os nove e a área é outra coisa. Por isso testa-se uma correção em linha (K3as, K5as): o fator de cada janela vem do erro da janela anterior, reduzido a metade.
 
 ## Entradas em tempo real
 
@@ -101,6 +101,30 @@ O erro do ROS de cabeça por janela (corrida / observado), com o K3 em 33 janela
 - Fortes e sem condições, estragam tudo (K6x).
 - A literatura diz quando contam. As projeções longas dependem sobretudo do tamanho do fogo que as lança, e depois do vento forte, da floresta densa e do declive (Storey et al. 2020, 338 observações na Austrália). A probabilidade de uma faúlha acender segue a humidade do combustível fino (Schroeder 1969; Ellis 2015 para o eucalipto).
 - A proposta é um peso condicional das projeções: projeções longas só quando o fogo já é grande, com vento forte e combustível seco (FFMC alto), e a probabilidade de Schroeder em todos os casos. Mede-se como uma dimensão do ensemble (várias sementes, uma probabilidade de arder), e não com uma corrida só.
+
+## O ponto de ignição em tempo real
+
+O Carlos notou, em Alijó, que as coordenadas do alerta estavam erradas. Em Portugal regista-se por vezes o centro da freguesia ou um marco cívico no momento do alerta telefónico; o primeiro foco de satélite estava a 311 m. Nos nove incêndios mediu-se a distância do ponto do alerta no SGIF a três coisas: à ignição do PT-FireSprd, ao perímetro do passo 0 e ao foco mais próximo da primeira passagem de satélite que viu o fogo.
+
+| Incêndio | Alerta → ignição PT-FireSprd | Alerta → perímetro do passo 0 | 1.ª passagem de satélite: foco mais próximo, horas depois do alerta, píxel |
+|---|---|---|---|
+| Vieira do Minho | 60 m | dentro | 185 m, 3,3 h, MODIS 1 km |
+| Cabeceiras de Basto | 1 412 m | 1 242 m | 534 m, 6,6 h, MODIS |
+| Vila Nova de Cerveira | 1 775 m | 1 513 m | 1 021 m, 1,8 h, MODIS |
+| Sever do Vouga | 76 m | 30 m | — |
+| Guarda | 213 m | dentro | 19 m, 0,1 h, VIIRS 375 m |
+| Oleiros | 1 778 m | 1 783 m | 1 336 m, 7,3 h, MODIS |
+| Castro Marim | 230 m | 216 m | 2 253 m, 1,7 h, MODIS (1 foco) |
+| Vila de Rei | 634 m | 598 m | 938 m, 9,1 h, MODIS |
+| Monchique | 282 m | 190 m | 221 m, 0,8 h, VIIRS |
+
+- **O ponto do alerta erra de 60 m a 1,8 km:** em 5 dos 9 incêndios menos de 300 m, em 3 mais de 1,4 km. Alijó, com 311 m, está no meio.
+- **Os satélites de órbita polar não o corrigem a tempo:** a primeira passagem que vê o fogo chega 0,1 a 9 h depois do alerta, quase sempre com píxeis de 1 km. O MTG-FCI (10 min, 1 km) e o VIIRS (375 m) é que podem.
+- **Os números deste estudo não mudam:** as corridas partem do perímetro observado do passo 0, e as ignições seguintes vêm dos polígonos de ignição do PT-FireSprd, não do SGIF. Só o relógio (a hora do alerta) vem do SGIF.
+- **Na API, um incêndio novo parte de um ponto, e esse ponto vem do alerta:**
+  - deslocá-lo para o primeiro foco de satélite logo que haja um (MTG-FCI, VIIRS) e, depois, para o primeiro perímetro observado;
+  - até lá, tratá-lo como incerto, com membros do ensemble deslocados até ~1–2 km. Benali et al. (2016) mostram que a incerteza da ignição pesa na previsão;
+  - não pôr a ignição numa célula não combustível: o centro da freguesia cai muitas vezes numa aldeia ou numa estrada.
 
 ## Linhas molhadas
 

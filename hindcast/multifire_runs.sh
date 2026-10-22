@@ -29,6 +29,9 @@ declare -A CFG=(
   [K5a]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge hotspots --active-window-h 6"
   [K5o]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge oracle"
   [K3o]="--fuels sb --scars --active-edge oracle"
+  # online correction: each window's spread factor from the previous window's area error of the plain run (steps.py)
+  [K5as]="--fuels pt --scars --live-herb 30 --live-woody 70 --assimilate-from K5"
+  [K3as]="--fuels sb --scars --assimilate-from K3"
   # the gusts: effective wind 30 % of the way from the mean to the gusts
   [K3g]="--fuels sb --scars --gust-frac 0.3"
   [K5g]="--fuels pt --scars --live-herb 30 --live-woody 70 --gust-frac 0.3"

@@ -19,6 +19,12 @@ that a wildfire's head spreads at 10 % of the 10 m open wind speed, grown as an 
 (Alexander 1985 length-to-breadth for that wind; the window's mean wind vector, its mean speed). It is the bar a fire
 model has to clear.
 
+Online correction (what a real-time system can do with the last two perimeters): with --assimilate-from CFG among the
+arguments after "--", window k runs with --adj (ratio_{k-1})^-beta, where ratio_{k-1} is the growth area ratio (run /
+observed) of the uncorrected run CFG in the previous window (fires/<id>/steps/<CFG>.json), beta from
+--assimilate-beta (0.5 by default: the error carries over only partly, rho ~0.6 between windows of up to 6 h), the
+factor kept within [0.3, 2.2]. With no previous window the factor is 1.
+
 The run.py arguments after "--" are the configuration (the same in every window). Writes
 hindcast/fires/<id>/steps/<name>.json; the runs go to fires/<id>/runs/st_<name>_<k>/ and data/hindcast/<id>/.
 """
@@ -125,6 +131,15 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     extra = argv[argv.index("--") + 1:] if "--" in argv else []
     argv = argv[:argv.index("--")] if "--" in argv else argv
+    assim, beta = None, 0.5
+    if "--assimilate-from" in extra:
+        i = extra.index("--assimilate-from")
+        assim = extra[i + 1]
+        extra = extra[:i] + extra[i + 2:]
+    if "--assimilate-beta" in extra:
+        i = extra.index("--assimilate-beta")
+        beta = float(extra[i + 1])
+        extra = extra[:i] + extra[i + 2:]
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("fire")
     p.add_argument("--name", required=True)
@@ -134,6 +149,10 @@ def main(argv=None):
     args = p.parse_args(argv)
 
     fire = fires.Fire(args.fire)
+    prev = {}
+    if assim:
+        prev = {w["k"]: w["model"]["ratio"] for w in
+                json.loads((fire_dir(args.fire) / "steps" / f"{assim}.json").read_text())["windows"] if "model" in w}
     legend = json.loads((fire.folder / "fuel.json").read_text())["legend"]
     idx = fire.read("fuel.u8", "u1")
     slope = fire.read("slope.u8", "u1").astype(float)
@@ -150,8 +169,13 @@ def main(argv=None):
         rec["rule10"] = scores(fire, p0, p1, t10 <= minutes, minutes)
         if not args.no_model:
             name = f"st_{args.name}_{k}"
+            more = []
+            if assim:
+                adj = float(np.clip(max(prev.get(k - 1, 1.0), 0.01) ** -beta, 0.3, 2.2)) if k - 1 in prev else 1.0
+                rec["assim_adj"] = round(adj, 3)
+                more = ["--adj", f"{adj:.3f}"]
             done = subprocess.run([PY, "-I", str(HERE / "run.py"), args.fire, "--name", name, "--start-step", str(k),
-                                   "--duration-min", str(minutes), "--no-preview", *extra],
+                                   "--duration-min", str(minutes), "--no-preview", *extra, *more],
                                   capture_output=True, text=True)
             if done.returncode != 0:
                 print(f"  k={k}: run.py failed: {done.stderr.strip().splitlines()[-1:]}")
@@ -167,6 +191,7 @@ def main(argv=None):
     d = fire_dir(args.fire) / "steps"
     d.mkdir(exist_ok=True)
     (d / f"{args.name}.json").write_text(json.dumps({"fire": args.fire, "name": args.name, "run_args": extra,
+                                                     "assimilate_from": assim, "assimilate_beta": beta if assim else None,
                                                      "windows": out}, indent=1, ensure_ascii=False))
     print(f"-> {d / (args.name + '.json')}")
 
