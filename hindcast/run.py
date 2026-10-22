@@ -5,7 +5,8 @@
 
 Like POST /api/run (api/runs.py) it starts from an observed step (the perimeter of --start-step), splits the run where
 a barrier starts to hold (runs.stretches), rasterises barriers with Fire.line and adds the later foci of fire.json as
-ignitions. It goes through engine/run.sh (engines/elmfire plus four optional request fields) and adds:
+ignitions. It goes through engines/elmfire/run.sh, with its four ELMFIRE-only request fields (engines/CONTRACT.md),
+and adds:
 
   --fuels pt          the Portuguese fuel models (fuels.py) instead of fuel.json's Scott & Burgan codes
   --scars             the burn perimeters of the fires put out shortly before (evidence.py) are non-burnable
@@ -48,7 +49,7 @@ import fuels  # noqa: E402
 from common import (CACHE, HERE, alert_offset_min, cells, evidence, fire_dir, fires, observed_arrival, official,  # noqa: E402
                     runs, score)
 
-ENGINE = HERE / "engine" / "run.sh"
+ENGINE = HERE.parent / "engines" / "elmfire" / "run.sh"
 # ELMFIRE's forecast template (vendor/elmfire/runs/forecasts/templates/default), each range at its middle
 SPOTTING = {"ENABLE_SPOTTING": True, "ENABLE_SURFACE_FIRE_SPOTTING": True, "USE_SUPERSEDED_SPOTTING": True,
             "CRITICAL_SPOTTING_FIRELINE_INTENSITY(:)": 1000.0, "SPOTTING_DISTRIBUTION_TYPE": "LOGNORMAL",
@@ -230,7 +231,7 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     result = {"fire": args.fire, "name": args.name, "start": step["time"], "duration_min": duration,
               "options": {k: (rel(v) if isinstance(v, Path) else v) for k, v in vars(args).items()},
-              "engine": f"ELMFIRE {res['version']} (engines/elmfire + hindcast/engine)", "platform": platform_info(),
+              "engine": f"ELMFIRE {res['version']} (engines/elmfire)", "platform": platform_info(),
               "barriers": len(lines),
               "stretches": len(runs.stretches(scenario)), "runtime_s": round(runtime, 1),
               "wall_s": round(time.time() - wall, 1), "notes": notes, "stats": stats}
