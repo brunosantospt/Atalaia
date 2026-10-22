@@ -117,3 +117,18 @@ const mid={lon:(turnedLine.barrier.path[0][0]+turnedLine.barrier.path[1][0])/2,l
 assert.ok(distanceM(mid,p)<1,'deliberately rotated sections remain at their selected point')
 console.log('COOPERATIVE FRONT:',{free:pastFront(freeWall),one:pastFront(singleWall),six:pastFront(strongWall)})
 console.log('OK: physical-unit BV IDs/renumbering, 100/200 m fixed lines, water/endurance display only, journeys, real fast propagation and timed barriers')
+
+// The demo ends at three hours even when the caller requests a longer horizon.
+assert.equal(freeWall.durationMin,180)
+assert.ok(Array.from(freeWall.arrival).every(t => t <= 180 || t === Infinity))
+// Turn the wind from west to north at T+30: the existing scar must remain,
+// while subsequent southward spread overtakes the unchanged-wind forecast.
+const west = {...scenario.weather, windKmh:[15,15,15], windFromDeg:[270,270,270]}
+const north = {...west, windFromDeg:[0,0,0]}
+const steady = simulateFast({...scenario, weather:west, durationMin:180},null)
+const shifted = simulateFast({...scenario, weather:north, forecastWeather:west, windShiftMin:30, durationMin:180},null)
+for (let i=0;i<steady.arrival.length;i++) if (steady.arrival[i]<30 || shifted.arrival[i]<30)
+  assert.ok(Math.abs(steady.arrival[i]-shifted.arrival[i])<.001,'wind incident preserves the earlier burn scar')
+const south = (run: typeof steady) => Array.from(run.arrival).filter((t,i)=>t<=120 && Math.floor(i/n)>n/2+3).length
+assert.ok(south(shifted)>south(steady),'new growth follows the changed wind toward the south')
+console.log('WIND TURN:', {steadySouth:south(steady),shiftedSouth:south(shifted)})

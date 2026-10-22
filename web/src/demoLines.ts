@@ -45,3 +45,14 @@ export function demoLines(scenario: Scenario, decision: Decision): WetLine[] {
     })
   })
 }
+
+/** Demo attack coverage, independent of the display water meter. */
+export function demoAttackZones(scenario: Scenario, decision: Decision) {
+  const eta = arrivals(scenario, decision)
+  return decision.assignments.flatMap((a, slot) => {
+    if (!['crew', 'vfci'].includes(a.unit) || a.task === 'shuttle') return []
+    const point = decision.points[a.target] ?? decision.lines[a.target]?.[0]
+    if (!point) return []
+    return [{ slot, point, radius: (a.unit === 'crew' ? 80 : 150) * Math.sqrt(a.count), from: eta[slot] }]
+  })
+}

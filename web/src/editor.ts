@@ -37,7 +37,7 @@ import { approachIntercept, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
 import { ensureAssignmentIds, originColor, originLetter, fieldIds } from './unitIdentity'
-import { demoLines, demoLineLength, demoLineBearing } from './demoLines'
+import { demoAttackZones, demoLines, demoLineLength, demoLineBearing } from './demoLines'
 import { supplyStatuses, tankerReach } from './tankerSupport'
 import { unitJourney } from './unitMotion'
 import { unitIconUrl } from './unitIcons'
@@ -355,8 +355,8 @@ export class Editor {
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
       const hint = id === 'vttu' ? `Cisterna · ${spec.waterL?.toLocaleString('pt-PT')} L. Apoia VFCI num raio de 300 m e prolonga a autonomia indicada. Não cria linha de combate.`
-        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Frente de 200 m por viatura; os meios juntos prolongam a mesma linha. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
-        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Frente de 100 m por equipa; os meios juntos prolongam a mesma linha. Pode atuar fora das estradas.`
+        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Proteção circular de 150 m por viatura; reforços aumentam a área coberta. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
+        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Proteção circular de 80 m por equipa; reforços aumentam a área coberta. Pode atuar fora das estradas.`
         : `${spec.name} · apoio aéreo. Escolha a base e o ponto de intervenção; a chegada depende da distância e da mobilização.`
       button.addEventListener('mouseenter', () => this.showTip(button, hint))
       button.addEventListener('focus', () => this.showTip(button, hint))
@@ -1800,6 +1800,14 @@ export class Editor {
       })
       const at = d.points[a.target] ?? d.lines[a.target]?.[0]
       if (at) (strip as any)._unitInfo = unitInfo(a, at, [a])
+    }
+
+    if (scenario) for (const zone of demoAttackZones(scenario, d)) {
+      const positions = Array.from({ length: 65 }, (_, i) => destination(zone.point, i*360/64, zone.radius))
+        .map(p => Cartesian3.fromDegrees(p.lon,p.lat))
+      const coverage = entities.add({ polyline: { positions, width: 2, clampToGround: true, material: WET,
+        show: new CallbackProperty(() => this.open || this.playbackMinute >= zone.from, false) } })
+      ;(coverage as any)._unitInfo = unitInfo(d.assignments[zone.slot], zone.point, [d.assignments[zone.slot]])
     }
 
     // Tankers supply nearby fire engines; the circle is coverage, never a combat barrier.

@@ -312,19 +312,19 @@ async function main() {
     // The shared ELMFIRE inputs and deployment geometry.
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
-    const durationMin = horizonMin(fire0.start, weather)
+    const durationMin = Math.min(180, horizonMin(fire0.start, weather))
     const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : weather).catch(() => weather) : weather
-    const scenario: Scenario = { demo: true, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
+    const scenario: Scenario = { demo: true, windShiftMin: fire0.windShift?.minutes, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
     // Loading shows the saved reference; the demo model only runs after a button press.
     const t0 = performance.now()
     const capHa = fire0.referenceCapHa ?? CAP_HA
-    const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0), durationMin,
+    const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0).map(t => t <= durationMin ? t : Infinity), durationMin,
       runtimeMs: 0, engine: 'Referência guardada' }
     const source = 'Referência guardada · simule o modelo rápido'
     const free = capRun(grid, reference, capHa)
     const freeEnd = endMinute(grid, free)
     // The story and the observed layer stop where the run does.
-    const { fire, progression } = cutSteps(fire0, progression0, fireEnd(grid, free).cutMin ?? Infinity)
+    const { fire, progression } = cutSteps(fire0, progression0, Math.min(durationMin, fireEnd(grid, free).cutMin ?? Infinity))
     const reach = computeReach(grid, free, fire, near, suppression, detection)
     const ringList = computeRings(grid, free.arrival, fire0.ignition, near, suppression, detection)
     scenario.fireArrival = free.arrival
@@ -601,7 +601,7 @@ async function main() {
     editor.setEngine({ state: 'running', name: 'Modelo rápido' })
     const t0 = performance.now()
     try {
-      const result = await runFast({ scenario: { ...scenario, weather: phase === 'pre' ? scenario.forecastWeather ?? scenario.weather : scenario.weather }, decisions }, task => busy.mark(task))
+      const result = await runFast({ scenario: { ...scenario, windShiftMin: phase === 'post' ? scenario.windShiftMin : undefined, weather: phase === 'pre' ? scenario.forecastWeather ?? scenario.weather : scenario.weather }, decisions }, task => busy.mark(task))
       if (replay !== current) { busy.hide(); return false }
       const capHa = current.data.referenceCapHa ?? CAP_HA
       const runs: Runs = { free: capRun(scenario.grid, result.free, capHa), A: capRun(scenario.grid, result.A, capHa), B: capRun(scenario.grid, result.B, capHa) }
@@ -728,7 +728,7 @@ async function main() {
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
     const shifted = frame.hours*60 >= (replay.data.windShift?.minutes ?? Infinity)
-    replay.wind.update(shifted ? replay.scenario.weather : replay.scenario.forecastWeather ?? replay.scenario.weather, replay.scenario.startIndex, frame.hours*60)
+    replay.wind.update(shifted ? replay.scenario.weather : replay.scenario.forecastWeather ?? replay.scenario.weather, replay.scenario.startIndex, shifted ? Math.max(frame.hours*60, Math.ceil((replay.data.windShift?.minutes ?? 0)/60)*60) : frame.hours*60)
     windShift.update(frame.hours, frame.playing)
     if (alerts) hud.setAlerts(windShift.alerts(computeAlerts(alerts, frame.hours * 60, side)))
     if (frameNo % 60 === 0) {

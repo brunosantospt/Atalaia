@@ -1,5 +1,5 @@
 // The example decision A, laid out around the ignition and the observed spread axis: everything
-// at the head. A and B are independent manual plans, simulated with ELMFIRE.
+// at the head. A and B are independent manual plans, simulated with the button-run demo model.
 
 import type { Fire, NearStation } from './data'
 import { destination, distanceM } from './geo'
@@ -11,10 +11,8 @@ export function demoDecision(fire: Fire, stations: NearStation[], unlimitedWater
   const axis = fire.periods[0]?.spreadTowardDeg ?? 270
   const near = stations[0]?.id ?? 'none'
   const next = stations[1]?.id ?? near
-  // The head itself is beyond any unit (flame over 3.4 m), so what counts is the front each unit
-  // holds from its access point and how fast it grows: with the tanker shuttling water the
-  // vehicles stay on the flanks. In unlimited-water mode the tanker protects the point directly.
-  const head = destination(ign, axis, 600)
+  // Keep the example attack within reach of the slower, three-hour demo front.
+  const head = destination(ign, axis, 350)
   let aircraft = 2
   const air = airBasesForUnit('hebl').sort((a, b) => distanceM(ign, a) - distanceM(ign, b)).flatMap((base) => {
     const count = Math.min(aircraft, base.units.hebl ?? 0)

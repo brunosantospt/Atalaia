@@ -75,7 +75,7 @@ export class Ledger {
     const hourIndex = (h: number) => Math.min(Math.max(startIndex + Math.floor(h), 0), weather.time.length-1)
     const rows: Row[] = [
       { layer: 'Deteção', source: 'Drone · cenário', at: h => h*60 < detection.droneMin ? ['wait', 'A aguardar alerta'] : ['on', `Alerta às ${clock(detection.droneMin)} · T+${detection.droneMin} min`] },
-      { layer: 'Vento', source: `${meteoSource}${fire.simulated ? ' + cenário' : ''}`, at: h => { const w=windAt(weatherAt(h),startIndex,Math.round(h*60)); return ['on', `${fmtNumber(w.kmh)} km/h de ${compass(w.from)} · rajadas ${fmtNumber(w.gust)}`] } },
+      { layer: 'Vento', source: `${meteoSource}${fire.simulated ? ' + cenário' : ''}`, at: h => { const w=windAt(weatherAt(h),startIndex,h*60 >= (known.windShiftMin ?? Infinity) ? Math.max(h*60, Math.ceil((known.windShiftMin ?? 0)/60)*60) : Math.round(h*60)); return ['on', `${fmtNumber(w.kmh)} km/h de ${compass(w.from)} · rajadas ${fmtNumber(w.gust)}`] } },
       { layer: 'Atmosfera', source: meteoSource, at: h => { const i=hourIndex(h); return ['on', `${fmtNumber(weather.tempC[i])} °C · humidade ${fmtNumber(weather.rhPct[i])}%`] } },
       { layer: 'Perigo', source: 'FWI calculado', at: h => { const f=fwiAt(weatherAt(h) === weather ? fwiList : forecastFwi,startIndex,h*60); return ['on', `${f.dangerClass} · FWI ${fmtNumber(f.fwi,1)}`] } },
       ...(metrics ? [

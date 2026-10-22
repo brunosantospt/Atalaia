@@ -17,6 +17,7 @@ export interface Run {
 export interface Scenario {
   demo?: boolean // fixed coverage strips for the button-run demo model
   grid: Grid
+  windShiftMin?: number // explicit demo incident; new wind applies at this minute
   forecastWeather?: Weather // forecast before the synthetic wind incident
   weather: Weather
   startIndex: number // entry of weather.time at the ignition
