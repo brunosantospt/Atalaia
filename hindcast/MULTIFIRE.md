@@ -72,7 +72,7 @@ Só conta o crescimento entre os dois perímetros. Uma janela acerta "no fator 2
 | K3 | 87 (9 incêndios) | 1.73 | 28% | 0.13 | 0.39 |
 | K3m | 87 (9 incêndios) | 1.61 | 31% | 0.14 | 0.39 |
 | K5 | 87 (9 incêndios) | 3.89 | 28% | 0.19 | 0.75 |
-| K5a | 52 (7 incêndios) | 2.17 | 35% | 0.23 | 0.79 |
+| K5a | 75 (8 incêndios) | 1.65 | 40% | 0.18 | 0.60 |
 | K5m | 87 (9 incêndios) | 3.08 | 28% | 0.18 | 0.74 |
 | K5o | 75 (8 incêndios) | 0.68 | 35% | 0.41 | 0.65 |
 | ref_area | 11 (3 incêndios) | 1.00 | 100% | 0.32 | 0.26 |
@@ -106,7 +106,7 @@ Lado a lado: cada referência contra o modelo **nas mesmas janelas** (as que as 
 | K5 | 87 | 0.12 · 0.19 (n=87; 67%) | 0.21 · 0.33 (n=8; 50%) | 0.32 · 0.38 (n=11; 82%) | 0.34 · 0.32 (n=11; 73%) |
 | K5m | 87 | 0.12 · 0.18 (n=87; 67%) | 0.21 · 0.34 (n=8; 62%) | 0.32 · 0.38 (n=11; 91%) |  |
 | K5o | 75 | 0.32 · 0.41 (n=75; 64%) | 0.35 · 0.40 (n=67; 61%) | 0.56 · 0.41 (n=75; 21%) |  |
-| K5a | 52 | 0.14 · 0.23 (n=52; 77%) | 0.09 · 0.19 (n=45; 64%) | 0.19 · 0.23 (n=52; 69%) |  |
+| K5a | 75 | 0.14 · 0.18 (n=75; 61%) | 0.09 · 0.17 (n=67; 63%) | 0.15 · 0.18 (n=75; 64%) |  |
 
 ## 3. Porque falha: o erro do ROS de cabeça contra as condições
 

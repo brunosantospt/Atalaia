@@ -325,11 +325,11 @@
    }
   },
   "K5a": {
-   "windows": 52,
-   "median_ratio": 2.1675,
-   "within2": 0.34615384615384615,
-   "median_sorensen_growth": 0.23199999999999998,
-   "median_ros_ratio": 0.7940562700477611,
+   "windows": 75,
+   "median_ratio": 1.654,
+   "within2": 0.4,
+   "median_sorensen_growth": 0.177,
+   "median_ros_ratio": 0.6029411764705882,
    "fires": [
     "CabeceirasdeBasto_06092016",
     "CastroMarim_16082021",
@@ -337,19 +337,20 @@
     "Oleiros_25072020",
     "SeverdoVouga_09082016",
     "VieiradoMinho_10082016",
-    "VilaNovadeCerveira_08082015"
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
    ],
    "vs_rule10": {
-    "n": 52,
-    "model_win": 0.7692307692307693
+    "n": 75,
+    "model_win": 0.6133333333333333
    },
    "vs_ref_persist": {
-    "n": 45,
-    "model_win": 0.6444444444444445
+    "n": 67,
+    "model_win": 0.6268656716417911
    },
    "vs_ref_area": {
-    "n": 52,
-    "model_win": 0.6923076923076923
+    "n": 75,
+    "model_win": 0.64
    }
   },
   "K5m": {
