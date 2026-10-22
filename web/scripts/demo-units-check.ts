@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { simulateFast } from '../src/demoModel'
 import { simulate as scoreForIls, decisionBarriers as optimizerBarriers } from '../src/fastModel'
-import { demoLines } from '../src/demoLines'
+import { demoLines, demoAttackZones, demoAttackRadius, demoAttackHeldAt } from '../src/demoLines'
 import { fieldIds, ensureAssignmentIds } from '../src/unitIdentity'
 import { supplyStatuses } from '../src/tankerSupport'
 import { arrivals } from '../src/wetLine'
@@ -105,7 +105,7 @@ assert.ok(Math.max(...endpoints.map(x=>x.y))-Math.min(...endpoints.map(x=>x.y))>
 const wallScenario={...scenario,durationMin:360}
 const freeWall=simulateFast(wallScenario,null), singleWall=simulateFast(wallScenario,defence), strongWall=simulateFast(wallScenario,reinforced)
 const pastFront=(run: typeof freeWall) => Array.from(run.arrival).filter((t,i)=>Number.isFinite(t) && (grid.xmin+(i%grid.cols+.5)*grid.cellsize)>xyP.x+60).length
-assert.ok(pastFront(freeWall)>0 && pastFront(singleWall)>0,'free fire and a short open flank can spread past the response')
+assert.ok(pastFront(freeWall)>pastFront(singleWall),'growing protection suppresses more fire than no response')
 assert.equal(pastFront(strongWall),0,'enough timely sections close the front and block the fire rather than letting it flow between units')
 const late = {...reinforced,assignments:[{...reinforced.assignments[0],dispatchMin:350}]}
 assert.ok(pastFront(simulateFast(wallScenario,late))>0,'late reinforcements cannot undo fire that has already passed')
@@ -117,3 +117,29 @@ const mid={lon:(turnedLine.barrier.path[0][0]+turnedLine.barrier.path[1][0])/2,l
 assert.ok(distanceM(mid,p)<1,'deliberately rotated sections remain at their selected point')
 console.log('COOPERATIVE FRONT:',{free:pastFront(freeWall),one:pastFront(singleWall),six:pastFront(strongWall)})
 console.log('OK: physical-unit BV IDs/renumbering, 100/200 m fixed lines, water/endurance display only, journeys, real fast propagation and timed barriers')
+
+// The demo ends at three hours even when the caller requests a longer horizon.
+assert.equal(freeWall.durationMin,180)
+assert.ok(Array.from(freeWall.arrival).every(t => t <= 180 || t === Infinity))
+// Turn the wind from west to north at T+30: the existing scar must remain,
+// while subsequent southward spread overtakes the unchanged-wind forecast.
+const west = {...scenario.weather, windKmh:[15,15,15], windFromDeg:[270,270,270]}
+const north = {...west, windKmh:[20,20,20], windFromDeg:[0,0,0]}
+const steady = simulateFast({...scenario, weather:west, durationMin:180},null)
+const shifted = simulateFast({...scenario, weather:north, forecastWeather:west, windShiftMin:30, durationMin:180},null)
+for (let i=0;i<steady.arrival.length;i++) if (steady.arrival[i]<30 || shifted.arrival[i]<30)
+  assert.ok(Math.abs(steady.arrival[i]-shifted.arrival[i])<.001,'wind incident preserves the earlier burn scar')
+const south = (run: typeof steady) => Array.from(run.arrival).filter((t,i)=>t<=120 && Math.floor(i/n)>n/2+3).length
+assert.ok(south(shifted)>south(steady),'new growth follows the changed wind toward the south')
+console.log('WIND TURN:', {steadySouth:south(steady),shiftedSouth:south(shifted)})
+
+const zone = demoAttackZones(scenario,defence)[0]
+assert.equal(demoAttackRadius(zone,zone.from-1),0,'no actual coverage before arrival')
+assert.equal(demoAttackRadius(zone,zone.from),zone.initialRadius)
+assert.ok(demoAttackRadius(zone,zone.from+20)>demoAttackRadius(zone,zone.from+10),'coverage grows with elapsed deployment time')
+assert.equal(demoAttackRadius(zone,zone.from+200),zone.radius*2,'coverage has a bounded maximum')
+for (const elapsed of [0,10,30]) {
+  const radius = demoAttackRadius(zone,zone.from+elapsed)
+  assert.ok(Math.abs(demoAttackHeldAt(zone,radius)-(zone.from+elapsed))<.001,'drawn radius and model protection share the same schedule')
+}
+assert.equal(demoAttackRadius(zone,zone.from+10),zone.initialRadius+10*zone.growthPerMin,'rewinding restores the smaller circle')

@@ -6,7 +6,7 @@ import { toPTTM06 } from './geo'
 import { cellOf, cellOfXY, centerXY } from './grid'
 import type { Scenario, Run } from './scenario'
 import { isAerial, type Decision } from './suppression'
-import { demoLines } from './demoLines'
+import { demoLines, demoAttackZones, demoAttackHeldAt } from './demoLines'
 import { stripCells, arrivals } from './wetLine'
 const FUEL: Record<number, [number, number]> = {
   91: [0.8, 0.4], // Tecido edificado / Interface urbano-florestal (casas e jardins vulneraveis se desprotegidos)
@@ -48,16 +48,24 @@ const K = OFFSETS.length
 const fwiCache = new WeakMap<Scenario['weather'], ReturnType<typeof computeFWISeries>>()
 export function simulateFast(scenario: Scenario, decision: Decision | null): Run {
   const t0 = performance.now()
-  const { grid, durationMin } = scenario
+  const { grid } = scenario
+  const durationMin = Math.min(180, scenario.durationMin)
   const { cols, rows, cellsize, fuelCode, slope, aspect } = grid
   const n = cols * rows
   const minuteCount = Math.ceil(durationMin) + 1
   const wind = new Float32Array(minuteCount * K)
   let series = fwiCache.get(scenario.weather)
   if (!series) { series = computeFWISeries(scenario.weather); fwiCache.set(scenario.weather, series) }
+  let forecastSeries = scenario.forecastWeather ? fwiCache.get(scenario.forecastWeather) : series
+  if (!forecastSeries) {
+    forecastSeries = computeFWISeries(scenario.forecastWeather!)
+    fwiCache.set(scenario.forecastWeather!, forecastSeries)
+  }
   for (let m = 0; m < minuteCount; m++) {
     const { kmh, fromDeg } = weatherAt(scenario, m)
-    const head = Math.max(.05, fwiAt(series, scenario.startIndex, m).isi / 11.2 * 4.6)
+    const beforeShift = m < (scenario.windShiftMin ?? -Infinity)
+    const sample = scenario.windShiftMin !== undefined && !beforeShift ? Math.max(m, Math.ceil(scenario.windShiftMin/60)*60) : m
+    const head = Math.max(.05, fwiAt(beforeShift ? forecastSeries : series, scenario.startIndex, sample).isi / 11.2 * 4.6)
     const lb = Math.max(1.15, 1.0 + 0.10 * kmh)
     const back = head / (lb * lb)
     const a = (head + back) / 2
@@ -77,11 +85,20 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   const cosUp = new Float32Array(360*K)
   for (let a = 0; a < 360; a++) for (let k = 0; k < K; k++) cosUp[a*K+k] = Math.cos((BEARING[k]-a-180)*Math.PI/180)
   const ros0 = new Float32Array(256)
-  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 1.35
+  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 1.4
   // Timed, fixed-length strips. Neither UI water nor elapsed endurance is read here.
   const heldAt = new Float32Array(n).fill(Infinity)
   if (decision) for (const { barrier } of demoLines(scenario, decision))
     for (const cell of stripCells(grid, barrier)) heldAt[cell] = Math.min(heldAt[cell], barrier.from_min)
+  if (decision) for (const zone of demoAttackZones(scenario, decision)) {
+    const xy = toPTTM06(zone.point), rc = cellOfXY(grid, xy.x, xy.y)
+    const extent = Math.ceil(zone.radius * 2 / cellsize)
+    for (let r = Math.max(0, rc.row-extent); r <= Math.min(rows-1, rc.row+extent); r++)
+      for (let c = Math.max(0, rc.col-extent); c <= Math.min(cols-1, rc.col+extent); c++) {
+        const i = r*cols+c, at = centerXY(grid,i)
+        heldAt[i] = Math.min(heldAt[i], demoAttackHeldAt(zone, Math.hypot(at.x-xy.x,at.y-xy.y)))
+      }
+  }
   // Simplified aerial support: a supplied aircraft slows its assigned zone from its ETA.
   // It never reads the display water meter or modifies the ground coverage geometry.
   const airZones: { cells: Set<number>; from: number; factor: number }[] = []
@@ -112,7 +129,6 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
     const t = heap.topKey(), i = heap.pop()
     if (t > arrival[i]) continue
     const col = i % cols, row = (i-col)/cols
-    const m = Math.min(Math.floor(t), minuteCount-1)*K
     for (let k = 0; k < K; k++) {
       const [dx,dy] = OFFSETS[k]
       const c = col+dx, r = row+dy
@@ -122,10 +138,19 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
       if (!base) continue
       const up = slope[j]*cosUp[(aspect[j]%360)*K+k]
       const slopeFactor = Math.min(4,Math.max(.4,Math.exp(Math.max(0,up)*Math.LN2/10)))
-      const nominal = t + STEP[k]*cellsize/(base*wind[m+k]*slopeFactor)
-      let factor = 1
-      for (const zone of airZones) if (zone.from <= nominal && zone.cells.has(j)) factor = Math.min(factor, zone.factor)
-      const tj = t + (nominal-t)/Math.max(.05,factor)
+      // Integrate each crossing through changing wind, rather than freezing the
+      // departure wind for an edge that may take many minutes to cross.
+      let tj = t, remaining = STEP[k]*cellsize
+      while (remaining > 1e-6 && tj < durationMin) {
+        const minute = Math.floor(tj), end = Math.min(minute+1, durationMin)
+        let factor = 1
+        for (const zone of airZones) if (zone.from <= tj && zone.cells.has(j)) factor = Math.min(factor, zone.factor)
+        const speed = base*wind[minute*K+k]*slopeFactor*Math.max(.05,factor)
+        const dt = Math.min(end-tj, remaining/speed)
+        remaining -= speed*dt
+        tj += dt
+      }
+      if (remaining > 1e-6 || heldAt[i] <= tj) continue
       if (tj > durationMin || tj >= arrival[j] || heldAt[j] <= tj) continue
       // A diagonal may not tunnel through the corner of an active strip.
       if (dx && dy && (heldAt[row*cols+c] <= tj || heldAt[r*cols+col] <= tj)) continue
@@ -135,8 +160,10 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   return { decision, arrival, durationMin, runtimeMs: performance.now()-t0, engine: 'Modelo rápido · demo' }
 }
 
-function weatherAt({ weather, startIndex }: Scenario, minute: number): { kmh: number; fromDeg: number; rh: number } {
-  const h = startIndex + minute / 60
+function weatherAt({ weather: actual, forecastWeather, windShiftMin, startIndex }: Scenario, minute: number): { kmh: number; fromDeg: number; rh: number } {
+  const weather = windShiftMin !== undefined && minute < windShiftMin ? forecastWeather ?? actual : actual
+  const sample = windShiftMin !== undefined && minute >= windShiftMin ? Math.max(minute, Math.ceil(windShiftMin/60)*60) : minute
+  const h = startIndex + sample / 60
   const i = Math.min(Math.floor(h), weather.time.length - 1)
   const j = Math.min(i + 1, weather.time.length - 1)
   const f = h - Math.floor(h)

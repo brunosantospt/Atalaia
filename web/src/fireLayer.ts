@@ -37,8 +37,8 @@ function positions(ring: Ring): Cartesian3[] {
 }
 
 export class FireLayer {
-  private readonly areas: GroundPrimitive
-  private readonly outlines: GroundPolylinePrimitive
+  private readonly areas?: GroundPrimitive
+  private readonly outlines?: GroundPolylinePrimitive
   private readonly areaIds: string[] = []
   private readonly outlineIds: string[] = []
   private shown = ''
@@ -91,14 +91,14 @@ export class FireLayer {
       ),
     )
 
-    this.areas = scene.primitives.add(
+    if (areaInstances.length) this.areas = scene.primitives.add(
       new GroundPrimitive({
         geometryInstances: areaInstances,
         appearance: new PerInstanceColorAppearance({ flat: true, translucent: true }),
         asynchronous: true,
       }),
     )
-    this.outlines = scene.primitives.add(
+    if (outlineInstances.length) this.outlines = scene.primitives.add(
       new GroundPolylinePrimitive({
         geometryInstances: outlineInstances,
         appearance: new PolylineColorAppearance({ translucent: true }),
@@ -109,7 +109,7 @@ export class FireLayer {
 
   /** Called every frame; only touches the GPU attributes when the state changed. */
   set(state: FireState) {
-    if (!this.areas.ready || !this.outlines.ready) return
+    if ((this.areas && !this.areas.ready) || (this.outlines && !this.outlines.ready)) return
     const key = `${state.step}|${state.fade.toFixed(3)}|${state.untimed}`
     if (key === this.shown) return
     this.shown = key
@@ -125,14 +125,14 @@ export class FireLayer {
         else if (step === state.step - 1) color = Color.lerp(FRONT, SCAR, state.fade, new Color())
         else if (step < state.step) color = SCAR
       }
-      this.paint(this.areas, id, color)
+      this.paint(this.areas!, id, color)
     }
     for (const id of this.outlineIds) {
       const step = Number(id.slice(4).split('/')[0])
       let alpha = 0
       if (step === state.step) alpha = state.fade
       else if (step === state.step - 1) alpha = 1 - state.fade // the previous front fades out
-      this.paint(this.outlines, id, OUTLINE.withAlpha(OUTLINE.alpha * alpha))
+      this.paint(this.outlines!, id, OUTLINE.withAlpha(OUTLINE.alpha * alpha))
     }
   }
 
@@ -142,7 +142,7 @@ export class FireLayer {
   }
 
   destroy() {
-    this.scene.primitives.remove(this.areas)
-    this.scene.primitives.remove(this.outlines)
+    if (this.areas) this.scene.primitives.remove(this.areas)
+    if (this.outlines) this.scene.primitives.remove(this.outlines)
   }
 }

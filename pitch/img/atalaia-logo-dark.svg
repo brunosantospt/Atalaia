@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 565 200" width="565" height="200" color="#d9dcdf">
+  <rect width="565" height="200" rx="4" fill="#0d0e0f"/>
   <title>Atalaia — Ver primeiro. Decidir melhor.</title>
   <defs>
     <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
