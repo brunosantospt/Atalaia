@@ -561,3 +561,6 @@
 .hud .editor .changes li.removed em {
   color: var(--ink-dim);
 }
+.hud .editor .changes li.line b {
+  text-transform: none;
+}

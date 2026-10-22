@@ -1,0 +1,139 @@
+{
+ "fire": "VieiradoMinho_10082016",
+ "name": "b_uniforme",
+ "start": "2016-08-10T10:00",
+ "duration_min": 1350.0,
+ "options": {
+  "fire": "VieiradoMinho_10082016"
+ },
+ "engine": "none: step 0 grown to the observed area of each step (hindcast/baseline.py)",
+ "barriers": 0,
+ "stretches": 0,
+ "runtime_s": 0.0,
+ "wall_s": 0.0,
+ "notes": [
+  "referência ingénua com a área observada de cada passo: a mesma distância em todas as direções"
+ ],
+ "stats": {
+  "burned_ha": 1621.3,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 6,
+    "run_ha": 6
+   },
+   {
+    "h": 3,
+    "observed_ha": 103,
+    "run_ha": 286
+   },
+   {
+    "h": 5.0,
+    "observed_ha": 707,
+    "run_ha": 707
+   },
+   {
+    "h": 6,
+    "observed_ha": 731,
+    "run_ha": 761
+   },
+   {
+    "h": 9,
+    "observed_ha": 839,
+    "run_ha": 947
+   },
+   {
+    "h": 12,
+    "observed_ha": 971,
+    "run_ha": 1149
+   },
+   {
+    "h": 15,
+    "observed_ha": 1188,
+    "run_ha": 1372
+   },
+   {
+    "h": 17.5,
+    "observed_ha": 1573,
+    "run_ha": 1573
+   },
+   {
+    "h": 18,
+    "observed_ha": 1573,
+    "run_ha": 1578
+   },
+   {
+    "h": 21,
+    "observed_ha": 1598,
+    "run_ha": 1605
+   },
+   {
+    "h": 22.5,
+    "observed_ha": 1621,
+    "run_ha": 1621
+   }
+  ],
+  "sorensen_last_step": 0.342,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 5.0,
+    "sorensen": 0.425
+   },
+   {
+    "step": 2,
+    "h": 17.5,
+    "sorensen": 0.346
+   },
+   {
+    "step": 3,
+    "h": 22.5,
+    "sorensen": 0.342
+   }
+  ],
+  "official_ha": 1840.0,
+  "sorensen_official": 0.46,
+  "outside_official_ha": 824.4,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2016-08-10T12:02:00+00:00",
+     "h": 3.04,
+     "n": 12,
+     "reached": 0.5
+    },
+    {
+     "time_utc": "2016-08-10T12:39:00+00:00",
+     "h": 3.65,
+     "n": 42,
+     "reached": 0.52
+    },
+    {
+     "time_utc": "2016-08-10T13:42:00+00:00",
+     "h": 4.7,
+     "n": 15,
+     "reached": 0.6
+    },
+    {
+     "time_utc": "2016-08-10T14:20:00+00:00",
+     "h": 5.34,
+     "n": 34,
+     "reached": 0.32
+    },
+    {
+     "time_utc": "2016-08-10T23:08:00+00:00",
+     "h": 14.14,
+     "n": 7,
+     "reached": 0.14
+    },
+    {
+     "time_utc": "2016-08-11T02:37:00+00:00",
+     "h": 17.62,
+     "n": 28,
+     "reached": 0.0
+    }
+   ],
+   "mean_reached": 0.35
+  }
+ }
+}

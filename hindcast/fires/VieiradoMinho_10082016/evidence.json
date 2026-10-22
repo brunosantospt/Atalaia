@@ -1,0 +1,595 @@
+{
+  "fire": "VieiradoMinho_10082016",
+  "incident": {
+    "sgif_id": "DM4161072",
+    "ncco": "2016030060428",
+    "municipality": "Vieira do Minho",
+    "parish": "Rossas",
+    "place": "Chã das Tertúlias (Unnamed Road. 4850. Portugal)",
+    "lon": -8.11527777777778,
+    "lat": 41.5566666666667,
+    "alert": "2016-08-10T09:46:00+01:00",
+    "alert_source": "Populares",
+    "first_intervention": "2016-08-10T09:50:00+01:00",
+    "extinguished": "2016-08-11T21:05:00+01:00",
+    "duration_h": 35.3,
+    "area_ha": {
+      "stands": 800.0,
+      "shrub": 1039.0,
+      "farmland": 0.0,
+      "total": 1839.0
+    },
+    "cause": "Desconhecida",
+    "weather_at_fire": {
+      "temp_c": 20.4,
+      "rh_pct": 37.0,
+      "wind_kmh": 22.2,
+      "wind_from_deg": 89.0,
+      "ffmc": 92.6,
+      "dmc": 193.6,
+      "dc": 511.4,
+      "isi": 16.6,
+      "bui": 198.9,
+      "fwi": 53.6,
+      "dsr": 31.3
+    },
+    "fuel_model_at_ignition": "227",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2016&MES=8)"
+  },
+  "news": [
+    {
+      "time": "2016-08-10T22:17",
+      "kind": "evacuation",
+      "fact": "Two hamlets of Sobradelo da Goma parish (Póvoa de Lanhoso), Carreiras and Cabanelas, evacuated 'as a precaution' as the fire that started at 09:46 in Rossas approached; residents rehoused with family and in a municipal building. Not in OpenStreetMap, so located only by parish.",
+      "parish": "Sobradelo da Goma",
+      "source": "RTP live blog, 10 Aug 2016, 22:17; Lusa via JN, 11 Aug 2016",
+      "url": "https://www.rtp.pt/noticias/pais/incendios-acompanhe-a-situacao-minuto-a-minuto_e939680"
+    },
+    {
+      "time": "2016-08-11T09:00",
+      "kind": "front",
+      "fact": "By the morning of 11 Aug the flames had consumed an abandoned house on the hill at Agrela (Fafe), at the fire's western end (time approximate: 'de manhã').",
+      "place": {
+        "name": "Agrela (Fafe)",
+        "lon": -8.2079624,
+        "lat": 41.5428879
+      },
+      "source": "Operational commander Vítor Azevedo to Lusa, in JN, 11 Aug 2016",
+      "url": "https://www.jn.pt/pais/artigo/fogo-de-vieira-do-minho-em-resolucao-apos-32-horas-de-combate/5334298"
+    },
+    {
+      "time": "2016-08-11T09:00",
+      "kind": "weather",
+      "fact": "Strong wind with gusts of up to 80 km/h was the main difficulty for the firefighters.",
+      "source": "Operational commander Vítor Azevedo to Lusa, in JN, 11 Aug 2016",
+      "url": "https://www.jn.pt/pais/artigo/fogo-de-vieira-do-minho-em-resolucao-apos-32-horas-de-combate/5334298"
+    },
+    {
+      "time": "2016-08-11T20:11",
+      "kind": "resolution",
+      "fact": "The fire, which had spread into Fafe and Póvoa de Lanhoso, entered 'resolution' (no longer spreading) after 32 hours of firefighting, per the national civil protection authority (ANPC); the evacuated residents had returned home.",
+      "source": "JN, 11 Aug 2016, 20:11",
+      "url": "https://www.jn.pt/pais/artigo/fogo-de-vieira-do-minho-em-resolucao-apos-32-horas-de-combate/5334298"
+    },
+    {
+      "time": "2016-08-17T00:00",
+      "kind": "area",
+      "fact": "ICNF provisional report RIF05/2016 (17 Aug 2016) lists Vieira do Minho / Rossas, 10-08-2016: 1,000 ha of forest stands and 1,500 ha of shrubland, 2,500 ha (provisional; the final SGIF record is 1,839 ha).",
+      "source": "ICNF, 5.º Relatório Provisório de Incêndios Florestais 2016, RIF05/2016",
+      "url": "https://www.icnf.pt/api/file/doc/077273386c350b52"
+    }
+  ],
+  "scars": [
+    {
+      "kind": "scar",
+      "ncco": "2016030053703",
+      "parish": "Frades",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-07-19T21:49:00+01:00",
+      "extinguished": "2016-07-20T01:26:00+01:00",
+      "area_ha": 6.4,
+      "reported_ha": 6.35,
+      "cause": "Negligente",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030053703%20-%201%20Ocorr%C3%AAncia%20Frades.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030054597",
+      "parish": "Serzedelo",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-07-23T00:13:00+01:00",
+      "extinguished": "2016-07-23T02:10:00+01:00",
+      "area_ha": 1.3,
+      "reported_ha": 1.27,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030054597%20-%20Porto%20de%20Bois%20-%201%C2%AA%20Ocorr%C3%AAncia.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030054942",
+      "parish": "Oliveira",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-07-24T04:05:00+01:00",
+      "extinguished": "2016-07-24T15:16:00+01:00",
+      "area_ha": 6.0,
+      "reported_ha": 7.27,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416561.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030054995",
+      "parish": "Gontim",
+      "municipality": "Fafe",
+      "alert": "2016-07-24T09:23:00+01:00",
+      "extinguished": "2016-07-24T10:28:00+01:00",
+      "area_ha": 7.5,
+      "reported_ha": 7.5,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416565.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030056861",
+      "parish": "Anjos",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-07-29T18:37:00+01:00",
+      "extinguished": "2016-07-29T20:40:00+01:00",
+      "area_ha": 3.1,
+      "reported_ha": 3.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/35%20-%20DM416701%20-%202016030056861.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030056959",
+      "parish": "Brunhais",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-07-30T02:02:00+01:00",
+      "extinguished": "2016-07-30T03:19:00+01:00",
+      "area_ha": 1.4,
+      "reported_ha": 1.37,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030056959.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030057155",
+      "parish": "Esperança",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-07-30T16:54:00+01:00",
+      "extinguished": "2016-07-30T18:53:00+01:00",
+      "area_ha": 1.1,
+      "reported_ha": 1.5,
+      "cause": "Negligente",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030057155.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030057820",
+      "parish": "Aboim",
+      "municipality": "Fafe",
+      "alert": "2016-08-01T20:32:00+01:00",
+      "extinguished": "2016-08-01T22:02:00+01:00",
+      "area_ha": 2.4,
+      "reported_ha": 2.4,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030057820.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030057889",
+      "parish": "Aboim",
+      "municipality": "Fafe",
+      "alert": "2016-08-02T01:13:00+01:00",
+      "extinguished": "2016-08-02T03:26:00+01:00",
+      "area_ha": 13.6,
+      "reported_ha": 13.6,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030057889.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030057906",
+      "parish": "Aboim",
+      "municipality": "Fafe",
+      "alert": "2016-08-02T03:25:00+01:00",
+      "extinguished": "2016-08-02T04:27:00+01:00",
+      "area_ha": 12.0,
+      "reported_ha": 12.0,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030057906.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030058022",
+      "parish": "Aboim",
+      "municipality": "Fafe",
+      "alert": "2016-08-02T13:27:00+01:00",
+      "extinguished": "2016-08-02T18:28:00+01:00",
+      "area_ha": 35.4,
+      "reported_ha": 35.5,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030058022.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059271",
+      "parish": "Guilhofrei",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-08-06T23:10:00+01:00",
+      "extinguished": "2016-08-07T01:39:00+01:00",
+      "area_ha": 2.0,
+      "reported_ha": 2.0,
+      "cause": "Negligente",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/43%20-%20DM416851%20-%202016030059271.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059294",
+      "parish": "Freitas",
+      "municipality": "Fafe",
+      "alert": "2016-08-07T00:53:00+01:00",
+      "extinguished": "2016-08-07T02:53:00+01:00",
+      "area_ha": 4.7,
+      "reported_ha": 4.7,
+      "cause": "Negligente",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416856.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059387",
+      "parish": "Garfe",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-08-07T11:06:00+01:00",
+      "extinguished": "2016-08-08T06:16:00+01:00",
+      "area_ha": 448.7,
+      "reported_ha": 448.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030059387.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059458",
+      "parish": "Freitas",
+      "municipality": "Fafe",
+      "alert": "2016-08-07T15:25:00+01:00",
+      "extinguished": "2016-08-08T04:41:00+01:00",
+      "area_ha": 193.9,
+      "reported_ha": 194.0,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/DM416896%281%29.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059631",
+      "parish": "Anjos",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-08-08T00:38:00+01:00",
+      "extinguished": "2016-08-08T02:55:00+01:00",
+      "area_ha": 1.5,
+      "reported_ha": 1.5,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/46%20-%20DM416925%20-%202016030059631.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059897",
+      "parish": "Gontim",
+      "municipality": "Fafe",
+      "alert": "2016-08-08T17:37:00+01:00",
+      "extinguished": "2016-08-09T01:02:00+01:00",
+      "area_ha": 24.9,
+      "reported_ha": 25.0,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030059897%281%29.kml"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030059980",
+      "parish": "Anjos",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-08-08T21:42:00+01:00",
+      "extinguished": "2016-08-09T00:22:00+01:00",
+      "area_ha": 2.4,
+      "reported_ha": 2.43,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/48%20-%20DM416989%20-%202016030059980.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030060022",
+      "parish": "Sobradelo da Goma",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-08-09T00:44:00+01:00",
+      "extinguished": "2016-08-10T01:12:00+01:00",
+      "area_ha": 114.9,
+      "reported_ha": 115.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030060022.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030060024",
+      "parish": "Rossas",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-08-09T00:54:00+01:00",
+      "extinguished": "2016-08-09T07:28:00+01:00",
+      "area_ha": 11.3,
+      "reported_ha": 11.3,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/49%20-%20DM4161000%20-%202016030060024.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030060086",
+      "parish": "Frades",
+      "municipality": "Póvoa de Lanhoso",
+      "alert": "2016-08-09T07:55:00+01:00",
+      "extinguished": "2016-08-09T11:23:00+01:00",
+      "area_ha": 20.7,
+      "reported_ha": 20.71,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/2016030060086.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2016030060397",
+      "parish": "Rossas",
+      "municipality": "Vieira do Minho",
+      "alert": "2016-08-10T07:03:00+01:00",
+      "extinguished": "2016-08-10T08:43:00+01:00",
+      "area_ha": 1.4,
+      "reported_ha": 1.4,
+      "cause": "Reacendimento",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/51%20-%20DM4161071%20-%202016030060397.kmz"
+    }
+  ],
+  "satellite_passes": [
+    {
+      "time_utc": "2016-08-08T13:17:00+00:00",
+      "time_local": "08 Aug 14:17",
+      "hours_after_alert": -43.48,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 1,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-08T23:20:00+00:00",
+      "time_local": "09 Aug 00:20",
+      "hours_after_alert": -33.43,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 3,
+      "this_fire": 0,
+      "near_fire_before_alert": 2
+    },
+    {
+      "time_utc": "2016-08-09T01:34:00+00:00",
+      "time_local": "09 Aug 02:34",
+      "hours_after_alert": -31.2,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 12,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-09T01:53:00+00:00",
+      "time_local": "09 Aug 02:53",
+      "hours_after_alert": -30.88,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 3,
+      "this_fire": 0,
+      "near_fire_before_alert": 1
+    },
+    {
+      "time_utc": "2016-08-09T03:15:00+00:00",
+      "time_local": "09 Aug 04:15",
+      "hours_after_alert": -29.52,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 14,
+      "this_fire": 0,
+      "near_fire_before_alert": 1
+    },
+    {
+      "time_utc": "2016-08-09T12:58:00+00:00",
+      "time_local": "09 Aug 13:58",
+      "hours_after_alert": -19.8,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 1,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-09T12:59:00+00:00",
+      "time_local": "09 Aug 13:59",
+      "hours_after_alert": -19.78,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 1,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-09T14:38:00+00:00",
+      "time_local": "09 Aug 15:38",
+      "hours_after_alert": -18.13,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 1,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-09T14:39:00+00:00",
+      "time_local": "09 Aug 15:39",
+      "hours_after_alert": -18.12,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 3,
+      "this_fire": 0,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-09T22:25:00+00:00",
+      "time_local": "09 Aug 23:25",
+      "hours_after_alert": -10.35,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 10,
+      "this_fire": 0,
+      "near_fire_before_alert": 2
+    },
+    {
+      "time_utc": "2016-08-10T01:15:00+00:00",
+      "time_local": "10 Aug 02:15",
+      "hours_after_alert": -7.52,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 8,
+      "this_fire": 0,
+      "near_fire_before_alert": 4
+    },
+    {
+      "time_utc": "2016-08-10T02:36:00+00:00",
+      "time_local": "10 Aug 03:36",
+      "hours_after_alert": -6.17,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 8,
+      "this_fire": 0,
+      "near_fire_before_alert": 3
+    },
+    {
+      "time_utc": "2016-08-10T02:56:00+00:00",
+      "time_local": "10 Aug 03:56",
+      "hours_after_alert": -5.83,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 23,
+      "this_fire": 0,
+      "near_fire_before_alert": 9
+    },
+    {
+      "time_utc": "2016-08-10T12:02:00+00:00",
+      "time_local": "10 Aug 13:02",
+      "hours_after_alert": 3.27,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 12,
+      "this_fire": 12,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-10T12:39:00+00:00",
+      "time_local": "10 Aug 13:39",
+      "hours_after_alert": 3.88,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 42,
+      "this_fire": 42,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-10T13:42:00+00:00",
+      "time_local": "10 Aug 14:42",
+      "hours_after_alert": 4.93,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 17,
+      "this_fire": 15,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-10T14:20:00+00:00",
+      "time_local": "10 Aug 15:20",
+      "hours_after_alert": 5.57,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 34,
+      "this_fire": 34,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-10T23:08:00+00:00",
+      "time_local": "11 Aug 00:08",
+      "hours_after_alert": 14.37,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 7,
+      "this_fire": 7,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T01:41:00+00:00",
+      "time_local": "11 Aug 02:41",
+      "hours_after_alert": 16.92,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 3,
+      "this_fire": 3,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T02:37:00+00:00",
+      "time_local": "11 Aug 03:37",
+      "hours_after_alert": 17.85,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 43,
+      "this_fire": 42,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T03:19:00+00:00",
+      "time_local": "11 Aug 04:19",
+      "hours_after_alert": 18.55,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 6,
+      "this_fire": 3,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T11:07:00+00:00",
+      "time_local": "11 Aug 12:07",
+      "hours_after_alert": 26.35,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 3,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T12:20:00+00:00",
+      "time_local": "11 Aug 13:20",
+      "hours_after_alert": 27.57,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 4,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2016-08-11T14:01:00+00:00",
+      "time_local": "11 Aug 15:01",
+      "hours_after_alert": 29.25,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 4,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}

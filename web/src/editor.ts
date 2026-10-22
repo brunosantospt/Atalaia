@@ -26,7 +26,7 @@ import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './forma
 import { bearingDeg, compass, destination, distanceM, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
-import { diffDecisions, groundOf, ILS_NAME, type Change, type Progress, type Result, type Score } from './optimize'
+import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { findSafeRoute } from './routing'
@@ -1229,7 +1229,7 @@ export class Editor {
             ? 'Procura parada: o B ainda é igual ao A.'
             : !this.decisions[0].assignments.length
               ? 'O A ainda não tem meios: põe meios no mapa e o B é procurado com os mesmos.'
-              : 'O A não tem meios em pontos para mudar de sítio: o B fica igual ao A.'
+              : 'O A não tem meios para mudar de sítio: o B fica igual ao A.'
       return
     }
     const { result, changes } = done
@@ -1249,7 +1249,32 @@ export class Editor {
       `Com os mesmos meios, B poupa ${saved.join(' e ') || 'pouco'} às ${hours} h` +
       (home > 0 ? `, e deixa ${home} ${home === 1 ? 'meio' : 'meios'} no quartel` : '') +
       ` · ${tested}.`
-    list.replaceChildren(...changes.map((c) => this.changeRow(c)))
+    const lines = diffLines(this.decisions[0], result.decision)
+    list.replaceChildren(...lines.map((c) => this.lineRow(c)), ...changes.map((c) => this.changeRow(c)))
+  }
+
+  /** What B did with one of A's lines: moved, cut, built from the other end, or left with no one on it. */
+  private lineRow(c: LineChange): HTMLElement {
+    const li = document.createElement('li')
+    li.className = `line ${c.kind}`
+    li.innerHTML = `
+      <div class="who"><b></b><span class="task"></span></div>
+      <div class="meta"><em></em></div>`
+    li.querySelector('b')!.textContent = `linha ${c.id}`
+    li.querySelector('.task')!.textContent = TASK_NAME[c.task]
+    const cut = [c.startM ? `${fmtNumber(c.startM)} m no início` : '', c.endM ? `${fmtNumber(c.endM)} m no fim` : ''].filter(Boolean)
+    const what =
+      c.kind === 'removed'
+        ? ['sem meios no B']
+        : c.kind === 'redrawn'
+          ? ['redesenhada']
+          : [
+              c.shiftM ? `${fmtNumber(c.shiftM)} m para ${compass(c.awayDeg)}` : '',
+              cut.length ? `encurtada ${cut.join(' e ')}` : '',
+              c.reverse ? `${c.task === 'drops' ? 'descargas' : 'construída'} a partir do outro extremo` : '',
+            ]
+    li.querySelector('em')!.textContent = what.filter(Boolean).join(' · ')
+    return li
   }
 
   /** One line of what changed from A to B: which means, from where, and where it went. */
@@ -1264,15 +1289,19 @@ export class Editor {
     li.querySelector('.n')!.textContent = `×${c.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[c.task]
     li.querySelector('.from')!.textContent = isAerial(unit) ? 'Base aérea' : (this.loaded?.stations.find((s) => s.id === c.from)?.short ?? c.from)
+    const access = c.b && !isAerial(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
+    const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
     let where = ''
-    if (c.kind === 'same') where = 'no mesmo sítio'
+    if (c.kind === 'same') where = c.line ? 'na mesma linha' : 'no mesmo sítio'
     else if (c.kind === 'removed') where = 'fica no quartel'
     else if (c.kind === 'added') where = 'novo'
-    else if (c.a && c.b) {
-      const access = !isAerial(unit) && this.loaded?.context ? snapToRoad(this.loaded.context, c.b, 60) : undefined
-      const road = access && this.loaded?.context ? ` · ${roadName(this.loaded.context, access.road)}` : ''
-      where = `${fmtNumber(distanceM(c.a, c.b))} m para ${compass(bearingDeg(c.a, c.b))}${road}`
-    }
+    else if (c.kind === 'retasked') {
+      // da linha apeada l1 para ataque direto, do ataque direto para a linha aérea l2
+      const article = c.task === 'direct' || c.task === 'shuttle' ? 'o' : 'a'
+      const was = `d${article} ${TASK_NAME[c.task]}${c.line ? ` ${c.line}` : ''}`
+      const now = c.lineB ? `a ${TASK_NAME[c.taskB!]} ${c.lineB}` : TASK_NAME[c.taskB!]
+      where = `${was} para ${now}${road}`
+    } else if (c.a && c.b) where = `${fmtNumber(distanceM(c.a, c.b))} m para ${compass(bearingDeg(c.a, c.b))}${road}`
     li.querySelector('em')!.textContent = where
     return li
   }
@@ -1763,8 +1792,9 @@ export class Editor {
       ;(pointEntity as any)._unitInfo = unitInfo(mainUnit, p, units)
     }
 
-    // 4. Drawn lines: aerial drops (white, dashed), crew lines (dashed grey where no piece of it is
-    // finished within the run; its pieces are the barriers above).
+    // 4. Drawn lines: on B, A's lines it moved or left under them, dotted; aerial drops (white, dashed),
+    // crew lines (dashed grey where no piece of it is finished within the run; its pieces are the barriers above).
+    if (d.id === 'B') for (const c of diffLines(this.decisions[0], d)) this.polyline(this.decisions[0].lines[c.id], DIM, true, 3)
     for (const [id, line] of Object.entries(d.lines)) {
       const a = d.assignments.find((x) => x.target === id)
       if (!a) continue
@@ -1917,14 +1947,14 @@ export class Editor {
     }
   }
 
-  private polyline(line: LonLat[], color: Color, dashed: boolean) {
+  private polyline(line: LonLat[], color: Color, dashed: boolean, dashLength = 12) {
     if (line.length < 2) return
     this.source.entities.add({
       polyline: {
         positions: line.map((p) => Cartesian3.fromDegrees(p.lon, p.lat)),
         width: dashed ? 2.5 : 4,
         clampToGround: true,
-        material: dashed ? new PolylineDashMaterialProperty({ color, dashLength: 12 }) : color,
+        material: dashed ? new PolylineDashMaterialProperty({ color, dashLength }) : color,
       },
     })
   }
@@ -2048,7 +2078,7 @@ const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME
 /** A plan without its name: what the search reads from A, and what it leaves in B. */
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments])
 /** Whether the search has anything of A to move: units at a point. */
-const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points)
+const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points || x.target in a.lines)
 
 function nextId(existing: Record<string, unknown>, prefix: string): string {
   let n = 1
