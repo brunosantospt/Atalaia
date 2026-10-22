@@ -28,8 +28,9 @@ import { loadDetection } from './detection'
 import { incidentShots } from './director'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
-import { engineName, fetchEngines, runScenario, type EngineRun, type ScenarioRequest } from './engines'
+import { runScenario, type EngineRun, type ScenarioRequest } from './engines'
 import { burnedHa, decisionBarriers, type Run, type Scenario } from './scenario'
+import { simulate as fastSimulate } from './fastModel'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
 import { computeFWISeries } from './fwi'
@@ -317,7 +318,7 @@ async function main() {
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
     const durationMin = horizonMin(fire0.start, weather)
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin, fwiSeries: fwiSeries as any }
     // The free run is the first ELMFIRE prediction, no forces: the API's cached run, or the reference's own
     // progression (the same ELMFIRE run) while the API is down. It is cut at the cap so the browser stays light.
     busy.start('A obter a previsão do ELMFIRE…', ['Livre'])
@@ -613,7 +614,7 @@ async function main() {
   /** The simulate button, in the drawer and in the HUD: lit only when the means differ from the last simulation's,
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
-    if (!replay) return { label: 'Simular no ELMFIRE', enabled: false, note: '' }
+    if (!replay) return { label: 'Simular intervenção', enabled: false, note: '' }
     if (editor.searching) return { label: 'À espera da proposta B…', enabled: false, note: 'O B está a ser procurado (até 10 s); depois podes simular.' }
     const [a, b] = editor.decisions
     const sim = replay.sims[replay.phase]
@@ -623,11 +624,11 @@ async function main() {
       return {
         label: sim ? 'Simulação atualizada' : 'Sem meios para simular',
         enabled: false,
-        note: sim ? `A e B simulados no ${engineName(hud.settings.engine)} com os meios que estão no mapa.` : 'Põe meios no mapa (E) e carrega aqui para os simular no ELMFIRE.',
+        note: sim ? 'A e B simulados com os meios no mapa (Modelo Rápido).' : 'Põe meios no mapa (E) e carrega aqui para simular a intervenção.',
       }
     const post = replay.phase === 'post'
     return {
-      label: post ? 'Simular com o vento novo' : 'Simular no ELMFIRE',
+      label: post ? 'Simular com o vento novo' : 'Simular intervenção',
       enabled: true,
       note: sim
         ? 'Os meios mudaram desde a última simulação.'
@@ -652,45 +653,33 @@ async function main() {
   async function simulate(automaticWind = false): Promise<boolean> {
     if (!replay || busy.active || (!automaticWind && !simulateState().enabled)) return false
     const { scenario } = replay
-    const { rows, cols } = scenario.grid
     const { phase } = replay
     const post = phase === 'post'
-    const wind = windOf(phase)
     const decisions = (automaticWind ? replay.sims.pre?.decisions ?? editor.decisions : editor.decisions).map((d) => structuredClone(d)) as [Decision, Decision]
     const [a, b] = decisions
     const hash = layoutKey()
-    const requests = [engineRequest(replay.id, scenario, a, wind), engineRequest(replay.id, scenario, b, wind)]
-    const freeRequest = post ? engineRequest(replay.id, scenario, null, wind) : undefined
-    const name = engineName(requests[0].engine)
     replay.player.pause()
-    busy.start(automaticWind ? 'Vento mudou · a atualizar o ELMFIRE…' : 'A simular no ELMFIRE…', post ? ['Livre', 'A', 'B'] : ['A', 'B'])
-    editor.setEngine({ state: 'running', name })
     const t0 = performance.now()
     try {
-      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols, (s) => busy.detail(task, s)).then((x) => (busy.mark(task), x))
-      const [ra, rb, rf] = await Promise.all([run(requests[0], 'A'), run(requests[1], 'B'), freeRequest ? run(freeRequest, 'Livre') : Promise.resolve(undefined)])
-      if (replay?.scenario !== scenario) { busy.hide(); return false } // another fire was opened meanwhile
-      if (automaticWind && [ra, rb, rf].some(r => r?.shiftIgnored)) throw new Error('A API não suporta a mudança de vento. Atualize a API antes de continuar.')
-      // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.
       const capHa = replay.data.referenceCapHa ?? CAP_HA
-      const cap = (r: EngineRun, d: Decision | null) => capRun(scenario.grid, engineRun(scenario, r, d), capHa)
-      const free = rf ? cap(rf, null) : replay.freeRun
-      const sim: Sim = { runs: { free, A: cap(ra, a), B: cap(rb, b) }, decisions, hash }
+      const cap = (r: Run) => capRun(scenario.grid, r, capHa)
+      const free = replay.freeRun
+      const ra = fastSimulate(scenario as any, a)
+      const rb = fastSimulate(scenario as any, b)
+      ra.engine = 'Modelo Rápido'
+      rb.engine = 'Modelo Rápido'
+      const sim: Sim = { runs: { free, A: cap(ra), B: cap(rb) }, decisions, hash }
       replay.sims[phase] = sim
       if (replay.phase === phase) show(sim.runs, decisions)
       if (post) windShift.setResolved(true)
-      const note = [ra, rb, rf].some((r) => r?.shiftIgnored) ? 'A API não aceita wind_shift: corre com o vento da referência.' : undefined
-      editor.setEngine({ state: 'done', name: ra.engine, seconds: [ra, rb, rf].some((r) => r && !r.cached) ? (performance.now() - t0) / 1000 : 0, note })
-      busy.hide()
+      const seconds = (performance.now() - t0) / 1000
+      editor.setEngine({ state: 'done', name: 'Modelo Rápido (navegador)', seconds })
       refreshSimulate()
       return true
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e)
-      console.warn(`${name}: ${reason}`)
-      // Only the API's own list tells "not started" from "failed": the dev proxy answers 5xx for both.
-      const down = (await fetchEngines()) === null
-      editor.setEngine({ state: 'down', name, reason })
-      busy.fail(down ? 'ELMFIRE indisponível — inicie api/serve.sh' : `O ELMFIRE falhou: ${reason}`)
+      console.warn(`Modelo rápido: ${reason}`)
+      editor.setEngine({ state: 'down', name: 'Modelo Rápido', reason })
     }
     refreshSimulate()
     return false

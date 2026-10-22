@@ -23,6 +23,7 @@ export interface Scenario {
   durationMin: number
   dispatchMin?: number // T+ when the fire is detected and the initial call can be made
   fireArrival?: Float32Array // free ELMFIRE forecast for approach checks
+  fwiSeries?: import('./fwi').FWIHourly[]
 }
 
 export function burnedHa(grid: Grid, run: Run, t: number): number {
