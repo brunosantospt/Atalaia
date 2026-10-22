@@ -2,7 +2,9 @@
 // scenario's `decision.barriers` (docs/contracts.md): a path, a width and the minute from which
 // nothing burns in the cells the strip touches (fuel 91). Ground units at a point lay a wet line
 // across the local spread, centred on their access point, as long and wide as their kind
-// (suppression.json); a crew line is laid in pieces as it is dug. The fast model (fastModel.ts)
+// (suppression.json), and from then on keep extending it both ways along the fire edge at their
+// attack rate, in pieces that hold from the minute they are finished; a crew line is laid in
+// pieces as it is dug. The fast model (fastModel.ts)
 // applies these same barriers, so the preview and an ELMFIRE run see the same input. Aerial
 // units are not barriers: their drops only slow the fire for a while, and the contract has no
 // end minute. Pure: no DOM and no fastModel at run time, so it runs in the ILS worker too.
@@ -10,8 +12,8 @@
 import { findAirBase } from './airBases'
 import type { Scenario } from './fastModel'
 import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat } from './geo'
-import { cellOfXY, type Grid } from './grid'
-import { arrivalMin, isAerial, type Assignment, type Decision } from './suppression'
+import { cellOfXY, lonLatAt, type Grid } from './grid'
+import { arrivalMin, attackMPerH, dutyCycle, isAerial, type Assignment, type Decision } from './suppression'
 
 /** One entry of the scenario's `decision.barriers`, as the API takes it. */
 export interface Barrier {
@@ -27,9 +29,13 @@ export interface WetLine {
   kind: 'wet' | 'line' // a wet line at a point, or a piece of a crew line
   lengthM: number
   spreadDeg?: number // wet line: the local spread it stands across
+  grown?: boolean // a piece laid along the fire edge after the first line, not the first line itself
 }
 
 const LINE_PIECE_MIN = 30 // a crew line holds piece by piece, each one this much work
+const MAX_FROM = 12 // distinct from_min per decision: each one splits the ELMFIRE run into one more stretch
+const GROW_MIN_SLICE = 30 // a unit's growth holds in slices of at least this much work (min), on one grid for all units
+const GROW_LEAD_MIN = 20 // a growing line is laid on the free run's isochrone this far ahead of the minute it holds
 const FIT_CELLS = [5, 8] // spread from the free run: least squares over the reached cells this many around (150 m; 240 m if too few)
 
 /** Minutes from the call until each assignment is at work, as the fast model counts them: the
@@ -95,12 +101,187 @@ export function wetLines(scenario: Scenario, decision: Decision, free: Float32Ar
       spreadDeg,
     })
   })
+  growLines(scenario, decision, free, eta, out, push)
+  capFromMin(out)
   return out
 }
 
 /** Just the barriers, for `decision.barriers` of the scenario sent to the API. */
 export function barriers(scenario: Scenario, decision: Decision, free: Float32Array): Barrier[] {
   return wetLines(scenario, decision, free).map((w) => w.barrier)
+}
+
+/** One end of a growing wet line: the cell it has reached, the way it is heading (east, north) and the
+ *  work (m) the unit has done that it has not laid yet. */
+interface Front {
+  col: number
+  row: number
+  hx: number
+  hy: number
+  at: LonLat
+}
+
+/** Wet lines that keep growing. A ground unit with `followsEdge` (suppression.json) at a point goes on
+ *  after its first line, from both ends of it, along the edge of the fire at its attack rate in the fuel
+ *  × count, with the tank's duty cycle (alerts.ts: the trip to refill, none with a shuttle at the point),
+ *  for `maxWorkH` hours. The work is laid in slices on ONE time grid for the whole decision, so the
+ *  distinct from_min stay few: the piece of a slice holds from the slice's end. A slice follows the
+ *  isochrone of the free run GROW_LEAD_MIN ahead of that minute (the edge the line meets), walking cell to cell
+ *  with a heading it keeps; where the free run never gets, it goes straight on. Units at the same
+ *  point share the ends of their line: the next one starts where the last one got to. */
+function growLines(
+  scenario: Scenario,
+  decision: Decision,
+  free: Float32Array,
+  eta: number[],
+  out: WetLine[],
+  push: (w: WetLine) => void,
+) {
+  const { grid, suppression: sup, durationMin } = scenario
+  const shuttled = new Set(decision.assignments.filter((a) => a.task === 'shuttle').map((a) => a.target))
+  interface Grower { slot: number; a: Assignment; rate: number; stop: number } // rate: m/h laid in all, stop: minute it stops
+  const groups = new Map<string, { growers: Grower[]; fronts: Front[]; seen: Set<number> }>()
+  const longest = new Map<string, number>() // the first line of a point that reaches furthest
+  decision.assignments.forEach((a, slot) => {
+    const unit = sup.units[a.unit]
+    if (isAerial(unit) || (a.task !== 'direct' && a.task !== 'protect') || !decision.points[a.target]) return
+    longest.set(a.target, Math.max(longest.get(a.target) ?? 0, wetLineLengthM(scenario, decision, a)))
+    if (!unit.followsEdge || !unit.wetLineWidthM || !(eta[slot] < durationMin)) return
+    const p = decision.points[a.target]
+    const cell = cellOfXY(grid, toPTTM06(p).x, toPTTM06(p).y)
+    const inside = cell.col >= 0 && cell.row >= 0 && cell.col < grid.cols && cell.row < grid.rows
+    const rate = inside ? attackMPerH(unit, grid.fuelClass[cell.row * grid.cols + cell.col]) * a.count * dutyCycle(unit, shuttled.has(a.target) ? 0 : sup.dispatch.waterPointKm) : 0
+    if (!(rate > 0)) return
+    const g = groups.get(a.target) ?? { growers: [], fronts: [], seen: new Set<number>() }
+    g.growers.push({ slot, a, rate, stop: eta[slot] + (unit.maxWorkH ?? 12) * 60 })
+    groups.set(a.target, g)
+  })
+  if (!groups.size) return
+  for (const [target, g] of groups) {
+    const p = decision.points[target]
+    const spread = spreadAt(scenario, free, p)
+    for (const sign of [1, -1]) {
+      const brg = spread + 90 * sign
+      const end = destination(p, brg, (longest.get(target) ?? 0) / 2)
+      const { x, y } = toPTTM06(end)
+      const { col, row } = cellOfXY(grid, x, y)
+      if (col < 0 || row < 0 || col >= grid.cols || row >= grid.rows) continue
+      const r = (brg * Math.PI) / 180
+      g.fronts.push({ col, row, hx: Math.sin(r), hy: Math.cos(r), at: end })
+    }
+  }
+
+  // The time grid: slots left by the other pieces' distinct minutes, but never slices shorter than GROW_MIN_SLICE.
+  const all = [...groups.values()].flatMap((g) => g.growers)
+  const t0 = Math.ceil(Math.min(...all.map((x) => eta[x.slot])))
+  const t1 = Math.floor(Math.min(durationMin - 1, Math.max(...all.map((x) => x.stop))))
+  const used = new Set(out.map((w) => w.barrier.from_min)).size
+  const slots = Math.min(MAX_FROM - 1, Math.max(3, MAX_FROM - used))
+  // Slices of GROW_MIN_SLICE first, then longer by a constant ratio until `slots` of them reach the end:
+  // the lines are cheapest to close, and the lag of a slice costs least, while the fire is small.
+  const cuts = sliceCuts(t0, t1, slots)
+  for (let k = 1; k < cuts.length; k++) {
+    const prev = cuts[k - 1]
+    const now = cuts[k]
+    for (const g of groups.values()) {
+      for (const w of g.growers) {
+        const worked = Math.min(now, w.stop) - Math.max(prev, eta[w.slot])
+        if (worked <= 0) continue
+        const unit = sup.units[w.a.unit]
+        const halfM = (w.rate * worked) / 60 / 2
+        for (const f of g.fronts) {
+          const piece = walk(grid, free, durationMin, f, g.seen, halfM, Math.min(now + GROW_LEAD_MIN, durationMin))
+          if (piece.m <= 0) continue
+          push({
+            barrier: { path: piece.path.map((q) => [q.lon, q.lat]), width_m: unit.wetLineWidthM!, from_min: now },
+            slot: w.slot,
+            kind: 'wet',
+            lengthM: piece.m,
+            grown: true,
+          })
+        }
+      }
+    }
+  }
+}
+
+/** Minutes t0 < ... < t1, at most `slots` slices: the first GROW_MIN_SLICE long, each the next ratio times longer. */
+function sliceCuts(t0: number, t1: number, slots: number): number[] {
+  let ratio = 1
+  if (t1 - t0 > slots * GROW_MIN_SLICE) {
+    let lo = 1
+    let hi = 3
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2
+      const total = (GROW_MIN_SLICE * (Math.pow(mid, slots) - 1)) / (mid - 1)
+      if (total < t1 - t0) lo = mid
+      else hi = mid
+    }
+    ratio = hi
+  }
+  const cuts = [t0]
+  for (let len = GROW_MIN_SLICE; cuts[cuts.length - 1] < t1 && cuts.length <= slots; len *= ratio) cuts.push(Math.min(Math.round(cuts[cuts.length - 1] + len), t1))
+  cuts[cuts.length - 1] = t1
+  return cuts.filter((c, i) => i === 0 || c > cuts[i - 1])
+}
+
+/** Walks a front along the isochrone of `level` in the free run for about `metres` of line: from cell to
+ *  cell within ±60° of its heading, to the one nearest the level (a cell the fire has passed by then weighs
+ *  3 times as much as one it has not). Moves `f`; returns the path from where it was and its length. */
+function walk(grid: Grid, free: Float32Array, durationMin: number, f: Front, seen: Set<number>, metres: number, level: number) {
+  const path: LonLat[] = [f.at]
+  let m = 0
+  let col = f.col
+  let row = f.row
+  while (m < metres) {
+    let best = -1
+    let bestScore = Infinity
+    for (let dr = -1; dr <= 1; dr++)
+      for (let dc = -1; dc <= 1; dc++) {
+        if (!dc && !dr) continue
+        const c = col + dc
+        const r = row + dr
+        if (c < 0 || r < 0 || c >= grid.cols || r >= grid.rows || seen.has(r * grid.cols + c)) continue
+        const len = Math.hypot(dc, dr)
+        const cos = (dc * f.hx - dr * f.hy) / len // rows go south
+        if (cos < 0.5) continue
+        const t = free[r * grid.cols + c]
+        const e = Math.min(t <= durationMin ? t : 2 * durationMin, 2 * durationMin) - level
+        const score = (e < 0 ? -3 * e : e) / 4 + (1 - cos) * 4
+        if (score < bestScore) (bestScore = score), (best = (dr + 1) * 3 + dc + 1)
+      }
+    if (best < 0) break
+    const dc = (best % 3) - 1
+    const dr = Math.floor(best / 3) - 1
+    const len = Math.hypot(dc, dr)
+    col += dc
+    row += dr
+    seen.add(row * grid.cols + col)
+    m += len * grid.cellsize
+    f.hx = 0.85 * f.hx + (0.15 * dc) / len
+    f.hy = 0.85 * f.hy + (-0.15 * dr) / len
+    const h = Math.hypot(f.hx, f.hy)
+    f.hx /= h
+    f.hy /= h
+    path.push(lonLatAt(grid, col + 0.5, row + 0.5))
+  }
+  f.col = col
+  f.row = row
+  f.at = path[path.length - 1]
+  // Every other cell is enough for the strip to touch the same cells, and a shorter path for the API.
+  const thin = path.filter((_, i) => i === 0 || i === path.length - 1 || i % 2 === 0)
+  return { path: thin, m: path.length > 1 ? m : 0 }
+}
+
+/** At most MAX_FROM distinct from_min in all: past that, every piece waits for the next of MAX_FROM
+ *  evenly spaced minutes from the first to the last (later never earlier, so nothing holds sooner than it was laid). */
+function capFromMin(out: WetLine[]) {
+  const set = [...new Set(out.map((w) => w.barrier.from_min))]
+  if (set.length <= MAX_FROM) return
+  const lo = Math.min(...set)
+  const hi = Math.max(...set)
+  const step = (hi - lo) / (MAX_FROM - 1)
+  for (const w of out) w.barrier.from_min = Math.min(hi, Math.ceil(lo + Math.ceil((w.barrier.from_min - lo) / step - 1e-9) * step - 1e-6))
 }
 
 /** A crew line as it is dug from its first click: a piece every LINE_PIECE_MIN of work, holding

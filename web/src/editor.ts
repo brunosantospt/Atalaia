@@ -917,10 +917,17 @@ export class Editor {
     const lines = unitInfo.lines ?? []
     const wet = lines.filter((w) => w.kind === 'wet')
     const dug = lines.filter((w) => w.kind === 'line')
-    const lineText = (w: WetLine) =>
-      `${this.sup.units[this.decisions[this.active].assignments[w.slot]?.unit ?? a.unit].short}: ${fmtNumber(w.lengthM)} m × ${fmtNumber(w.barrier.width_m)} m, segura a partir das ${this.holdsFrom(w.barrier.from_min)}${this.minutes >= w.barrier.from_min ? '' : ' · a caminho'}`
+    // One row per unit: its first line and the pieces it has laid since along the fire edge, summed.
+    const wetBySlot = new Map<number, WetLine[]>()
+    for (const w of wet) wetBySlot.set(w.slot, [...(wetBySlot.get(w.slot) ?? []), w])
+    const lineText = (ws: WetLine[]) => {
+      const first = ws[0]
+      const grown = ws.filter((w) => w.grown)
+      const last = Math.max(...ws.map((w) => w.barrier.from_min))
+      return `${this.sup.units[this.decisions[this.active].assignments[first.slot]?.unit ?? a.unit].short}: ${fmtNumber(ws.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(first.barrier.width_m)} m, segura a partir das ${this.holdsFrom(first.barrier.from_min)}${grown.length ? `, cresce ao longo da orla até às ${this.holdsFrom(last)}` : ''}${this.minutes >= first.barrier.from_min ? '' : ' · a caminho'}`
+    }
     const barrierRows = [
-      ...wet.map((w) => `Linha molhada ${lineText(w)}`),
+      ...[...wetBySlot.values()].map((ws) => `Linha molhada ${lineText(ws)}`),
       ...(dug.length
         ? [`Linha apeada: ${dug.length} troço${dug.length > 1 ? 's' : ''}, ${fmtNumber(dug.reduce((m, w) => m + w.lengthM, 0))} m × ${fmtNumber(dug[0].barrier.width_m)} m, feita até às ${this.holdsFrom(Math.max(...dug.map((w) => w.barrier.from_min)))}`]
         : []),
@@ -1586,7 +1593,8 @@ export class Editor {
     // Ground units at a point: the wet line across the spread, from their arrival.
     const w = mine[0]
     if (!w) return 'chega depois do fim da simulação: não faz linha'
-    return `linha molhada de ${fmtNumber(w.lengthM)} × ${fmtNumber(w.barrier.width_m)} m atravessada ao fogo, segura a partir das ${this.holdsFrom(w.barrier.from_min)}`
+    const grown = mine.some((x) => x.grown)
+    return `linha molhada de ${fmtNumber(mine.reduce((m, x) => m + x.lengthM, 0))} × ${fmtNumber(w.barrier.width_m)} m atravessada ao fogo, segura a partir das ${this.holdsFrom(w.barrier.from_min)}${grown ? ' e a crescer ao longo da orla' : ''}`
   }
 
   private renderPalette() {
@@ -1743,7 +1751,8 @@ export class Editor {
       if (!clean.length) continue // zero-length strip
       const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const holds = this.minutes >= w.barrier.from_min
-      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? 0.6 : 0.25) } })
+      // pieces grown along the edge a bit fainter than the first line
+      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2) } })
       const strip = entities.add({
         polyline: {
           positions,
