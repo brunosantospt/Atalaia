@@ -7,6 +7,7 @@ export function unitStatus(unit: UnitSpec, kind: UnitId, arrival: number, now: n
   const capacity = Number.isFinite(tank) ? tank : kind === 'crew' ? 60 : unit.holdMin ?? 60
   return {
     onScene, elapsed, eta: Math.max(0, arrival - now),
+    capacity,
     remaining: Math.max(0, capacity - elapsed),
     waterPct: Math.max(0, Math.min(100, Math.round(100 * (1 - elapsed / capacity)))),
   }

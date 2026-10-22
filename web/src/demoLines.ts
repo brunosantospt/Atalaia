@@ -18,7 +18,7 @@ export function demoLines(scenario: Scenario, decision: Decision): WetLine[] {
   const eta = arrivals(scenario, decision)
   return decision.assignments.flatMap((a, slot) => {
     const unit = scenario.suppression.units[a.unit]
-    if (isAerial(unit) || a.task === 'shuttle') return []
+    if (isAerial(unit) || a.unit === 'vttu' || a.task === 'shuttle') return []
     const drawn = decision.lines[a.target]
     const point = decision.points[a.target] ?? drawn?.[0]
     if (!point) return []

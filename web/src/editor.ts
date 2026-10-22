@@ -38,7 +38,7 @@ import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
 import { ensureAssignmentIds, originColor, originLetter, fieldIds } from './unitIdentity'
 import { demoLines, demoLineLength, demoLineBearing } from './demoLines'
-import { unitStatus } from './unitStatus'
+import { supplyStatuses, tankerReach } from './tankerSupport'
 import { unitJourney } from './unitMotion'
 import { unitIconUrl } from './unitIcons'
 import { UnitMarkers, type UnitMarker } from './unitMarkers'
@@ -95,6 +95,7 @@ export interface EditorActions {
   simulate(): void
   /** The drawer opened or closed. */
   editing(open: boolean): void
+  reporting(open: boolean): void
 }
 
 const SNAP_M = 400 // a click further than this from any road stays where it is
@@ -155,7 +156,6 @@ const TEMPLATE = `
         <button type="button" data-ref="less" title="Menos">−</button>
         <span data-ref="count">1</span>
         <button type="button" data-ref="more" title="Mais">+</button>
-        <button type="button" class="info" data-ref="capacityInfo" aria-label="Capacidade e rendimento deste meio" title="Ver capacidade e rendimento deste meio">i</button>
       </div></div>
     </div>
     <p class="note stock" data-ref="stock"></p>
@@ -287,8 +287,7 @@ export class Editor {
   private readonly unitMarkers: UnitMarkers
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
-  private currentCapacityText = ''
-  private activeTipAnchor: HTMLElement | null = null
+  readonly reportPanel: HTMLElement
   private currentFlameM = 0
 
   constructor(
@@ -306,12 +305,22 @@ export class Editor {
     // On the body: the drawer's blur would make it the box of a fixed child, and its scroll would clip it.
     this.tip = document.createElement('div')
     this.tip.className = 'editor-tip'
+    this.tip.id = 'means-hint'
+    this.tip.setAttribute('role', 'tooltip')
     this.tip.hidden = true
     document.body.append(this.tip)
     this.el.addEventListener('scroll', () => this.hideTip(), { passive: true })
     this.refs = Object.fromEntries(
       [...this.el.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     )
+    this.reportPanel = document.createElement('aside')
+    this.reportPanel.className = 'editor reports-panel'
+    this.reportPanel.hidden = true
+    this.reportPanel.setAttribute('aria-label', 'Relatórios')
+    this.reportPanel.innerHTML = '<header><span>Relatórios · impacto das decisões</span><button type="button" aria-label="Fechar relatórios">×</button></header>'
+    this.reportPanel.querySelector('button')!.addEventListener('click', () => this.toggleReports(false))
+    this.reportPanel.append(this.refs.ends.closest('section')!, this.refs.report.closest('section')!)
+    this.root.append(this.reportPanel)
     void viewer.dataSources.add(this.source)
     void viewer.dataSources.add(this.access)
     void viewer.dataSources.add(this.routes)
@@ -335,15 +344,24 @@ export class Editor {
       const button = document.createElement('button')
       button.type = 'button'
       button.dataset.unit = id
-      button.title = `${spec.name}: escolhe e clica no mapa`
+      button.setAttribute('aria-label', `${spec.name}: escolher e colocar no mapa`)
       button.setAttribute('aria-pressed', 'false')
+      button.setAttribute('aria-describedby', 'means-hint')
       const icon = document.createElement('img')
       icon.alt = ''
       icon.src = unitIconUrl(id as UnitId)
       const label = document.createElement('span')
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
-      button.addEventListener('click', () => this.arm(id as UnitId))
+      const hint = id === 'vttu' ? `Cisterna · ${spec.waterL?.toLocaleString('pt-PT')} L. Apoia VFCI num raio de 300 m e prolonga a autonomia indicada. Não cria linha de combate.`
+        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Linha de 100 m, ajustável por rotação. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
+        : id === 'crew' ? `Brigada · ${spec.people} operacionais. Linha de 50 m, ajustável por rotação. Pode atuar fora das estradas.`
+        : `${spec.name} · apoio aéreo. Escolha a base e o ponto de intervenção; a chegada depende da distância e da mobilização.`
+      button.addEventListener('mouseenter', () => this.showTip(button, hint))
+      button.addEventListener('focus', () => this.showTip(button, hint))
+      button.addEventListener('mouseleave', () => this.hideTip())
+      button.addEventListener('blur', () => this.hideTip())
+      button.addEventListener('click', () => { this.hideTip(); this.arm(id as UnitId) })
       this.refs.units.append(button)
     }
     this.renderUnits()
@@ -362,29 +380,6 @@ export class Editor {
     this.updateTaskDropdown()
     this.refs.less.addEventListener('click', () => this.setCount(this.count - 1))
     this.refs.more.addEventListener('click', () => this.setCount(this.count + 1))
-    this.refs.capacityInfo?.addEventListener('click', (e) => {
-      e.stopPropagation()
-      if (this.tip.hidden || this.activeTipAnchor !== this.refs.capacityInfo) {
-        this.showTip(this.refs.capacityInfo, this.currentCapacityText)
-        this.activeTipAnchor = this.refs.capacityInfo
-        this.refs.capacityInfo.classList.add('active')
-      } else {
-        this.hideTip()
-      }
-    })
-    this.refs.capacityInfo?.addEventListener('mouseenter', () => {
-      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
-    })
-    this.refs.capacityInfo?.addEventListener('mouseleave', () => {
-      if (this.activeTipAnchor !== this.refs.capacityInfo) {
-        this.hideTip()
-      }
-    })
-    document.addEventListener('click', () => {
-      if (this.activeTipAnchor === this.refs.capacityInfo) {
-        this.hideTip()
-      }
-    })
     this.refs.simulate.addEventListener('click', () => this.actions.simulate())
     this.refs.ils.addEventListener('click', () => {
       if (!this.ils) return this.runIls(true)
@@ -392,7 +387,7 @@ export class Editor {
     })
     this.refs.close.addEventListener('click', () => this.toggle(false))
     this.refs.openDispatch?.addEventListener('click', () => this.openDispatchDialog())
-    this.refs.addPma?.addEventListener('click', () => this.togglePmaTool())
+    this.refs.addPma?.addEventListener('click', () => { this.toggle(true); this.togglePmaTool() })
     this.refs.clear.addEventListener('click', () => {
       const d = this.decisions[this.active]
       this.decisions[this.active] = { ...empty(d.id), name: d.name, nextAssignmentId: d.nextAssignmentId }
@@ -496,8 +491,19 @@ export class Editor {
     this.draw()
   }
 
+  get reportsOpen() { return !this.reportPanel.hidden }
+
+  toggleReports(open = !this.reportsOpen) {
+    if (open) this.toggle(false)
+    this.reportPanel.hidden = !open
+    this.reportPanel.classList.toggle('open', open)
+    if (open) { this.renderEnds(); this.renderReport() }
+    this.actions.reporting(open)
+  }
+
   toggle(open = !this.open) {
     if (this.role !== 'cmd' && open) return
+    if (open) this.toggleReports(false)
     if (open === this.open) return
     this.el.classList.toggle('open', open)
     if (!open) {
@@ -880,8 +886,7 @@ export class Editor {
     const slot = d.assignments.indexOf(a)
     if (slot < 0) return this.hideCutTooltip()
     const spec = this.sup.units[a.unit]
-    const eta = arrivals(this.loaded.scenario, d)[slot]
-    const status = unitStatus(spec, a.unit, eta, this.playbackMinute)
+    const status = supplyStatuses(this.loaded.scenario, d, this.playbackMinute)[slot]
     const station = this.loaded.stations.find(s => s.id === a.from)
     const base = findAirBase(a.from)
     const code = info.displayId ?? fieldIds(d, this.loaded.stations)[slot].join(' · ')
@@ -891,10 +896,13 @@ export class Editor {
       <div class="hover-state"><i class="${status.onScene ? 'arrived' : 'travelling'}"></i>${timeText}</div>
       <ul class="hover-facts">
         <li><span>Origem</span><b>${escapeText(origin)}</b></li>
-        <li><span>Tarefa</span><b>${TASK_NAME[a.task]}</b></li>
-        <li><span>Aguenta mais</span><b>${timeMinutes(status.remaining)}</b></li>
-        ${!isAerial(spec) && a.task !== 'shuttle' ? `<li><span>Linha</span><b>${demoLineLength(a)} m</b></li>` : ''}
+        <li><span>Tarefa</span><b>${a.unit === 'vttu' ? 'abastecimento' : TASK_NAME[a.task]}</b></li>
+        ${a.unit === 'vttu' ? `<li><span>Apoio · ${tankerReach(this.loaded.scenario)} m</span><b>${status.recipients} VFCI abrangidos</b></li>` : ''}
+        ${status.suppliedBy ? `<li><span>Abastecimento</span><b>${status.suppliedBy} cisterna(s)</b></li>` : ''}
+        ${!isAerial(spec) && a.unit !== 'vttu' && a.task !== 'shuttle' ? `<li><span>Linha</span><b>${demoLineLength(a)} m</b></li>` : ''}
       </ul>
+      <div class="hover-water hover-autonomy"><span>Autonomia</span><b>${timeMinutes(status.remaining)}</b>
+        <meter min="0" max="100" value="${Number.isFinite(status.capacity) ? Math.round(status.remaining/status.capacity*100) : 100}" aria-label="Autonomia restante"></meter></div>
       <div class="hover-water"><span>Água</span><b>${status.waterPct}%</b>
         <meter min="0" max="100" low="25" optimum="100" value="${status.waterPct}" aria-label="Água estimada">${status.waterPct}%</meter></div>
       <p class="hover-note">Água e autonomia: indicadores visuais da demo.</p>`, 'unit')
@@ -1408,10 +1416,7 @@ export class Editor {
         <option value="drops">linha aérea (desenha no mapa)</option>
       `
     } else if (this.unit === 'vttu') {
-      task.innerHTML = `
-        ${this.sup.unlimitedWater ? '<option value="direct">ataque direto (linha de 100 m)</option>' : '<option value="shuttle">abastecimento (cisterna móvel)</option>'}
-        <option value="protect">proteção de estruturas</option>
-      `
+      task.innerHTML = '<option value="shuttle">abastecimento · raio de 300 m</option>'
     } else if (this.unit === 'crew') {
       task.innerHTML = `
         <option value="direct">ataque direto (ferramentas)</option>
@@ -1454,6 +1459,7 @@ export class Editor {
 
   /** How each run ends (when the fire stops, and what it burned), and which engine ran them. */
   private renderEnds() {
+    if (this.reportPanel.hidden) return
     const table = this.refs.ends
     const runs = this.runs
     const status = this.engine
@@ -1591,7 +1597,7 @@ export class Editor {
     info.addEventListener('mouseleave', () => this.hideTip())
     info.addEventListener('blur', () => this.hideTip())
     x.addEventListener('click', () => this.remove(k))
-    if (isGround && target && unit.wetLineWidthM && (a.task === 'direct' || a.task === 'protect' || a.task === 'line') && this.loaded) {
+    if (isGround && a.unit !== 'vttu' && target && unit.wetLineWidthM && (a.task === 'direct' || a.task === 'protect' || a.task === 'line') && this.loaded) {
       const rotation = document.createElement('div')
       rotation.className = 'wetline-rotation'
       const label = document.createElement('label')
@@ -1640,36 +1646,26 @@ export class Editor {
     this.tip.textContent = text
     this.tip.hidden = false
     const r = anchor.getBoundingClientRect()
-    const { height } = this.tip.getBoundingClientRect()
-    this.tip.style.left = `${this.el.getBoundingClientRect().right + 10}px`
+    const { height, width } = this.tip.getBoundingClientRect()
+    this.tip.style.left = `${Math.max(12, Math.min(this.el.getBoundingClientRect().right + 10, innerWidth - width - 12))}px`
     this.tip.style.top = `${Math.min(Math.max(r.top + r.height / 2 - height / 2, 8), innerHeight - height - 8)}px`
     this.tip.style.setProperty('--arrow', `${r.top + r.height / 2 - parseFloat(this.tip.style.top)}px`)
   }
 
   private hideTip() {
     this.tip.hidden = true
-    this.activeTipAnchor = null
-    this.refs.capacityInfo?.classList.remove('active')
   }
 
   /** What the assignment does, in one line: the barrier it lays (the engines' input), the drops, the water. */
   private whatText(a: Assignment): string {
     const unit = this.sup.units[a.unit]
     if (isAerial(unit)) return `${unit.short}: apoio aéreo no modelo rápido. Água/autonomia são indicadores visuais.`
-    if (a.task === 'shuttle') return 'Apoio logístico; sem dependência de água no modelo.'
+    if (a.unit === 'vttu' || a.task === 'shuttle') return 'Abastece VFCI num raio de 300 m; prolonga a autonomia visual, sem criar linha.'
     return `Linha reta de ${demoLineLength(a)} m por ${a.unit === 'crew' ? 'equipa' : 'viatura'}, ativa desde a chegada. Sem extensão prevista.`
   }
 
   private renderPalette() {
     const unit = this.sup.units[this.unit]
-    const parts = [`${unit.people * this.count} pessoas`]
-    if (isAerial(unit)) parts.push(`descola em ${unit.turnoutMin} min`, 'apoio aéreo no modelo rápido')
-    else parts.push(`linha reta de ${this.unit === 'crew' ? 50 : 100} m por meio`, 'sem crescimento previsto')
-    parts.push('água/autonomia: indicadores visuais da demo')
-    this.currentCapacityText = parts.join(' · ')
-    if (this.activeTipAnchor === this.refs.capacityInfo && !this.tip.hidden) {
-      this.showTip(this.refs.capacityInfo, this.currentCapacityText)
-    }
     this.refs.from.closest<HTMLElement>('.field')!.hidden = false
     // What the station or CMA still has of this unit for the active decision.
     const from = this.from(this.loaded?.stations ?? [])
@@ -1703,6 +1699,7 @@ export class Editor {
   }
 
   private renderReport() {
+    if (this.reportPanel.hidden) return
     const table = this.refs.report
     const r = this.reports
     if (!r) {
@@ -1802,6 +1799,20 @@ export class Editor {
       })
       const at = d.points[a.target] ?? d.lines[a.target]?.[0]
       if (at) (strip as any)._unitInfo = unitInfo(a, at, [a])
+    }
+
+    // Tankers supply nearby fire engines; the circle is coverage, never a combat barrier.
+    if (scenario) for (const [slot, a] of d.assignments.entries()) {
+      if (a.unit !== 'vttu') continue
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (!at) continue
+      const color = Color.fromCssColorString(originColor(a.from, stations ?? []))
+      const positions = Array.from({ length: 65 }, (_, i) => destination(at, i*360/64, tankerReach(scenario)))
+        .map(p => Cartesian3.fromDegrees(p.lon,p.lat))
+      const arrived = arrivals(scenario, d)[slot]
+      const coverage = entities.add({ id: `tanker-coverage:${a.id}`, polyline: { positions, width: 2, clampToGround: true, material: color,
+        show: new CallbackProperty(() => this.open || this.playbackMinute >= arrived, false) } })
+      ;(coverage as any)._unitInfo = unitInfo(a, at, [a])
     }
 
     // Every physical means gets only its current source-letter + count ID.
@@ -2134,6 +2145,7 @@ function lineLengthM(line: LonLat[]): number {
 
 const escapeText = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
 const timeMinutes = (m: number) => {
+  if (!Number.isFinite(m)) return 'Em espera'
   const whole = Math.max(0, Math.round(m))
   return whole < 60 ? `${whole} min` : `${Math.floor(whole / 60)} h ${whole % 60} min`
 }

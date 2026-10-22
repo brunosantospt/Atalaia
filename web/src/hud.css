@@ -1418,3 +1418,26 @@
     box-shadow: 0 0 0 12px rgba(240, 163, 58, 0), 0 4px 16px rgba(0, 0, 0, 0.5);
   }
 }
+
+/* Operational data belongs directly beneath the incident title. */
+.hud .ledger { top: var(--ledger-top, 160px); bottom: auto; width: min(470px, calc(100vw - 68px)); box-sizing: border-box; font-size: 12px; letter-spacing: .015em; text-transform: none; }
+.hud .ledger .eyebrow { text-transform: uppercase; font-size: 12px; letter-spacing: .08em; }
+.hud .ledger table { width: 100%; margin-top: 12px; }
+.hud .ledger caption { text-align: left; padding-bottom: 9px; color: #b8c4cf; font: 12px/1.4 system-ui, sans-serif; }
+.hud .ledger th, .hud .ledger td { padding: 7px 8px 7px 0; white-space: normal; line-height: 1.5; border-bottom: 1px solid #ffffff12; }
+.hud .ledger .text { color: #eef2f6; font: 12px/1.5 system-ui, sans-serif; }
+.hud .ledger .source { font: 10px/1.5 system-ui, sans-serif; color: #a4b2bf; width: 80px; }
+.hud .ledger thead th { color: #93a4b5; font: 10px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.hud .ledger thead th::before { display: none; }
+.hud .ledger tbody th { width: 90px; font-size: 11px; }
+.hud .ledger tr.wait .text { color: #d4b68b; }
+.wind-readout { position: absolute; top: 0; left: 0; pointer-events: auto; background: #09131ee8; border: 1px solid #b9e7ff80; color: #e7f6ff; padding: 6px 9px; font: 12px/1.4 system-ui, sans-serif; white-space: nowrap; border-radius: 3px; }
+.tag b svg { display: block; width: 23px; height: 23px; }
+.tag b { min-width: 29px; display: grid; place-items: center; }
+.reports-btn .nav-icon svg { width: 18px; height: 18px; }
+.hud.reporting .bottom-nav-cluster { right: min(492px, calc(100vw - 105px)); }
+@media (max-width: 760px) { .hud .ledger { display: none; } }
+
+.hud .bottom-nav-cluster .reports-btn { width: 76px; height: 48px; }
+.hud .bottom-nav-cluster .reports-btn .nav-label { font-size: 9px; letter-spacing: .035em; color: #b8c6d6; }
+.hud .bottom-nav-cluster .reports-btn[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }

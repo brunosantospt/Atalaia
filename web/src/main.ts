@@ -40,6 +40,7 @@ import { MarkerLayer } from './markers'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { OutcomeLayer } from './outcomeLayer'
+import { WindLayer } from './windLayer'
 import { WindShiftWatch } from './windShift'
 import { computeReach } from './reach'
 import { ReachLayer } from './reachLayer'
@@ -76,6 +77,7 @@ interface Replay {
   stations: NearStation[]
   credits: Credit[]
   fire: FireLayer // the observed fire
+  wind: WindLayer
   markers: MarkerLayer
   player: Player
   scenario: Scenario // shared model inputs, forecast and deployment geometry
@@ -224,6 +226,7 @@ async function main() {
     resetNorth,
     flyToIgnition,
     toggleEditor: () => editor.toggle(),
+    toggleReports: () => editor.toggleReports(),
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
     flyTo: (at) => void flyToAlert(at),
   })
@@ -240,6 +243,11 @@ async function main() {
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => refreshSimulate(),
     simulate: () => void simulate(),
+    reporting: (open) => {
+      hud.setReports(open)
+      if (open) replay?.player.pause()
+      scene.requestRender()
+    },
     editing: (open) => {
       hud.setEditing(open)
       if (!replay) return
@@ -341,6 +349,7 @@ async function main() {
     const from = replay ? (readPose(scene) ?? START) : START
     replay?.fire.destroy()
     replay?.markers.destroy()
+    replay?.wind.destroy()
     replay?.free.destroy()
     replay?.reach.destroy()
     replay?.rings.destroy()
@@ -354,6 +363,7 @@ async function main() {
       stations: regional,
       credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
+      wind: new WindLayer(viewer, overlay, fire.ignition),
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,
@@ -386,7 +396,7 @@ async function main() {
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
     hud.setFire(fire, story.shots, {
-      known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
+      known: { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
       areaHa: (hours) => {
         const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
         if (hudRun !== run || hudMinute !== minute) {
@@ -442,6 +452,7 @@ async function main() {
       return
     }
     const wasEditing = editor.open
+    editor.toggleReports(false)
     editor.toggle(false)
     if (wasEditing) void refreshDirector().then(action)
     else action()
@@ -716,6 +727,8 @@ async function main() {
     hud.update(frame, readout, splitOn)
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
+    const shifted = frame.hours*60 >= (replay.data.windShift?.minutes ?? Infinity)
+    replay.wind.update(shifted ? replay.scenario.weather : replay.scenario.forecastWeather ?? replay.scenario.weather, replay.scenario.startIndex, frame.hours*60)
     windShift.update(frame.hours, frame.playing)
     if (alerts) hud.setAlerts(windShift.alerts(computeAlerts(alerts, frame.hours * 60, side)))
     if (frameNo % 60 === 0) {
@@ -731,6 +744,7 @@ async function main() {
 
   document.addEventListener('keydown', (e) => {
     if (busy.active || e.metaKey || e.ctrlKey || e.altKey) return
+    if (e.key === 'Escape' && editor.reportsOpen) return editor.toggleReports(false)
     if (e.key === 'Escape' && hud.settings.open) return hud.settings.toggle(false)
     if (editor.handleKey(e)) return e.preventDefault()
     // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.

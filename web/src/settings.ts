@@ -25,7 +25,7 @@ export interface SettingsActions {
 
 const TEMPLATE = `
   <header>
-    <span>Settings</span>
+    <span>Definições</span>
     <button type="button" data-ref="close" title="Fechar (Esc)">×</button>
   </header>
   <section>
@@ -56,7 +56,7 @@ export class SettingsPanel {
   constructor(parent: HTMLElement, fires: FireIndexEntry[], private readonly actions: SettingsActions) {
     this.el = document.createElement('aside')
     this.el.className = 'settings'
-    this.el.setAttribute('aria-label', 'Settings')
+    this.el.setAttribute('aria-label', 'Definições')
     this.el.innerHTML = TEMPLATE
     parent.append(this.el)
     const ref = (name: string) => this.el.querySelector<HTMLElement>(`[data-ref="${name}"]`)!

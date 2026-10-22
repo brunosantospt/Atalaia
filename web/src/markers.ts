@@ -14,6 +14,7 @@ import {
   type Viewer,
 } from 'cesium'
 import { cleanLonLat, destination } from './geo'
+import { landmarkGlyph, landmarkIconUrl } from './landmarkIcons'
 import { BEST_CSS } from './reachLayer'
 import type { MarkerKind, MarkerSpec } from './shots'
 
@@ -89,7 +90,8 @@ export class MarkerLayer {
       const tag = document.createElement('div')
       tag.className = `tag tag-${spec.kind}`
       tag.innerHTML = `<b></b><span></span>`
-      tag.querySelector('b')!.textContent = spec.badge
+      if (spec.symbol) tag.querySelector('b')!.innerHTML = landmarkGlyph(spec.symbol)
+      else tag.querySelector('b')!.textContent = spec.badge
       tag.querySelector('span')!.textContent = spec.label
       const line = document.createElementNS(SVG, 'line')
       const dot = document.createElementNS(SVG, 'circle')
@@ -110,7 +112,7 @@ export class MarkerLayer {
       }
       this.svg.append(line, dot)
       this.root.append(tag)
-      const icon = spec.persistent ? document.createElement('img') : undefined
+      const icon = spec.persistent || spec.kind === 'ignition' ? document.createElement('img') : undefined
       if (icon) {
         icon.className = 'landmark-icon'
         icon.src = landmarkIcon(spec)
@@ -217,6 +219,5 @@ function measure(tag: HTMLElement): { w: number; h: number } | undefined {
 /** A constant-size landmark remains readable even when its longer tag is hidden by a HUD panel. */
 function landmarkIcon(spec: MarkerSpec): string {
   const color = spec.color ?? (spec.kind === 'hospital' ? '#6ee7b7' : spec.kind === 'airbase' ? '#7dd3fc' : '#d9dcdf')
-  const badge = spec.badge.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#f8fafc" stroke="${color}" stroke-width="3"/><text x="20" y="25" text-anchor="middle" font-family="sans-serif" font-size="${badge.length > 2 ? 12 : 16}" font-weight="bold" fill="#0f172a">${badge}</text></svg>`)}`
+  return landmarkIconUrl(spec.symbol ?? 'helmet', color)
 }

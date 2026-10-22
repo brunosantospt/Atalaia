@@ -4,6 +4,9 @@ import { simulateFast } from '../src/demoModel'
 import { simulate as scoreForIls, decisionBarriers as optimizerBarriers } from '../src/fastModel'
 import { demoLines } from '../src/demoLines'
 import { fieldIds, ensureAssignmentIds } from '../src/unitIdentity'
+import { supplyStatuses } from '../src/tankerSupport'
+import { arrivals } from '../src/wetLine'
+import { windAt } from '../src/windLayer'
 import { unitStatus } from '../src/unitStatus'
 import { unitJourney } from '../src/unitMotion'
 import { destination, distanceM, toPTTM06 } from '../src/geo'
@@ -60,4 +63,30 @@ assert.deepEqual(journey(10),origin)
 assert.deepEqual(journey(22),end)
 assert.ok(Math.abs(distanceM(origin,journey(17))-500)<1)
 assert.ok(Array.from(free.arrival).filter(Number.isFinite).length>10,'fast model propagates across connected burnable cells')
+// A tanker shares its finite display supply among physical VFCI, only once both arrive.
+const supplied: Decision = {id:'A',name:'Supply',points:{p,far:destination(p,0,400)},lines:{},assignments:[
+  {unit:'vfci',count:2,from:'bv1',target:'p',task:'direct',dispatchMin:0},
+  {unit:'vfci',count:1,from:'bv2',target:'p',task:'direct',dispatchMin:0},
+  {unit:'vttu',count:1,from:'bv1',target:'p',task:'shuttle',dispatchMin:20},
+  {unit:'vfci',count:1,from:'bv2',target:'far',task:'direct',dispatchMin:0},
+]}
+const etas=arrivals(scenario,supplied), joined=Math.max(...etas.slice(0,3))
+const waiting=supplyStatuses(scenario,supplied,etas[2]-.1)
+assert.equal(waiting[0].suppliedBy,0,'tank support must wait for arrival')
+const support=supplyStatuses(scenario,supplied,joined)
+assert.equal(support[0].capacity,35,'3000 L + one third of 12000 L, at 200 L/min')
+assert.equal(support[1].capacity,35)
+assert.equal(support[0].suppliedBy,1)
+assert.equal(support[2].recipients,3,'count physical engines, not assignment rows')
+assert.equal(support[3].capacity,15,'out-of-range engine keeps its own tank')
+const later=supplyStatuses(scenario,supplied,joined+10)
+assert.equal(later[2].waterPct,50,'three VFCI consume 6000 L in ten minutes')
+assert.equal(later[0].remaining,10,'empty time before tanker arrival does not spend future supply')
+assert.equal(later[1].remaining,10)
+assert.deepEqual(supplyStatuses(scenario,supplied,joined),support,'rewinding recomputes deterministic gauges')
+assert.equal(supplyStatuses(scenario,{...supplied,assignments:[supplied.assignments[2]]},100)[0].waterPct,100,'idle tanker retains water')
+assert.equal(demoLines(scenario,{...supplied,assignments:[{...supplied.assignments[2],task:'direct'}]}).length,0,'even old direct-attack tankers never create combat lines')
+const calm={...scenario.weather,windFromDeg:[350,10,10],windKmh:[10,20,20]}
+assert.equal(windAt(calm,0,30).from,0,'wind wraps through north rather than reversing')
+assert.equal(windAt(calm,0,30).kmh,15)
 console.log('OK: physical-unit BV IDs/renumbering, 50/100 m fixed lines, water/endurance display only, journeys, real fast propagation and timed barriers')
