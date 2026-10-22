@@ -333,17 +333,31 @@ export class Hud {
     if (this.lastDispatch === dispatch) return
     this.lastDispatch = dispatch
     if (this.refs.pspBriefingBody) {
-      const roads = dispatch.psp.roads
-      this.refs.pspBriefingBody.innerHTML = roads.length
-        ? roads.slice(0, 4).map((r) => `
+      const { fireCutRoads = [], firefighterRoads = [] } = dispatch.psp
+      const hasAny = fireCutRoads.length > 0 || firefighterRoads.length > 0
+      if (!hasAny) {
+        this.refs.pspBriefingBody.innerHTML = '<div class="briefing-item">Nenhuma via cortada ou ameaçada neste momento.</div>'
+      } else {
+        const fireItems = fireCutRoads.slice(0, 3).map((r) => `
           <div class="briefing-item ${r.urgency}">
-            <div style="font-weight:600;color:#fff;">⛔ Cortar: ${r.label}</div>
+            <div style="font-weight:600;color:#ff6b6b;">⛔ Fogo: ${r.label}</div>
             <div style="color:${r.urgency === 'cortado' ? '#ff6b6b' : '#f0a33a'};font-size:9px;">
               ${r.minutesToImpact <= 0 ? 'Fogo ativo na via' : `Impacto previsto em ~${r.minutesToImpact} min`}
             </div>
           </div>
         `).join('')
-        : '<div class="briefing-item">Nenhuma via ameaçada neste momento.</div>'
+
+        const ffItems = firefighterRoads.slice(0, 2).map((r) => `
+          <div class="briefing-item" style="border-left:2px solid #3b82f6;">
+            <div style="font-weight:600;color:#60a5fa;">🚒 Veículo: ${r.label}</div>
+            <div style="color:#93c5fd;font-size:9px;">
+              Corte do fogo ao veículo${r.barrier ? ' e no sentido oposto' : ''} · Reforços autorizados
+            </div>
+          </div>
+        `).join('')
+
+        this.refs.pspBriefingBody.innerHTML = fireItems + ffItems
+      }
     }
     if (this.refs.inemBriefingBody) {
       const pma = dispatch.inem.pmaList[0]

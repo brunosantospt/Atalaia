@@ -649,3 +649,48 @@
 .assignment .unit-action svg { width: 16px; height: 16px; }
 .assignment .unit-action:hover, .assignment .unit-action:focus-visible { background: #392c18; border-color: #f4ad42; }
 .placement-history .unit-action { margin-left: 6px; vertical-align: middle; }
+
+/* Top decision B proposal section */
+.hud .editor section.ils.top-ils {
+  margin-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor section.ils.top-ils h3 {
+  color: var(--amber);
+  font-weight: 600;
+}
+.hud .editor .ils-btn {
+  width: 100%;
+}
+
+/* Posto de Socorro (INEM) section */
+.hud .editor .pma-section {
+  margin-top: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor .pma-btn {
+  background: #059669;
+  border: 1px solid #10b981;
+  color: #fff;
+  width: 100%;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.hud .editor .pma-btn:hover {
+  background: #10b981;
+  border-color: #34d399;
+}
+.hud .editor .pma-btn.active {
+  background: #047857;
+  border-color: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.4);
+}
