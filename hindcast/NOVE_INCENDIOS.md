@@ -69,6 +69,10 @@ O Sørensen no último passo observado, mediana dos nove incêndios: a elipse qu
   O V-MAb (mato alto com menos carga, K5b) dá quase o mesmo (0,655). O modelo de mato deve ser escolhido por região e não um só para o país: o V-MAa foi escolhido para os tojais do Minho, e no Algarve os matos são de esteva. Atenção: aqui a escolha foi feita nos mesmos incêndios em que se mede, por isso é uma pista e não uma prova. Fica por confirmar com incêndios de fora deste conjunto.
 - **As copas da Meta** (K3m) travam o fogo onde o S&B já queimava de mais (Cerveira 1,71× → 1,29×), mas também onde já era lento (Oleiros 0,28× → 0,21×). Nas copas o ELMFIRE abriga o vento (~10–15 % do vento a 10 m), e isso pesa mais do que o fogo de copas.
 - **As vivas de seca** (K5 contra K4) aceleram tudo mais 20–30 %. Ajudam onde o K4 era curto e estragam onde já era comprido.
+- **As rajadas** (vento efetivo a 30 % do caminho da média até à rajada; K3g, K5g) não chegam sozinhas.
+  - No S&B, que é lento, melhoram 6 de 8 incêndios (Oleiros 0,39 → 0,50, Cabeceiras 0,73 → 0,77) e pioram Cerveira (0,60 → 0,48). A mediana desce de 0,66 para 0,62, a média sobe de 0,59 para 0,61.
+  - Nos combustíveis portugueses aceleram o que já é rápido: a mediana desce de 0,62 para 0,55.
+  - O vento conta, mas o ERA5 não diz onde e quando sopra a rajada.
 - **As projeções** com os parâmetros de origem quase não mudam nada: +0 a 4 % de área (K6 contra K5, K3s contra K3). O que queima de mais nas corridas com projeções são os combustíveis portugueses e as vivas de seca, não as projeções. A probabilidade de ignição de Schroeder (K6d) dá entre 24 e 60 % conforme o incêndio, contra 55 % fixos, e muda ainda menos.
 - **As projeções fortes** (K6x: distância × 5, até 3 faúlhas) estragam todos os incêndios. Por exemplo, Cabeceiras passa de 0,63 para 0,32, com 4 875 ha fora do perímetro oficial (contra 1 033), e Cerveira tem 10 483 ha fora. É o que a Mara viu: projeções sem condições estragam os resultados.
 
