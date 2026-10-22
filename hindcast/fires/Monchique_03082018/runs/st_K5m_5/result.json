@@ -1,0 +1,367 @@
+{
+ "fire": "Monchique_03082018",
+ "name": "st_K5m_5",
+ "start": "2018-08-06T00:30",
+ "duration_min": 870.0,
+ "options": {
+  "fire": "Monchique_03082018",
+  "name": "st_K5m_5",
+  "start_step": 5,
+  "duration_min": 870.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 16.2,
+ "wall_s": 20.9,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 25698.6,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 3,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 136,
+    "run_ha": 0
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 209,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 244,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 337,
+    "run_ha": 0
+   },
+   {
+    "h": 12.0,
+    "observed_ha": 530,
+    "run_ha": 0
+   },
+   {
+    "h": 15,
+    "observed_ha": 544,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 567,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 593,
+    "run_ha": 0
+   },
+   {
+    "h": 24,
+    "observed_ha": 623,
+    "run_ha": 0
+   },
+   {
+    "h": 27,
+    "observed_ha": 739,
+    "run_ha": 0
+   },
+   {
+    "h": 30,
+    "observed_ha": 1040,
+    "run_ha": 0
+   },
+   {
+    "h": 33,
+    "observed_ha": 1479,
+    "run_ha": 0
+   },
+   {
+    "h": 36,
+    "observed_ha": 2373,
+    "run_ha": 0
+   },
+   {
+    "h": 36.5,
+    "observed_ha": 2506,
+    "run_ha": 0
+   },
+   {
+    "h": 39,
+    "observed_ha": 2509,
+    "run_ha": 0
+   },
+   {
+    "h": 42,
+    "observed_ha": 2515,
+    "run_ha": 0
+   },
+   {
+    "h": 45,
+    "observed_ha": 2522,
+    "run_ha": 0
+   },
+   {
+    "h": 48.0,
+    "observed_ha": 2528,
+    "run_ha": 0
+   },
+   {
+    "h": 51,
+    "observed_ha": 2554,
+    "run_ha": 0
+   },
+   {
+    "h": 54,
+    "observed_ha": 2609,
+    "run_ha": 0
+   },
+   {
+    "h": 57,
+    "observed_ha": 3338,
+    "run_ha": 0
+   },
+   {
+    "h": 59.0,
+    "observed_ha": 12642,
+    "run_ha": 12642
+   },
+   {
+    "h": 60,
+    "observed_ha": 12642,
+    "run_ha": 14341
+   },
+   {
+    "h": 63,
+    "observed_ha": 12665,
+    "run_ha": 16385
+   },
+   {
+    "h": 66,
+    "observed_ha": 12695,
+    "run_ha": 18558
+   },
+   {
+    "h": 69,
+    "observed_ha": 12743,
+    "run_ha": 21029
+   },
+   {
+    "h": 72,
+    "observed_ha": 12808,
+    "run_ha": 23751
+   },
+   {
+    "h": 73.5,
+    "observed_ha": 12832,
+    "run_ha": 25699
+   }
+  ],
+  "sorensen_last_step": 0.666,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 3.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 12.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 36.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 48.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 5,
+    "h": 59.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 6,
+    "h": 73.5,
+    "sorensen": 0.666
+   }
+  ],
+  "official_ha": 26848.6,
+  "sorensen_official": 0.727,
+  "outside_official_ha": 6598.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2018-08-03T13:21:00+00:00",
+     "h": 0.85,
+     "n": 25,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-03T22:00:00+00:00",
+     "h": 9.5,
+     "n": 5,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T01:41:00+00:00",
+     "h": 13.18,
+     "n": 15,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T02:14:00+00:00",
+     "h": 13.73,
+     "n": 6,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T03:21:00+00:00",
+     "h": 14.85,
+     "n": 9,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T22:43:00+00:00",
+     "h": 34.21,
+     "n": 23,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T01:22:00+00:00",
+     "h": 36.86,
+     "n": 45,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T02:57:00+00:00",
+     "h": 38.45,
+     "n": 9,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T03:03:00+00:00",
+     "h": 38.55,
+     "n": 35,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T12:22:00+00:00",
+     "h": 47.86,
+     "n": 4,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T12:44:00+00:00",
+     "h": 48.23,
+     "n": 25,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T14:00:00+00:00",
+     "h": 49.5,
+     "n": 19,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T14:24:00+00:00",
+     "h": 49.9,
+     "n": 72,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T21:48:00+00:00",
+     "h": 57.3,
+     "n": 43,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-05T23:26:00+00:00",
+     "h": 58.93,
+     "n": 49,
+     "reached": 0.69
+    },
+    {
+     "time_utc": "2018-08-06T02:02:00+00:00",
+     "h": 61.53,
+     "n": 34,
+     "reached": 0.94
+    },
+    {
+     "time_utc": "2018-08-06T02:44:00+00:00",
+     "h": 62.23,
+     "n": 271,
+     "reached": 0.91
+    },
+    {
+     "time_utc": "2018-08-06T11:27:00+00:00",
+     "h": 70.95,
+     "n": 14,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2018-08-06T12:25:00+00:00",
+     "h": 71.91,
+     "n": 27,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2018-08-06T13:05:00+00:00",
+     "h": 72.58,
+     "n": 14,
+     "reached": 1.0
+    }
+   ],
+   "mean_reached": 0.28
+  }
+ }
+}

@@ -1,0 +1,113 @@
+{
+ "fire": "CastroMarim_16082021",
+ "name": "st_K5a_2",
+ "start": "2021-08-16T04:00",
+ "duration_min": 60.0,
+ "options": {
+  "fire": "CastroMarim_16082021",
+  "name": "st_K5a_2",
+  "start_step": 2,
+  "duration_min": 60.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "hotspots",
+  "active_window_h": 6.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 3.0,
+ "wall_s": 8.4,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "borda ativa: 24 focos de satélite nas 6 h antes; 0% da borda segura"
+ ],
+ "stats": {
+  "burned_ha": 246.1,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.0,
+    "observed_ha": 67,
+    "run_ha": 0
+   },
+   {
+    "h": 3.0,
+    "observed_ha": 108,
+    "run_ha": 108
+   },
+   {
+    "h": 4.0,
+    "observed_ha": 184,
+    "run_ha": 246
+   }
+  ],
+  "sorensen_last_step": 0.678,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 3,
+    "h": 4.0,
+    "sorensen": 0.678
+   }
+  ],
+  "official_ha": 6643.4,
+  "sorensen_official": 0.064,
+  "outside_official_ha": 25.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2021-08-16T02:07:00+00:00",
+     "h": 2.11,
+     "n": 18,
+     "reached": 0.0
+    }
+   ],
+   "mean_reached": 0.0
+  }
+ }
+}

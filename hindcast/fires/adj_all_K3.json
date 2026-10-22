@@ -1,0 +1,42 @@
+{
+ "adj_class": "herb=0.88,shrub=1.42,euc=1.30,forest=2.20",
+ "fitted_on": [
+  "CabeceirasdeBasto_06092016",
+  "CastroMarim_16082021",
+  "Guarda_23082017",
+  "Monchique_03082018",
+  "Oleiros_25072020",
+  "SeverdoVouga_09082016",
+  "VieiradoMinho_10082016",
+  "VilaNovadeCerveira_08082015",
+  "ViladeRei_20072019"
+ ],
+ "windows": 86,
+ "steps": "K3",
+ "fold_range": {
+  "herb": [
+   0.74,
+   1.12
+  ],
+  "shrub": [
+   1.0,
+   1.84
+  ],
+  "euc": [
+   1.12,
+   1.51
+  ],
+  "forest": [
+   2.2,
+   2.2
+  ]
+ },
+ "class_support_windows": {
+  "herb": 8.0,
+  "shrub": 28.3,
+  "euc": 16.1,
+  "forest": 32.1
+ },
+ "residual_ln_before": 1.127,
+ "residual_ln_after": 0.511
+}

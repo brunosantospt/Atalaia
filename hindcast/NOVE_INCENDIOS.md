@@ -2,7 +2,25 @@
 
 Os números são do `MULTIFIRE.md`, gerado pelo `multifire_report.py`. Este texto lê-os e diz o que fazer com eles.
 
-> **RASCUNHO:** os resultados passo a passo ainda estão a correr. As secções marcadas *(a completar)* mudam quando acabarem.
+> **Estado em 22/10/2026, 13:40:** a meio. O que falta, e como continuar, está em [`HANDOFF.md`](HANDOFF.md). As secções marcadas *(a completar)* esperam por corridas que estavam na fila.
+
+## Em resumo
+
+1. **As primeiras horas** são as que interessam ao Atalaia (o primeiro ataque):
+   - a configuração da API (K3: S&B) faz 0,27× da área observada nas janelas das primeiras 4 h;
+   - os combustíveis portugueses com as vivas de seca (K5) fazem 0,79×, com o Sørensen do crescimento de 0,20 para 0,39 e as janelas dentro do fator 2 de 25 % para 58 %.
+
+   Para as primeiras horas, a configuração a usar é o K5 (secção "As primeiras horas").
+2. **Depois das primeiras horas o problema é o combate:** o modelo reacende a borda toda do perímetro em cada recomeço, mas 85–99 % dela já não cresce.
+   - Saber que borda está ativa leva o Sørensen do crescimento de 0,19 para 0,41 e a área de 3,9× para 0,68× (K5o, o limite).
+   - Com os focos do VIIRS e do MODIS só se recupera uma parte: 0,23 e 2,2× (K5a).
+   - O MTG-FCI (10 min) e os setores ativos e dominados da ANEPC são a entrada em tempo real que mais vale.
+3. **O combustível é o fator principal.**
+   - O S&B é lento em pinhal e eucaliptal (TU5).
+   - O mato V-MAa dos modelos portugueses é rápido de mais fora do Minho. O mato médio V-MMb melhora todos os incêndios de mato.
+4. **O vento médio, a temperatura e a humidade do ERA5 não explicam o erro.** As rajadas ajudam o S&B e estragam os portugueses. O declive não é a fonte do erro.
+5. **As projeções contam pouco.** As de origem dão +0–4 % de área e as sementes quase não diferem. Fortes, estragam tudo. Devem entrar como dimensão do ensemble e com condições (fogo grande, vento forte, FFMC alto).
+6. **O ponto do alerta erra até 1,8 km** (o caso de Alijó, do Carlos). Deve deslocar-se para o primeiro foco de satélite.
 
 ## A pergunta
 
@@ -82,6 +100,31 @@ A corrida livre não tem combate. Num incêndio que o combate segurou, queimar d
 
 Ver `MULTIFIRE.md`, secção 2.
 
+### As primeiras horas
+
+As janelas que começam até 4 h depois do passo 0 e duram até 4 h são 12, em 5 incêndios (Castro Marim, Monchique, Oleiros, Vila Nova de Cerveira, Vila de Rei). Na primeira janela ainda não há borda segura, e por isso não há efeito do combate a modelar.
+
+| Primeiras 4 h | Área: corrida / observada (mediana) | Sørensen do crescimento (mediana) | Dentro do fator 2 |
+|---|---|---|---|
+| K3 (a API: S&B) | 0,27× | 0,20 | 25 % |
+| K3m (S&B, copas da Meta) | 0,26× | 0,19 | 25 % |
+| **K5 (portugueses, vivas de seca)** | **0,79×** | **0,39** | **58 %** |
+| K5m (K5, copas da Meta) | 0,76× | 0,35 | 50 % |
+| Regra dos 10 % | 4,4× | 0,35 | 17 % |
+
+- **Corridas livres, Sørensen no primeiro passo observado (2–5 h):** com o K3 fica entre 0,03 e 0,35; com o K5 entre 0,20 e 0,63.
+  - Oleiros às 2,5 h: 0,05 → 0,62.
+  - Cerveira às 3 h: 0,25 → 0,54.
+  - Vieira às 5 h: 0,31 → 0,63.
+- **O K5 queima de mais mais tarde, não no início.** É o combate que o modelo não vê, e para isso há a borda ativa.
+- **O mato médio (K5mm), melhor no fim, é pior no início** em Vieira (0,63 → 0,48) e Cerveira (0,54 → 0,47). Para as primeiras horas fica o V-MAa.
+- **O que falha ainda:** as arrancadas mais rápidas. Vila de Rei fez 522 ha nas primeiras 2,5 h, e o K5 faz 72. Nada no modelo chega lá: nem projeções, nem rajadas.
+- **Para melhorar as primeiras horas:**
+  1. a ignição no primeiro foco de satélite e não no ponto do alerta (até 1,8 km de erro);
+  2. a previsão de vento à hora e com rajadas (AROME), em vez do ERA5;
+  3. um ensemble com o vento × 0,8 e × 1,25 para dar o leque em vez de um número;
+  4. recomeçar do primeiro foco do MTG-FCI 10–20 min depois do alerta.
+
 ### Porque falha
 
 O erro do ROS de cabeça por janela é log2(corrida / observado). O ROS de cabeça é o percentil 95 da distância que o crescimento vai além do perímetro de partida, por hora. Correlação de Spearman com as condições da janela, nas janelas com pelo menos 5 ha de crescimento observado (secção 3 do `MULTIFIRE.md`). Com o K3, 86 janelas de 9 incêndios, a mediana do erro é ×0,39. Com o K5, 74 janelas, é ×0,61.
@@ -110,7 +153,17 @@ Num recomeço, o ELMFIRE põe a arder todas as células do perímetro de partida
 
 As referências (regra dos 10 %, persistência, elipse com a área certa) crescem da mesma borda (`references.py --active-edge`), para que a comparação não seja ganha por construção.
 
-*(resultados do K5o, K5a: a completar)*
+Resultados no passo a passo, sem Monchique (secção 2 do `MULTIFIRE.md`):
+
+| | K5 (borda toda) | K5a (focos de 6 h, tempo real; 7 de 8 incêndios no momento da escrita) | K5o (oráculo, limite) |
+|---|---|---|---|
+| Sørensen do crescimento (mediana) | 0,19 | 0,23 | 0,41 |
+| Área: corrida / observada (mediana) | 3,9× | 2,2× | 0,68× |
+| Ganha à regra dos 10 % com a mesma borda | 67 % das janelas | 77 % | 64 % |
+| Ganha à elipse que sabe a área, com a mesma borda | — | 69 % | 21 % |
+
+- **Saber a borda ativa vale mais do que qualquer outra mudança testada.**
+- **Com a borda perfeita, uma elipse que soubesse a área ganharia ao modelo** (0,56 contra 0,41). O que o modelo ainda tem de acertar é a área, ou seja, a velocidade, não a forma.
 
 ## O ponto de ignição em tempo real
 

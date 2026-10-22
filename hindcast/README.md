@@ -27,7 +27,8 @@ Experimenta-se aqui. Fora desta pasta só muda o que ajuda nos dois incêndios: 
 
 > **22/10/2026: teste em nove incêndios** (ramo `hindcast-multifire`). O ELMFIRE foi corrido em sete incêndios novos do PT-FireSprd (2015–2021), além dos dois do Minho. Houve corridas livres e um teste passo a passo, que recomeça em cada perímetro observado como faria um sistema em tempo real. Ler primeiro:
 > - **[`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md):** o que falha, porquê, que entradas em tempo real ajudam, e as recomendações;
-> - **[`MULTIFIRE.md`](MULTIFIRE.md):** os números, gerados pelo `multifire_report.py`.
+> - **[`MULTIFIRE.md`](MULTIFIRE.md):** os números, gerados pelo `multifire_report.py`;
+> - **[`HANDOFF.md`](HANDOFF.md):** onde ficou o trabalho e como continuar.
 >
 > O resto desta secção é o estado de 21/10, só com Vieira e Cabeceiras.
 

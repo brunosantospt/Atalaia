@@ -1,0 +1,145 @@
+{
+ "fire": "VieiradoMinho_10082016",
+ "name": "shape_K3",
+ "of": "K3",
+ "windows": [
+  {
+   "k": 0,
+   "start": "2016-08-10T10:00",
+   "end": "2016-08-10T15:00",
+   "minutes": 300.0,
+   "mid_hour": 12,
+   "wind_to_deg": 260.4,
+   "wind_from_deg": 80.4,
+   "wind_kmh": 20.5,
+   "wind_vector_kmh": 20.5,
+   "gust_kmh": 57.5,
+   "temp_c": 23.4,
+   "rh_pct": 30.0,
+   "start_ha": 6.4,
+   "growth_fuel": {
+    "Não combustível": 0.01,
+    "Herbáceo": 0.16,
+    "Mato": 0.56,
+    "Eucalipto e acácia": 0.03,
+    "Pinhal e folhosas": 0.24
+   },
+   "growth_slope_deg": 15.6,
+   "cells": 1522,
+   "model": {
+    "growth_obs_ha": 700.5,
+    "growth_run_ha": 137.0,
+    "ratio": 0.196,
+    "sorensen_growth": 0.303,
+    "sorensen_total": 0.313,
+    "reach_obs_m": 3704,
+    "reach_run_m": 1041,
+    "ros_obs": 741,
+    "ros_run": 208
+   },
+   "ellipse": {
+    "growth_obs_ha": 700.5,
+    "growth_run_ha": 137.0,
+    "ratio": 0.196,
+    "sorensen_growth": 0.314,
+    "sorensen_total": 0.325,
+    "reach_obs_m": 3704,
+    "reach_run_m": 1471,
+    "ros_obs": 741,
+    "ros_run": 294
+   }
+  },
+  {
+   "k": 1,
+   "start": "2016-08-10T15:00",
+   "end": "2016-08-11T03:30",
+   "minutes": 750.0,
+   "mid_hour": 21,
+   "wind_to_deg": 265.7,
+   "wind_from_deg": 85.7,
+   "wind_kmh": 14.0,
+   "wind_vector_kmh": 14.0,
+   "gust_kmh": 41.8,
+   "temp_c": 22.0,
+   "rh_pct": 32.0,
+   "start_ha": 706.9,
+   "growth_fuel": {
+    "Não combustível": 0.01,
+    "Herbáceo": 0.08,
+    "Mato": 0.45,
+    "Eucalipto e acácia": 0.22,
+    "Pinhal e folhosas": 0.24
+   },
+   "growth_slope_deg": 16.4,
+   "cells": 9626,
+   "model": {
+    "growth_obs_ha": 866.3,
+    "growth_run_ha": 866.9,
+    "ratio": 1.001,
+    "sorensen_growth": 0.568,
+    "sorensen_total": 0.762,
+    "reach_obs_m": 2399,
+    "reach_run_m": 1162,
+    "ros_obs": 192,
+    "ros_run": 93
+   },
+   "ellipse": {
+    "growth_obs_ha": 866.3,
+    "growth_run_ha": 866.5,
+    "ratio": 1.0,
+    "sorensen_growth": 0.603,
+    "sorensen_total": 0.781,
+    "reach_obs_m": 2399,
+    "reach_run_m": 1034,
+    "ros_obs": 192,
+    "ros_run": 83
+   }
+  },
+  {
+   "k": 2,
+   "start": "2016-08-11T03:30",
+   "end": "2016-08-11T08:30",
+   "minutes": 300.0,
+   "mid_hour": 6,
+   "wind_to_deg": 263.7,
+   "wind_from_deg": 83.7,
+   "wind_kmh": 14.8,
+   "wind_vector_kmh": 14.7,
+   "gust_kmh": 42.8,
+   "temp_c": 14.4,
+   "rh_pct": 50.0,
+   "start_ha": 1573.1,
+   "growth_fuel": {
+    "Não combustível": 0.05,
+    "Herbáceo": 0.03,
+    "Mato": 0.0,
+    "Eucalipto e acácia": 0.87,
+    "Pinhal e folhosas": 0.06
+   },
+   "growth_slope_deg": 15.1,
+   "cells": 534,
+   "model": {
+    "growth_obs_ha": 48.1,
+    "growth_run_ha": 48.4,
+    "ratio": 1.007,
+    "sorensen_growth": 0.05,
+    "sorensen_total": 0.972,
+    "reach_obs_m": 526,
+    "reach_run_m": 124,
+    "ros_obs": 105,
+    "ros_run": 25
+   },
+   "ellipse": {
+    "growth_obs_ha": 48.1,
+    "growth_run_ha": 49.0,
+    "ratio": 1.019,
+    "sorensen_growth": 0.052,
+    "sorensen_total": 0.972,
+    "reach_obs_m": 526,
+    "reach_run_m": 60,
+    "ros_obs": 105,
+    "ros_run": 12
+   }
+  }
+ ]
+}

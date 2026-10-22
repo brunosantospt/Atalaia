@@ -1,0 +1,15 @@
+{
+ "adj_class": "herb=1.12,shrub=1.00,euc=1.35,forest=2.20",
+ "fitted_on": [
+  "CabeceirasdeBasto_06092016",
+  "Guarda_23082017",
+  "Monchique_03082018",
+  "Oleiros_25072020",
+  "SeverdoVouga_09082016",
+  "VieiradoMinho_10082016",
+  "VilaNovadeCerveira_08082015",
+  "ViladeRei_20072019"
+ ],
+ "windows": 68,
+ "steps": "K3"
+}

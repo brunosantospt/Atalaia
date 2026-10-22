@@ -1,0 +1,126 @@
+{
+ "fire": "VilaNovadeCerveira_08082015",
+ "name": "st_K3_1",
+ "start": "2015-08-08T15:00",
+ "duration_min": 540.0,
+ "options": {
+  "fire": "VilaNovadeCerveira_08082015",
+  "name": "st_K3_1",
+  "start_step": 1,
+  "duration_min": 540.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 4.6,
+ "wall_s": 6.7,
+ "notes": [
+  "cicatrizes: 0 ha"
+ ],
+ "stats": {
+  "burned_ha": 2088.8,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 34,
+    "run_ha": 0
+   },
+   {
+    "h": 3.0,
+    "observed_ha": 609,
+    "run_ha": 609
+   },
+   {
+    "h": 6,
+    "observed_ha": 669,
+    "run_ha": 1184
+   },
+   {
+    "h": 9,
+    "observed_ha": 786,
+    "run_ha": 1488
+   },
+   {
+    "h": 12.0,
+    "observed_ha": 1488,
+    "run_ha": 2089
+   }
+  ],
+  "sorensen_last_step": 0.602,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 3.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 2,
+    "h": 12.0,
+    "sorensen": 0.602
+   }
+  ],
+  "official_ha": 3035.8,
+  "sorensen_official": 0.657,
+  "outside_official_ha": 404.7,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2015-08-08T12:02:00+00:00",
+     "h": 1.04,
+     "n": 5,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2015-08-08T12:43:00+00:00",
+     "h": 1.72,
+     "n": 22,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2015-08-08T13:42:00+00:00",
+     "h": 2.7,
+     "n": 14,
+     "reached": 0.86
+    },
+    {
+     "time_utc": "2015-08-08T14:23:00+00:00",
+     "h": 3.39,
+     "n": 32,
+     "reached": 1.0
+    }
+   ],
+   "mean_reached": 0.46
+  }
+ }
+}

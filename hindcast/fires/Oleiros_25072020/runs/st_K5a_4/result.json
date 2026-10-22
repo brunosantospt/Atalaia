@@ -1,0 +1,160 @@
+{
+ "fire": "Oleiros_25072020",
+ "name": "st_K5a_4",
+ "start": "2020-07-26T01:30",
+ "duration_min": 90.0,
+ "options": {
+  "fire": "Oleiros_25072020",
+  "name": "st_K5a_4",
+  "start_step": 4,
+  "duration_min": 90.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "hotspots",
+  "active_window_h": 6.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 2.9,
+ "wall_s": 4.5,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "borda ativa: 44 focos de satélite nas 6 h antes; 13% da borda segura"
+ ],
+ "stats": {
+  "burned_ha": 3215.0,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.5,
+    "observed_ha": 137,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 193,
+    "run_ha": 0
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 508,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 895,
+    "run_ha": 0
+   },
+   {
+    "h": 7.0,
+    "observed_ha": 1449,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 2018,
+    "run_ha": 0
+   },
+   {
+    "h": 10.0,
+    "observed_ha": 2957,
+    "run_ha": 2957
+   },
+   {
+    "h": 11.5,
+    "observed_ha": 4018,
+    "run_ha": 3215
+   }
+  ],
+  "sorensen_last_step": 0.847,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 7.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 10.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 5,
+    "h": 11.5,
+    "sorensen": 0.847
+   }
+  ],
+  "official_ha": 5589.8,
+  "sorensen_official": 0.701,
+  "outside_official_ha": 130.0,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2020-07-25T21:47:00+00:00",
+     "h": 7.29,
+     "n": 15,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-25T23:25:00+00:00",
+     "h": 8.92,
+     "n": 16,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-26T02:00:00+00:00",
+     "h": 11.5,
+     "n": 22,
+     "reached": 0.82
+    }
+   ],
+   "mean_reached": 0.27
+  }
+ }
+}

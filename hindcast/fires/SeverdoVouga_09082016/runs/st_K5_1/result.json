@@ -1,0 +1,124 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "st_K5_1",
+ "start": "2016-08-10T15:00",
+ "duration_min": 750.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "st_K5_1",
+  "start_step": 1,
+  "duration_min": 750.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 4.8,
+ "wall_s": 6.0,
+ "notes": [
+  "cicatrizes: 0 ha"
+ ],
+ "stats": {
+  "burned_ha": 1391.0,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 0
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 390
+   },
+   {
+    "h": 15,
+    "observed_ha": 392,
+    "run_ha": 529
+   },
+   {
+    "h": 18,
+    "observed_ha": 415,
+    "run_ha": 804
+   },
+   {
+    "h": 21,
+    "observed_ha": 459,
+    "run_ha": 1098
+   },
+   {
+    "h": 24,
+    "observed_ha": 581,
+    "run_ha": 1291
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 817,
+    "run_ha": 1391
+   }
+  ],
+  "sorensen_last_step": 0.672,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 2,
+    "h": 26.5,
+    "sorensen": 0.672
+   }
+  ]
+ }
+}
