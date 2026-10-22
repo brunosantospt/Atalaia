@@ -30,13 +30,13 @@ class Strict(BaseModel):
 
 
 class Moisture(Strict):
-    """Fuel moistures in %, the same over the grid and the run. Provisional until they are estimated
-    from the weather."""
+    """Fuel moistures in %. If dynamic is True, hourly dead fuel moisture follows Simard (1968) EMC."""
     dead_1h_pct: float = Field(6, gt=0, le=60)
     dead_10h_pct: float = Field(8, gt=0, le=60)
     dead_100h_pct: float = Field(10, gt=0, le=60)
     live_herb_pct: float = Field(60, ge=30, le=300)
     live_woody_pct: float = Field(90, ge=30, le=300)
+    dynamic: bool = Field(False)
 
 
 class Barrier(Strict):
@@ -150,17 +150,35 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
             if from_min <= t0:
                 fuel[cells] = NONBURNABLE
         weather = fire.weather(start, times)
+        weather_items = []
+        for t, w in zip(times, weather):
+            item = {
+                't_min': t - t0,
+                'wind_kmh': w['wind_kmh'],
+                'wind_from_deg': w['wind_from_deg'],
+                'dead_1h_pct': w['dead_1h_pct'] if scenario.moisture.dynamic else scenario.moisture.dead_1h_pct,
+                'dead_10h_pct': w['dead_10h_pct'] if scenario.moisture.dynamic else scenario.moisture.dead_10h_pct,
+                'dead_100h_pct': w['dead_100h_pct'] if scenario.moisture.dynamic else scenario.moisture.dead_100h_pct,
+                'live_herb_pct': scenario.moisture.live_herb_pct,
+                'live_woody_pct': scenario.moisture.live_woody_pct,
+            }
+            weather_items.append(item)
+
         request = {
             'grid': fire.grid,
             'duration_min': t1 - t0,
             'ignitions': [{'x': x, 'y': y, 't_min': t - t0} for x, y, t in ignitions if t0 <= t < t1],
             'burned': burned.astype(np.uint8).tolist(),
-            'weather': [{'t_min': t - t0, **w, **scenario.moisture.model_dump()} for t, w in zip(times, weather)],
+            'weather': weather_items,
             'layers': {
                 'fuel': fuel.tolist(),
                 'elevation_m': np.round(layers['elevation_m'], 1).tolist(),
                 'slope_deg': layers['slope_deg'].tolist(),
                 'aspect_deg': layers['aspect_deg'].tolist(),
+                'canopy_cover_pct': np.round(layers['canopy_cover_pct'], 1).tolist(),
+                'canopy_height_m': np.round(layers['canopy_height_m'], 1).tolist(),
+                'canopy_base_m': np.round(layers['canopy_base_m'], 1).tolist(),
+                'canopy_bulk_kgm3': np.round(layers['canopy_bulk_kgm3'], 3).tolist(),
             },
         }
         result = engine.run(request)

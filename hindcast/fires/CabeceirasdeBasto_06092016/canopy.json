@@ -1,0 +1,10 @@
+{
+  "file": "canopy.npz",
+  "grid": "grid.json, row 0 north",
+  "source": "Physical forestry parameterization (Fernandes 2009 / DGT COS2018)",
+  "summary": {
+    "canopy_cells_pct": 42.3,
+    "mean_height_m": 15.2,
+    "mean_cover_pct": 69.3
+  }
+}

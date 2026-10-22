@@ -49,6 +49,16 @@ WEATHER = {
 # Bare ground and no canopy unless the request says otherwise; fuel and weather have no default.
 LAYER_DEFAULTS = {name: 0 for name in LAYERS if name != 'fuel'}
 
+DEFAULT_FUEL_TABLE = Path('/engine/fuel_models_default.csv')
+
+
+def fortran(v) -> str:
+    if isinstance(v, bool):
+        return '.TRUE.' if v else '.FALSE.'
+    if isinstance(v, str):
+        return f"'{v}'"
+    return repr(float(v)) if isinstance(v, float) else str(v)
+
 
 class Grid:
     """The request's raster grid: `rows` x `cols` square cells, row 0 along the north edge."""
@@ -102,15 +112,7 @@ def weather_times(req: dict) -> tuple[list[dict], float | None]:
 
 def wind_from_bands(wind_from: np.ndarray) -> np.ndarray:
     """The wind directions to write, one band per weather time, so that ELMFIRE turns the wind the
-    short way round between two times.
-
-    ELMFIRE interpolates the direction the wind blows to (wind_from + 180) linearly, and only brings
-    it back into 0..360 when it is above 360 (INTERP_WD_RASTER in elmfire_subs.f90). From a wind from
-    170° to one from 190°, it would turn the wind through north. Here each cell's directions are
-    unwound, so that two times never differ by more than 180°, and shifted by whole turns until none
-    blows to more than 360°: ELMFIRE then folds none of them, and only takes sines and cosines of
-    what it interpolates.
-    """
+    short way round between two times."""
     to = np.unwrap((wind_from + 180) % 360, period=360, axis=0)
     to -= 360 * np.maximum(np.ceil((to.max(axis=0) - 360) / 360), 0)
     return to - 180
@@ -130,10 +132,25 @@ def write_inputs(folder: Path, grid: Grid, req: dict):
         if name == 'wind_from_deg':
             bands = wind_from_bands(bands)
         grid.write(folder / f'{raster}.tif', bands, gdal.GDT_Float32)
-    # No spread rate adjustment.
-    grid.write(folder / 'adj.tif', grid.array('adj', 1.0), gdal.GDT_Float32)
+
+    # Spread rate adjustment (default 1.0 everywhere)
+    if 'adj' in req.get('layers', {}):
+        grid.write(folder / 'adj.tif', grid.array('adj', req['layers']['adj']), gdal.GDT_Float32)
+    else:
+        grid.write(folder / 'adj.tif', grid.array('adj', 1.0), gdal.GDT_Float32)
+
     # phi <= 0 is burned at the start, with a time of arrival of 0; phi > 0 is not burned.
     grid.write(folder / 'phi.tif', np.where(burned_at_start(grid, req), -1.0, 1.0), gdal.GDT_Float32)
+
+    # Custom fuel model table (e.g. Portuguese fuel models Fernandes 2009)
+    if req.get('fuel_models'):
+        rows = DEFAULT_FUEL_TABLE.read_text().strip().splitlines() if DEFAULT_FUEL_TABLE.exists() else []
+        taken = {int(r.split(',')[0]) for r in rows if r and r[0].isdigit()}
+        for m in req['fuel_models']:
+            if int(m[0]) in taken:
+                continue
+            rows.append(','.join([str(int(m[0])), str(m[1]), fortran(bool(m[2]))] + [f'{float(x):.6g}' for x in m[3:]]))
+        (folder / 'fuel_models.csv').write_text('\n'.join(rows) + '\n')
 
 
 def namelist(grid: Grid, req: dict) -> str:
@@ -145,6 +162,7 @@ def namelist(grid: Grid, req: dict) -> str:
     names = {'fbfm40': 'FBFM', 'dem': 'DEM', 'slp': 'SLP', 'asp': 'ASP', 'cc': 'CC', 'ch': 'CH', 'cbh': 'CBH',
              'cbd': 'CBD', 'ws': 'WS', 'wd': 'WD', 'm1': 'M1', 'm10': 'M10', 'm100': 'M100', 'mlh': 'MLH',
              'mlw': 'MLW', 'adj': 'ADJ', 'phi': 'PHI'}
+
     lines = [
         '&INPUTS',
         "FUELS_AND_TOPOGRAPHY_DIRECTORY = './inputs'",
@@ -183,14 +201,70 @@ def namelist(grid: Grid, req: dict) -> str:
             for i, p in enumerate(ignitions, 1)
         ],
         '/',
+        '&CROWN_FIRE',
+        "CROWN_FIRE_MODEL = 'SCOTT_REINHARDT'",
+        'CRITICAL_CANOPY_BULK_DENSITY = 0.08',
+        '/',
+    ]
+
+    # Spotting module (Albini ember transport)
+    spotting_val = req.get('spotting', True)
+    if spotting_val is not False:
+        spotting_cfg = {
+            'ENABLE_SPOTTING': True,
+            'ENABLE_SURFACE_FIRE_SPOTTING': True,
+            'USE_SUPERSEDED_SPOTTING': True,
+            'CRITICAL_SPOTTING_FIRELINE_INTENSITY(:)': 1000.0,
+            'SPOTTING_DISTRIBUTION_TYPE': 'LOGNORMAL',
+            'SURFACE_FIRE_SPOTTING_PERCENT(:)': 0.10,
+            'MEAN_SPOTTING_DIST_MIN': 20.0,
+            'MEAN_SPOTTING_DIST_MAX': 40.0,
+            'NORMALIZED_SPOTTING_DIST_VARIANCE_MIN': 425.0,
+            'NORMALIZED_SPOTTING_DIST_VARIANCE_MAX': 425.0,
+            'SPOT_WS_EXP_LO': 0.55,
+            'SPOT_WS_EXP_HI': 0.55,
+            'SPOT_FLIN_EXP_LO': 0.30,
+            'SPOT_FLIN_EXP_HI': 0.30,
+            'NEMBERS_MIN': 1,
+            'NEMBERS_MAX_LO': 2,
+            'NEMBERS_MAX_HI': 2,
+            'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MIN': 0.08,
+            'GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MAX': 0.08,
+            'CROWN_FIRE_SPOTTING_PERCENT_MIN': 0.70,
+            'CROWN_FIRE_SPOTTING_PERCENT_MAX': 0.70,
+            'PIGN_MIN': 60.0,
+            'PIGN_MAX': 60.0,
+        }
+        if isinstance(spotting_val, dict):
+            spotting_cfg.update(spotting_val)
+        lines.extend([
+            '&SPOTTING',
+            *[f'{k} = {fortran(v)}' for k, v in spotting_cfg.items()],
+            '/',
+        ])
+
+    mc_lines = [
         '&MONTE_CARLO',
         f'NUM_METEOROLOGY_TIMES = {len(weather)}',
-        '/',
+    ]
+    if 'seed' in req:
+        mc_lines.append(f"SEED = {int(req['seed'])}")
+    mc_lines.append('/')
+    lines.extend(mc_lines)
+
+    misc_lines = [
         '&MISCELLANEOUS',
         "PATH_TO_GDAL = '/usr/bin'",
         "SCRATCH = './scratch'",
-        '/',
     ]
+    if req.get('fuel_models'):
+        misc_lines.extend([
+            "FUEL_MODEL_FILE = 'fuel_models.csv'",
+            "MISCELLANEOUS_INPUTS_DIRECTORY = './inputs'",
+        ])
+    misc_lines.append('/')
+    lines.extend(misc_lines)
+
     return '\n'.join(lines) + '\n'
 
 
