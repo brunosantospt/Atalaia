@@ -43,7 +43,7 @@ Testar o ELMFIRE noutros incêndios do PT-FireSprd, perceber porque falha, que e
 
 ## O que estava a correr e o que falta
 
-À hora da passagem estava a correr um lote em segundo plano, sem Monchique, 3 trabalhos de cada vez: os membros do ensemble, depois K3x, K5as e K5c (K5o e K5a já acabaram). Se a máquina reiniciou ou a sessão morreu, recomeça-se assim. O `multifire_runs.sh` salta o que já tem `steps/<cfg>.json`, por isso pode correr-se outra vez sem medo:
+Às 14:35 os membros do ensemble estavam acabados, o K3x a terminar, o K5as a meio (6 de 8) e o K5c ainda por começar. O `ensemble.py` (seis membros) estava a correr. Se a máquina reiniciou ou a sessão morreu, recomeça-se assim. Se a máquina reiniciou ou a sessão morreu, recomeça-se assim. O `multifire_runs.sh` salta o que já tem `steps/<cfg>.json`, por isso pode correr-se outra vez sem medo:
 
 ```bash
 cd /home/ragdraco/development/Hack4Guimaraes/Atalaia-multifire

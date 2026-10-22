@@ -206,9 +206,24 @@ No teste de Vieira, uma linha de água que fica para sempre não combustível ex
 
 Com isto, o tempo de reabastecimento passa a ser um parâmetro físico em vez de uma barreira eterna. Não parte a corrida em troços (é uma humidade por banda de tempo).
 
-## Calibração *(a completar)*
+## Correção em linha, projeções por janela e calibração
 
-## Ensemble *(a completar)*
+Nas mesmas janelas (passo a passo):
+
+| | Janelas | Sørensen do crescimento | Área corrida / obs. | Dentro do fator 2 | Ganha à base |
+|---|---|---|---|---|---|
+| K5 | 52 | 0,28 | 2,64× | 31 % | — |
+| K5as: fator da janela anterior (β = 0,5) | 52 (7 incêndios, parcial) | 0,26 | 2,26× | 37 % | 35 % das janelas |
+| K3 | 75 | 0,12 | 1,62× | 28 % | — |
+| K3x: projeções fortes com Schroeder, por janela | 75 | 0,12 | 1,65× | 28 % | 17 % |
+
+- **A correção em linha ajuda pouco.** Aproxima a área mas não a forma, e rende muito menos do que a estimativa fora de linha (que supunha a área proporcional ao fator). O erro que persiste é sobretudo o da borda toda, e corrigi-lo com um fator global encolhe também a cabeça.
+- **As projeções fortes não ajudam em nenhuma condição clara:** ganham em 17 % das janelas.
+- **A calibração por classe** (`calibrate.py`, deixando um incêndio de fora) dá fatores que mudam até ×2 entre dobras (K5: mato 0,71–1,45, herbáceo 0,59–1,22), e a floresta bate no limite de 2,2. Não transfere de incêndio para incêndio. O K5c estava na fila para o confirmar.
+
+## Ensemble
+
+Seis membros: K3m e K5m, cada um com o vento × 0,8, × 1 e × 1,25, nos oito incêndios sem Monchique. `ensemble.py` → `hindcast/ensemble.json`, secção 5 do `MULTIFIRE.md`. *(estava a correr na passagem; ver o `HANDOFF.md`)*
 
 ## Literatura
 
