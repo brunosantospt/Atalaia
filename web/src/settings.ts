@@ -1,21 +1,14 @@
 // The settings drawer, on the right of the HUD: choices that hold across shots, one section each.
 // Today the fire on screen, the map under it, how sharp it is drawn and the spread engine. The fire lives in the URL hash,
-// so a link opens it; the rest is remembered by this browser. The engines come from the API, asked again each time
-// the drawer opens, so starting Docker or the API shows up without a reload.
+// so a link opens it; the rest is remembered by this browser. The demo runs locally; ELMFIRE stays on hold.
 
 import { DEFAULT_MAP, MAPS, type MapId } from './basemap'
 import type { FireIndexEntry } from './data'
-import { DEFAULT_ENGINE, type Engine, type EngineState, fetchEngines } from './engines'
+import { DEFAULT_ENGINE } from './engines'
 import { fmtDate, fmtHa, wallClock } from './format'
 import { DEFAULT_QUALITY, QUALITIES, type Quality } from './scene'
 
 const STORAGE_KEY = 'atalaia.settings'
-
-const ENGINE_STATES: Record<EngineState, { label: string; hint: (id: string) => string }> = {
-  ready: { label: 'Pronto', hint: () => '' },
-  not_installed: { label: 'Não instalado', hint: (id) => `Falta a imagem: corre engines/${id}/setup.sh` },
-  no_docker: { label: 'Docker desligado', hint: () => 'Os motores correm em contentores: abre o Docker' },
-}
 
 interface Stored {
   engine: string
@@ -32,7 +25,7 @@ export interface SettingsActions {
 
 const TEMPLATE = `
   <header>
-    <span>Settings</span>
+    <span>Definições</span>
     <button type="button" data-ref="close" title="Fechar (Esc)">×</button>
   </header>
   <section>
@@ -52,20 +45,18 @@ const TEMPLATE = `
     <h3>Motor de propagação</h3>
     <div class="choices" data-ref="engines"></div>
     <p class="note" data-ref="no-api" hidden>A API está desligada, por isso não há motores. Corre api/serve.sh.</p>
-    <p class="note">O replay mostra o incêndio de referência (observado, ou simulado no ELMFIRE). O motor escolhido é o que corre as simulações das decisões A e B.</p>
+    <p class="note">O modelo rápido calcula a previsão e as decisões A/B ao carregar em Simular. ELMFIRE em pausa para a demo.</p>
   </section>
 `
 
 export class SettingsPanel {
   readonly el: HTMLElement
   private stored = load()
-  private engines: Engine[] | null = null
-  private asked = 0 // engine lists asked for, so a late answer does not replace a newer one
 
   constructor(parent: HTMLElement, fires: FireIndexEntry[], private readonly actions: SettingsActions) {
     this.el = document.createElement('aside')
     this.el.className = 'settings'
-    this.el.setAttribute('aria-label', 'Settings')
+    this.el.setAttribute('aria-label', 'Definições')
     this.el.innerHTML = TEMPLATE
     parent.append(this.el)
     const ref = (name: string) => this.el.querySelector<HTMLElement>(`[data-ref="${name}"]`)!
@@ -121,7 +112,7 @@ export class SettingsPanel {
 
   /** The engine picked here, or the default while the API has not listed it. */
   get engine(): string {
-    return this.engines?.some((e) => e.id === this.stored.engine) ? this.stored.engine : DEFAULT_ENGINE
+    return DEFAULT_ENGINE
   }
 
   get open(): boolean {
@@ -138,23 +129,15 @@ export class SettingsPanel {
   }
 
   private async loadEngines() {
-    const asked = ++this.asked
-    const engines = await fetchEngines()
-    if (asked !== this.asked) return
-    this.engines = engines
-    this.el.querySelector<HTMLElement>('[data-ref="no-api"]')!.hidden = engines !== null
+    this.el.querySelector<HTMLElement>('[data-ref="no-api"]')!.hidden = true
     this.el.querySelector('[data-ref="engines"]')!.replaceChildren(
-      ...(engines ?? []).map((e) => {
-        const { label, hint } = ENGINE_STATES[e.state]
-        const state = { label, ready: e.state === 'ready', hint: hint(e.id) }
-        return choice('engine', e.id, { name: e.name, detail: `${e.version} · ${e.method}`, state }, () => {
-          this.stored = { ...this.stored, engine: e.id }
-          save(this.stored)
-          this.actions.pickEngine?.()
-        })
-      }),
+      choice('engine', 'fast', { name: 'Modelo rápido', detail: 'Demo · corre apenas com o botão Simular',
+        state: { label: 'Pronto', ready: true, hint: '' } }, () => this.actions.pickEngine?.()),
+      choice('engine', 'elmfire', { name: 'ELMFIRE', detail: 'Em pausa durante a demo',
+        state: { label: 'Em pausa', ready: false, hint: 'Calibração continua em separado.' } }, () => {}),
     )
-    if (engines) this.input('engine', this.engine).checked = true
+    this.input('engine', 'fast').checked = true
+    this.input('engine', 'elmfire').disabled = true
   }
 
   private input(group: string, value: string): HTMLInputElement {

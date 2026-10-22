@@ -605,3 +605,35 @@
 .hud .editor .wetline-rotation button { width: auto; padding: 3px 6px; font: inherit; }
 
 .hud .editor .line-actions[hidden] { display: none; }
+
+/* Buttons grow with their text rather than clipping at the shared control height. */
+.hud .editor .simulate .simulate-btn { height: auto; min-height: 48px; white-space: normal; line-height: 1.4; letter-spacing: .035em; overflow: visible; }
+.hud .simulate-hud { display: none !important; }
+.hud .reports-panel { left: auto; right: 0; width: min(480px, 100vw); transform: translateX(100%); border-left: 1px solid var(--ink-faint); border-right: 0; z-index: 5; }
+.hud .reports-panel.open { transform: none; }
+.hud .reports-panel[hidden] { display: none; }
+.hud .reports-panel header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.hud .reports-panel section { margin-top: 28px; }
+.hud .reports-panel .report { width: 100%; font-size: 12px; }
+.hud .reports-panel .report td, .hud .reports-panel .report th { padding: 8px 4px; }
+.hud .reports-panel .note { font-size: 12px; line-height: 1.6; }
+.editor-tip { font: 13px/1.6 system-ui, sans-serif; letter-spacing: .01em; max-width: min(300px, calc(100vw - 24px)); }
+.hover-autonomy meter { accent-color: #a7f3d0; }
+.hud .reports-panel { z-index: 50; background: #080c11; }
+.hud .reports-panel header { letter-spacing: .08em; }
+.hud .reports-panel h3 { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.hud .reports-panel h3 span { line-height: 1.5; }
+
+/* Arrival guidance and its complete colour key live with the planning controls. */
+.hud .editor .ring-legend { font: 12px/1.5 system-ui, sans-serif; text-transform: none; letter-spacing: 0; color: #d9e2eb; background: #101820; border: 1px solid #ffffff20; border-radius: 4px; padding: 8px 10px; }
+.hud .editor .ring-legend[hidden] { display: none; }
+.hud .editor .ring-toggle { display: flex; gap: 9px; align-items: flex-start; cursor: pointer; font-weight: 600; font-size: 11.5px; }
+.hud .editor .ring-toggle input { flex: none; width: 15px; height: 15px; margin: 3px 0 0; accent-color: #f0a33a; }
+.hud .editor .ring-legend p { margin: 9px 0; color: #b7c5d2; }
+.hud .editor .ring-key { list-style: none; padding: 6px 0; margin: 5px 0; border-bottom: 1px solid #ffffff18; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.hud .editor .ring-key li { display: grid; grid-template-columns: 14px auto; gap: 5px; font-size: 11px; align-items: center; }
+.hud .editor .ring-key .sw { width: 14px; border-top: 3px dashed; }
+.hud .editor .ring-key small { display: none; }
+.hud .editor .ring-key .selected { color: white; font-weight: 650; }
+.hud .editor .ring-legend summary { cursor: pointer; font-size: 12px; color: #d8e6f3; }
+.hud .editor .ring-legend summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 4px; }

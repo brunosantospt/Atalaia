@@ -10,6 +10,7 @@
     "deployment:check": "node scripts/run.mjs scripts/deployment-check.ts",
     "placement:check": "node scripts/run.mjs scripts/placement-check.ts",
     "interaction:check": "node scripts/run.mjs scripts/interaction-check.ts",
+    "demo-units:check": "node scripts/run.mjs scripts/demo-units-check.ts",
     "director:check": "node scripts/run.mjs scripts/director-check.ts",
     "demo:check": "node scripts/run.mjs scripts/demo-check.ts"
   },

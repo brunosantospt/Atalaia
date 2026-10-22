@@ -46,7 +46,7 @@ export interface Suppression {
 
 /** One line of a decision: `count` units of a kind, from a station, working a point or a line. */
 export interface Assignment {
-  id?: string // stable deployment group ID, displayed on the map and in the unit list
+  id?: string // stable internal group key; visible BV/count IDs are derived separately
   unit: UnitId
   count: number
   from: string // station id (data.ts), or anything else for an air base

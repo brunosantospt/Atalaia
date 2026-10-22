@@ -898,7 +898,7 @@
 .markers {
   z-index: 2;
 }
-.markers svg {
+.markers > svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -938,7 +938,7 @@
   left: 0;
   top: 0;
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   column-gap: 7px;
   align-items: center;
   white-space: nowrap;
@@ -1418,3 +1418,30 @@
     box-shadow: 0 0 0 12px rgba(240, 163, 58, 0), 0 4px 16px rgba(0, 0, 0, 0.5);
   }
 }
+
+/* Operational data belongs directly beneath the incident title. */
+.hud .ledger { top: var(--ledger-top, 160px); bottom: auto; width: min(470px, calc(100vw - 68px)); box-sizing: border-box; font-size: 12px; letter-spacing: .015em; text-transform: none; }
+.hud .ledger .eyebrow { text-transform: uppercase; font-size: 12px; letter-spacing: .08em; }
+.hud .ledger table { width: 100%; margin-top: 12px; }
+.hud .ledger caption { text-align: left; padding-bottom: 9px; color: #b8c4cf; font: 12px/1.4 system-ui, sans-serif; }
+.hud .ledger th, .hud .ledger td { padding: 7px 8px 7px 0; white-space: normal; line-height: 1.5; border-bottom: 1px solid #ffffff12; }
+.hud .ledger .text { color: #eef2f6; font: 12px/1.5 system-ui, sans-serif; }
+.hud .ledger .source { font: 10px/1.5 system-ui, sans-serif; color: #a4b2bf; width: 80px; }
+.hud .ledger thead th { color: #93a4b5; font: 10px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.hud .ledger thead th::before { display: none; }
+.hud .ledger tbody th { width: 90px; font-size: 11px; }
+.hud .ledger tr.wait .text { color: #d4b68b; }
+.reports-btn .nav-icon svg { width: 18px; height: 18px; }
+.hud.reporting .bottom-nav-cluster { right: min(492px, calc(100vw - 105px)); }
+@media (max-width: 760px) { .hud .ledger { display: none; } }
+
+.hud .bottom-nav-cluster .nav-btn { width: 76px; height: 48px; }
+.hud .bottom-nav-cluster .nav-btn .nav-label { font-size: 9px; letter-spacing: .035em; color: #b8c6d6; }
+.hud .bottom-nav-cluster .reports-btn[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }
+
+/* Point symbols stay on the map; labels carry just the place name. */
+.markers .tag { color: #f0a33a; border-color: #f0a33acc; padding: 6px 10px; }
+
+/* Keep the additional operational figures within the space above the director caption. */
+.hud .ledger { max-height: calc(100% - var(--ledger-top, 160px) - var(--credits-h, 20px) - 190px); overflow-y: auto; scrollbar-width: thin; }
+.hud .ledger th, .hud .ledger td { padding-top: 5px; padding-bottom: 5px; }

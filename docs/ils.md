@@ -1,3 +1,5 @@
+> **Modo atual da demo:** a pesquisa é opcional e arranca apenas no botão **Propor B**. Editar A não inicia pesquisa nem substitui B. No cenário demo, a pontuação usa o modelo rápido de faixas fixas (100 m por viatura / 50 m por equipa), com água apenas visual. Depois é necessário carregar em **Simular modelo rápido**. ELMFIRE permanece em pausa. As referências abaixo à execução automática e ao ELMFIRE descrevem o fluxo anterior.
+
 # ILS · otimização das decisões
 
 Formulação do artigo premiado de um dos nossos orientadores, para gerar e ordenar decisões no Atalaia em vez de só comparar A e B desenhadas à mão.

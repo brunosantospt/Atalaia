@@ -36,9 +36,10 @@ assert.deepEqual(Object.values(vehicle.points)[0], { lon: road.lon, lat: road.la
 assert.equal(sup.unlimitedWater, true, 'demo enables unlimited ground water')
 const plans = Object.create(Editor.prototype)
 let proposed = 0
-Object.assign(plans, { active: 0, decisions: [foot, vehicle], newlyLate: () => -1, render: () => {}, actions: { changed: () => {} }, proposeB: () => proposed++ })
+Object.assign(plans, { active: 0, decisions: [foot, vehicle], newlyLate: () => -1, render: () => {}, actions: { changed: () => {} }, stopIls: () => {}, hideCutTooltip: () => {}, runIls: () => proposed++, proposeB: () => proposed++ })
 plans.commit()
-assert.equal(proposed, 1, 'editing A asks the ILS for a new B')
+assert.equal(proposed, 0, 'editing A must not start a model or replace B')
+assert.strictEqual(plans.decisions[1], vehicle, 'B stays independent when A is edited')
 const identified: Decision = structuredClone(foot)
 identified.assignments.push({ ...identified.assignments[0], id: undefined })
 ensureAssignmentIds(identified)

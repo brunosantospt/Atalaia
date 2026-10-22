@@ -139,7 +139,7 @@ export class Player {
     else this.userMoved = true
   }
 
-  update(dt: number): Frame {
+  update(dt: number, spreadRate = 1): Frame {
     const shot = this.shots[this.index]
     let revealCurrent = this.phase !== 'move'
     let driving = false
@@ -160,7 +160,9 @@ export class Player {
     }
 
     if (this.phase === 'hold' && this.playing) {
-      this.t += dt
+      // Accelerate growth playback only; camera moves, pause gates and final comparisons keep their timing.
+      const growing = !shot.gate && shot.kind !== 'outcome' && (shot.hoursTo ?? shot.hours) > shot.hours
+      this.t += dt * (growing ? Math.max(1, spreadRate) : 1)
       const k = Math.min(this.t / shot.holdS, 1)
       this.pose = this.place(holdPose(shot, k), dt)
       driving = true

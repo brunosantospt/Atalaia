@@ -13,7 +13,7 @@ export interface Engine {
   state: EngineState
 }
 
-export const DEFAULT_ENGINE = 'elmfire' // the API's default too
+export const DEFAULT_ENGINE = 'fast' // demo default; API engines retain their own defaults
 
 /** The engines and their state, or null when the API is not running (api/serve.sh). */
 export async function fetchEngines(): Promise<Engine[] | null> {
@@ -52,7 +52,7 @@ interface ApiResult {
   arrival_min: (number | null)[][]
 }
 
-const NAMES: Record<string, string> = { elmfire: 'ELMFIRE', simfire: 'SimFire' }
+const NAMES: Record<string, string> = { fast: 'Modelo rápido', elmfire: 'ELMFIRE', simfire: 'SimFire' }
 export const engineName = (id: string) => NAMES[id] ?? id
 
 let windShiftTaken = true // false once an old API has refused the field

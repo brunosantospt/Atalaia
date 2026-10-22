@@ -5,7 +5,7 @@
 import { rank, type Alert } from './alerts'
 import type { MapId } from './basemap'
 import type { Fire, FireIndexEntry } from './data'
-import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtPct, fmtRange, fmtTime, wallClock } from './format'
+import { fmtDate, fmtElapsed, fmtHa, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
 import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
@@ -35,6 +35,7 @@ export interface HudActions {
   pickQuality(id: Quality): void
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
+  toggleReports?(): void
   resetNorth?(): void
   flyToIgnition?(): void
   mobilizeAerial?(flameM: number): void
@@ -108,13 +109,16 @@ const TEMPLATE = `
     <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clica para copiar."></span></div>
     <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clica para copiar."></span></div>
   </section>
-  <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o ELMFIRE com os meios de A e de B. Só se acende quando os meios mudaram desde a última simulação."></button>
+  <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
   <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
     <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 18 15 12 9 6" />
     </svg>
   </button>
   <div class="bottom-nav-cluster">
+    <button type="button" class="nav-btn reports-btn" data-ref="btnReports" aria-expanded="false" title="Comparar impacto de Livre, A e B">
+      <span class="nav-icon">${ICON_CLIPBOARD}</span><span class="nav-label">Relatórios</span>
+    </button>
     <button type="button" class="nav-btn ignition-btn" data-ref="btnIgnition" title="Centrar câmara no Ponto de Ignição inicial (visão aproximada)">
       <span class="nav-icon">
         <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
@@ -127,19 +131,6 @@ const TEMPLATE = `
         </svg>
       </span>
       <span class="nav-label">Ignição</span>
-    </button>
-    <button type="button" class="nav-btn north-btn" data-ref="btnNorth" title="Reorientar mapa para o Norte Geográfico (0°)">
-      <span class="nav-icon" data-ref="compassNeedle">
-        <svg class="nav-svg-icon" viewBox="0 0 24 24" width="18" height="18" fill="none">
-          <circle cx="12" cy="12" r="10.5" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2" fill="none"/>
-          <polygon points="12,3.5 15,12 12,10" fill="#f8fafc" />
-          <polygon points="12,3.5 9,12 12,10" fill="#94a3b8" />
-          <polygon points="12,20.5 15,12 12,10" fill="#475569" />
-          <polygon points="12,20.5 9,12 12,10" fill="#334155" />
-          <circle cx="12" cy="12" r="1.5" fill="#0f172a" />
-        </svg>
-      </span>
-      <span class="nav-label">Norte</span>
     </button>
     <div class="bottom-compass" data-ref="bottomCompass" title="Rosa dos Ventos: Aponta para o Norte Geográfico em tempo real. Clica para reorientar a 0°">
       <div class="compass-dial" data-ref="compassDial">
@@ -188,9 +179,9 @@ const TEMPLATE = `
       <button type="button" data-ref="play" title="Play / pausa (espaço)"></button>
       <button type="button" data-ref="next" title="Plano seguinte (→)">▸</button>
       <div class="ticks" data-ref="ticks"></div>
-      <button type="button" class="open-settings" data-ref="gear" title="Incêndio, mapa e motor (S)">Settings</button>
+      <button type="button" class="open-settings" data-ref="gear" title="Incêndio, mapa e motor (S)">Definições</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · M mapa · S settings · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · M mapa · S definições · H esconde o HUD</div>
   </section>
 `
 
@@ -199,7 +190,7 @@ type Refs = Record<
   | 'hdg' | 'pitch' | 'rng' | 'coordDMS' | 'coordDec' | 'cardHead' | 'cardTitle' | 'cardBody'
   | 'prev' | 'play' | 'next' | 'ticks' | 'gear'
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
-  | 'simulate' | 'editorToggle' | 'btnNorth' | 'compassNeedle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
+  | 'btnReports' | 'simulate' | 'editorToggle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
   | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
   HTMLElement
@@ -273,8 +264,8 @@ export class Hud {
 
     this.refs.editorToggle?.addEventListener('click', () => this.actions.toggleEditor?.())
     this.refs.simulate.addEventListener('click', () => this.actions.simulate?.())
-    this.refs.btnNorth?.addEventListener('click', () => this.actions.resetNorth?.())
     this.refs.bottomCompass?.addEventListener('click', () => this.actions.resetNorth?.())
+    this.refs.btnReports.addEventListener('click', () => this.actions.toggleReports?.())
     this.refs.btnIgnition?.addEventListener('click', () => this.actions.flyToIgnition?.())
 
     this.refs.alertBadge?.addEventListener('click', (e) => {
@@ -391,7 +382,7 @@ export class Hud {
     this.fire = fire
     this.sim = sim
     this.ledger.el.hidden = !sim
-    if (sim) this.ledger.set(sim.known)
+    if (sim) this.ledger.set({ ...sim.known, metrics: sim })
     this.settings.setFire(fire.id)
     this.setShots(shots)
 
@@ -503,6 +494,11 @@ export class Hud {
   }
 
   /** The decision editor is open on the left: the title and the ledger give it the room. */
+  setReports(on: boolean) {
+    this.refs.btnReports.setAttribute('aria-expanded', String(on))
+    this.root.classList.toggle('reporting', on)
+  }
+
   setEditing(on: boolean) {
     this.root.classList.toggle('editing', on)
     if (this.refs.editorToggle) {
@@ -519,14 +515,16 @@ export class Hud {
     const rail = rect('.rail')
     const ledger = rect('.ledger')
     const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
+    const wind = this.root.querySelector('.wind-compass')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
+    if (this.root.classList.contains('reporting')) right = Math.min(right, rect('.reports-panel').left - pad)
     if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
     const editing = this.root.classList.contains('editing')
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: editing ? height - pad : rect('.bottom').top - pad,
-      avoid: [ledger, guidance, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
+      avoid: [ledger, guidance, wind, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
@@ -569,7 +567,7 @@ export class Hud {
       sim
         ? split
           ? `Livre ${fmtHa(sim.areaHa(frame.hours))}`
-          : `POC ${fmtPct(sim.poc(areaHa))} · I ${fmtNumber(sim.intensityKWPerM)} kW/m`
+          : ''
         : `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`,
     )
     this.ledger.update(frame.hours)
@@ -578,9 +576,6 @@ export class Hud {
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))
     this.set('rng', fmtRange(camera.range))
 
-    if (this.refs.compassNeedle) {
-      this.refs.compassNeedle.style.transform = `rotate(${-camera.heading}deg)`
-    }
     if (this.refs.compassDial) {
       this.refs.compassDial.style.transform = `rotate(${-camera.heading}deg)`
     }

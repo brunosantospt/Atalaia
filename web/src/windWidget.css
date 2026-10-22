@@ -1,0 +1,21 @@
+.hud .wind-compass { position: absolute; width: 124px; box-sizing: border-box; padding: 5px 8px 7px; border: 1px solid #8098ab66; border-radius: 8px; background: #0b141df2; box-shadow: 0 6px 24px #0005; color: #e7f0f7; font: 12px/1.4 system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-shadow: none; pointer-events: auto; z-index: 12; user-select: none; }
+.hud .wind-drag { position: absolute; top: 2px; right: 3px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #8da7bb; font: 18px/1 system-ui, sans-serif; cursor: grab; touch-action: none; }
+.hud .wind-drag:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 3px; }
+.hud .wind-compass.dragging .wind-drag { cursor: grabbing; background: #7dd3fc15; }
+.hud .wind-dial { display: block; width: 88px; height: 88px; margin: 3px auto 0; cursor: grab; touch-action: none; overflow: visible; }
+.hud .wind-bezel { fill: #14222e; stroke: #7895ac70; stroke-width: 1; }
+.hud .wind-ticks { fill: none; stroke: #71899b; stroke-width: 1.2; }
+.hud .wind-rose text { fill: #bdd0df; text-anchor: middle; font: 600 11px system-ui, sans-serif; }
+.hud .wind-needle path { fill: #7dd3fc; stroke: #d9f4ff; stroke-width: .8; }
+.hud .wind-needle circle { fill: #132331; stroke: #7dd3fc; stroke-width: 1; }
+.hud .wind-centre { fill: #e3f5ff; }
+.hud .wind-speed { display: flex; justify-content: center; align-items: baseline; gap: 5px; margin-top: -2px; }
+.hud .wind-speed strong { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.hud .wind-map-toggle { display: flex; justify-content: center; align-items: center; gap: 5px; width: max-content; margin: 5px auto 0; font: 11px/1.4 system-ui, sans-serif; color: #aec3d3; cursor: pointer; border-radius: 4px; }
+.hud .wind-map-toggle input { margin: 0; accent-color: #7dd3fc; cursor: pointer; }
+
+.hud .wind-title { padding: 1px 0 5px; color: #b8cad8; font: 600 10px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .12em; }
+.hud .map-wind-arrow { position: absolute; top: 0; left: 0; width: 88px; height: 88px; pointer-events: none; filter: drop-shadow(0 2px 3px #000b); }
+.hud .map-wind-arrow[hidden] { display: none; }
+.hud .map-wind-arrow svg { display: block; width: 100%; height: 100%; }

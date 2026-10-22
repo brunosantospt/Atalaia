@@ -4,21 +4,25 @@
 // title folds the table away (key L too); the choice is kept in this browser.
 
 import type { Fire, NearStation, Weather } from './data'
+import { windAt } from './windLayer'
 import type { Detection } from './detection'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
-import { fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
+import { fmtHa, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock } from './format'
 import { compass } from './geo'
-import { fleet, stockSource, type Inventory } from './inventory'
+import { fleet, type Inventory } from './inventory'
 
 export interface Known {
   fire: Fire
   weather: Weather
+  forecastWeather?: Weather
+  windShiftMin?: number
   startIndex: number // entry of weather.time at the ignition
   stations: NearStation[]
   inventory: Inventory | null
   detection: Detection
   satHa: number // burned when the satellite would detect the fire
   fwiSeries?: FWIHourly[]
+  metrics?: { areaHa(hours: number): number; poc(areaHa: number): number; intensityKWPerM: number }
 }
 
 type State = 'on' | 'off' | 'wait' | 'retro'
@@ -39,10 +43,12 @@ export class Ledger {
     this.el = document.createElement('section')
     this.el.className = 'panel ledger'
     this.el.innerHTML =
-      '<button type="button" class="eyebrow" title="Mostra ou esconde os dados (L)"><i></i>Dados conhecidos em tempo real</button><table></table>'
+      '<button type="button" class="eyebrow" title="Mostra ou esconde os dados (L)"><i></i>Dados conhecidos</button><table></table>'
     parent.append(this.el)
     this.el.querySelector('button')!.addEventListener('click', () => this.toggle())
-    this.fold(localStorage.getItem(STORAGE_KEY) !== 'open')
+    this.fold(localStorage.getItem(STORAGE_KEY) === 'folded')
+    const title = parent.querySelector<HTMLElement>('.title')
+    if (title) new ResizeObserver(() => { const top = `${title.offsetTop + title.offsetHeight + 12}px`; this.el.style.top = top; this.el.style.setProperty('--ledger-top',top) }).observe(title)
   }
 
   /** Folds the table away under the title, or opens it again. */
@@ -52,75 +58,43 @@ export class Ledger {
 
   private fold(folded: boolean) {
     this.el.classList.toggle('folded', folded)
+    this.el.querySelector('button')!.setAttribute('aria-expanded', String(!folded))
     localStorage.setItem(STORAGE_KEY, folded ? 'folded' : 'open')
   }
 
   set(known: Known) {
     const { fire, weather, startIndex, stations, inventory, detection, satHa } = known
+    const metrics = known.metrics
     const fwiList = known.fwiSeries ?? computeFWISeries(weather)
+    const forecastFwi = known.forecastWeather ? computeFWISeries(known.forecastWeather) : fwiList
+    const weatherAt = (h: number) => h*60 < (known.windShiftMin ?? Infinity) ? known.forecastWeather ?? weather : weather
+    const meteoSource = fire.simulated ? 'IFS' : 'ERA5'
     const clock = (minutes: number) => fmtTime(wallClock(fire.start, minutes / 60))
     const nearest = stations[0]
     const stock = nearest ? inventory?.[nearest.id] : undefined
+    const hourIndex = (h: number) => Math.min(Math.max(startIndex + Math.floor(h), 0), weather.time.length-1)
     const rows: Row[] = [
-      {
-        layer: 'Ignição',
-        source: 'drone',
-        at: (h) => (h * 60 < detection.droneMin ? ['off', 'sem deteção'] : ['on', `${clock(detection.droneMin)} · T+${detection.droneMin} min`]),
-      },
-      {
-        layer: 'Meteo',
-        source: 'ERA5',
-        at: (h) => {
-          const i = Math.min(Math.max(startIndex + Math.floor(h), 0), weather.time.length - 1)
-          const text = `${clock(Math.floor(h) * 60)} · ${fmtNumber(weather.windKmh[i])} km/h de ${compass(weather.windFromDeg[i])} · ${fmtNumber(weather.tempC[i])} °C · ${fmtNumber(weather.rhPct[i])} %`
-          return ['on', text]
-        },
-      },
-      {
-        layer: 'Perigo FWI',
-        source: 'IPMA',
-        at: (h) => {
-          const f = fwiAt(fwiList, startIndex, h * 60)
-          const text = `${f.dangerClass.toUpperCase()} (FWI ${fmtNumber(f.fwi, 1)}) · ISI ${fmtNumber(f.isi, 1)} · FFMC ${fmtNumber(f.ffmc, 0)} (humidade ${fmtNumber(f.fuelMoisturePct, 1)} %)`
-          return ['on', text]
-        },
-      },
-      { layer: 'Combustível', source: 'COS 2015', at: () => ['on', 'pré-carregado'] },
-      { layer: 'Relevo', source: 'Copernicus 30 m', at: () => ['on', 'pré-carregado'] },
-      {
-        layer: 'Quartéis',
-        source: 'OSM',
-        at: () => ['on', nearest ? `${stations.length} em jogo · ${nearest.short} ${fmtKm(nearest.km)}` : 'nenhum em jogo'],
-      },
-      {
-        layer: 'Inventário',
-        source: stock ? stockSource(stock) : 'INE 2024 · estimado',
-        at: () =>
-          stock && nearest
-            ? ['on', `${nearest.short} · ${fleet(stock) ?? `${stock.units.vfci} VFCI`} · ${stock.personnel.onDuty} de serviço`]
-            : ['off', 'sem estimativa'],
-      },
-      {
-        layer: 'Satélite',
-        source: 'MODIS · VIIRS',
-        at: (h) =>
-          h * 60 < detection.satelliteMin
-            ? ['wait', `só deteta o fogo às ${clock(detection.satelliteMin)}`]
-            : ['on', `detetou o fogo às ${clock(detection.satelliteMin)} · ${fmtHa(satHa)}`],
-      },
-      fire.simulated
-        ? { layer: 'Perímetros', source: 'ELMFIRE (simulado)', at: () => ['retro', 'referência simulada, só em retrospetiva'] }
-        : { layer: 'Perímetros', source: 'PT-FireSprd', at: () => ['retro', 'só em retrospetiva'] },
+      { layer: 'Deteção', source: 'Drone · cenário', at: h => h*60 < detection.droneMin ? ['wait', 'A aguardar alerta'] : ['on', `Alerta às ${clock(detection.droneMin)} · T+${detection.droneMin} min`] },
+      { layer: 'Vento', source: `${meteoSource}${fire.simulated ? ' + cenário' : ''}`, at: h => { const w=windAt(weatherAt(h),startIndex,Math.round(h*60)); return ['on', `${fmtNumber(w.kmh)} km/h de ${compass(w.from)} · rajadas ${fmtNumber(w.gust)}`] } },
+      { layer: 'Atmosfera', source: meteoSource, at: h => { const i=hourIndex(h); return ['on', `${fmtNumber(weather.tempC[i])} °C · humidade ${fmtNumber(weather.rhPct[i])}%`] } },
+      { layer: 'Perigo', source: 'FWI calculado', at: h => { const f=fwiAt(weatherAt(h) === weather ? fwiList : forecastFwi,startIndex,h*60); return ['on', `${f.dangerClass} · FWI ${fmtNumber(f.fwi,1)}`] } },
+      ...(metrics ? [
+        { layer: 'POC', source: 'Estimativa · Livre', at: (h: number): [State, string] => ['on', `${fmtPct(metrics.poc(metrics.areaHa(h)))} · contenção`] },
+        { layer: 'Intensidade', source: 'Pico estimado', at: (): [State, string] => ['on', `${fmtNumber(metrics.intensityKWPerM)} kW/m`] },
+      ] : []),
+      { layer: 'Resposta', source: 'Inventário estimado', at: () => ['on', nearest ? `${nearest.short} · ${fmtKm(nearest.km)}${stock ? ` · ${fleet(stock) ?? `${stock.units.vfci} VFCI`}` : ''}` : 'Sem quartel disponível'] },
+      { layer: 'Satélite', source: 'Passagem · cenário', at: h => h*60<detection.satelliteMin ? ['wait', `Verificação às ${clock(detection.satelliteMin)}`] : ['on', `${clock(detection.satelliteMin)} · área estimada ${fmtHa(satHa)}`] },
     ]
     const table = this.el.querySelector('table')!
-    table.replaceChildren()
+    table.innerHTML = '<caption>Situação à hora do cenário</caption><thead><tr><th>Dado</th><th>Situação</th><th>Origem</th></tr></thead><tbody></tbody>'
+    const body = table.querySelector('tbody')!
     this.rows = rows.map((row) => {
       const tr = document.createElement('tr')
-      tr.innerHTML = '<th></th><td class="source"></td><td class="text"></td>'
+      tr.innerHTML = '<th scope="row"></th><td class="text"></td><td class="source"></td>'
       tr.querySelector('th')!.textContent = row.layer
       const source = tr.querySelector<HTMLElement>('.source')!
       source.textContent = row.source
-      table.append(tr)
+      body.append(tr)
       return { row, state: tr, text: tr.querySelector<HTMLElement>('.text')!, source, shown: '' }
     })
   }

@@ -1,3 +1,4 @@
+import type { LandmarkSymbol } from './landmarkIcons'
 // The replay as a list of camera shots, derived from fire.json, the nearest stations and the
 // free run of ELMFIRE (no forces, cut at the cap): it opens with the fire when the drone sights it,
 // when the satellite does and the first ELMFIRE prediction; then the overview with the stations, the
@@ -12,7 +13,7 @@ import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLo
 import { freeAreaHa, type Reach } from './reach'
 import { AIR_BASES } from './airBases'
 import { DEFAULT_HOSPITAL } from './reporting'
-import { originColor } from './unitIdentity'
+import { originColor, originLetter } from './unitIdentity'
 
 export type ShotKind = 'response' | 'control' | 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
@@ -36,7 +37,7 @@ export interface Shot {
   conceal: string[] // marker ids that go away from this shot on
   // The director's shots (director.ts):
   milestone?: boolean // show one director chapter, while its clock advances in five-minute blocks
-  gate?: 'decision' | 'wind' // pause at a required command/forecast boundary
+  gate?: 'decision' | 'wind' | 'arrival' // pause at a required command/forecast boundary
   split?: boolean // the decisions A and B are shown side by side
   decision?: number // which decision's means are on the ground, 0 or 1
   hoursTo?: number // the clock runs from `hours` to this while holding
@@ -49,6 +50,7 @@ export interface MarkerSpec extends LonLat {
   id: string
   kind: MarkerKind
   h: number
+  symbol?: LandmarkSymbol
   badge: string
   label: string
   detail: string
@@ -112,15 +114,15 @@ export function buildStory(
   const all = bboxOf([ignition, ...stations], [fire.bbox])
   const allR = bboxRadiusM(all)
   for (const s of stations) {
-    const [prefix, ...name] = s.short.split(' ') // "BV Cabeceirenses": the prefix goes in the badge
     markers.push({
       id: `station:${s.id}`,
       kind: 'station',
       lon: s.lon,
       lat: s.lat,
       h: 0,
-      badge: prefix,
-      label: `${name.join(' ') || 'Bombeiros'} · ${fmtKm(s.km)}`,
+      badge: originLetter(s.id, stations),
+      symbol: 'helmet',
+      label: s.short,
       detail: 'em linha reta',
       ringM: 0,
       persistent: true,
@@ -129,13 +131,14 @@ export function buildStory(
   }
   markers.push({
     id: 'hospital', kind: 'hospital', ...DEFAULT_HOSPITAL.location, h: 0,
-    badge: 'H', label: DEFAULT_HOSPITAL.name, detail: 'Hospital de retaguarda', ringM: 0, persistent: true, color: '#6ee7b7',
+    symbol: 'cross', badge: 'H', label: DEFAULT_HOSPITAL.name, detail: 'Hospital de retaguarda', ringM: 0, persistent: true, color: '#6ee7b7',
   })
   for (const base of [...AIR_BASES].filter((b) => distanceM(ignition, b) < 50_000)
     .sort((a, b) => distanceM(ignition, a) - distanceM(ignition, b)).slice(0, 3)) {
     markers.push({
       id: `airbase:${base.id}`, kind: 'airbase', lon: base.lon, lat: base.lat, h: 0,
-      badge: 'CMA', label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true, color: originColor(base.id, stations),
+      symbol: base.units.avbp ? 'airplane' : 'helipad',
+      badge: originLetter(base.id, stations), label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true, color: originColor(base.id, stations),
     })
   }
   shots.push({
@@ -169,6 +172,7 @@ export function buildStory(
       lon: ign.lon,
       lat: ign.lat,
       h: 0,
+      symbol: 'flame',
       badge: i === 0 ? 'I' : `I${i + 1}`,
       label: `${i === 0 ? 'Ignição' : 'Novo foco'} · ${fmtTime(clock(ign.hours))}`,
       detail: i === 0 ? fmtDate(clock(ign.hours)) : `+${fmtHa(ign.areaHa)}`,

@@ -5,6 +5,8 @@
 // engines get) hold from their minute, and aerial drops slow the fire where they fall
 // (suppression.ts). The engines (engines/CONTRACT.md) remain the reference.
 
+import { simulateFast } from './demoModel'
+import { demoLines } from './demoLines'
 import { computeFWISeries, fwiAt, type FWIHourly } from './fwi'
 import { toPTTM06, type LonLat } from './geo'
 import { cellOf, cellOfXY, centerXY, type Grid } from './grid'
@@ -95,6 +97,7 @@ export interface Scenario extends BaseScenario {
 }
 
 export function simulate(scenario: Scenario, decision: Decision | null): Run {
+  if (scenario.demo) return simulateFast(scenario, decision)
   const t0 = performance.now()
   const { grid, suppression: sup, durationMin } = scenario
   const { cols, rows, cellsize, fuelCode, slope, aspect, fuelClass } = grid
@@ -307,6 +310,7 @@ export function freeArrival(scenario: Scenario): Float32Array {
 
 /** The decision's barriers, exactly as the scenario's `decision.barriers` (docs/contracts.md) takes them: those ELMFIRE gets. */
 export function decisionBarriers(scenario: Scenario, decision: Decision): Barrier[] {
+  if (scenario.demo) return demoLines(scenario, decision).map(w => w.barrier)
   return barriers(scenario, decision, freeArrival(scenario))
 }
 
