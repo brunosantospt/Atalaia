@@ -41,6 +41,25 @@ const FUEL: Record<number, [number, number]> = {
   183: [0.3, 0.6],
   186: [0.6, 0.8],
   188: [0.7, 1.3],
+  // Portuguese fuel models (Fernandes et al. 2009 / Paixão 2017)
+  211: [1.8, 1.2], // F-EUC
+  212: [1.2, 1.0], // F-FOL
+  213: [1.5, 1.4], // F-PIN
+  214: [1.4, 1.1], // F-RAC
+  221: [1.6, 1.5], // M-CAD
+  222: [2.0, 1.6], // M-ESC
+  223: [2.2, 1.8], // M-EUC
+  224: [1.3, 1.2], // M-EUCd
+  225: [1.4, 1.2], // M-F
+  226: [1.1, 0.8], // M-H
+  227: [1.6, 1.6], // M-PIN
+  231: [1.5, 0.8], // V-Ha
+  232: [1.2, 0.5], // V-Hb
+  233: [3.5, 2.4], // V-MAa (mato alto denso)
+  234: [2.6, 1.6], // V-MAb (mato médio)
+  235: [1.6, 1.2], // V-MH
+  236: [2.2, 1.8], // V-MMa
+  237: [1.8, 1.4], // V-MMb
 }
 /** The knobs of the model, in one place so they can be tuned from the console in dev (atalaia.params). */
 export const params = {

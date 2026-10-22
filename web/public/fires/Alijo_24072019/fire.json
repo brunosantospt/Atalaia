@@ -1,0 +1,48 @@
+{
+  "id": "Alijo_24072019",
+  "name": "Alijó",
+  "district": "Vila Real",
+  "municipality": "Alijó",
+  "parish": "Ribalonga (Pópulo e Ribalonga)",
+  "incidentId": "2019170019467",
+  "timeZone": "Europe/Lisbon",
+  "start": "2019-07-24T15:05",
+  "end": "2019-07-25T18:40",
+  "ignition": {
+    "lon": -7.507565,
+    "lat": 41.357188,
+    "pt_tm06_x": 252348,
+    "pt_tm06_y": 487736,
+    "place": "Ribalonga"
+  },
+  "bbox": [
+    -7.55,
+    41.34,
+    -7.42,
+    41.42
+  ],
+  "areaHa": {
+    "total": 593.29,
+    "stands_forest": 294.46,
+    "shrubland": 237.35,
+    "agricultural": 61.48
+  },
+  "fuel_model_farsite_ignition": "233 (V-MAa - Fernandes et al. 2009)",
+  "terrain": {
+    "mean_elevation_m": 710.4,
+    "mean_slope_pct": 15.7
+  },
+  "fwi_indices_at_alert": {
+    "temp_c": 30.4,
+    "rh_pct": 36.4,
+    "wind_kmh": 14.3,
+    "wind_dir_deg": 253.0,
+    "ffmc": 87.2,
+    "dmc": 51.8,
+    "dc": 354.1,
+    "isi": 5.0,
+    "bui": 75.9,
+    "fwi": 16.6,
+    "dsr": 3.9
+  }
+}

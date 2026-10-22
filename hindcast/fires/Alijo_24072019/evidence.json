@@ -1,0 +1,252 @@
+{
+  "fire": "Alijo_24072019",
+  "incident": {
+    "sgif_id": "2019170019467",
+    "ncco": "2019170019467",
+    "municipality": "Alijó",
+    "parish": "Ribalonga",
+    "place": "RIBALONGA",
+    "lon": -7.507565,
+    "lat": 41.357188,
+    "alert": "2019-07-24T15:05:00+01:00",
+    "alert_source": "CCO",
+    "first_intervention": "2019-07-24T15:23:00+01:00",
+    "extinguished": "2019-07-25T18:40:00+01:00",
+    "duration_h": 27.6,
+    "area_ha": {
+      "stands": 294.46,
+      "shrub": 237.35,
+      "farmland": 61.48,
+      "total": 593.29
+    },
+    "cause": "Negligente (Queimas de amontoados de sobrantes florestais/agrícolas)",
+    "weather_at_fire": {
+      "temp_c": 30.4,
+      "rh_pct": 36.4,
+      "wind_kmh": 14.3,
+      "wind_dir_deg": 253.0,
+      "ffmc": 87.2,
+      "dmc": 51.8,
+      "dc": 354.1,
+      "isi": 5.0,
+      "bui": 75.9,
+      "fwi": 16.6,
+      "dsr": 3.9
+    },
+    "fuel_model_at_ignition": "233 (V-MAa)",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2019&MES=7)",
+    "gnr_perimeter_kml_url": "http://fogos.icnf.pt/sgif2010/ficheiroskml/AA_TM119616.kml"
+  },
+  "news": [
+    {
+      "time": "2019-07-24T15:05",
+      "kind": "alert",
+      "fact": "Deflagrou incêndio florestal em povoamento e mato na aldeia de Ribalonga, concelho de Alijó, com vento forte a impulsionar a propagação.",
+      "source": "ANEPC / JN / RTP",
+      "url": "https://www.rtp.pt/noticias/pais/incendio-em-alijo-mobiliza-mais-de-200-operacionais_n1162489"
+    },
+    {
+      "time": "2019-07-24T17:30",
+      "kind": "traffic_cut",
+      "fact": "Corte de trânsito na A4 (Autoestrada Transmontana) entre os nós de Alijó e Murça devido ao fumo intenso e projeções de faúlhas que atravessaram a faixa de rodagem.",
+      "source": "GNR / JN",
+      "url": "https://www.jn.pt"
+    },
+    {
+      "time": "2019-07-24T18:00",
+      "kind": "traffic_cut",
+      "fact": "Corte do Itinerário Complementar 5 (IC5) entre Pópulo e Alijó, e da Estrada Nacional 212 (EN212).",
+      "source": "Sábado / Lusa",
+      "url": "https://www.sabado.pt"
+    },
+    {
+      "time": "2019-07-24T19:00",
+      "kind": "casualties",
+      "fact": "Dois feridos: um civil de 48 anos com queimaduras em 10% do corpo evacuado para hospital, e um militar da GNR com fratura no braço. Uma bombeira assistida por exaustão.",
+      "source": "RTP / CDOS Vila Real",
+      "url": "https://www.rtp.pt"
+    },
+    {
+      "time": "2019-07-25T03:00",
+      "kind": "resolution",
+      "fact": "Flanco de Alijó dominado durante a madrugada com diminuição do vento; preocupação manteve-se na frente virada a Murça de acessos muito difíceis.",
+      "source": "Sábado",
+      "url": "https://www.sabado.pt"
+    },
+    {
+      "time": "2019-07-25T18:40",
+      "kind": "extinction",
+      "fact": "Incêndio considerado totalmente extinto após 27.6 horas de combate e operações de rescaldo. Área final apurada pelo ICNF de 593.3 ha.",
+      "source": "ICNF SGIF Oficial",
+      "url": "https://fogos.icnf.pt"
+    }
+  ],
+  "satellite_hotspots_count": 15,
+  "satellite_hotspots": [
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-24",
+      "time_utc": "14:06",
+      "lat": 41.35859,
+      "lon": -7.51395,
+      "frp_mw": 8.45,
+      "confidence": "n",
+      "daynight": "D"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.37243,
+      "lon": -7.5077,
+      "frp_mw": 0.45,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.39377,
+      "lon": -7.46874,
+      "frp_mw": 1.27,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.39635,
+      "lon": -7.4633,
+      "frp_mw": 1.27,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.39706,
+      "lon": -7.46785,
+      "frp_mw": 1.27,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.39893,
+      "lon": -7.45786,
+      "frp_mw": 0.9,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.40034,
+      "lon": -7.46696,
+      "frp_mw": 5.84,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.39964,
+      "lon": -7.46241,
+      "frp_mw": 5.84,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.3736,
+      "lon": -7.49318,
+      "frp_mw": 1.79,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "VIIRS-SNPP",
+      "pixel_m": 375.0,
+      "date": "2019-07-25",
+      "time_utc": "02:24",
+      "lat": 41.37219,
+      "lon": -7.48408,
+      "frp_mw": 0.81,
+      "confidence": "n",
+      "daynight": "N"
+    },
+    {
+      "sensor": "MODIS",
+      "pixel_m": 1000.0,
+      "date": "2019-07-24",
+      "time_utc": "22:30",
+      "lat": 41.3694,
+      "lon": -7.4914,
+      "frp_mw": 4.9,
+      "confidence": "22",
+      "daynight": "N"
+    },
+    {
+      "sensor": "MODIS",
+      "pixel_m": 1000.0,
+      "date": "2019-07-24",
+      "time_utc": "22:30",
+      "lat": 41.3918,
+      "lon": -7.4671,
+      "frp_mw": 29.2,
+      "confidence": "100",
+      "daynight": "N"
+    },
+    {
+      "sensor": "MODIS",
+      "pixel_m": 1000.0,
+      "date": "2019-07-24",
+      "time_utc": "22:30",
+      "lat": 41.3901,
+      "lon": -7.4788,
+      "frp_mw": 19.3,
+      "confidence": "100",
+      "daynight": "N"
+    },
+    {
+      "sensor": "MODIS",
+      "pixel_m": 1000.0,
+      "date": "2019-07-24",
+      "time_utc": "22:30",
+      "lat": 41.4006,
+      "lon": -7.4694,
+      "frp_mw": 5.3,
+      "confidence": "53",
+      "daynight": "N"
+    },
+    {
+      "sensor": "MODIS",
+      "pixel_m": 1000.0,
+      "date": "2019-07-25",
+      "time_utc": "02:42",
+      "lat": 41.403,
+      "lon": -7.4558,
+      "frp_mw": 14.7,
+      "confidence": "86",
+      "daynight": "N"
+    }
+  ]
+}
