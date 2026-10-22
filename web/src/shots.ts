@@ -123,8 +123,8 @@ export function buildStory(
     word: 'Visão geral',
     title: `${fire.name} · ${fmtDate(clock(0))}`,
     caption: stations.length
-      ? `${stations.length === 1 ? 'Um quartel' : `${stations.length} quartéis`} a menos de 20 km da ignição, em linha reta.`
-      : 'Nenhum quartel a menos de 20 km da ignição.',
+      ? `${stations.length === 1 ? 'Um quartel' : `${stations.length} quartéis`} em jogo, os mais próximos da ignição em linha reta.`
+      : 'Nenhum quartel em jogo perto da ignição.',
     place: bboxCenter(all),
     simulated: sim, // a simulated fire is the free run from the first frame, the ignition's cells included
     step: -1,

@@ -25,6 +25,7 @@ import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat }
 import { cellHa, cellOf, lonLatAt, type Grid } from './grid'
 import type { Context } from './osm'
 import { wetLines, stripCells } from './wetLine'
+import { inRing } from './stationRings'
 import { arrivalMin, isAerial, type Assignment, type Decision, type Task, type UnitId } from './suppression'
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
@@ -240,6 +241,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const p = spots[s]
     if (s === u.home) return true
     if (u.aerial ? !p.air : !p.road) return false
+    if (!u.aerial && !inRing(scenario.rings, scenario.ignition, u.from, p)) return false // beyond its station's ring
     return at(free, s) > u.eta[s] - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
   }
   const isOpen = units.map((_, k) => Uint8Array.from(spots, (_, s) => (open(k, s) ? 1 : 0)))
@@ -314,6 +316,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     if (u.home === -2 - l && v === 0) return true
     const line = shapeAt(l, v)
     if (!line || !u.onLine || !(kinds[l].has(u.onLine) || u.home === -2 - l)) return false
+    if (!u.aerial && !line.every((p) => inRing(scenario.rings, scenario.ignition, u.from, p))) return false // every vertex inside the ring
     const cell = cellOf(grid, line[0])
     return (cell < 0 ? Infinity : free[cell]) > etaLine(k, l, v) - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
   }
