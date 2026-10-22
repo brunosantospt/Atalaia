@@ -1,0 +1,312 @@
+{
+ "fire": "ViladeRei_20072019",
+ "name": "st_K5as_15",
+ "start": "2019-07-21T18:00",
+ "duration_min": 60.0,
+ "options": {
+  "fire": "ViladeRei_20072019",
+  "name": "st_K5as_15",
+  "start_step": 15,
+  "duration_min": 60.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 0.366,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 3.7,
+ "wall_s": 8.2,
+ "notes": [
+  "cicatrizes: 1 ha"
+ ],
+ "stats": {
+  "burned_ha": 7422.8,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 0
+   },
+   {
+    "h": 2.5,
+    "observed_ha": 523,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 581,
+    "run_ha": 0
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 785,
+    "run_ha": 0
+   },
+   {
+    "h": 4.5,
+    "observed_ha": 1113,
+    "run_ha": 0
+   },
+   {
+    "h": 5.5,
+    "observed_ha": 2280,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 2314,
+    "run_ha": 0
+   },
+   {
+    "h": 6.5,
+    "observed_ha": 2677,
+    "run_ha": 0
+   },
+   {
+    "h": 8.5,
+    "observed_ha": 3212,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 3635,
+    "run_ha": 0
+   },
+   {
+    "h": 9.5,
+    "observed_ha": 4735,
+    "run_ha": 0
+   },
+   {
+    "h": 10.5,
+    "observed_ha": 5276,
+    "run_ha": 0
+   },
+   {
+    "h": 11.5,
+    "observed_ha": 5341,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 5579,
+    "run_ha": 0
+   },
+   {
+    "h": 12.5,
+    "observed_ha": 6174,
+    "run_ha": 0
+   },
+   {
+    "h": 15,
+    "observed_ha": 6183,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 6196,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 6208,
+    "run_ha": 0
+   },
+   {
+    "h": 24.0,
+    "observed_ha": 6213,
+    "run_ha": 0
+   },
+   {
+    "h": 24.5,
+    "observed_ha": 6340,
+    "run_ha": 0
+   },
+   {
+    "h": 25.5,
+    "observed_ha": 6565,
+    "run_ha": 0
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 6666,
+    "run_ha": 0
+   },
+   {
+    "h": 27,
+    "observed_ha": 6700,
+    "run_ha": 0
+   },
+   {
+    "h": 27.5,
+    "observed_ha": 6821,
+    "run_ha": 6821
+   },
+   {
+    "h": 28.5,
+    "observed_ha": 6967,
+    "run_ha": 7423
+   }
+  ],
+  "sorensen_last_step": 0.95,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 4.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 5.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 5,
+    "h": 6.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 6,
+    "h": 8.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 7,
+    "h": 9.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 8,
+    "h": 10.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 9,
+    "h": 11.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 10,
+    "h": 12.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 11,
+    "h": 24.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 12,
+    "h": 24.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 13,
+    "h": 25.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 14,
+    "h": 26.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 15,
+    "h": 27.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 16,
+    "h": 28.5,
+    "sorensen": 0.95
+   }
+  ],
+  "official_ha": 9354.0,
+  "sorensen_official": 0.818,
+  "outside_official_ha": 562.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2019-07-20T22:54:00+00:00",
+     "h": 9.4,
+     "n": 46,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2019-07-21T02:00:00+00:00",
+     "h": 12.5,
+     "n": 214,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2019-07-21T03:07:00+00:00",
+     "h": 13.61,
+     "n": 18,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2019-07-21T03:40:00+00:00",
+     "h": 14.16,
+     "n": 82,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2019-07-21T13:22:00+00:00",
+     "h": 23.86,
+     "n": 8,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2019-07-21T14:12:00+00:00",
+     "h": 24.7,
+     "n": 6,
+     "reached": 0.0
+    }
+   ],
+   "mean_reached": 0.0
+  }
+ }
+}

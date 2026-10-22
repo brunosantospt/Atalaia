@@ -289,6 +289,69 @@
     "model_win": 0.6363636363636364
    }
   },
+  "K3m_w08": {
+   "windows": 75,
+   "median_ratio": 1.427,
+   "within2": 0.36,
+   "median_sorensen_growth": 0.124,
+   "median_ros_ratio": 0.26720647773279355,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K3m_w125": {
+   "windows": 75,
+   "median_ratio": 1.617,
+   "within2": 0.30666666666666664,
+   "median_sorensen_growth": 0.12,
+   "median_ros_ratio": 0.40476190476190477,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K3x": {
+   "windows": 75,
+   "median_ratio": 1.653,
+   "within2": 0.28,
+   "median_sorensen_growth": 0.121,
+   "median_ros_ratio": 0.4642857142857143,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.52
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.625
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.5454545454545454
+   }
+  },
   "K5": {
    "windows": 87,
    "median_ratio": 3.894,
@@ -353,6 +416,61 @@
     "model_win": 0.64
    }
   },
+  "K5as": {
+   "windows": 52,
+   "median_ratio": 2.2555,
+   "within2": 0.36538461538461536,
+   "median_sorensen_growth": 0.258,
+   "median_ros_ratio": 0.6551862636810926,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015"
+   ],
+   "vs_rule10": {
+    "n": 52,
+    "model_win": 0.7307692307692307
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.5
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.7272727272727273
+   }
+  },
+  "K5c": {
+   "windows": 33,
+   "median_ratio": 2.825,
+   "within2": 0.2727272727272727,
+   "median_sorensen_growth": 0.334,
+   "median_ros_ratio": 0.9861495844875346,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015"
+   ],
+   "vs_rule10": {
+    "n": 33,
+    "model_win": 0.8484848484848485
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.5
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.8181818181818182
+   }
+  },
   "K5m": {
    "windows": 87,
    "median_ratio": 3.077,
@@ -382,6 +500,40 @@
     "n": 11,
     "model_win": 0.9090909090909091
    }
+  },
+  "K5m_w08": {
+   "windows": 75,
+   "median_ratio": 2.582,
+   "within2": 0.3333333333333333,
+   "median_sorensen_growth": 0.174,
+   "median_ros_ratio": 0.5089605734767025,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K5m_w125": {
+   "windows": 75,
+   "median_ratio": 3.164,
+   "within2": 0.24,
+   "median_sorensen_growth": 0.188,
+   "median_ros_ratio": 0.7559523809523809,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
   },
   "K5o": {
    "windows": 75,
@@ -758,6 +910,56 @@
    "duração da janela (h)": {
     "rho": 0.645492142499209,
     "p": 5.335628133353865e-10
+   }
+  },
+  "K3x": {
+   "vento médio (km/h)": {
+    "rho": -0.05391234837969713,
+    "p": 0.648240407425848
+   },
+   "rajada (km/h)": {
+    "rho": -0.10682286040555132,
+    "p": 0.3650013678828561
+   },
+   "temperatura (°C)": {
+    "rho": -0.011478165605065448,
+    "p": 0.9226778852459597
+   },
+   "humidade (%)": {
+    "rho": -0.3287054654252844,
+    "p": 0.004244337980614647
+   },
+   "dia (10-19 h)": {
+    "rho": -0.07148999801709596,
+    "p": 0.5449892416202233
+   },
+   "declive (°)": {
+    "rho": 0.2819624129318018,
+    "p": 0.014939528415922122
+   },
+   "fração de mato": {
+    "rho": 0.3220677098979301,
+    "p": 0.0051365614535209825
+   },
+   "fração de eucalipto": {
+    "rho": -0.2255756361275309,
+    "p": 0.05330705855865195
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.5031995384171483,
+    "p": 4.889780295009831e-06
+   },
+   "fração herbácea": {
+    "rho": 0.10252743364969233,
+    "p": 0.3847088753613104
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.7061942320364808,
+    "p": 2.0908437886484112e-12
+   },
+   "duração da janela (h)": {
+    "rho": 0.5491810952562196,
+    "p": 4.0468731362325833e-07
    }
   }
  }

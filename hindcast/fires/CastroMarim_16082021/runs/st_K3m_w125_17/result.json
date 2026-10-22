@@ -1,0 +1,335 @@
+{
+ "fire": "CastroMarim_16082021",
+ "name": "st_K3m_w125_17",
+ "start": "2021-08-17T03:30",
+ "duration_min": 150.0,
+ "options": {
+  "fire": "CastroMarim_16082021",
+  "name": "st_K3m_w125_17",
+  "start_step": 17,
+  "duration_min": 150.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 1.25,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 4.8,
+ "wall_s": 10.1,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 8053.0,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.0,
+    "observed_ha": 67,
+    "run_ha": 0
+   },
+   {
+    "h": 3.0,
+    "observed_ha": 108,
+    "run_ha": 0
+   },
+   {
+    "h": 4.0,
+    "observed_ha": 184,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 230,
+    "run_ha": 0
+   },
+   {
+    "h": 6.5,
+    "observed_ha": 262,
+    "run_ha": 0
+   },
+   {
+    "h": 7.5,
+    "observed_ha": 321,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 323,
+    "run_ha": 0
+   },
+   {
+    "h": 10.5,
+    "observed_ha": 330,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 342,
+    "run_ha": 0
+   },
+   {
+    "h": 13.5,
+    "observed_ha": 429,
+    "run_ha": 0
+   },
+   {
+    "h": 15.0,
+    "observed_ha": 781,
+    "run_ha": 0
+   },
+   {
+    "h": 15.5,
+    "observed_ha": 1122,
+    "run_ha": 0
+   },
+   {
+    "h": 16.5,
+    "observed_ha": 2356,
+    "run_ha": 0
+   },
+   {
+    "h": 17.5,
+    "observed_ha": 2947,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 3048,
+    "run_ha": 0
+   },
+   {
+    "h": 18.5,
+    "observed_ha": 3964,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 4094,
+    "run_ha": 0
+   },
+   {
+    "h": 22.0,
+    "observed_ha": 4534,
+    "run_ha": 0
+   },
+   {
+    "h": 23.0,
+    "observed_ha": 4649,
+    "run_ha": 0
+   },
+   {
+    "h": 24.0,
+    "observed_ha": 4835,
+    "run_ha": 0
+   },
+   {
+    "h": 25.5,
+    "observed_ha": 5835,
+    "run_ha": 0
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 5836,
+    "run_ha": 5836
+   },
+   {
+    "h": 27,
+    "observed_ha": 5836,
+    "run_ha": 7078
+   },
+   {
+    "h": 29.0,
+    "observed_ha": 5909,
+    "run_ha": 8053
+   }
+  ],
+  "sorensen_last_step": 0.842,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 4.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 6.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 5,
+    "h": 7.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 6,
+    "h": 10.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 7,
+    "h": 13.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 8,
+    "h": 15.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 9,
+    "h": 15.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 10,
+    "h": 16.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 11,
+    "h": 17.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 12,
+    "h": 18.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 13,
+    "h": 22.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 14,
+    "h": 23.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 15,
+    "h": 24.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 16,
+    "h": 25.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 17,
+    "h": 26.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 18,
+    "h": 29.0,
+    "sorensen": 0.842
+   }
+  ],
+  "official_ha": 6643.4,
+  "sorensen_official": 0.884,
+  "outside_official_ha": 1555.0,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2021-08-16T02:07:00+00:00",
+     "h": 2.11,
+     "n": 18,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T11:10:00+00:00",
+     "h": 11.16,
+     "n": 3,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T13:28:00+00:00",
+     "h": 13.46,
+     "n": 13,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T14:30:00+00:00",
+     "h": 14.5,
+     "n": 7,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T22:13:00+00:00",
+     "h": 22.21,
+     "n": 34,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-17T01:48:00+00:00",
+     "h": 25.8,
+     "n": 75,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-17T02:31:00+00:00",
+     "h": 26.51,
+     "n": 19,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2021-08-17T03:28:00+00:00",
+     "h": 27.46,
+     "n": 31,
+     "reached": 0.97
+    }
+   ],
+   "mean_reached": 0.25
+  }
+ }
+}

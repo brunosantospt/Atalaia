@@ -1,0 +1,234 @@
+{
+ "fire": "Oleiros_25072020",
+ "name": "st_K3m_w08_7",
+ "start": "2020-07-26T13:00",
+ "duration_min": 120.0,
+ "options": {
+  "fire": "Oleiros_25072020",
+  "name": "st_K3m_w08_7",
+  "start_step": 7,
+  "duration_min": 120.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 0.8,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 2.8,
+ "wall_s": 4.2,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 5038.1,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.5,
+    "observed_ha": 137,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 193,
+    "run_ha": 0
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 508,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 895,
+    "run_ha": 0
+   },
+   {
+    "h": 7.0,
+    "observed_ha": 1449,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 2018,
+    "run_ha": 0
+   },
+   {
+    "h": 10.0,
+    "observed_ha": 2957,
+    "run_ha": 0
+   },
+   {
+    "h": 11.5,
+    "observed_ha": 4018,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 4018,
+    "run_ha": 0
+   },
+   {
+    "h": 15,
+    "observed_ha": 4053,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 4099,
+    "run_ha": 0
+   },
+   {
+    "h": 19.5,
+    "observed_ha": 4120,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 4291,
+    "run_ha": 0
+   },
+   {
+    "h": 21.5,
+    "observed_ha": 4466,
+    "run_ha": 4466
+   },
+   {
+    "h": 23.5,
+    "observed_ha": 4480,
+    "run_ha": 5038
+   }
+  ],
+  "sorensen_last_step": 0.94,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 7.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 10.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 5,
+    "h": 11.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 6,
+    "h": 19.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 7,
+    "h": 21.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 8,
+    "h": 23.5,
+    "sorensen": 0.94
+   }
+  ],
+  "official_ha": 5589.8,
+  "sorensen_official": 0.856,
+  "outside_official_ha": 488.8,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2020-07-25T21:47:00+00:00",
+     "h": 7.29,
+     "n": 15,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-25T23:25:00+00:00",
+     "h": 8.92,
+     "n": 16,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-26T02:00:00+00:00",
+     "h": 11.5,
+     "n": 22,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-26T02:43:00+00:00",
+     "h": 12.22,
+     "n": 153,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-26T11:25:00+00:00",
+     "h": 20.92,
+     "n": 8,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2020-07-26T12:25:00+00:00",
+     "h": 21.92,
+     "n": 10,
+     "reached": 0.8
+    },
+    {
+     "time_utc": "2020-07-26T13:05:00+00:00",
+     "h": 22.59,
+     "n": 3,
+     "reached": 1.0
+    }
+   ],
+   "mean_reached": 0.26
+  }
+ }
+}

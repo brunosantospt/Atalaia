@@ -71,9 +71,16 @@ Só conta o crescimento entre os dois perímetros. Uma janela acerta "no fator 2
 |---|---|---|---|---|---|
 | K3 | 87 (9 incêndios) | 1.73 | 28% | 0.13 | 0.39 |
 | K3m | 87 (9 incêndios) | 1.61 | 31% | 0.14 | 0.39 |
+| K3m_w08 | 75 (8 incêndios) | 1.43 | 36% | 0.12 | 0.27 |
+| K3m_w125 | 75 (8 incêndios) | 1.62 | 31% | 0.12 | 0.40 |
+| K3x | 75 (8 incêndios) | 1.65 | 28% | 0.12 | 0.46 |
 | K5 | 87 (9 incêndios) | 3.89 | 28% | 0.19 | 0.75 |
 | K5a | 75 (8 incêndios) | 1.65 | 40% | 0.18 | 0.60 |
+| K5as | 52 (7 incêndios) | 2.26 | 37% | 0.26 | 0.66 |
+| K5c | 33 (6 incêndios) | 2.83 | 27% | 0.33 | 0.99 |
 | K5m | 87 (9 incêndios) | 3.08 | 28% | 0.18 | 0.74 |
+| K5m_w08 | 75 (8 incêndios) | 2.58 | 33% | 0.17 | 0.51 |
+| K5m_w125 | 75 (8 incêndios) | 3.16 | 24% | 0.19 | 0.76 |
 | K5o | 75 (8 incêndios) | 0.68 | 35% | 0.41 | 0.65 |
 | ref_area | 11 (3 incêndios) | 1.00 | 100% | 0.32 | 0.26 |
 | ref_area_hotspots | 87 (9 incêndios) | 1.00 | 98% | 0.16 | 0.25 |
@@ -107,6 +114,9 @@ Lado a lado: cada referência contra o modelo **nas mesmas janelas** (as que as 
 | K5m | 87 | 0.12 · 0.18 (n=87; 67%) | 0.21 · 0.34 (n=8; 62%) | 0.32 · 0.38 (n=11; 91%) |  |
 | K5o | 75 | 0.32 · 0.41 (n=75; 64%) | 0.35 · 0.40 (n=67; 61%) | 0.56 · 0.41 (n=75; 21%) |  |
 | K5a | 75 | 0.14 · 0.18 (n=75; 61%) | 0.09 · 0.17 (n=67; 63%) | 0.15 · 0.18 (n=75; 64%) |  |
+| K5as | 52 | 0.12 · 0.26 (n=52; 73%) | 0.21 · 0.32 (n=8; 50%) | 0.32 · 0.38 (n=11; 73%) |  |
+| K5c | 33 | 0.12 · 0.33 (n=33; 85%) | 0.21 · 0.33 (n=8; 50%) | 0.32 · 0.38 (n=11; 82%) |  |
+| K3x | 75 | 0.12 · 0.12 (n=75; 52%) | 0.21 · 0.29 (n=8; 62%) | 0.32 · 0.33 (n=11; 55%) |  |
 
 ## 3. Porque falha: o erro do ROS de cabeça contra as condições
 
@@ -196,6 +206,23 @@ log2(ROS corrida / ROS observado) por janela: 0 é certo, −1 é metade, +1 o d
 | fração herbácea | -0.03 | 0.794 | -0.64 → -0.61 |
 | ROS observado (m/h) | -0.79 | 0.000 | +0.12 → -1.63 |
 | duração da janela (h) | +0.65 | 0.000 | -1.37 → +0.14 |
+
+### K3x (74 janelas, mediana do erro -1.19, ou seja ×0.44)
+
+| Condição | ρ | p | mediana do erro: metade de baixo → metade de cima |
+|---|---|---|---|
+| vento médio (km/h) | -0.05 | 0.648 | -1.11 → -1.40 |
+| rajada (km/h) | -0.11 | 0.365 | -0.93 → -1.42 |
+| temperatura (°C) | -0.01 | 0.923 | -0.79 → -1.86 |
+| humidade (%) | -0.33 | 0.004 | -0.93 → -1.90 |
+| dia (10-19 h) | -0.07 | 0.545 | -0.92 → -1.89 |
+| declive (°) | +0.28 | 0.015 | -1.95 → -0.74 |
+| fração de mato | +0.32 | 0.005 | -2.04 → -0.79 |
+| fração de eucalipto | -0.23 | 0.053 | -0.81 → -1.92 |
+| fração de pinhal e folhosas | -0.50 | 0.000 | -0.69 → -2.36 |
+| fração herbácea | +0.10 | 0.385 | -1.58 → -0.88 |
+| ROS observado (m/h) | -0.71 | 0.000 | -0.32 → -2.40 |
+| duração da janela (h) | +0.55 | 0.000 | -2.07 → -0.27 |
 
 ## 4. Calibração por classe de combustível (deixando um incêndio de fora)
 

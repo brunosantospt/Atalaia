@@ -1,0 +1,128 @@
+{
+ "fire": "CastroMarim_16082021",
+ "name": "st_K5m_w08_3",
+ "start": "2021-08-16T05:00",
+ "duration_min": 150.0,
+ "options": {
+  "fire": "CastroMarim_16082021",
+  "name": "st_K5m_w08_3",
+  "start_step": 3,
+  "duration_min": 150.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 0.8,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 2.9,
+ "wall_s": 7.9,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 631.3,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.0,
+    "observed_ha": 67,
+    "run_ha": 0
+   },
+   {
+    "h": 3.0,
+    "observed_ha": 108,
+    "run_ha": 0
+   },
+   {
+    "h": 4.0,
+    "observed_ha": 184,
+    "run_ha": 184
+   },
+   {
+    "h": 6,
+    "observed_ha": 230,
+    "run_ha": 533
+   },
+   {
+    "h": 6.5,
+    "observed_ha": 262,
+    "run_ha": 631
+   }
+  ],
+  "sorensen_last_step": 0.572,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 3.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 4.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 4,
+    "h": 6.5,
+    "sorensen": 0.572
+   }
+  ],
+  "official_ha": 6643.4,
+  "sorensen_official": 0.15,
+  "outside_official_ha": 84.4,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2021-08-16T02:07:00+00:00",
+     "h": 2.11,
+     "n": 18,
+     "reached": 0.0
+    }
+   ],
+   "mean_reached": 0.0
+  }
+ }
+}
