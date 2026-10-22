@@ -1942,10 +1942,9 @@ export class Editor {
     for (const [id, line] of Object.entries(d.lines)) if (d.assignments.some((x) => x.target === id && x.task === 'line')) this.polyline(line, DIM, true)
     for (const w of lines) {
       const a = d.assignments[w.slot]
-      // In direct attack, do not draw the straight line through the vehicle:
-      // the vehicle has its circular base perimeter (35-45m) and hose line.
-      // The extinguished line is drawn only where work was actually done along the fire front (w.grown)!
-      if (a.task === 'direct' && !w.grown) continue
+      // Em ataque direto, remover completamente as linhas verdes (feedback do especialista).
+      // A presenca e acao direta e visualizada pela base operacional e pela contencao da mancha.
+      if (a.task === 'direct') continue
       // Village protection is rendered as the dedicated protective dome around the settlement
       if (a.task === 'protect') continue
 
@@ -1954,38 +1953,18 @@ export class Editor {
       const positions = clean.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const holds = this.minutes >= w.barrier.from_min
 
-      if (a.task === 'direct') {
-        // Rasto consolidado do que já foi apagado até ao minuto atual (hora do timeline).
-        // Não desenha linhas futuras pelo monte fora para não parecer ataque indireto/aceiro.
-        if (!holds) continue
-
-        const green = Color.fromCssColorString('#10b981')
-        const strip = entities.add({
-          polyline: {
-            positions,
-            width: 4.0,
-            clampToGround: true,
-            material: green,
-          },
-        })
-        const at = d.points[a.target]
-        if (at) {
-          (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-        }
-      } else {
-        // Crew handline / containment line
-        entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2), classificationType: ClassificationType.TERRAIN } })
-        const strip = entities.add({
-          polyline: {
-            positions,
-            width: 3,
-            clampToGround: true,
-            material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
-          },
-        })
-        const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-        if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
-      }
+      // Crew handline / containment line (desenhada explicitamente com a ferramenta de linha)
+      entities.add({ corridor: { positions, width: Math.max(w.barrier.width_m, 1), material: WET.withAlpha(holds ? (w.grown ? 0.45 : 0.6) : 0.2), classificationType: ClassificationType.TERRAIN } })
+      const strip = entities.add({
+        polyline: {
+          positions,
+          width: 3,
+          clampToGround: true,
+          material: holds ? WET : new PolylineDashMaterialProperty({ color: WET.withAlpha(0.7), dashLength: 10 }),
+        },
+      })
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (at) (strip as any)._unitInfo = unitInfo(a, at, d.assignments.filter((x) => x.target === a.target))
     }
 
     // One circle per assignment, with the same stable ID and origin colour as its list row.
