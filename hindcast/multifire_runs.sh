@@ -16,14 +16,18 @@ declare -A CFG=(
   [K3s]="--fuels sb --scars --spotting --seed 1"                                 # K3 + spotting
   [K4]="--fuels pt --scars"                                                      # K3 + Portuguese fuels
   [K6]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --seed 1"   # Vieira's best data configuration
+  [K3m]="--fuels sb --scars --canopy-source meta"                                # K3 with the open canopy map
+  [K6m]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --seed 1 --canopy-source meta"
 )
 CONFIGS=${*:-${CONFIGS:-K0 K3 K3s K4 K6}}
-N=${N:-6}
+N=${N:-4}   # ELMFIRE jobs at a time (Monchique's grid alone takes ~2 GB; 30 GB machine shared with others)
 for c in $CONFIGS; do for f in $FIRES; do
   while [ "$(jobs -rp | wc -l)" -ge "$N" ]; do sleep 2; done
   if [ "$MODE" = free ]; then
+    [ -f hindcast/fires/$f/runs/mf_$c/result.json ] && continue   # done already (an interrupted batch resumes)
     ( $PY -I hindcast/run.py $f --name mf_$c ${CFG[$c]} > $LOG/free_${c}_$f.log 2>&1; echo "free $c $f $(date +%H:%M:%S) $(tail -c 160 $LOG/free_${c}_$f.log | tr '\n' ' ')" ) &
   else
+    [ -f hindcast/fires/$f/steps/$c.json ] && continue
     ( $PY -I hindcast/steps.py $f --name $c -- ${CFG[$c]} > $LOG/steps_${c}_$f.log 2>&1; echo "steps $c $f $(date +%H:%M:%S)" ) &
   fi
 done; done

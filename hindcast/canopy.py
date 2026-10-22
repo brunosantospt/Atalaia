@@ -44,6 +44,14 @@ def layers(grid: dict, idx: np.ndarray, legend: list, dgt: Path, prefire: bool =
         return a
 
     chm = np.clip(mosaic("MDS-2m") - mosaic("MDT-2m"), 0, 60)
+    return layers_from_chm(grid, idx, legend, chm, prefire)
+
+
+def layers_from_chm(grid: dict, idx: np.ndarray, legend: list, chm: np.ndarray, prefire: bool = False) -> tuple[dict, dict]:
+    """The four layers from a canopy height model at 2 m over the package grid (NaN where unknown), whatever its
+    source: the DGT LiDAR here, Meta and WRI's global map in canopy_open.py."""
+    rows, cols, cs = grid["rows"], grid["cols"], grid["cellsize"]
+    k = int(round(cs / 2.0))
     blk = chm.reshape(rows, k, cols, k).transpose(0, 2, 1, 3).reshape(rows, cols, k * k)
     ok = np.isfinite(blk)
     has = ok.mean(-1) > 0.5

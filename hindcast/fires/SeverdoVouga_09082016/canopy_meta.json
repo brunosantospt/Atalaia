@@ -1,0 +1,21 @@
+{
+ "file": "canopy_meta.npz",
+ "grid": "the package grid (grid.json), row 0 north",
+ "arrays": {
+  "cover_pct": "canopy cover, %",
+  "height_dm": "canopy height, dm",
+  "base_dm": "canopy base height, dm",
+  "bulk_cg_m3": "canopy bulk density, hundredths of kg/m3"
+ },
+ "source": "Meta & WRI global canopy height (Tolan et al. 2024), ~1.2 m, imagery mostly 2018-2020, https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float; resampled to 2 m (average) and aggregated by hindcast/canopy_open.py",
+ "method": "as canopy.py (canopy.layers_from_chm): cover = share of 2 m pixels >= 4 m, height = their 90th percentile, base and bulk density assumed per COS class",
+ "caveat": "a model of satellite imagery (MAE 2.8 m), not a measurement; its year is not the fire's",
+ "summary": {
+  "mode": "meta",
+  "lidar_cells_pct": 100.0,
+  "canopy_cells_pct": 66.2,
+  "crown_capable_cells_pct (cover >= 39 %)": 43.0,
+  "median_height_m": 8.9,
+  "median_bulk_kgm3": 0.08
+ }
+}

@@ -126,6 +126,8 @@ def main(argv=None):
                    help="use fires/<id>/canopy.npz when there is one")
     p.add_argument("--canopy-fill", action="store_true",
                    help="inside the burned area, the canopy of each COS class's median outside it (before the fire)")
+    p.add_argument("--canopy-source", choices=["lidar", "meta"], default="lidar",
+                   help="canopy.npz (DGT LiDAR, canopy.py) or canopy_meta.npz (Meta/WRI global map, canopy_open.py)")
     p.add_argument("--spotting", action="store_true")
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--weather", choices=["era5", "cerra"], default="era5",
@@ -164,10 +166,10 @@ def main(argv=None):
         notes.append(f"cicatrizes: {scar.sum() * fire.cellsize ** 2 / 1e4:.0f} ha")
     base = {"elevation_m": np.round(layers["elevation_m"], 1).tolist(), "slope_deg": layers["slope_deg"].tolist(),
             "aspect_deg": layers["aspect_deg"].tolist()}
-    can = fire_dir(args.fire) / "canopy.npz"
+    can = fire_dir(args.fire) / ("canopy.npz" if args.canopy_source == "lidar" else "canopy_meta.npz")
     if args.canopy and can.exists():
         c = dict(np.load(can))
-        notes.append("copas do LiDAR")
+        notes.append("copas do LiDAR" if args.canopy_source == "lidar" else "copas do mapa global da Meta/WRI")
         if args.canopy_fill:
             c, ha = canopy_fill(fire, c, idx, feats)
             notes.append(f"copas dentro da área ardida ({ha:.0f} ha): mediana da classe COS fora dela")
