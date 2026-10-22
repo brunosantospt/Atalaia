@@ -66,7 +66,8 @@ export interface MultiAgencyDispatch {
 /** Default regional hospital destination for emergency medical evacuations. */
 export const DEFAULT_HOSPITAL: { name: string; location: LonLat } = {
   name: 'Hospital da Senhora da Oliveira (Guimarães)',
-  location: { lon: -8.2917, lat: 41.4398 },
+  // 41°26′31.7″N 8°18′20.0″W — shared by the landmark and evacuation routing.
+  location: { lon: -8.305555555555555, lat: 41.44213888888889 },
 }
 
 /**
