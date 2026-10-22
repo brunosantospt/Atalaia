@@ -270,8 +270,10 @@ async function main() {
   // The drawer's hour slider moves the fire clock (the editor has taken the new hour by now); the replay goes on from there.
   editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => {
     if (!replay) return
-    const hours = editor.hours
+    let hours = editor.hours
     setPhase(hours*60 >= (replay.data.windShift?.minutes ?? Infinity) ? 'post' : 'pre')
+    // Hold the defended state at the incident until the explicitly requested run exists.
+    if (replay.phase === 'post' && !replay.sims.post) hours = Math.min(hours, (replay.data.windShift?.minutes ?? Infinity)/60)
     replay.player.seek(hours)
   })
 
@@ -281,7 +283,7 @@ async function main() {
     seek: (h) => replay?.player.seek(h),
     reallocate: () => {
       if (!replay) return
-      replay.phase = 'post'
+      setPhase('post')
       const post = replay.sims.post
       if (post && replay.runs !== post.runs) show(post.runs, post.decisions)
       windShift.setResolved(!!post)
@@ -298,7 +300,10 @@ async function main() {
     const cached = replay.sims[phase]
     windShift.setResolved(phase === 'post' && !!cached)
     if (cached) show(cached.runs, cached.decisions)
-    else showFreeOnly(replay.freeRun)
+    else if (phase === 'post' && replay.sims.pre) {
+      const previous = replay.sims.pre
+      if (replay.runs !== previous.runs) show(previous.runs, previous.decisions)
+    } else if (!replay.runs) showFreeOnly(replay.freeRun)
     refreshSimulate()
   }
   async function open(id: string) {
@@ -579,6 +584,8 @@ async function main() {
     if (!replay) return { label: 'Simular', enabled: false, note: '' }
     if (editor.searching) return { label: 'Simular', enabled: false, note: 'Termine a procura opcional de B antes de simular.' }
     const sim = replay.sims[replay.phase]
+    if (replay.phase === 'post' && !sim)
+      return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
       return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
     return { label: 'Simular', enabled: true,
