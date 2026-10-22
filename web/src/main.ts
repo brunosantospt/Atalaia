@@ -45,7 +45,7 @@ import { WindLayer } from './windLayer'
 import { WindShiftWatch } from './windShift'
 import { computeReach } from './reach'
 import { ReachLayer } from './reachLayer'
-import { arrivalFromProgression, cutSteps } from './reference'
+import { cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
 import { createViewer, setQuality } from './scene'
 import { addHeights, buildStory, type Shot, type Story } from './shots'
@@ -317,7 +317,7 @@ async function main() {
       loadOsm(id),
     ])
     const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : structuredClone(weather)).catch(() => structuredClone(weather)) : structuredClone(weather)
-    const movedDemo = configurePenhaDemo(fire0, weather, forecastWeather, progression0)
+    configurePenhaDemo(fire0, weather, forecastWeather, progression0)
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
     // Only the stations in play are available anywhere means come from (stationRings.ts).
     const near = stationsInPlay(stations, fire0.ignition, suppression)
@@ -327,14 +327,16 @@ async function main() {
     const fwiSeries = computeFWISeries(weather)
     const durationMin = Math.min(180, horizonMin(fire0.start, weather))
     const scenario: Scenario = { demo: true, windShiftMin: fire0.windShift?.minutes, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
-    // Loading shows the saved reference; the demo model only runs after a button press.
+    // Opening runs the empty-plan forecast once in a worker; subsequent edits stay button-run.
     const t0 = performance.now()
+    const emptyPlan = (id: string): Decision => ({ id, name: `Decisão ${id}`, points: {}, lines: {}, assignments: [] })
+    const emptyPlans: [Decision, Decision] = [emptyPlan('A'), emptyPlan('B')]
+    const initial = await runFast({ scenario: { ...scenario, weather: forecastWeather, windShiftMin: undefined }, decisions: emptyPlans }, () => {})
+    if (loading !== id) return
     const capHa = fire0.referenceCapHa ?? CAP_HA
-    const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0).map(t => t <= durationMin ? t : Infinity), durationMin,
-      runtimeMs: 0, engine: 'Referência guardada' }
-    const source = movedDemo ? 'Nova ignição · carregue em Simular' : 'Referência guardada · simule o modelo rápido'
-    const free = capRun(grid, reference, capHa)
-    const freeEnd = movedDemo ? durationMin : endMinute(grid, free)
+    const source = 'Modelo rápido · previsão inicial sem meios'
+    const free = capRun(grid, initial.free, capHa)
+    const freeEnd = durationMin
     // The story and the observed layer stop where the run does.
     const { fire, progression } = cutSteps(fire0, progression0, Math.min(durationMin, fireEnd(grid, free).cutMin ?? Infinity))
     const reach = computeReach(grid, free, fire, near, suppression, detection)
@@ -422,6 +424,7 @@ async function main() {
     document.title = `${fire.name} · Atalaia`
     // Nothing is simulated yet but Livre: the means layout of the start (empty) is what the button compares against.
     replay.baseHash = layoutKey()
+    replay.sims.pre = { runs: { free, A: { ...free, decision: emptyPlans[0] }, B: { ...free, decision: emptyPlans[1] } }, decisions: emptyPlans, hash: replay.baseHash }
     alerts = prepareAlerts({ scenario, context, decisions: editor.decisions, runs: { free, A: free, B: free } }) // A and B are never read before they are simulated
     setShots()
     refreshSimulate()

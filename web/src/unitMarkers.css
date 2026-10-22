@@ -22,3 +22,8 @@
   text-shadow: none;
 }
 .unit-map-label b { color: var(--origin-color); font-weight: 800; }
+
+.unit-marker.pending > img, .unit-marker.pending > .unit-tether { opacity: .35; }
+.unit-marker.pending > .unit-map-label { opacity: .65; }
+.unit-map-eta { position: absolute; bottom: 23px; left: 0; transform: translateX(-50%); white-space: nowrap; padding: 2px 5px; border-radius: 3px; background: rgba(6,12,20,.92); color: #f8fafc; font: 600 12px/1.4 system-ui,sans-serif; }
+.unit-map-eta[hidden] { display: none; }

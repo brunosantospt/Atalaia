@@ -52,6 +52,7 @@ export interface Assignment {
   from: string // station id (data.ts), or anything else for an air base
   target: string // id in Decision.points (direct, protect, shuttle) or Decision.lines (line, drops)
   task: Task
+  orderedMin?: number // T+ when the placement order was created, before any detection/turnout delay
   dispatchMin?: number // T+ when ordered out; omitted in older examples
   wetLineBearingDeg?: number // line axis clockwise from north, 0..179; omitted = across spread
 }

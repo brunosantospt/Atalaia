@@ -398,7 +398,7 @@ export class Editor {
       if (!this.loaded) return
       const { id, nextAssignmentId } = this.decisions[this.active]
       this.decisions[this.active] = { ...clone(this.loaded.example), id, name: `Decisão ${id}`, nextAssignmentId }
-      for (const a of this.decisions[this.active].assignments) a.dispatchMin = this.dispatchMinute()
+      for (const a of this.decisions[this.active].assignments) { a.dispatchMin = this.dispatchMinute(); a.orderedMin = this.minutes }
       this.commit()
     })
     const name = this.refs.name as HTMLInputElement
@@ -1062,7 +1062,7 @@ export class Editor {
       from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
-      dispatchMin: this.dispatchMinute(),
+      dispatchMin: this.dispatchMinute(), orderedMin: this.minutes,
     })
     this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = aerial
@@ -1091,7 +1091,7 @@ export class Editor {
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing
     const task = this.tool
-    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task, dispatchMin: this.dispatchMinute() })
+    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task, dispatchMin: this.dispatchMinute(), orderedMin: this.minutes })
     const lenM = task === 'line' ? demoLineLength({ unit: 'crew' }) : lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
@@ -1527,9 +1527,11 @@ export class Editor {
     const late = this.late(d)
     this.lateShown = { id: d.id, keys: new Set(d.assignments.filter((_, k) => late[k] !== undefined).map(lateKey)) }
     const rows = d.assignments.map((a, k) => ({ a, k, kind: kindOf(this.sup.units[a.unit]) }))
+    const isFuture = (a: Assignment) => this.playbackMinute < (a.orderedMin ?? a.dispatchMin ?? this.loaded?.scenario.dispatchMin ?? 0)
+    this.refs.list.dataset.future = rows.filter(r => isFuture(r.a)).map(r => r.a.id).join('|')
     this.refs.list.replaceChildren(
       ...GROUPS.flatMap(({ kind, name }) => {
-        const mine = rows.filter((r) => r.kind === kind)
+        const mine = rows.filter((r) => r.kind === kind && !isFuture(r.a))
         if (!mine.length) return []
         const head = document.createElement('li')
         head.className = 'group'
@@ -1539,6 +1541,20 @@ export class Editor {
         return [head, ...mine.map(({ a, k }) => this.row(a, k, late[k]))]
       }),
     )
+    const future = rows.filter(r => isFuture(r.a))
+    if (future.length) {
+      const item = document.createElement('li'), details = document.createElement('details'), summary = document.createElement('summary')
+      summary.textContent = `Ordens futuras (${future.reduce((n,r)=>n+r.a.count,0)})`
+      details.append(summary)
+      const list = document.createElement('ul')
+      for (const {a,k} of future) {
+        const row = this.row(a,k,late[k])
+        const when = document.createElement('div')
+        when.textContent = `Ordem às ${fmtTime(wallClock(this.loaded!.fire.start,(a.orderedMin ?? a.dispatchMin ?? 0)/60))}`
+        row.prepend(when); list.append(row)
+      }
+      details.append(list); item.append(details); this.refs.list.append(item)
+    }
     if (!d.assignments.length) this.refs.list.innerHTML = '<li class="none">Nada no terreno: o fogo corre livre.</li>'
   }
 
@@ -1636,6 +1652,9 @@ export class Editor {
   }
 
   private updateEtas() {
+    const d = this.decisions[this.active]
+    const future = d.assignments.filter(a => this.playbackMinute < (a.orderedMin ?? a.dispatchMin ?? this.loaded?.scenario.dispatchMin ?? 0)).map(a => a.id).join('|')
+    if (this.refs.list.dataset.future !== future) this.renderList(d)
     this.refs.list.querySelectorAll<HTMLElement>('[data-eta]').forEach((el) => {
       el.textContent = this.etaText(Number(el.dataset.eta))
     })
@@ -1757,12 +1776,13 @@ export class Editor {
     const d = this.decisions[this.active]
     ensureAssignmentIds(d)
     const { context, scenario, stations } = this.loaded ?? {}
+    const ordered = (a: Assignment) => this.playbackMinute >= (a.orderedMin ?? a.dispatchMin ?? scenario?.dispatchMin ?? 0)
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
 
     // 1. Draw dark blue road routes connecting stations to ground attack points
     if (context && scenario && stations) {
       for (const [id, p] of Object.entries(d.points)) {
-        const units = d.assignments.filter((a) => a.target === id)
+        const units = d.assignments.filter((a) => a.target === id && ordered(a))
         const groundUnits = units.filter((a) => isRoadVehicle(this.sup.units[a.unit]))
         if (!groundUnits.length) continue
 
@@ -1796,7 +1816,7 @@ export class Editor {
       const a = d.assignments[w.slot]
       const positions = w.barrier.path.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat))
       const strip = entities.add({
-        polyline: { show: new CallbackProperty(() => this.open || this.playbackMinute >= w.barrier.from_min, false), positions, width: 3, clampToGround: true, material: WET },
+        polyline: { show: new CallbackProperty(() => ordered(a) && (this.open || this.playbackMinute >= w.barrier.from_min), false), positions, width: 3, clampToGround: true, material: WET },
       })
       const at = d.points[a.target] ?? d.lines[a.target]?.[0]
       if (at) (strip as any)._unitInfo = unitInfo(a, at, [a])
@@ -1812,7 +1832,7 @@ export class Editor {
       for (const preview of [true, false]) {
         const coverage = entities.add({ id: `attack-coverage:${zone.slot}:${preview}`, polyline: { positions, width: 2, clampToGround: true,
           material: preview ? planned : WET,
-          show: new CallbackProperty(() => preview ? this.open && this.playbackMinute < zone.from : this.playbackMinute >= zone.from, false) } })
+          show: new CallbackProperty(() => ordered(d.assignments[zone.slot]) && (preview ? this.open && this.playbackMinute < zone.from : this.playbackMinute >= zone.from), false) } })
         ;(coverage as any)._unitInfo = unitInfo(d.assignments[zone.slot], zone.point, [d.assignments[zone.slot]])
       }
     }
@@ -1827,7 +1847,7 @@ export class Editor {
         .map(p => Cartesian3.fromDegrees(p.lon,p.lat))
       const arrived = arrivals(scenario, d)[slot]
       const coverage = entities.add({ id: `tanker-coverage:${a.id}`, polyline: { positions, width: 2, clampToGround: true, material: color,
-        show: new CallbackProperty(() => this.open || this.playbackMinute >= arrived, false) } })
+        show: new CallbackProperty(() => ordered(a) && (this.open || this.playbackMinute >= arrived), false) } })
       ;(coverage as any)._unitInfo = unitInfo(a, at, [a])
     }
 
@@ -1852,20 +1872,28 @@ export class Editor {
       const journey = unitJourney(path, departure, eta[slot] ?? departure)
       for (let number = 0; number < a.count; number++) {
         const color = originColor(a.from, stations ?? [])
+        const arrival = eta[slot] ?? departure
         const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
           color, offsetX: 0, offsetY: 0, label: spec.short,
-          position: () => this.open ? at : journey(this.playbackMinute) }
-        deployed.push(marker)
-        const entity = entities.add({
-          position: new CallbackPositionProperty(() => { const p = marker.position!(); return Cartesian3.fromDegrees(p.lon, p.lat) }, false),
-          billboard: {
-            image: unitIconUrl(a.unit, color), width: 36, height: 36,
-            pixelOffset: new CallbackProperty(() => new Cartesian2(marker.offsetX, marker.offsetY), false),
-            verticalOrigin: VerticalOrigin.CENTER, heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Infinity,
-          },
-        })
-        ;(entity as any)._unitInfo = { ...unitInfo(a, at, [a]), displayId: marker.code }
+          visible: () => ordered(a), position: () => journey(this.playbackMinute) }
+        const destination: UnitMarker = { ...marker, id: `${marker.id}:destination`, pending: true,
+          position: () => at, visible: () => ordered(a) && this.playbackMinute < arrival,
+          eta: () => arrival - this.playbackMinute }
+        for (const item of [marker, destination]) {
+          deployed.push(item)
+          const entity = entities.add({
+            position: new CallbackPositionProperty(() => { const p = item.position!(); return Cartesian3.fromDegrees(p.lon, p.lat) }, false),
+            billboard: {
+              show: new CallbackProperty(() => item.visible!(), false),
+              // DOM supplies crisp visible icons; the near-transparent billboard is the hover target.
+              image: unitIconUrl(a.unit, color), color: Color.WHITE.withAlpha(.01), width: 36, height: 36,
+              pixelOffset: new CallbackProperty(() => new Cartesian2(item.offsetX, item.offsetY), false),
+              verticalOrigin: VerticalOrigin.CENTER, heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+          })
+          ;(entity as any)._unitInfo = { ...unitInfo(a, at, [a]), displayId: marker.code }
+        }
       }
     }
     this.unitMarkers.set(deployed)
