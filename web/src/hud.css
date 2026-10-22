@@ -898,7 +898,7 @@
 .markers {
   z-index: 2;
 }
-.markers svg {
+.markers > svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1431,9 +1431,6 @@
 .hud .ledger thead th::before { display: none; }
 .hud .ledger tbody th { width: 90px; font-size: 11px; }
 .hud .ledger tr.wait .text { color: #d4b68b; }
-.wind-readout { position: absolute; top: 0; left: 0; pointer-events: auto; background: #09131ee8; border: 1px solid #b9e7ff80; color: #e7f6ff; padding: 6px 9px; font: 12px/1.4 system-ui, sans-serif; white-space: nowrap; border-radius: 3px; }
-.tag b svg { display: block; width: 23px; height: 23px; }
-.tag b { min-width: 29px; display: grid; place-items: center; }
 .reports-btn .nav-icon svg { width: 18px; height: 18px; }
 .hud.reporting .bottom-nav-cluster { right: min(492px, calc(100vw - 105px)); }
 @media (max-width: 760px) { .hud .ledger { display: none; } }
@@ -1441,3 +1438,10 @@
 .hud .bottom-nav-cluster .reports-btn { width: 76px; height: 48px; }
 .hud .bottom-nav-cluster .reports-btn .nav-label { font-size: 9px; letter-spacing: .035em; color: #b8c6d6; }
 .hud .bottom-nav-cluster .reports-btn[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }
+
+/* Give category symbols their own light tile, independent of origin-coloured label borders. */
+.markers .tag.has-symbol { grid-template-columns: 36px auto; padding: 4px 10px 4px 4px; gap: 9px; }
+.markers .tag.has-symbol b { display: grid; place-items: center; width: 36px; height: 36px; min-width: 36px; box-sizing: border-box; padding: 0; background: #fff4ed; color: var(--landmark-color); border: 1px solid currentColor; border-radius: 5px; }
+.markers .tag-hospital.has-symbol b { background: #edfff5; }
+.markers .tag-airbase.has-symbol b { background: #edfaff; }
+.markers .tag.has-symbol b svg { position: static; display: block; width: 25px; height: 25px; overflow: visible; }

@@ -14,7 +14,7 @@ import {
   type Viewer,
 } from 'cesium'
 import { cleanLonLat, destination } from './geo'
-import { landmarkGlyph, landmarkIconUrl } from './landmarkIcons'
+import { landmarkGlyph, landmarkIconUrl, landmarkColor } from './landmarkIcons'
 import { BEST_CSS } from './reachLayer'
 import type { MarkerKind, MarkerSpec } from './shots'
 
@@ -90,7 +90,11 @@ export class MarkerLayer {
       const tag = document.createElement('div')
       tag.className = `tag tag-${spec.kind}`
       tag.innerHTML = `<b></b><span></span>`
-      if (spec.symbol) tag.querySelector('b')!.innerHTML = landmarkGlyph(spec.symbol)
+      if (spec.symbol) {
+        tag.classList.add('has-symbol')
+        tag.style.setProperty('--landmark-color', landmarkColor(spec.symbol))
+        tag.querySelector('b')!.innerHTML = landmarkGlyph(spec.symbol)
+      }
       else tag.querySelector('b')!.textContent = spec.badge
       tag.querySelector('span')!.textContent = spec.label
       const line = document.createElementNS(SVG, 'line')
@@ -99,7 +103,7 @@ export class MarkerLayer {
       dot.setAttribute('class', `lead lead-${spec.kind}`)
       dot.setAttribute('r', '3')
       if (spec.color) {
-        tag.querySelector('b')!.style.background = spec.color
+        if (!spec.symbol) tag.querySelector('b')!.style.background = spec.color
         tag.style.borderColor = spec.color
         line.style.stroke = spec.color
         dot.style.fill = spec.color
@@ -218,6 +222,6 @@ function measure(tag: HTMLElement): { w: number; h: number } | undefined {
 
 /** A constant-size landmark remains readable even when its longer tag is hidden by a HUD panel. */
 function landmarkIcon(spec: MarkerSpec): string {
-  const color = spec.color ?? (spec.kind === 'hospital' ? '#6ee7b7' : spec.kind === 'airbase' ? '#7dd3fc' : '#d9dcdf')
-  return landmarkIconUrl(spec.symbol ?? 'helmet', color)
+  const symbol = spec.symbol ?? 'helmet'
+  return landmarkIconUrl(symbol, landmarkColor(symbol))
 }

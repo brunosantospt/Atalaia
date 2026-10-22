@@ -1,4 +1,5 @@
 export type LandmarkSymbol = 'helmet' | 'cross' | 'flame' | 'helipad' | 'airplane'
+export const landmarkColor = (symbol: LandmarkSymbol) => ({ helmet: '#dc4046', cross: '#16875c', flame: '#e87916', helipad: '#087fae', airplane: '#087fae' })[symbol]
 const paths: Record<LandmarkSymbol, string> = {
   helmet: '<path d="M4 15v-3a8 8 0 0 1 16 0v3M3 15h18v3H3zM10 4v8M14 4v8M7 18v3h10v-3"/>',
   cross: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
@@ -8,6 +9,6 @@ const paths: Record<LandmarkSymbol, string> = {
 }
 export const landmarkGlyph = (symbol: LandmarkSymbol) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[symbol]}</svg>`
 export function landmarkIconUrl(symbol: LandmarkSymbol, color: string) {
-  const glyph = landmarkGlyph(symbol).replace('<svg ', '<svg x="9" y="9" width="22" height="22" style="color:#10202c" ')
+  const glyph = landmarkGlyph(symbol).replace('<svg ', `<svg x="9" y="9" width="22" height="22" style="color:${color}" `)
   return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#f8fafc" stroke="${color}" stroke-width="3"/>${glyph}</svg>`)}`
 }

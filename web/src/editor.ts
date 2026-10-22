@@ -142,6 +142,7 @@ const TEMPLATE = `
     <h3>Hora <span data-ref="hourText"></span></h3>
     <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
   </section>
+  <section class="deployment-guidance" data-ref="arrivalGuidance" aria-label="Chegada do fogo e cores dos quartéis"></section>
   <section>
     <h3>Meios no terreno</h3>
     <ul class="assignments" data-ref="list"></ul>
@@ -1345,6 +1346,7 @@ export class Editor {
   private updateStationDropdown() {
     const from = this.refs.from as HTMLSelectElement
     if (!this.loaded) return
+    const stations = this.loaded.stations
     const unit = this.sup.units[this.unit]
     const aerial = isAerial(unit)
 
@@ -1376,7 +1378,6 @@ export class Editor {
       return
     }
 
-    const stations = this.loaded.stations
     const current = from.value || this.fromId
 
     from.replaceChildren(

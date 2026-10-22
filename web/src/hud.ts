@@ -529,6 +529,7 @@ export class Hud {
     const rail = rect('.rail')
     const ledger = rect('.ledger')
     const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
+    const wind = this.root.querySelector('.wind-compass')?.getBoundingClientRect()
     // The rail and the ledger are hidden on narrow screens and then have no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.root.classList.contains('reporting')) right = Math.min(right, rect('.reports-panel').left - pad)
@@ -537,7 +538,7 @@ export class Hud {
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: editing ? height - pad : rect('.bottom').top - pad,
-      avoid: [ledger, guidance, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
+      avoid: [ledger, guidance, wind, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
