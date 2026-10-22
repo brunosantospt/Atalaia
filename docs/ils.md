@@ -244,7 +244,14 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 | Vieira do Minho 2016 | 3 lugares · 871,9 ha | 0 lugares · 138,4 ha | ~2000 |
 | Cabeceiras de Basto 2016 | 5 lugares · 449,0 ha | 3 lugares · 428,2 ha | ~2400 |
 
-Com as linhas molhadas no modelo rápido (22 out, 2000 planos, semente 1, `npm run ils:check`) os números mudaram: Vieira A 0 lugares · 259,5 ha, B 0 lugares · 120,5 ha; Cabeceiras A 5 lugares · 595,2 ha, B 3 lugares · 472,7 ha. A tabela acima é do modelo anterior.
+**Referência atual (22 out, 2000 planos, semente 1, `npm run ils:check`):** com as linhas molhadas, no máximo 6 instantes de ativação e os anéis dos 3 quartéis mais próximos:
+
+| Incêndio | A | B | Melhor B no plano |
+|---|---|---|---|
+| Vieira do Minho 2016 | 0 lugares · 128,9 ha | 0 lugares · 88,3 ha | 883 |
+| Cabeceiras de Basto 2016 | 5 lugares · 471,5 ha | 1 lugar · 234,6 ha | 1632 |
+
+Estes valores batem com `web/scripts/ils-reference.json`. São do modelo rápido da pesquisa, não de uma corrida ELMFIRE. A tabela e os exemplos seguintes medidos no Chrome são do modelo anterior.
 
 - **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m). Os terrestres ficam sempre ≥ 10 min antes do fogo livre; os aéreos só têm de chegar antes dele, contando o voo desde a sua base.
 - **Cabeceiras:** os meios do A mudam 275 m–2 km (VFCI 524 m, as ECIN 1030 m e 2045 m, os HEBL 275 m e 1560 m).

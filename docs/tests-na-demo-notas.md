@@ -1,49 +1,108 @@
-# Tests na demo — o que já está feito (22 out 2026)
+# Tests na demo — mudanças e verificação (22 out 2026)
 
-Tudo está no `main` local do Atalaia. Ainda não foi feito push nem testado no browser. Nenhum item foi marcado como concluído.
+Este ramo responde à lista **"Tests na demo"** do Build Week Plan. Traz também o `origin/main` até ao hindcast step 3.
 
-## Mudanças
+A demo passa a ter **um só incêndio**, simulado na Penha. O fogo corre só no **ELMFIRE**, com um botão. Um **incidente de vento** obriga a realocar os meios.
 
-- **Só um incêndio, Guimarães, com mudança brusca de vento:**
-  - Novo incêndio simulado `Penha_Guimaraes_hipotetico`, que é o único no índice. A meteo é a real do IFS de 16 set 2024, e o vento roda às 12:30 (T+150): de E a 23 km/h para NNO a 36 km/h, com rajadas de 63.
-  - A reprodução pausa às 12:30 e abre "Mudança brusca de vento" com dois botões, "Rever estratégia" e "Continuar sem alterar". Há também um alerta de vento e um marco "Vento roda" na linha do tempo.
-  - Em curso: recalibrar o incêndio para a ordem de grandeza de Paredes, 17 set 2024, para ficar mais dramático e atingir aldeias depois da rotação.
-- **Coordenadas na mira:** a leitura mostra o ponto no centro do ecrã (rótulo "Mira"), e a mira está mais visível. O clique copia na mesma.
-- **Alertas especiais:** há um painel no canto superior direito com quatro tipos de alerta:
-  - habitações atingidas em menos de 1 h (crítico abaixo de 30 min);
-  - meios com pouca água ou sem água;
-  - velocidade de propagação: aviso a partir de 16,8 m/min (Scott & Burgan 2005), crítico acima de 50 m/min (Tedim et al. 2018);
-  - vento.
-  
-  Clicar num alerta voa até ao local.
-- **Cenários sem meios:** cada incêndio abre vazio. "Repor exemplo" continua a funcionar.
-- **Início manual:** a aplicação abre em pausa; a animação começa com espaço ou play.
-- **Estilo do incêndio:** o fogo simulado deixa de ser feito de píxeis. Usa agora o estilo do fogo observado: linha âmbar na frente, âmbar suave nos últimos 30 min e brasa escura atrás.
-- **Linhas brancas:** saem as linhas brancas e entra uma só linha verde, "Melhor caso · X ha". É o que arde se o drone detetar o fogo e o primeiro meio chegar a tempo.
-- **Wet line:**
-  - Cada meio terrestre colocado desenha uma faixa azul-clara atravessada à propagação. As medidas são: VFCI 300 × 10 m, VTTU 1200 × 15 m, brigada 120 × 2 m.
-  - A faixa conta a partir da hora de chegada do meio. É exatamente o `decision.barriers` que vai para o ELMFIRE.
-- **Rota dos meios:** passa a azul-escuro (#1e3a8a).
-- **Incêndio até ao fim:**
-  - As corridas vão até 24 h. A secção "Fim do incêndio" mostra, para Livre, A e B: "Extinto às HH:MM · N ha" ou "Não extinto em 24 h".
-  - Nota: em Vieira e Cabeceiras nenhuma corrida se extingue em 24 h.
-- **"Satélite" mais explícito:** passa a "Satélite deteta o fogo · HH:MM", e o termo T_sat sai do ecrã.
-- **Raio de ignição:** foram removidos os anéis de 1, 2 e 5 km e o anel âmbar do marcador I.
-- **Integrar ELMFIRE (como no ramo hindcast-registos):**
-  - O ELMFIRE substitui o modelo rápido para Livre, A e B, através da API. O modelo rápido fica como pré-visualização imediata e para o ILS.
-  - Se a API estiver em baixo, a aplicação usa o modelo rápido e avisa.
-  - Os combustíveis portugueses e as projeções do ramo estão disponíveis na API, mas desligados, porque sem copas queimam de mais em Vieira.
-- **Botões por meio:** um botão por meio (VFCI, VTTU, Brigada, HEBL, AVBP), que se arma e depois se clica no mapa. Saíram "+ colocar meio" e "clicar no mapa".
+Verificações de 22 out 2026: `npm run build` (`tsc --noEmit` + Vite), `npm run ils:check`, `api/test.sh` com ELMFIRE real e o teste sintético `engines/elmfire/test.sh`. A API de tarefas da Penha foi verificada até ao resultado e à reutilização da cache: 521,01 ha às 6 h, contra 553,4 ha da referência (−5,85 %, dentro da tolerância de 10 %). **Falta a verificação visual num browser com WebGL** (ver o fim).
 
-## Bugs
+## Como correr
 
-- **Luz central:** a luz segue o centro do ecrã em cada frame, o mesmo ponto da mira.
-- **Visual do incêndio não volta ao início:** o relógio passa a ser um só, partilhado pela reprodução e pelo editor. A causa encontrada era o slider do editor sobrepor-se à reprodução. Falta confirmar no browser.
-- **Hora no menu da esquerda:** arrastar o slider move o relógio do fogo, e a reprodução continua a partir daí.
-- **Zoom-out ao remover uma unidade:** depois de recalcular, o plano atual é substituído no lugar e a câmara não se mexe.
+```bash
+api/setup.sh        # uma vez
+api/serve.sh        # porta 5181, precisa do Docker com atalaia/elmfire:2025.0717
+cd web && npm run dev
+```
 
-## Estado e conhecidos
+Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fica em cache para os dois ventos.
 
-- O ramo `tests-na-demo` = `main` local com todos os pontos acima + o merge do `origin/main` do Bruno (ILS das linhas, `ils:check`, hindcast). O `ils:check` passa; a referência foi atualizada porque as wet lines mudaram o modelo rápido (ver `docs/ils.md` §5.1).
-- **Corrigido:** o Cesium parava de renderizar ("normalized result is not a number") por pontos repetidos nos perímetros da Penha. As linhas no chão agora descartam pontos repetidos e anéis degenerados (`cleanPath` em `geo.ts`), e o `progression.geojson` foi limpo.
-- Para a demo: Docker ligado, `api/setup.sh` (uma vez), `api/serve.sh` (porta 5181), `cd web && npm run dev`.
+## O cenário: Penha, Guimarães (simulado)
+
+- **Ignição:** 41°25′42.8″N 8°16′17.4″W, a 16 set 2024 às 10:00.
+- **Meteo:** IFS real desse dia, com o vento ×2.
+- **Grelha:** 27 km × 27 km, 900 × 900 células de 30 m.
+- **Calibração:** à ordem de grandeza do incêndio de **Paredes, 17 set 2024** (PT-FireSprd v2, uso interno). Do v2 só se leram áreas e ROS; nenhuma geometria de 2024 está no repositório.
+- **Incidente de vento às 12:30 (T+150):** de E a 45 km/h para NNO a 65 km/h, com rajadas de 91 km/h. A cabeça roda de O para SE, sobre Abação, Pinheiro, Lapinha, Calvos e Tagilde.
+  - Às 6 h ardem 553 ha com a rotação e 178 ha sem ela.
+- **Referência cortada aos 2000 ha:** 400 anéis e 320 KB, contra os 1105 anéis e 1,6 MB de antes. Assim o browser não fica lento.
+- **Deteção:** drone aos 10 min, satélite aos 30 min (`detection.json`).
+- **Construção:** reproduzível com `scripts/build_hypothetical.py`. Os outros incêndios continuam no disco, mas fora do `index.json`.
+
+## Fluxo de decisão
+
+- **ELMFIRE em vez do modelo rápido:** o modelo rápido já não aparece no ecrã. Fica só por dentro do ILS, para propor o B.
+- **Botão "Simular no ELMFIRE":** acende-se só quando a disposição dos meios mudou.
+  - Durante a corrida, um véu de ecrã inteiro bloqueia tudo. Mostra o tempo decorrido e o progresso Livre / A / B, troço k/n.
+- **API assíncrona:** `POST /api/jobs` e `GET /api/jobs/{id}`, com consultas a cada 1,5 s. Isto resolve o "NetworkError" das corridas com mais de um minuto. `/api/run` continua igual.
+- **Abertura e corte do diretor:**
+  - fogo ao avistamento do drone (T+10);
+  - fogo ao avistamento do satélite (T+30);
+  - previsão ELMFIRE sem meios.
+- **Incidente de vento:**
+  - Antes do incidente, os planos usam a previsão sem a rotação (`wind_shift: false`).
+  - Às 12:30 a reprodução pausa e aparece um só botão, "Realocar meios".
+  - Não se passa do incidente sem uma nova corrida ELMFIRE com o vento real.
+- **Fim do incêndio:** "Extinto às HH:MM · N ha", ou "corte aos 2000 ha".
+
+## Meios
+
+- **Wet lines:**
+  - Cada meio terrestre põe uma faixa azul-clara que é exatamente o `decision.barriers` do ELMFIRE.
+  - A faixa cresce pela frente do fogo ao ritmo de ataque do meio: VFCI ~240 m/h, brigadas pela NWCG.
+  - O crescimento é limitado pela água, pelos reabastecimentos e por um turno de 12 h.
+  - Há no máximo 6 `from_min` por decisão.
+- **Só os 3 quartéis mais próximos:** BV Guimarães, Vizela e Fafe.
+  - Cada um tem um **anel de alcance centrado na ignição**: até onde o fogo chegou quando os meios chegam, mais o alcance de trabalho. Os raios são calculados a partir da previsão e atualizados após o incidente de vento.
+  - Fora do anel, a colocação é recusada, e o ILS também respeita os anéis.
+- **Colocação:** um botão por meio, e cada meio coloca-se com um clique no mapa. Saíram "+ colocar meio" e "clicar no mapa".
+- **Rotas:** a azul-escuro.
+- **Início vazio:** os cenários começam sem meios. "Repor exemplo" continua disponível.
+- **ILS do Bruno:** as linhas de A, com mover, deslocar e encurtar, estão integradas nas wet lines. O `ils:check` foi atualizado, e B continua a bater A nos dois incêndios de referência.
+
+## Visual e HUD
+
+- **Fogo simulado:** liso, com o estilo do fogo observado: linha âmbar, últimos 30 min em âmbar suave e brasa escura.
+  - Aparece desde T+0, com um brilho mínimo enquanto é pequeno.
+  - As células batem com o minuto do relógio.
+- **Linhas brancas:** substituídas por uma linha verde, "Melhor caso · X ha".
+- **Anéis de 1/2/5 km e raio de ignição:** removidos.
+- **"Satélite deteta o fogo · HH:MM":** substitui o T_sat.
+- **Coordenadas:** são as da **mira**, no centro do ecrã.
+- **Luz de foco:**
+  - Segue a mira em cada frame.
+  - Tem tamanho fixo no ecrã; só o corte do diretor (D) a ajusta por plano.
+- **Painel de alertas:**
+  - habitações em risco em menos de 1 h;
+  - meios com pouca água;
+  - velocidade de propagação crítica: aviso a 16,8 m/min (Scott & Burgan 2005), crítico a 50 m/min (Tedim et al. 2018);
+  - o incidente de vento.
+- **Reprodução:**
+  - A animação começa em pausa.
+  - Há um só relógio para a reprodução e para o slider da hora.
+  - Remover um meio já não afasta a câmara.
+  - O relógio é partilhado com o reset (R); confirmar o comportamento visual no browser.
+- **Correção:** o Cesium deixava de renderizar ("normalized result is not a number"). Agora as linhas no chão descartam pontos repetidos (`cleanPath`).
+
+## A verificar no browser
+
+1. Na abertura (T+10, T+30, Previsão), o fogo aparece desde T+0.
+2. Colocar meios só dentro dos anéis acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
+3. Às 12:30 aparece "Realocar meios". Não se avança sem simular, e depois o split mostra o resultado com o vento novo.
+4. As wet lines crescem ao longo da frente. As rotas aparecem a azul-escuro.
+5. A luz e as coordenadas ficam na mira.
+
+## Limitações conhecidas
+
+- **Referência vs API depois das 6 h:** o handoff relata grande variação entre as corridas de 24 h com projeções; essa comparação longa não foi repetida nesta recuperação. O teste atual confirmou apenas a tolerância às 6 h (−5,85 %).
+- **Anéis e mudança de vento:** os meios já colocados não são retirados se os anéis encolherem depois do vento.
+
+## Merge do hindcast step 3 e recuperação do push
+
+- Integrado `origin/main` (`c910095`), incluindo os três commits que faltavam. Mantêm-se as humidades mortas calculadas de hora a hora, as copas LiDAR e as cicatrizes nos incêndios históricos.
+- A Penha não precisa de ficheiros LiDAR nem cicatrizes. O seu bloco `engine` continua a definir combustíveis portugueses, copas típicas, projeções, semente 2 e humidades vivas 30/70. As opções explícitas do pedido ganham aos valores do incêndio.
+- A meteo sem rotação continua disponível e dá uma chave de cache diferente da meteo com rotação.
+- `api/test.sh` verifica o índice público real e usa os incêndios históricos como fixtures isoladas; já não depende de estes aparecerem na seleção da demo. Inclui regressões dos valores da Penha após o merge.
+- O gerador da Penha passa a usar diretamente `engines/elmfire/run.sh`. Foi removido o overlay duplicado, que ficou incompatível depois de o adapter principal incorporar combustíveis portugueses e projeções; a entrada antiga `scripts/elmfire_pt/run.sh` fica como encaminhamento.
+- ILS, 2000 planos, semente 1: Vieira A 128,9 ha / B 88,3 ha, ambos 0 lugares; Cabeceiras A 471,5 ha / B 234,6 ha, 5 / 1 lugares. Os valores batem com `web/scripts/ils-reference.json`. São resultados do modelo rápido usado na pesquisa, não do ELMFIRE.
+- SimFire não está instalado neste ambiente; as corridas reais da regressão API usaram ELMFIRE.
+- As edições de `pitch/` da outra sessão ficam fora deste ramo e do PR.

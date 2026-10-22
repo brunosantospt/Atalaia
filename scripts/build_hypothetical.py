@@ -17,10 +17,10 @@ dead fuels, Portuguese fuel models and spotting in ELMFIRE. Writes:
     web/public/fires/<id>/osm.json             through fetch_osm.py (once) and build_osm.py
     web/public/fires/index.json                this fire only: the demo shows one
 
-With no observed spread, the steps the story plays are ELMFIRE's (scripts/elmfire_pt in Docker: engines/elmfire plus Portuguese fuels, typical canopy and spotting;
+With no observed spread, the steps the story plays are ELMFIRE's (engines/elmfire in Docker, with Portuguese fuels, typical canopy and spotting;
 moistures from temperature and humidity less --dry) with nobody on the fire. Only the wind (--wind-mult) is baked into
 weather.json and the dry farmland into fuel.json; the canopy, the PT fuel models, the drier fuels and the spotting live
-only in this reference, so the web's fast model and the API's re-plans run a tamer fire.
+in fire.json's engine block too, so the API's re-plans use the reference settings. The fast model remains an approximation.
 --model fast uses the browser's fast model instead (web/src/fastModel.ts, run by Node through
 scripts/fastmodel/free_run.ts), which spreads this fire some 5x faster in its eucalyptus;
 --compare records the other model's areas in windShift.compare. Steps are hourly through the 6 h decision window, then at 9 and 12 h, and further
@@ -52,7 +52,7 @@ PACKAGE = ROOT / "data/simfire/penha_2024-09-16"  # symlink to FireRenderer/data
 CACHE = ROOT / "data/hypothetical"
 OUT = ROOT / "web/public/fires"
 FAST = ROOT / "scripts/fastmodel"
-ELMFIRE = ROOT / "scripts/elmfire_pt/run.sh"  # engines/elmfire plus fuel_models, spotting and seed (from hindcast/engine)
+ELMFIRE = ROOT / "engines/elmfire/run.sh"  # unified adapter: fuel_models, canopy, spotting and seed
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/elmfire_pt"))
 import build_grid  # noqa: E402
@@ -199,7 +199,7 @@ def emc_pct(temp_c, rh):
 
 
 def elmfire_run(weather, start, ignition, g, folder, opts):
-    """ELMFIRE through scripts/elmfire_pt (Docker), typical canopy; Portuguese fuel models, spotting; dead 1 h
+    """ELMFIRE through engines/elmfire (Docker), typical canopy; Portuguese fuel models, spotting; dead 1 h
     moisture from the hourly temperature and humidity less opts.dry points (floor opts.dead_floor), live
     30/70 %. Cached by request in data/hypothetical/."""
     rows, cols = g["rows"], g["cols"]
@@ -246,8 +246,8 @@ def elmfire_run(weather, start, ignition, g, folder, opts):
     if opts.spotting:
         request.update(spotting=SPOTTING, seed=opts.seed)
     body = json.dumps(request, separators=(",", ":"))
-    key = hashlib.sha256(body.encode() + ELMFIRE.with_name("adapter.py").read_bytes()
-                         + (ROOT / "engines/elmfire/adapter.py").read_bytes()).hexdigest()[:16]
+    key = hashlib.sha256(body.encode() + ELMFIRE.read_bytes()
+                         + ELMFIRE.with_name("adapter.py").read_bytes()).hexdigest()[:16]
     cached = CACHE / f"{FIRE_ID}_elmfire_{key}.npy"
     if not cached.exists():
         done = subprocess.run([str(ELMFIRE)], input=body, capture_output=True, text=True)
@@ -388,7 +388,7 @@ class Exposure:
 
 
 MODELS = {
-    "elmfire": "ELMFIRE 2025.0717 (scripts/elmfire_pt: engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression",
+    "elmfire": "ELMFIRE 2025.0717 (engines/elmfire with Portuguese fuel models, typical canopy and spotting), no suppression",
     "fast": "web/src/fastModel.ts, free run, no suppression",
 }
 

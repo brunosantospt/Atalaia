@@ -14,6 +14,7 @@ import os
 import sys
 import tempfile
 import warnings
+from unittest.mock import patch
 
 sys.path.insert(0, sys.argv[1])
 cache = tempfile.TemporaryDirectory(prefix='atalaia-cache-')
@@ -26,6 +27,7 @@ from pyproj import Transformer
 warnings.filterwarnings('ignore', message='.*httpx')  # Starlette's TestClient wants a newer httpx
 from fastapi.testclient import TestClient
 
+import engines
 import fires
 import runs
 from app import app
@@ -81,7 +83,21 @@ def arrival(result):
     return np.array(result['arrival_min'], dtype=float)  # null becomes NaN
 
 
-# What the API reads from each fire's folder.
+# The public demo may expose only Penha; the historical regression fixtures stay available on disk.
+public_index = fires.index()
+listed = client.get('/api/fires').json()
+check('GET /api/fires public', {
+    'segue o índice publicado': [f['id'] for f in listed] == [f['id'] for f in public_index],
+    'metadados e passos completos': all(f['steps'] and f['ignitions'] for f in listed),
+})
+fixture_index = []
+for fire_id in (VIEIRA, CABECEIRAS):
+    meta = json.loads((fires.FIRES / fire_id / 'fire.json').read_text())
+    fixture_index.append({k: meta[k] for k in ('id', 'name', 'start')})
+fixture_index_patch = patch('fires.index', return_value=fixture_index)
+fixture_index_patch.start()
+
+# What the API reads from each historical fire's folder.
 listed = client.get('/api/fires').json()
 check('GET /api/fires', {
     'os 2 incêndios': [f['id'] for f in listed] == [VIEIRA, CABECEIRAS],
@@ -178,6 +194,34 @@ class Recorder:
             arrival[row][col] = p['t_min']
         return {'engine': 'recorder', 'version': '0', 'grid': g, 'arrival_min': arrival, 'burned_ha': 0,
                 'runtime_s': 0}
+
+
+# The merge must retain Penha's engine defaults and forecast, even without LiDAR or burn scars.
+with patch('fires.index', return_value=public_index):
+    penha, forecast = runs.plan(runs.Scenario(fire='Penha_Guimaraes_hipotetico', duration_min=180, wind_shift=False))
+    recorded = Recorder()
+    runs.simulate(penha, forecast, recorded)
+    request = recorded.requests[0]
+    _, shifted = runs.plan(runs.Scenario(fire=penha.id, duration_min=180))
+    _, explicit = runs.plan(runs.Scenario(fire=penha.id, duration_min=180, moisture={
+        'dead_1h_pct': 5, 'dead_10h_pct': 7, 'dead_100h_pct': 9}))
+    hashes = penha.file_hashes()
+    check('Penha após merge', {
+        'combustíveis portugueses, copas típicas, projeções e semente':
+            (forecast.fuels, forecast.canopy, forecast.spotting, forecast.seed) == ('pt', True, True, 2),
+        'sem ficheiros LiDAR nem cicatrizes obrigatórios': not penha.has_canopy() and not penha.scars().any()
+            and 'scars.geojson' not in hashes and 'weather_noshift.json' in hashes,
+        'pedido inclui tabela portuguesa e copas': bool(request['fuel_models'])
+            and all(name in request['layers'] for name in runs.CANOPY),
+        'pedido inclui projeções com semente 2': bool(request['spotting']) and request['seed'] == 2,
+        'meteo usa a previsão sem rotação': request['weather'][-1]['wind_kmh'] == penha.weather(
+            fires.parse_time(penha.steps[0]['time']), [180], 'weather_noshift.json')[0]['wind_kmh'],
+        'humidades vivas da referência': (request['weather'][0]['live_herb_pct'], request['weather'][0]['live_woody_pct']) == (30, 70),
+        'humidades explícitas ganham à referência': explicit.weather_moisture is None
+            and explicit.moisture.dead_1h_pct == 5,
+        'previsão e vento rodado têm caches distintas': runs.cache_key(penha, forecast, engines.all_engines()['elmfire'])
+            != runs.cache_key(penha, shifted, engines.all_engines()['elmfire']),
+    })
 
 
 # The requests for Cabeceiras de Basto from step 0 (04:00) for 10 hours, with one line held from the
