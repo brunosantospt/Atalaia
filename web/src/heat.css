@@ -1,0 +1,87 @@
+/* The heat map's legend (heatLayer.ts): bottom right, beside the compass, in the HUD's panel look. */
+
+.hud .heat-legend {
+  position: absolute;
+  right: 108px;
+  bottom: calc(var(--credits-h, 20px) + 14px);
+  width: 250px;
+  padding: 9px 12px 9px 11px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  background: rgba(8, 9, 10, 0.78);
+  border: 1px solid var(--ink-faint);
+  border-left: 2px solid #ef7a2e;
+  backdrop-filter: blur(4px);
+}
+.hud .heat-legend[hidden] {
+  display: none;
+}
+.hud .heat-legend .head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+  color: var(--ink-dim);
+  letter-spacing: 0.16em;
+}
+.hud .heat-legend .head [data-ref='time'] {
+  color: var(--ink);
+}
+.hud .heat-legend ol {
+  display: grid;
+  grid-template-columns: 10px auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hud .heat-legend li {
+  display: contents;
+}
+.hud .heat-legend li i {
+  width: 10px;
+  height: 10px;
+  opacity: 0.85;
+}
+.hud .heat-legend li b {
+  font-weight: normal;
+  white-space: nowrap;
+}
+.hud .heat-legend li span {
+  color: var(--ink-dim);
+}
+.hud .heat-legend .cursor {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--ink-faint);
+  color: var(--ink-dim);
+}
+.hud .heat-legend .cursor[style*='--swatch'] {
+  color: var(--ink);
+}
+.hud .heat-legend .cursor[style*='--swatch']::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  background: var(--swatch);
+}
+
+/* Where the caption reaches under it, above the player instead. */
+@media (max-width: 1100px) {
+  .hud .heat-legend {
+    bottom: calc(var(--credits-h, 20px) + 150px);
+  }
+}
+
+@media (max-width: 720px) {
+  .hud .heat-legend {
+    right: 16px;
+    left: 16px;
+    width: auto;
+    bottom: calc(var(--credits-h, 20px) + 150px);
+  }
+}

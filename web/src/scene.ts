@@ -17,6 +17,15 @@ import type { LonLat } from './geo'
 const LIGHT_FROM_DEG = 315 // azimuth the light comes from (NW, as on printed relief maps)
 const LIGHT_ELEVATION_DEG = 35
 
+export type Quality = 'sharp' | 'light'
+
+export const QUALITIES: { id: Quality; name: string; detail: string }[] = [
+  { id: 'sharp', name: 'Nítida', detail: 'Resolução do ecrã, retina incluída: para a demo' },
+  { id: 'light', name: 'Leve', detail: '82 % da resolução e terreno mais grosso: para PCs fracos' },
+]
+
+export const DEFAULT_QUALITY: Quality = 'sharp'
+
 export async function createViewer(container: string, center: LonLat): Promise<Viewer> {
   const token = import.meta.env.VITE_CESIUM_ION_TOKEN
   if (token) Ion.defaultAccessToken = token
@@ -50,9 +59,6 @@ export async function createViewer(container: string, center: LonLat): Promise<V
   const title = viewer.container.querySelector('.cesium-credit-lightbox-title')
   if (title) title.textContent = 'Fontes'
 
-  // Performance optimizations for low-end / integrated GPUs:
-  viewer.resolutionScale = 0.82
-  scene.globe.maximumScreenSpaceError = 3.5
   scene.globe.tileCacheSize = 100
 
   // Fire perimeters and markers sit on the ground and must hide behind the relief.
@@ -68,19 +74,25 @@ export async function createViewer(container: string, center: LonLat): Promise<V
   scene.globe.showGroundAtmosphere = false
   scene.fog.enabled = false
 
-  // Imagery keeps most of its colour where the spotlight falls (the area in play); the spotlight
-  // (spotlight.ts) is what greys and darkens everything else, so the fire still reads first.
-  const imagery = viewer.imageryLayers.get(0)
-  imagery.brightness = 0.92
-  imagery.contrast = 1.15
-  imagery.saturation = 0.62
-  imagery.gamma = 1.05
+  // The imagery's look is set by the map profile picked in the settings (basemap.ts).
 
   scene.globe.enableLighting = true
   scene.globe.dynamicAtmosphereLighting = false
   scene.light = new DirectionalLight({ direction: lightDirection(center), intensity: 2.2 })
 
   return viewer
+}
+
+/**
+ * How finely the globe is drawn (settings drawer). Sharp draws every pixel of the screen, a retina
+ * one's too (up to twice the CSS pixels), with Cesium's own terrain and imagery detail. Light is for
+ * low-end and integrated GPUs: 82 % of the CSS pixels and terrain one level coarser.
+ */
+export function setQuality(viewer: Viewer, quality: Quality) {
+  const sharp = quality === 'sharp'
+  viewer.useBrowserRecommendedResolution = !sharp
+  viewer.resolutionScale = sharp ? Math.min(1, 2 / window.devicePixelRatio) : 0.82
+  viewer.scene.globe.maximumScreenSpaceError = sharp ? 2 : 3.5
 }
 
 /** Direction the light travels, in Earth-fixed coordinates, for a light standing NW of `center`. */

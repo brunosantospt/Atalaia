@@ -2,6 +2,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
   BoundingSphere,
+  Cartesian2,
   Cartesian3,
   Cartographic,
   Credit,
@@ -11,6 +12,7 @@ import {
 } from 'cesium'
 import { sampleTerrainMostDetailed } from 'cesium'
 import { computeAlerts, prepareAlerts, type AlertSide, type PreparedAlerts } from './alerts'
+import { Basemap, MAPS, type MapId } from './basemap'
 import { applyPose, readPose, type Pose } from './camera'
 import {
   loadFire,
@@ -31,6 +33,7 @@ import { engineName, fetchEngines, runScenario, type EngineRun, type ScenarioReq
 import { burnedHa, computeFWISeries, decisionBarriers, params, type Run, type Scenario } from './fastModel'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
+import { HeatLayer } from './heatLayer'
 import { Hud, type CameraReadout } from './hud'
 import { loadInventory } from './inventory'
 import { layoutHash } from './layout'
@@ -42,7 +45,7 @@ import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
 import { arrivalFromProgression, cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
-import { createViewer } from './scene'
+import { createViewer, setQuality } from './scene'
 import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
@@ -81,6 +84,7 @@ interface Replay {
   freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   rings: StationRingsLayer // station approach interception boundaries; follows the free run shown
+  heat: HeatLayer // the heat map profile: who holds the head, cell by cell, at the hour on the clock
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
   split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
@@ -113,6 +117,7 @@ async function main() {
 
   const spotlight = new Spotlight(scene)
   const busy = new Busy() // the loading screen: while an ELMFIRE run is on, nothing can be changed
+  const basemap = new Basemap(viewer)
   let replay: Replay | undefined
   // Console handle for tuning in dev (atalaia.spotlight.strength = 0, …); absent from the build.
   if (import.meta.env.DEV)
@@ -207,6 +212,8 @@ async function main() {
     pickFire: (id) => (location.hash = id),
     pickEngine: () => refreshSimulate(),
     simulate: () => void simulate(),
+    pickMap: (id) => setMap(id),
+    pickQuality: (id) => setQuality(viewer, id),
     roleChanged: (role) => {
       editor.setRole(role)
       const dispatch = editor.getMultiAgencyDispatch()
@@ -218,6 +225,16 @@ async function main() {
     mobilizeAerial: (flameM) => editor.mobilizeAerial(flameM),
     flyTo: (at) => void flyToAlert(at),
   })
+  setMap(hud.settings.map)
+  setQuality(viewer, hud.settings.quality)
+
+  /** The map under the fire (settings or key M); the heat map is the fire's own layer. */
+  function setMap(id: MapId) {
+    basemap.set(id)
+    hud.settings.setMap(id)
+    replay?.heat.show(id === 'heat')
+  }
+
   // The decision editor: placing means runs nothing; the simulate button (here and in the HUD) runs A and B on ELMFIRE.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => refreshSimulate(),
@@ -263,6 +280,24 @@ async function main() {
     else showFreeOnly(replay.freeRun)
     refreshSimulate()
   }
+  const mouseMovePixel = new Cartesian2()
+  scene.canvas.addEventListener('mousemove', (e) => {
+    mouseMovePixel.x = e.clientX
+    mouseMovePixel.y = e.clientY
+    const ray = viewer.camera.getPickRay(mouseMovePixel)
+    if (!ray) return
+    const cartesian = viewer.scene.globe.pick(ray, viewer.scene)
+    if (cartesian) {
+      const c = Cartographic.fromCartesian(cartesian)
+      const at = { lon: CesiumMath.toDegrees(c.longitude), lat: CesiumMath.toDegrees(c.latitude), h: c.height }
+      replay?.heat.hover(at)
+    } else {
+      replay?.heat.hover(undefined)
+    }
+  })
+  scene.canvas.addEventListener('mouseleave', () => {
+    replay?.heat.hover(undefined)
+  })
 
   async function open(id: string) {
     if (replay?.id === id || loading === id) return
@@ -336,6 +371,7 @@ async function main() {
     replay?.free.destroy()
     replay?.reach.destroy()
     replay?.rings.destroy()
+    replay?.heat.destroy()
     replay?.split?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
@@ -353,6 +389,7 @@ async function main() {
       freeNow: free,
       reach: new ReachLayer(viewer, fire.ignition, reach),
       rings: new StationRingsLayer(viewer, fire.ignition, overlay),
+      heat: new HeatLayer(viewer, hud.root, scenario, fire.start),
       context,
       story,
       showSplit: false,
@@ -372,6 +409,7 @@ async function main() {
     editor.setEngine({ state: 'done', name: source, seconds: 0, note: shiftNote })
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
+    replay.heat.show(basemap.id === 'heat')
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
     hud.setFire(fire, story.shots, {
       known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
@@ -691,6 +729,7 @@ async function main() {
     split?.set(frame.hours)
     // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.
     editor.syncTime(frame.hours)
+    replay.heat.set(frame.hours)
     // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
     // the comparison starts with the split in the middle.
     if (frame.shot !== replay.shotShown) {
@@ -750,6 +789,7 @@ async function main() {
       a: () => toggleDecisions(),
       d: () => toggleDirector(),
       e: () => editor.toggle(),
+      m: () => setMap(MAPS[(MAPS.findIndex((m) => m.id === basemap.id) + 1) % MAPS.length].id),
     }
     const action = actions[e.key.length === 1 ? e.key.toLowerCase() : e.key]
     if (!action) return

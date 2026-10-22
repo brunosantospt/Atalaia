@@ -1,11 +1,13 @@
 // The settings drawer, on the right of the HUD: choices that hold across shots, one section each.
-// Today the fire on screen and the spread engine. The fire lives in the URL hash, so a link opens
-// it; the rest is remembered by this browser. The engines come from the API, asked again each time
+// Today the fire on screen, the map under it, how sharp it is drawn and the spread engine. The fire lives in the URL hash,
+// so a link opens it; the rest is remembered by this browser. The engines come from the API, asked again each time
 // the drawer opens, so starting Docker or the API shows up without a reload.
 
+import { DEFAULT_MAP, MAPS, type MapId } from './basemap'
 import type { FireIndexEntry } from './data'
 import { DEFAULT_ENGINE, type Engine, type EngineState, fetchEngines } from './engines'
 import { fmtDate, fmtHa, wallClock } from './format'
+import { DEFAULT_QUALITY, QUALITIES, type Quality } from './scene'
 
 const STORAGE_KEY = 'atalaia.settings'
 
@@ -17,11 +19,15 @@ const ENGINE_STATES: Record<EngineState, { label: string; hint: (id: string) => 
 
 interface Stored {
   engine: string
+  map: MapId
+  quality: Quality
 }
 
 export interface SettingsActions {
   pickFire(id: string): void
   pickEngine?(): void
+  pickMap(id: MapId): void
+  pickQuality(id: Quality): void
 }
 
 const TEMPLATE = `
@@ -32,6 +38,15 @@ const TEMPLATE = `
   <section>
     <h3>Incêndio</h3>
     <div class="choices" data-ref="fires"></div>
+  </section>
+  <section>
+    <h3>Mapa</h3>
+    <div class="choices" data-ref="maps"></div>
+    <p class="note">Cada mapa responde a outra pergunta. O de calor é o modelo rápido: a chama que a cabeça do incêndio teria em cada célula à hora do relógio, com o vento e a secura dessa hora. A tecla M passa ao seguinte.</p>
+  </section>
+  <section>
+    <h3>Imagem</h3>
+    <div class="choices" data-ref="qualities"></div>
   </section>
   <section>
     <h3>Motor de propagação</h3>
@@ -63,8 +78,45 @@ export class SettingsPanel {
         ),
       ),
     )
+    ref('maps').append(
+      ...MAPS.map((m) =>
+        choice('map', m.id, { name: m.name, detail: m.detail }, () => {
+          this.stored = { ...this.stored, map: m.id }
+          save(this.stored)
+          actions.pickMap(m.id)
+        }),
+      ),
+    )
+    this.input('map', this.map).checked = true
+    ref('qualities').append(
+      ...QUALITIES.map((q) =>
+        choice('quality', q.id, { name: q.name, detail: q.detail }, () => {
+          this.stored = { ...this.stored, quality: q.id }
+          save(this.stored)
+          actions.pickQuality(q.id)
+        }),
+      ),
+    )
+    this.input('quality', this.quality).checked = true
     this.toggle(false)
     void this.loadEngines()
+  }
+
+  /** The map picked here, remembered by this browser. */
+  get map(): MapId {
+    return this.stored.map
+  }
+
+  /** How finely the globe is drawn, remembered by this browser. */
+  get quality(): Quality {
+    return this.stored.quality
+  }
+
+  /** Marks a map picked elsewhere (key M) and remembers it. */
+  setMap(id: MapId) {
+    this.stored = { ...this.stored, map: id }
+    save(this.stored)
+    this.input('map', id).checked = true
   }
 
   /** The engine picked here, or the default while the API has not listed it. */
@@ -139,9 +191,13 @@ function choice(group: string, value: string, { name, detail, state }: Choice, o
 function load(): Stored {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
-    return { engine: typeof raw.engine === 'string' ? raw.engine : DEFAULT_ENGINE }
+    return {
+      engine: typeof raw.engine === 'string' ? raw.engine : DEFAULT_ENGINE,
+      map: MAPS.some((m) => m.id === raw.map) ? raw.map : DEFAULT_MAP,
+      quality: QUALITIES.some((q) => q.id === raw.quality) ? raw.quality : DEFAULT_QUALITY,
+    }
   } catch {
-    return { engine: DEFAULT_ENGINE }
+    return { engine: DEFAULT_ENGINE, map: DEFAULT_MAP, quality: DEFAULT_QUALITY }
   }
 }
 

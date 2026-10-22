@@ -115,42 +115,16 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
   const { cols, rows, cellsize, fuelCode, slope, aspect, fuelClass } = grid
   const n = cols * rows
 
-  // ROS and load by code, as flat tables for the inner loop.
-  const ros0 = new Float32Array(256)
-  const load = new Float32Array(256)
-  for (const [code, [r, l]] of Object.entries(FUEL)) (ros0[+code] = r * params.fuelScale), (load[+code] = l)
-  const { windGain, slopeMin, slopeMax } = params
+  const { ros0, load } = fuelTables()
+  const { slopeMin, slopeMax } = params
   const upPerDeg = Math.LN2 / params.slopeDoubleDeg
   const downPerDeg = Math.log(params.slopeDown) / params.slopeDoubleDeg
 
-  // Weather factor per minute and step: the head factor of the wind spread over an ellipse (Canadian
-  // FBP length-to-breadth), times the drying of the fuel with the humidity of the hour.
-  // Weather factor per minute and step: the head factor of the wind spread over an ellipse (Canadian
-  // FBP length-to-breadth), times fuel drying via Canadian FWI Initial Spread Index (Van Wagner 1987).
   const fwiSeries = scenario.fwiSeries ?? computeFWISeries(scenario.weather)
   const minutes = durationMin + 1
   const windFactor = new Float32Array(minutes * K)
-  for (let m = 0; m < minutes; m++) {
-    const { kmh, fromDeg, rh } = weatherAt(scenario, m)
-    let head: number
-    if (params.useFWI) {
-      const fwi = fwiAt(fwiSeries, scenario.startIndex, m)
-      head = (fwi.isi / params.isiRef) * params.fwiHeadBase
-    } else {
-      head = (1 + windGain * kmh) * Math.exp((-params.rhGain * (rh - params.rhRef)) / 100)
-    }
-    const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-0.03 * kmh), 2.155)
-    const e = Math.sqrt(1 - 1 / (lb * lb))
-    const to = fromDeg + 180
-    for (let k = 0; k < K; k++) {
-      const cos = Math.cos(((BEARING[k] - to) * Math.PI) / 180)
-      windFactor[m * K + k] = (head * (1 - e)) / (1 - e * cos)
-    }
-  }
-  // Slope along a step: cos between the step and the uphill direction (aspect faces downhill), per aspect degree.
-  const cosUp = new Float32Array(360 * K)
-  for (let a = 0; a < 360; a++)
-    for (let k = 0; k < K; k++) cosUp[a * K + k] = Math.cos(((BEARING[k] - a - 180) * Math.PI) / 180)
+  for (let m = 0; m < minutes; m++) stepFactors(scenario, fwiSeries, m, windFactor, m * K)
+  const cosUp = cosUpTable()
 
   // What the decision does to the ground: cells held by its barriers from their minute, cells slowed by
   // aerial drops. A cell can be in two zones (a point and a line, two points): the one holding with the lowest factor counts.
@@ -225,6 +199,77 @@ export function simulate(scenario: Scenario, decision: Decision | null): Run {
   }
   void fuelClass
   return { decision, arrival, durationMin, runtimeMs: performance.now() - t0 }
+}
+
+/**
+ * Flame length (m, Byram) of a head fire running through each cell at minute `minute` after the
+ * ignition, with nobody on it: the fastest of the 16 steps out of the cell, as simulate() takes
+ * them, and the cell's fuel load. 0 where nothing burns. Read against the units' holdFlameM, it
+ * says who can hold the front there (heatLayer.ts).
+ */
+export function headFlameM(scenario: Scenario, minute: number): Float32Array {
+  const { grid, suppression: sup } = scenario
+  const { fuelCode, slope, aspect } = grid
+  const { ros0, load } = fuelTables()
+  const { slopeMin, slopeMax } = params
+  const upPerDeg = Math.LN2 / params.slopeDoubleDeg
+  const downPerDeg = Math.log(params.slopeDown) / params.slopeDoubleDeg
+  const factor = new Float32Array(K)
+  stepFactors(scenario, scenario.fwiSeries ?? computeFWISeries(scenario.weather), minute, factor, 0)
+  const cosUp = cosUpTable()
+
+  const flame = new Float32Array(fuelCode.length)
+  for (let i = 0; i < flame.length; i++) {
+    const code = fuelCode[i]
+    if (ros0[code] === 0) continue
+    let ros = 0
+    for (let k = 0; k < K; k++) {
+      const up = slope[i] * cosUp[aspect[i] * K + k]
+      const step = factor[k] * Math.min(slopeMax, Math.max(slopeMin, Math.exp((up >= 0 ? upPerDeg : -downPerDeg) * up)))
+      if (step > ros) ros = step
+    }
+    flame[i] = flameLengthM(sup, intensityKWPerM(sup, load[code], ros0[code] * ros))
+  }
+  return flame
+}
+
+/** ROS with no wind on flat ground (m/min) and fine fuel load (kg/m²), by Scott & Burgan code, as flat tables for the inner loops. */
+function fuelTables(): { ros0: Float32Array; load: Float32Array } {
+  const ros0 = new Float32Array(256)
+  const load = new Float32Array(256)
+  for (const [code, [r, l]] of Object.entries(FUEL)) (ros0[+code] = r * params.fuelScale), (load[+code] = l)
+  return { ros0, load }
+}
+
+/**
+ * Weather factor of each step at minute `m`, into `out` from `at`: the head factor of the wind spread
+ * over an ellipse (Canadian FBP length-to-breadth), times fuel drying via the Canadian FWI Initial
+ * Spread Index (Van Wagner 1987), or the humidity of the hour without it.
+ */
+function stepFactors(scenario: Scenario, fwiSeries: FWIHourly[], m: number, out: Float32Array, at: number) {
+  const { kmh, fromDeg, rh } = weatherAt(scenario, m)
+  let head: number
+  if (params.useFWI) {
+    const fwi = fwiAt(fwiSeries, scenario.startIndex, m)
+    head = (fwi.isi / params.isiRef) * params.fwiHeadBase
+  } else {
+    head = (1 + params.windGain * kmh) * Math.exp((-params.rhGain * (rh - params.rhRef)) / 100)
+  }
+  const lb = 1 + 8.729 * Math.pow(1 - Math.exp(-0.03 * kmh), 2.155)
+  const e = Math.sqrt(1 - 1 / (lb * lb))
+  const to = fromDeg + 180
+  for (let k = 0; k < K; k++) {
+    const cos = Math.cos(((BEARING[k] - to) * Math.PI) / 180)
+    out[at + k] = (head * (1 - e)) / (1 - e * cos)
+  }
+}
+
+/** Slope along a step: cos between the step and the uphill direction (aspect faces downhill), per aspect degree. */
+function cosUpTable(): Float32Array {
+  const cosUp = new Float32Array(360 * K)
+  for (let a = 0; a < 360; a++)
+    for (let k = 0; k < K; k++) cosUp[a * K + k] = Math.cos(((BEARING[k] - a - 180) * Math.PI) / 180)
+  return cosUp
 }
 
 /** Hectares reached by minute `t`. */
