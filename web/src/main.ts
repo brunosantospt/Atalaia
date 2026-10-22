@@ -47,6 +47,7 @@ import { WaterGauge } from './waterGauge'
 import { DangerGauge } from './dangerGauge'
 import { DetectionGauge } from './detectionGauge'
 import { MeansGauge } from './meansGauge'
+import { restack } from './floating'
 import { GrowthGauge } from './growthGauge'
 import { WindShiftWatch } from './windShift'
 import { computeReach } from './reach'
@@ -54,6 +55,7 @@ import { ReachLayer } from './reachLayer'
 import { cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
 import { createViewer, setQuality } from './scene'
+import type { WidgetId } from './settings'
 import { addHeights, buildStory, type Shot, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
@@ -226,11 +228,9 @@ async function main() {
     prev: () => playback(() => replay?.player.prev()),
     next: () => playback(() => replay?.player.next()),
     goTo: (i) => playback(() => replay?.player.goTo(i)),
-    pickFire: (id) => (location.hash = id),
-    pickEngine: () => refreshSimulate(),
     simulate: () => void simulate(),
     pickMap: (id) => setMap(id),
-    pickQuality: (id) => setQuality(viewer, id),
+    showWidget: () => replay && showWidgets(replay),
     roleChanged: (role) => {
       editor.setRole(role)
       const dispatch = editor.getMultiAgencyDispatch()
@@ -244,7 +244,7 @@ async function main() {
     flyTo: (at) => void flyToAlert(at),
   })
   setMap(hud.settings.map)
-  setQuality(viewer, hud.settings.quality)
+  setQuality(viewer, 'sharp')
 
   /** The map under the fire (settings or key M). */
   function setMap(id: MapId) {
@@ -389,11 +389,25 @@ async function main() {
     replay?.outcome?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
-    // The floating cards stack under each other until the commander moves them; a move reflows the map labels.
+    // The floating cards stack in two columns until the commander moves them, the widgets turned off taking
+    // no room; a move reflows the map labels.
     const reflow = () => viewer.scene.requestRender()
+    const columns: { el: HTMLElement }[][] = [[], []]
     const wind = new WindLayer(viewer, hud.root, fire.ignition)
-    const intensity = new IntensityGauge(hud.root, wind.el, scenario.suppression, reflow)
-    const water = new WaterGauge(hud.root, intensity.el, reflow)
+    const stack = (column: number) => {
+      const k = columns[column].length
+      return () => {
+        const above = columns[column].slice(0, k).reverse().find((c) => !c.el.hidden)
+        if (above) return { x: above.el.offsetLeft, y: above.el.offsetTop + above.el.offsetHeight + 10 }
+        const left = column ? columns[0].find((c) => !c.el.hidden) : undefined
+        return left ? { x: left.el.offsetLeft + left.el.offsetWidth + 10, y: left.el.offsetTop } : wind.home()
+      }
+    }
+    columns[0].push(wind)
+    const intensity = new IntensityGauge(hud.root, stack(0), scenario.suppression, reflow)
+    columns[0].push(intensity)
+    const water = new WaterGauge(hud.root, stack(0), reflow)
+    columns[0].push(water)
     let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
     const areaHa = (hours: number) => {
       const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
@@ -404,11 +418,14 @@ async function main() {
     }
     const poc = (ha: number) => containmentProbability(suppression, ha, reach.intensityKWPerM)
     const known = { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries }
-    const under = (above: HTMLElement) => () => ({ x: above.offsetLeft, y: above.offsetTop + above.offsetHeight + 10 })
-    const danger = new DangerGauge(hud.root, known, () => ({ x: wind.el.offsetLeft + wind.el.offsetWidth + 10, y: wind.el.offsetTop }), reflow)
-    const detectionCard = new DetectionGauge(hud.root, known, under(danger.el), reflow)
-    const means = new MeansGauge(hud.root, { stations: near, inventory, poc: (minute) => poc(areaHa(minute / 60)) }, under(detectionCard.el), reflow)
-    const growth = new GrowthGauge(hud.root, { areaHa, poc }, under(means.el), reflow)
+    const danger = new DangerGauge(hud.root, known, stack(1), reflow)
+    columns[1].push(danger)
+    const detectionCard = new DetectionGauge(hud.root, known, stack(1), reflow)
+    columns[1].push(detectionCard)
+    const means = new MeansGauge(hud.root, { stations: near, inventory, poc: (minute) => poc(areaHa(minute / 60)) }, stack(1), reflow)
+    columns[1].push(means)
+    const growth = new GrowthGauge(hud.root, { areaHa, poc }, stack(1), reflow)
+    columns[1].push(growth)
     replay = {
       id,
       data: fire,
@@ -441,6 +458,7 @@ async function main() {
       arrivalPauses: new Map(),
     }
     replay.rings.set(ringList)
+    showWidgets(replay)
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
     else replay.player.seek(story.shots[0].hours)
@@ -629,6 +647,16 @@ async function main() {
       return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
     return { label: 'Simular', enabled: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
+  }
+
+  /** The widgets the settings have on, the others hidden; every card back at home, stacked with no holes. */
+  function showWidgets(r: Replay) {
+    const cards: Record<WidgetId, { el: HTMLElement }> = {
+      wind: r.wind, intensity: r.intensity, water: r.water, danger: r.danger, detection: r.detection, means: r.means, growth: r.growth,
+    }
+    for (const [id, card] of Object.entries(cards)) card.el.hidden = !hud.settings.showing(id as WidgetId)
+    restack(hud.root)
+    viewer.scene.requestRender()
   }
 
   let lastSimulate = ''

@@ -22,7 +22,7 @@ export class WaterGauge {
   private readonly floating: Floating
   private shown = ''
 
-  constructor(parent: HTMLElement, above: HTMLElement, moved?: () => void) {
+  constructor(parent: HTMLElement, home: () => { x: number; y: number }, moved?: () => void) {
     this.el.className = 'float-card water-card'
     this.el.setAttribute('aria-label', 'Água em campo')
     this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
@@ -36,8 +36,7 @@ export class WaterGauge {
     this.detail = new Detail(parent, 'Água em campo')
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.water-position',
-      home: () => ({ x: above.offsetLeft, y: above.offsetTop + above.offsetHeight + 10 }),
+      home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),
     })

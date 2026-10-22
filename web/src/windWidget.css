@@ -16,6 +16,10 @@
 .hud .wind-map-toggle { display: flex; justify-content: flex-start; align-items: center; gap: 5px; margin: 0; font: 13px/1.5 system-ui, sans-serif; color: #aec3d3; cursor: pointer; border-radius: 4px; }
 .hud .wind-map-toggle input { margin: 0; accent-color: #7dd3fc; cursor: pointer; }
 
+.hud .wind-map-toggle + .wind-map-toggle { margin-top: 4px; }
+/* The vector map, under the cards and the arrow: thin arrows that read over the satellite and the paper maps. */
+.hud .map-wind-field { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hud .map-wind-field path { fill: none; stroke: #bae6fd; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .85; filter: drop-shadow(0 1px 1.5px #000c); }
 .hud .map-wind-arrow { position: absolute; top: 0; left: 0; width: 88px; height: 88px; pointer-events: none; filter: drop-shadow(0 2px 3px #000b); }
 .hud .map-wind-arrow[hidden] { display: none; }
 .hud .map-wind-arrow svg { display: block; width: 100%; height: 100%; }

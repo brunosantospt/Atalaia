@@ -2,8 +2,8 @@
 // cards that touch it, a gap apart, and the ones touching those); the rest of the card drags it alone, out
 // of its block. Near another card it snaps, a magnet: a gap beside it, or edge to edge with it. Arrow keys on
 // the grip nudge the card (Shift for bigger steps), Home or a double click on the grip puts it back. A click
-// on the rest of it, or Enter on the grip, opens its detail. Its place is kept in this browser as fractions
-// of the room it has, so it stays put when the window changes size. A card that was never moved stands at
+// on the rest of it, or Enter on the grip, opens its detail. Its place is kept as fractions of the room it
+// has, so it stays put when the window changes size; a new page starts every card at home. A card that was never moved stands at
 // its home, which may be under another card: it follows that one when it moves. Moving a card never touches
 // the globe.
 
@@ -12,7 +12,6 @@ import './floating.css'
 const MOVED = 'floating-moved'
 
 export interface FloatingOptions {
-  storageKey: string
   home(): { x: number; y: number } // where it stands until it is moved, px from the parent's top left
   moved?(): void // after each move that is kept
   open?(): void // a click that did not move it
@@ -43,7 +42,13 @@ function snap(lo: number, hi: number, others: { lo: number; hi: number; near: bo
   return Math.abs(best) <= SNAP ? shift : 0
 }
 
-const cardsOf = new WeakMap<HTMLElement, Set<Floating>>() // by parent: the cards that can make a block
+const cardsOf = new WeakMap<HTMLElement, Set<Floating>>() // by parent: the cards that can make a block, as made
+
+/** Every card of the parent back at home, in the order they were made: after some were hidden or shown, the
+ *  rest stack again with no holes. A hidden card (`hidden` on it) takes no room and is in no block. */
+export function restack(parent: HTMLElement) {
+  for (const card of cardsOf.get(parent) ?? []) card.reset()
+}
 
 export class Floating {
   private position?: { x: number; y: number }
@@ -52,10 +57,6 @@ export class Floating {
   private readonly follow = () => { if (!this.position) this.place() }
 
   constructor(readonly el: HTMLElement, handle: HTMLButtonElement, private readonly parent: HTMLElement, private readonly options: FloatingOptions) {
-    try {
-      const saved = JSON.parse(localStorage.getItem(options.storageKey) ?? 'null')
-      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) this.position = { x: Math.max(0,Math.min(1,saved.x)), y: Math.max(0,Math.min(1,saved.y)) }
-    } catch { /* A malformed saved position simply uses the default. */ }
     el.addEventListener('pointerdown', e => {
       if (e.button !== 0 || this.drag || (e.target as Element).closest('label, input')) return
       e.preventDefault(); e.stopPropagation()
@@ -105,7 +106,7 @@ export class Floating {
     this.place()
   }
 
-  private cards() { return [...(cardsOf.get(this.parent) ?? [])] }
+  private cards() { return [...(cardsOf.get(this.parent) ?? [])].filter((c) => !c.el.hidden) }
 
   /** The first step of a drag: every card keeps the place it has now (none follows a home any more), and the
    *  block that moves is this card's (by the grip) or this card alone (by the body). */
@@ -144,7 +145,8 @@ export class Floating {
     for (const c of others) c.el.classList.toggle('magnet', held.some((b) => touching(b, boxOf(c.el))))
   }
 
-  private reset() { this.position=undefined; this.place(); this.save() }
+  /** Back at home, where it stood before it was moved. */
+  reset() { this.position=undefined; this.place(); this.save() }
   private bounds() {
     return { x: Math.max(0,this.parent.clientWidth-this.el.offsetWidth-12), y:Math.max(0,this.parent.clientHeight-this.el.offsetHeight-12) }
   }
@@ -164,12 +166,6 @@ export class Floating {
     if (!home) this.position={x:bounds.x>12 ? (left-12)/(bounds.x-12) : 0,y:bounds.y>12 ? (top-12)/(bounds.y-12) : 0}
     if (`${this.el.style.left},${this.el.style.top}` !== was) this.parent.dispatchEvent(new Event(MOVED)) // the cards at home under it follow
   }
-  private save() {
-    try {
-      if (this.position) localStorage.setItem(this.options.storageKey,JSON.stringify(this.position))
-      else localStorage.removeItem(this.options.storageKey)
-    } catch { /* Moving still works without storage. */ }
-    this.options.moved?.()
-  }
+  private save() { this.options.moved?.() }
   destroy() { this.resize.disconnect(); this.parent.removeEventListener(MOVED, this.follow); cardsOf.get(this.parent)?.delete(this) }
 }

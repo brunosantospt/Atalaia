@@ -44,7 +44,6 @@ export class MeansGauge {
     this.detail = new Detail(parent, 'Meios da decisão')
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.means-position',
       home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),

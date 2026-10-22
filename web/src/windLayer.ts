@@ -36,6 +36,13 @@ export function nextTurn(weather: Weather, startIndex: number, minute: number): 
 
 const ARC_R = 47
 const FORECAST_STEP_MIN = 30
+// The vector map: arrows on a square of ground around the ignition, one every FIELD_STEP_M, as long as the wind
+// is strong; zoomed out, never shorter than FIELD_MIN_PX on the screen. The weather is one point of the model,
+// so the field is the same wind everywhere in the square.
+const FIELD_HALF = 5 // arrows each side of the ignition: 11 by 11, 9 km a side
+const FIELD_STEP_M = 900
+const FIELD_MIN_PX = 16
+const fieldLengthM = (kmh: number) => Math.min(560, 160 + 12 * kmh)
 
 /**
  * A movable screen widget: the compass, where the wind turns next and its speed; a click opens the rest
@@ -61,7 +68,13 @@ export class WindLayer {
   private readonly speed: HTMLElement
   private readonly detail: Detail
   private readonly mapToggle: HTMLInputElement
+  private readonly fieldToggle: HTMLInputElement
+  private readonly field = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  private readonly fieldPath: SVGPathElement
+  private readonly fieldPoints: { at: LonLat; ground: Cartographic }[] = []
+  private kmh = 0
   private readonly floating: Floating
+  readonly home: () => { x: number; y: number } // under the HUD's title, where the widgets start
   private readonly remove: () => void
   private key = ''
   private weather?: Weather
@@ -94,8 +107,19 @@ export class WindLayer {
     this.turnArc = this.el.querySelector('.wind-turn')!
     this.speed = this.el.querySelector('.wind-speed strong')!
     this.detail = new Detail(parent, 'Vento')
-    this.detail.extra.innerHTML = '<label class="wind-map-toggle"><input type="checkbox">Seta do vento no mapa, junto à ignição</label>'
-    this.mapToggle = this.detail.extra.querySelector('input')!
+    this.detail.extra.innerHTML = `
+      <label class="wind-map-toggle"><input type="checkbox" data-ref="arrow">Seta do vento no mapa, junto à ignição</label>
+      <label class="wind-map-toggle"><input type="checkbox" data-ref="field">Mapa de vetores do vento sobre a zona do incêndio</label>`
+    this.mapToggle = this.detail.extra.querySelector('[data-ref="arrow"]')!
+    this.fieldToggle = this.detail.extra.querySelector('[data-ref="field"]')!
+    for (let i = -FIELD_HALF; i <= FIELD_HALF; i++) for (let j = -FIELD_HALF; j <= FIELD_HALF; j++) {
+      const at = destination(destination(ignition, 90, i * FIELD_STEP_M), 0, j * FIELD_STEP_M)
+      this.fieldPoints.push({ at, ground: Cartographic.fromDegrees(at.lon, at.lat) })
+    }
+    this.field.setAttribute('class', 'map-wind-field')
+    this.field.setAttribute('aria-hidden', 'true')
+    this.fieldPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    this.field.append(this.fieldPath)
     this.mapAnchor = destination(ignition,45,300)
     this.ground = Cartographic.fromDegrees(this.mapAnchor.lon, this.mapAnchor.lat)
     this.occluder = new EllipsoidalOccluder(Ellipsoid.WGS84, viewer.camera.positionWC)
@@ -104,29 +128,37 @@ export class WindLayer {
     this.mapArrow.innerHTML = `<svg viewBox="0 0 120 120" aria-hidden="true">${this.needle.outerHTML}</svg>`
     this.mapArrow.setAttribute('role', 'img')
     this.mapNeedle = this.mapArrow.querySelector('.wind-needle')!
+    parent.prepend(this.field) // under every panel of the HUD
     parent.append(this.mapArrow)
-    try { this.mapToggle.checked = localStorage.getItem('atalaia.wind-map') === 'true' } catch { /* Optional preference. */ }
+    try {
+      this.mapToggle.checked = localStorage.getItem('atalaia.wind-map') === 'true'
+      this.fieldToggle.checked = localStorage.getItem('atalaia.wind-field') === 'true'
+    } catch { /* Optional preference. */ }
     const setMap = () => {
       this.projectArrow()
-      try { localStorage.setItem('atalaia.wind-map', String(this.mapToggle.checked)) } catch { /* Optional preference. */ }
+      this.projectField()
+      try {
+        localStorage.setItem('atalaia.wind-map', String(this.mapToggle.checked))
+        localStorage.setItem('atalaia.wind-field', String(this.fieldToggle.checked))
+      } catch { /* Optional preference. */ }
       this.viewer.scene.requestRender()
     }
     this.mapToggle.addEventListener('change', setMap)
+    this.fieldToggle.addEventListener('change', setMap)
     setMap()
     parent.append(this.el)
     // Home under the screen's title, its left edge on the title's; the place it had stays while the editor
     // hides the title.
     const title = parent.querySelector<HTMLElement>('.title')
     let last = { x: 34, y: 200 }
-    const home = () => title?.offsetHeight ? (last = { x: title.offsetLeft, y: title.offsetTop + title.offsetHeight + 18 }) : last
+    this.home = () => title?.offsetHeight ? (last = { x: title.offsetLeft, y: title.offsetTop + title.offsetHeight + 18 }) : last
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.wind-position',
-      home,
+      home: this.home,
       watch: title ?? undefined,
       moved: () => viewer.scene.requestRender(), // Reflow map labels around the compass after a move.
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),
     })
-    this.remove = viewer.scene.postRender.addEventListener(() => { this.orient(); this.projectArrow() })
+    this.remove = viewer.scene.postRender.addEventListener(() => { this.orient(); this.projectArrow(); this.projectField() })
     this.orient()
   }
 
@@ -155,6 +187,41 @@ export class WindLayer {
     }
   }
 
+  /** The vector map: each arrow laid on the ground and drawn where it falls on the screen, over the relief. */
+  private projectField() {
+    const on = this.fieldToggle.checked
+    this.field.style.display = on ? '' : 'none'
+    if (!on) return
+    this.occluder.cameraPosition = this.viewer.camera.positionWC
+    const half = fieldLengthM(this.kmh) / 2, scene = this.viewer.scene
+    const tail = new Cartesian3(), tip = new Cartesian3(), a = new Cartesian2(), b = new Cartesian2()
+    let d = ''
+    for (const p of this.fieldPoints) {
+      // Sampled each frame: before the fine tiles load, the coarse ones can give heights kilometres off.
+      const ground = scene.globe.getHeight(p.ground)
+      const h = (ground !== undefined && ground > -100 && ground < 3000 ? ground : 0) + 8
+      const from = destination(p.at, this.to + 180, half), to = destination(p.at, this.to, half)
+      Cartesian3.fromDegrees(from.lon, from.lat, h, undefined, tail)
+      Cartesian3.fromDegrees(to.lon, to.lat, h, undefined, tip)
+      if (!this.occluder.isPointVisible(tail) || !this.occluder.isPointVisible(tip)) continue
+      if (!SceneTransforms.worldToWindowCoordinates(scene, tail, a) || !SceneTransforms.worldToWindowCoordinates(scene, tip, b)) continue
+      let len = Math.hypot(b.x - a.x, b.y - a.y)
+      if (len < 1) continue
+      if (len < FIELD_MIN_PX) {
+        // Grown about its middle, still along the ground's direction on the screen.
+        const k = FIELD_MIN_PX / len, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2
+        a.x = mx + (a.x - mx) * k; a.y = my + (a.y - my) * k; b.x = mx + (b.x - mx) * k; b.y = my + (b.y - my) * k
+        len = FIELD_MIN_PX
+      }
+      // The head, two barbs back from the tip, a third of the arrow long at most.
+      const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, head = Math.min(9, len * 0.35)
+      const bx = b.x - ux * head, by = b.y - uy * head, wx = -uy * head * 0.55, wy = ux * head * 0.55
+      d += `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`
+        + `M${(bx + wx).toFixed(1)} ${(by + wy).toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}L${(bx - wx).toFixed(1)} ${(by - wy).toFixed(1)}`
+    }
+    this.fieldPath.setAttribute('d', d)
+  }
+
   private orient() {
     const heading=CesiumMath.toDegrees(this.viewer.camera.heading)
     if (Math.abs(this.heading-heading)<.1) return
@@ -169,6 +236,7 @@ export class WindLayer {
     this.weather=weather;this.key=key
     const wind=windAt(weather,start,Math.round(minute))
     this.to=(wind.from+180)%360
+    this.kmh=wind.kmh
     this.el.dataset.from=String(wind.from);this.el.dataset.to=String(this.to)
     this.speed.textContent=fmtNumber(wind.kmh)
     // The next turn: a ghost needle where it will point, the arc it sweeps on the bezel, and when.
@@ -193,12 +261,12 @@ export class WindLayer {
         ? [['Próxima', `para ${compass(turn.from)} (${Math.round(turn.from)}°) em ${fmtMinutes(turn.inMin)}`, 'forecast'], ['Sentido', sense]]
         : [['Próxima', `estável nas próximas ${TURN_HORIZON_MIN/60} h`, 'good']] },
       { heading:`Próximas ${TURN_HORIZON_MIN/60} h`, rows:ahead },
-    ], `A seta da bússola aponta para onde o vento sopra; a seta laranja tracejada, para onde vai soprar depois da próxima rotação de ${TURN_DEG}° ou mais.\nA bússola roda com a câmara: o N marca o norte no ecrã.`)
+    ], `A seta da bússola aponta para onde o vento sopra; a seta laranja tracejada, para onde vai soprar depois da próxima rotação de ${TURN_DEG}° ou mais.\nA bússola roda com a câmara: o N marca o norte no ecrã.\nO mapa de vetores leva o vento do ponto do modelo a toda a zona: a mesma direção em cada seta, o comprimento pela velocidade.`)
     this.el.setAttribute('aria-label',`Vento ${fmtNumber(wind.kmh)} km/h de ${compass(wind.from)}; rajadas ${fmtNumber(wind.gust)} km/h; ${turnText}`)
     this.mapArrow.setAttribute('aria-label', this.el.getAttribute('aria-label')!)
     this.heading=NaN;this.orient()
   }
-  destroy() { this.remove();this.floating.destroy();this.detail.destroy();this.el.remove();this.mapArrow.remove() }
+  destroy() { this.remove();this.floating.destroy();this.detail.destroy();this.el.remove();this.mapArrow.remove();this.field.remove() }
 }
 
 /** The arc on the bezel from one bearing to another, the short way round (north up, clockwise). */

@@ -41,7 +41,6 @@ export class GrowthGauge {
     this.detail = new Detail(parent, 'Crescimento do incêndio')
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.growth-position',
       home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),

@@ -52,7 +52,6 @@ export class DangerGauge {
     this.detail = new Detail(parent, 'Perigo meteorológico')
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.danger-position',
       home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),

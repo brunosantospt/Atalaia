@@ -58,7 +58,7 @@ export class IntensityGauge {
   private key = ''
   private prepared?: PreparedAlerts
 
-  constructor(parent: HTMLElement, above: HTMLElement, private readonly sup: Suppression, moved?: () => void) {
+  constructor(parent: HTMLElement, home: () => { x: number; y: number }, private readonly sup: Suppression, moved?: () => void) {
     this.bands = bandsOf(sup)
     this.el.className = 'float-card intensity-card'
     this.el.setAttribute('aria-label', 'Intensidade da frente')
@@ -93,8 +93,7 @@ export class IntensityGauge {
     this.holds = [...byHold].sort((a, b) => a[0] - b[0]).map(([kw, names]) => [names.join(' / '), `até ${fmtNumber(kw)} kW/m`])
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.intensity-position',
-      home: () => ({ x: above.offsetLeft, y: above.offsetTop + above.offsetHeight + 10 }),
+      home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),
     })

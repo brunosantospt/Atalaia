@@ -9,8 +9,7 @@ import { fmtDate, fmtElapsed, fmtHa, fmtRange, fmtTime, wallClock } from './form
 import { compass, formatDMS, type LonLat } from './geo'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
-import type { Quality } from './scene'
-import { SettingsPanel } from './settings'
+import { SettingsPanel, type WidgetId } from './settings'
 import type { Shot } from './shots'
 import type { AgencyRole, MultiAgencyDispatch } from './reporting'
 import {
@@ -27,11 +26,9 @@ export interface HudActions {
   prev(): void
   next(): void
   goTo(i: number): void
-  pickFire(id: string): void
-  pickEngine?(): void // the settings' engine changed: the next simulation runs on it
   simulate?(): void // the "Simular no ELMFIRE" button
   pickMap(id: MapId): void
-  pickQuality(id: Quality): void
+  showWidget(id: WidgetId, on: boolean): void
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
   toggleReports?(): void
@@ -177,7 +174,7 @@ const TEMPLATE = `
       <button type="button" data-ref="play" title="Play / pausa (espaço)"></button>
       <button type="button" data-ref="next" title="Plano seguinte (→)">▸</button>
       <div class="ticks" data-ref="ticks"></div>
-      <button type="button" class="open-settings" data-ref="gear" title="Incêndio, mapa e motor (S)">Definições</button>
+      <button type="button" class="open-settings" data-ref="gear" title="Mapa e widgets (S)">Definições</button>
     </nav>
     <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · M mapa · S definições · H esconde o HUD</div>
   </section>
@@ -228,11 +225,9 @@ export class Hud {
     ) as unknown as Refs
 
     this.alerts = new AlertStack(root, (at) => actions.flyTo?.(at))
-    this.settings = new SettingsPanel(root, fires, {
-      pickFire: actions.pickFire,
-      pickEngine: actions.pickEngine,
+    this.settings = new SettingsPanel(root, fires[0] ?? { lon: -8.27, lat: 41.42 }, {
       pickMap: actions.pickMap,
-      pickQuality: actions.pickQuality,
+      showWidget: actions.showWidget,
     })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
@@ -391,7 +386,6 @@ export class Hud {
   setFire(fire: Fire, shots: Shot[], sim: Simulated | undefined) {
     this.fire = fire
     this.sim = sim
-    this.settings.setFire(fire.id)
     this.setShots(shots)
 
     if (this.refs.alertPopover) this.refs.alertPopover.hidden = true

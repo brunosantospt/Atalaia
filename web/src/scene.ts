@@ -19,13 +19,6 @@ const LIGHT_ELEVATION_DEG = 35
 
 export type Quality = 'sharp' | 'light'
 
-export const QUALITIES: { id: Quality; name: string; detail: string }[] = [
-  { id: 'sharp', name: 'Nítida', detail: 'Resolução do ecrã, retina incluída: para a demo' },
-  { id: 'light', name: 'Leve', detail: '82 % da resolução e terreno mais grosso: para PCs fracos' },
-]
-
-export const DEFAULT_QUALITY: Quality = 'sharp'
-
 export async function createViewer(container: string, center: LonLat): Promise<Viewer> {
   const token = import.meta.env.VITE_CESIUM_ION_TOKEN
   if (token) Ion.defaultAccessToken = token

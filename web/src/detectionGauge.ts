@@ -46,7 +46,6 @@ export class DetectionGauge {
     this.detail = new Detail(parent, 'Deteção')
     parent.append(this.el)
     this.floating = new Floating(this.el, this.el.querySelector('.float-drag')!, parent, {
-      storageKey: 'atalaia.detection-position',
       home,
       moved,
       open: () => this.detail.show(this.el.querySelector<HTMLElement>('.float-drag')!),
