@@ -1,0 +1,158 @@
+{
+ "fire": "VieiradoMinho_10082016",
+ "name": "5c_cerra_seed2",
+ "start": "2016-08-10T10:00",
+ "duration_min": 1350.0,
+ "options": {
+  "fire": "VieiradoMinho_10082016",
+  "name": "5c_cerra_seed2",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "spotting": true,
+  "seed": 2,
+  "weather": "cerra",
+  "topowind": false,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "hindcast/engine/run.sh"
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 6.6,
+ "wall_s": 7.2,
+ "notes": [
+  "cicatrizes: 627 ha",
+  "copas do LiDAR"
+ ],
+ "stats": {
+  "burned_ha": 2264.3,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 6,
+    "run_ha": 6
+   },
+   {
+    "h": 3,
+    "observed_ha": 103,
+    "run_ha": 124
+   },
+   {
+    "h": 5.0,
+    "observed_ha": 707,
+    "run_ha": 256
+   },
+   {
+    "h": 6,
+    "observed_ha": 731,
+    "run_ha": 342
+   },
+   {
+    "h": 9,
+    "observed_ha": 839,
+    "run_ha": 713
+   },
+   {
+    "h": 12,
+    "observed_ha": 971,
+    "run_ha": 1097
+   },
+   {
+    "h": 15,
+    "observed_ha": 1188,
+    "run_ha": 1436
+   },
+   {
+    "h": 17.5,
+    "observed_ha": 1573,
+    "run_ha": 1684
+   },
+   {
+    "h": 18,
+    "observed_ha": 1573,
+    "run_ha": 1741
+   },
+   {
+    "h": 21,
+    "observed_ha": 1598,
+    "run_ha": 2089
+   },
+   {
+    "h": 22.5,
+    "observed_ha": 1621,
+    "run_ha": 2264
+   }
+  ],
+  "sorensen_last_step": 0.769,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 5.0,
+    "sorensen": 0.468
+   },
+   {
+    "step": 2,
+    "h": 17.5,
+    "sorensen": 0.795
+   },
+   {
+    "step": 3,
+    "h": 22.5,
+    "sorensen": 0.769
+   }
+  ],
+  "official_ha": 1840.0,
+  "sorensen_official": 0.817,
+  "outside_official_ha": 586.7,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2016-08-10T12:02:00+00:00",
+     "h": 3.04,
+     "n": 12,
+     "reached": 0.42
+    },
+    {
+     "time_utc": "2016-08-10T12:39:00+00:00",
+     "h": 3.65,
+     "n": 42,
+     "reached": 0.4
+    },
+    {
+     "time_utc": "2016-08-10T13:42:00+00:00",
+     "h": 4.7,
+     "n": 15,
+     "reached": 0.4
+    },
+    {
+     "time_utc": "2016-08-10T14:20:00+00:00",
+     "h": 5.34,
+     "n": 34,
+     "reached": 0.35
+    },
+    {
+     "time_utc": "2016-08-10T23:08:00+00:00",
+     "h": 14.14,
+     "n": 7,
+     "reached": 0.71
+    },
+    {
+     "time_utc": "2016-08-11T02:37:00+00:00",
+     "h": 17.62,
+     "n": 28,
+     "reached": 0.79
+    }
+   ],
+   "mean_reached": 0.51
+  }
+ }
+}
