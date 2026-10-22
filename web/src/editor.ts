@@ -35,7 +35,7 @@ import { computeFWISeries } from './fwi'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
-import { approachIntercept, type DeploymentSelection } from './stationRings'
+import { deploymentBoundary, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
 import { ensureAssignmentIds, originColor, originLetter, fieldIds } from './unitIdentity'
@@ -48,6 +48,8 @@ import { findAirBase, airBasesForUnit } from './airBases'
 import {
   DEFAULT_HOSPITAL,
   buildMultiAgencyDispatch,
+  OTHER_SIDE_M,
+  detectFirefighterRoads,
   evaluateMedicalPointSafety,
   type AgencyRole,
   type MedicalPointItem,
@@ -61,6 +63,7 @@ import {
 } from './icons'
 import { arrivals, wetLines, type Barrier, type WetLine } from './wetLine'
 import {
+  arrivalMin,
   flameLengthM,
   isAerial,
   isRoadVehicle,
@@ -140,6 +143,12 @@ const TEMPLATE = `
     <button type="button" data-ref="simulate" class="primary-btn simulate-btn" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
     <p class="note" data-ref="simulateNote"></p>
   </section>
+  <section class="ils top-ils">
+    <h3>Proposta Decisão B</h3>
+    <button type="button" data-ref="ils" class="primary-btn ils-btn" title="Procura uma proposta B com os meios de A durante até 10 s. Substitui o plano B apenas ao carregar neste botão; depois carregue em Simular modelo rápido."></button>
+    <p class="note" data-ref="ilsNote"></p>
+    <ul class="assignments changes" data-ref="ilsChanges"></ul>
+  </section>
   <section class="hour">
     <h3>Hora <span data-ref="hourText"></span></h3>
     <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
@@ -168,11 +177,10 @@ const TEMPLATE = `
     <p class="note hint" data-ref="hint"></p>
   </section>
   <section class="deployment-guidance" data-ref="arrivalGuidance" aria-label="Chegada do fogo e cores dos quartéis"></section>
-  <section class="ils">
-    <h3>Proposta B</h3>
-    <button type="button" data-ref="ils" class="primary-btn" title="Procura uma proposta B com os meios de A durante até 10 s. Substitui o plano B apenas ao carregar neste botão; depois carregue em Simular modelo rápido."></button>
-    <p class="note" data-ref="ilsNote"></p>
-    <ul class="assignments changes" data-ref="ilsChanges"></ul>
+  <section class="pma-section">
+    <h3>Posto de Socorro (INEM)</h3>
+    <button type="button" data-ref="addPma" class="primary-btn pma-btn" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:6px;" title="Colocar Posto Médico Avançado (PMA)">${ICON_PMA} Posto de Socorro (INEM / PMA)</button>
+    <p class="note" data-ref="pmaNote">Defina o Posto Médico Avançado e corredor de evacuação seguro para o hospital.</p>
   </section>
   <section class="end">
     <h3>Fim do incêndio <span data-ref="engine"></span></h3>
@@ -186,7 +194,6 @@ const TEMPLATE = `
     <p class="note" data-ref="detail"></p>
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,224,228,0.15);display:flex;flex-direction:column;gap:6px;">
       <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">${ICON_CLIPBOARD} Reportar às Entidades (PSP / INEM)</button>
-      <button type="button" data-ref="addPma" style="background:#059669;border-color:#10b981;color:#fff;width:100%;padding:6px;" title="Colocar Posto Médico Avançado (PMA)">${ICON_PMA} Ponto Socorro (PMA)</button>
     </div>
   </section>
   <footer>
@@ -242,6 +249,75 @@ function clipRoadToFire(
   return segments
 }
 
+const NO_ENTRY_CANVASES = new Map<string, HTMLCanvasElement>()
+
+/** `veiculo`: the block a working vehicle puts on its road, in a softer red than the fire's cuts. */
+function getNoEntrySignCanvas(urgency: RoadCutItem['urgency'] | 'veiculo' = 'cortado'): HTMLCanvasElement {
+  const cached = NO_ENTRY_CANVASES.get(urgency)
+  if (cached) return cached
+
+  // High-DPI canvas (48x48) rendered sharp and discreet at 18x18 on the 3D map
+  const canvas = document.createElement('canvas')
+  canvas.width = 48
+  canvas.height = 48
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+
+  const color =
+    urgency === 'cortado'
+      ? '#dc2626'
+      : urgency === 'veiculo'
+        ? '#e57373'
+      : urgency === 'urgente'
+        ? '#ea580c'
+        : '#d97706'
+
+  const cx = 24
+  const cy = 24
+  const r = 20
+
+  // Drop shadow for contrast on any 3D terrain
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.85)'
+  ctx.shadowBlur = 4
+  ctx.shadowOffsetY = 1.5
+
+  // Dark outline ring
+  ctx.beginPath()
+  ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2)
+  ctx.fillStyle = '#0f172a'
+  ctx.fill()
+
+  // White border
+  ctx.shadowBlur = 0
+  ctx.shadowOffsetY = 0
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.fillStyle = '#ffffff'
+  ctx.fill()
+
+  // Inner colored circle (Red or Amber)
+  ctx.beginPath()
+  ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2)
+  ctx.fillStyle = color
+  ctx.fill()
+
+  // White horizontal prohibition bar (No Entry ⛔)
+  ctx.fillStyle = '#ffffff'
+  const barW = 24
+  const barH = 6
+  const barR = 2
+  ctx.beginPath()
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(cx - barW / 2, cy - barH / 2, barW, barH, barR)
+  } else {
+    ctx.rect(cx - barW / 2, cy - barH / 2, barW, barH)
+  }
+  ctx.fill()
+
+  NO_ENTRY_CANVASES.set(urgency, canvas)
+  return canvas
+}
+
 export class Editor {
   readonly el: HTMLElement
   decisions: [Decision, Decision] = [empty('A'), empty('B')]
@@ -285,7 +361,7 @@ export class Editor {
   private hoverPosition = new Cartesian2()
   private hoveredItem: unknown
   private hoveredMinute = -1
-  private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; value: MultiAgencyDispatch } | undefined
+  private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; decision?: Decision; assignmentsLen?: number; value: MultiAgencyDispatch } | undefined
   private readonly tip: HTMLElement
   private readonly unitMarkers: UnitMarkers
   private readonly handler: ScreenSpaceEventHandler
@@ -710,6 +786,9 @@ export class Editor {
     this.renderUnits()
     this.refs.hint.classList.remove('danger', 'late')
     this.updateLineActionsUI()
+    if (tool !== 'pma') {
+      this.refs.addPma?.classList.remove('active')
+    }
     if (!tool) {
       this.refs.hint.textContent = ''
     } else if (tool === 'point') {
@@ -838,7 +917,8 @@ export class Editor {
     const activeRun = this.runs ? (this.runs[this.decisions[this.active].id as 'A' | 'B'] ?? this.runs.free) : undefined
     const isFire = cell >= 0 && activeRun && activeRun.arrival[cell] <= this.minutes
     const aerial = isAerial(this.sup.units[this.unit])
-    this.viewer.scene.canvas.style.cursor = isFire && !aerial ? 'not-allowed' : 'crosshair'
+    const forbidden = !aerial && (isFire || this.fireFirst(p) !== undefined)
+    this.viewer.scene.canvas.style.cursor = forbidden ? 'not-allowed' : 'crosshair'
   }
 
   private positionTooltip(position: Cartesian2) {
@@ -867,11 +947,28 @@ export class Editor {
   }
 
   private showCutTooltip(position: Cartesian2, cut: RoadCutItem) {
-    const state = cut.urgency === 'cortado' ? 'Interditada' : `Impacto em ${cut.minutesToImpact} min`
-    this.showHover(position, `Estrada · ${escapeText(cut.label)}`, `<ul class="hover-facts">
-      <li><span>Estado</span><b>${state}</b></li>
-      <li><span>Via</span><b>${cut.isPaved ? 'Pavimentada' : 'Rural / florestal'}</b></li>
-      <li><span>Ação PSP / GNR</span><b>Interditar e desviar tráfego</b></li></ul>`, 'road')
+    if (cut.kind === 'firefighters') {
+      this.showHover(
+        position,
+        `Estrada · ${escapeText(cut.label)}`,
+        `<ul class="hover-facts">
+          <li><span>Estado</span><b>Atuação de Bombeiros (${escapeText(cut.firefighterUnit ?? 'Bombeiros')})</b></li>
+          <li><span>Via</span><b>${cut.isPaved ? 'Pavimentada' : 'Rural / florestal'}</b></li>
+          <li><span>Ação PSP / GNR</span><b>Corte de trânsito do fogo até ${cut.barrier ? `${OTHER_SIDE_M / 1000} km para lá do veículo` : 'ao veículo'} · Reforços autorizados</b></li></ul>`,
+        'road',
+      )
+      return
+    }
+    const state = cut.urgency === 'cortado' ? 'Interditada (Zona de Fogo)' : `Impacto em ${cut.minutesToImpact} min`
+    this.showHover(
+      position,
+      `Estrada · ${escapeText(cut.label)}`,
+      `<ul class="hover-facts">
+        <li><span>Estado</span><b>${state}</b></li>
+        <li><span>Via</span><b>${cut.isPaved ? 'Pavimentada' : 'Rural / florestal'}</b></li>
+        <li><span>Ação PSP / GNR</span><b>Interditar e desviar tráfego</b></li></ul>`,
+      'road',
+    )
   }
 
   private showPmaTooltip(position: Cartesian2, pma: MedicalPointItem) {
@@ -932,19 +1029,35 @@ export class Editor {
     return Math.max(this.loaded?.scenario.dispatchMin ?? 0, this.minutes)
   }
 
-  /** Ground units must beat the fire along their approach; no circular radius bans a destination. */
+  private boundary?: { key: string; arrival: Float32Array; blocked: Uint8Array }
+
+  /** When the fire and the selected ground means reach `p`, if the fire gets there first: inside the
+   *  dashed deployment boundary (StationRingsLayer), from the same cells. Undefined outside it. */
+  private fireFirst(p: LonLat): { fireMin: number; meansMin: number } | undefined {
+    const selection = this.deploymentSelection
+    const scenario = this.loaded?.scenario
+    const arrival = scenario?.fireArrival
+    const station = this.loaded?.stations.find((s) => s.id === selection?.from)
+    if (!selection || !scenario || !arrival || !station) return undefined
+    const unit = this.sup.units[selection.unit]
+    const key = `${selection.from}|${selection.unit}|${selection.dispatchMin}|${selection.ecin}`
+    if (this.boundary?.key !== key || this.boundary.arrival !== arrival) {
+      const { blocked } = deploymentBoundary(scenario.grid, arrival, { ...station, km: 0 }, this.sup, unit, selection.dispatchMin, selection.ecin)
+      this.boundary = { key, arrival, blocked }
+    }
+    const cell = cellOf(scenario.grid, p)
+    if (cell < 0 || !this.boundary.blocked[cell]) return undefined
+    return { fireMin: arrival[cell], meansMin: selection.dispatchMin + arrivalMin(this.sup, unit, distanceM(station, p) / 1000, selection.ecin) }
+  }
+
+  /** Ground units must reach their point before the fire: no destination inside the dashed boundary. */
   private checkRing(p: LonLat): boolean {
     if (!this.loaded) return true
-    const { scenario, stations } = this.loaded
-    const from = this.from(stations)
-    const station = stations.find((s) => s.id === from)
-    const d = this.decisions[this.active]
-    const ecin = !d.assignments.some((a) => a.from === from && !isAerial(this.sup.units[a.unit]))
-    const meeting = station && scenario.fireArrival
-      ? approachIntercept(scenario.grid, scenario.fireArrival, station, p, this.sup, this.sup.units[this.unit], this.dispatchMinute(), ecin)
-      : undefined
+    const meeting = this.fireFirst(p)
     if (!meeting) return true
-    const text = `O fogo interceta os meios de ${station?.short ?? from} no percurso (T+${Math.round(meeting.arriveMin)} min). Escolhe um acesso antes da frente prevista.`
+    const from = this.from(this.loaded.stations)
+    const station = this.loaded.stations.find((s) => s.id === from)
+    const text = `O fogo interceta os meios de ${station?.short ?? from}: chega a este ponto às T+${Math.round(meeting.fireMin)} min e os meios só às T+${Math.round(meeting.meansMin)} min. Escolhe um ponto fora do tracejado.`
     if (this.dangerTimer !== undefined) window.clearTimeout(this.dangerTimer)
     this.refs.hint.classList.add('danger')
     this.refs.hint.textContent = text
@@ -1954,8 +2067,60 @@ export class Editor {
               coord: { lon: seg[0][0], lat: seg[0][1] },
               pts: r.pts,
               isPaved: r.cls === 'paved' || !!r.name || !!r.ref,
+              kind: 'fire',
             }
             ;(lineEntity as any)._roadCut = roadItem
+
+            // Small discreet No-Entry circular sign (⛔) billboard icon
+            const cutIconEntity = this.agency.entities.add({
+              position: Cartesian3.fromDegrees(roadItem.coord.lon, roadItem.coord.lat),
+              billboard: {
+                image: getNoEntrySignCanvas('cortado'),
+                width: 18,
+                height: 18,
+                verticalOrigin: VerticalOrigin.CENTER,
+                heightReference: HeightReference.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Infinity,
+              },
+            })
+            ;(cutIconEntity as any)._roadCut = roadItem
+          }
+        }
+
+        // Roads where combat and supply vehicles (VFCI / VTTU) are at work: the GNR closes the road from the
+        // fire to the vehicle and on past it the other way (dashed red), with a softer red sign at the vehicle
+        // and at the far barrier. Crews on foot do not.
+        const roadItems = detectFirefighterRoads(context, this.decisions[this.active], this.minutes, scenario.grid, activeRun.arrival)
+        for (const roadItem of roadItems) {
+          const seg = cleanPath(roadItem.pts, (p) => p)
+          if (seg.length >= 2) {
+            const lineEntity = this.agency.entities.add({
+              polyline: {
+                positions: seg.map((p) => Cartesian3.fromDegrees(p[0], p[1])),
+                width: 4,
+                clampToGround: true,
+                material: new PolylineDashMaterialProperty({
+                  color: Color.fromCssColorString('#e63946'),
+                  dashLength: 10,
+                }),
+              },
+            })
+            ;(lineEntity as any)._roadCut = roadItem
+          }
+
+          for (const at of roadItem.barrier ? [roadItem.coord, roadItem.barrier] : [roadItem.coord]) {
+            const cutIconEntity = this.agency.entities.add({
+              position: Cartesian3.fromDegrees(at.lon, at.lat),
+              billboard: {
+                image: getNoEntrySignCanvas('veiculo'),
+                width: 18,
+                height: 18,
+                verticalOrigin: VerticalOrigin.CENTER,
+                heightReference: HeightReference.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Infinity,
+              },
+            })
+            ;(cutIconEntity as any)._roadCut = roadItem
           }
         }
       }
@@ -2032,10 +2197,12 @@ export class Editor {
     if (this.tool === 'pma') {
       this.setTool(null)
       this.refs.hint.textContent = ''
+      this.refs.addPma?.classList.remove('active')
     } else {
       this.setTool('pma')
       this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent = 'Clica no mapa onde queres instalar o Posto Médico Avançado (PMA).'
+      this.refs.addPma?.classList.add('active')
     }
   }
 
@@ -2073,6 +2240,10 @@ export class Editor {
       },
     ]
 
+    this.refs.addPma?.classList.remove('active')
+    if (this.refs.pmaNote) {
+      this.refs.pmaNote.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
+    }
     this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
     this.draw()
@@ -2085,7 +2256,17 @@ export class Editor {
     const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
     if (!activeRun) return undefined
     const cached = this.dispatchCache
-    if (cached && cached.loaded === this.loaded && cached.run === activeRun && cached.minutes === this.minutes && cached.pma === this.pmaList) return cached.value
+    if (
+      cached &&
+      cached.loaded === this.loaded &&
+      cached.run === activeRun &&
+      cached.minutes === this.minutes &&
+      cached.pma === this.pmaList &&
+      cached.decision === d &&
+      cached.assignmentsLen === (d?.assignments?.length ?? 0)
+    ) {
+      return cached.value
+    }
     const value = buildMultiAgencyDispatch(
       this.loaded.fire.name,
       this.loaded.fire.start,
@@ -2094,8 +2275,17 @@ export class Editor {
       this.loaded.context,
       activeRun,
       this.pmaList,
+      d,
     )
-    this.dispatchCache = { loaded: this.loaded, run: activeRun, minutes: this.minutes, pma: this.pmaList, value }
+    this.dispatchCache = {
+      loaded: this.loaded,
+      run: activeRun,
+      minutes: this.minutes,
+      pma: this.pmaList,
+      decision: d,
+      assignmentsLen: d?.assignments?.length ?? 0,
+      value,
+    }
     return value
   }
 

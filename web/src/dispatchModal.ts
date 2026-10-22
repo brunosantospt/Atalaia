@@ -1,4 +1,5 @@
-import type { MultiAgencyDispatch } from './reporting'
+import { fmtKm } from './format'
+import { OTHER_SIDE_M, type MultiAgencyDispatch } from './reporting'
 import {
   ICON_PROTECAO_CIVIL,
   ICON_PSP,
@@ -55,20 +56,22 @@ export class DispatchModal {
       body.innerHTML = ''
 
       if (this.currentTab === 'psp') {
-        const { roads, cordonM, message } = dispatch.psp
-        const urgentCount = roads.filter((r) => r.urgency === 'urgente' || r.urgency === 'cortado').length
+        const { fireCutRoads = [], firefighterRoads = [], cordonM, message } = dispatch.psp
+        const urgentCount = fireCutRoads.filter((r) => r.urgency === 'urgente' || r.urgency === 'cortado').length
 
         body.innerHTML = `
           <div class="dispatch-stats">
-            <div class="stat-pill danger"><strong>${roads.length} vias ameaçadas</strong> (${urgentCount} urgentes)</div>
+            <div class="stat-pill danger"><strong>${fireCutRoads.length} vias em zona de fogo</strong> (${urgentCount} urgentes)</div>
+            <div class="stat-pill" style="border-color:rgba(59,130,246,0.5);background:rgba(59,130,246,0.12);color:#93c5fd;"><strong>${firefighterRoads.length} vias em combate</strong> (corte nos dois sentidos)</div>
             <div class="stat-pill">Perímetro de segurança: <strong>${cordonM}m</strong></div>
             <div class="stat-pill">Canal Rádio: <strong>SIRESP Sub-Grupo 04</strong></div>
           </div>
-          <div style="font-weight:600;font-size:10px;text-transform:uppercase;color:#8b9096;">Arruamentos Prioritários Detetados pelo Simulador:</div>
+
+          <div style="font-weight:700;font-size:10px;text-transform:uppercase;color:#ff6b6b;letter-spacing:0.06em;">1. Estradas Cortadas por Zonas de Fogo:</div>
           <div class="road-cut-list">
             ${
-              roads.length
-                ? roads
+              fireCutRoads.length
+                ? fireCutRoads
                     .map(
                       (r) => `
                 <div class="road-cut-card ${r.urgency}">
@@ -84,10 +87,35 @@ export class DispatchModal {
               `,
                     )
                     .join('')
-                : '<div class="road-cut-card">Nenhuma via ameaçada neste instante.</div>'
+                : '<div class="road-cut-card">Nenhuma via atingida pelo fogo.</div>'
             }
           </div>
-          <div style="font-weight:600;font-size:10px;text-transform:uppercase;color:#8b9096;">Texto Formatado para Envio Imediato (WhatsApp / Rádio):</div>
+
+          <div style="font-weight:700;font-size:10px;text-transform:uppercase;color:#60a5fa;letter-spacing:0.06em;margin-top:6px;">2. Estradas em Atuação de Veículos de Bombeiros (Corte do Fogo ao Veículo e no Sentido Oposto · Reforços Permitidos):</div>
+          <div class="road-cut-list">
+            ${
+              firefighterRoads.length
+                ? firefighterRoads
+                    .map(
+                      (r) => `
+                <div class="road-cut-card cortado" style="border-left:3px solid #3b82f6;">
+                  <div class="road-name">
+                    <span class="road-badge" style="background:#1d4ed8;color:#fff;border-color:#3b82f6;">até ao fogo</span>
+                    <span>${r.label}</span>
+                    <span style="color:#60a5fa;font-size:10px;">[${r.firefighterUnit ?? 'Bombeiros'}]</span>
+                  </div>
+                  <div style="color:#93c5fd;font-size:10px;">
+                    Via interdita do fogo ao veículo${r.barrier ? ` · barreira no sentido oposto a ${fmtKm(OTHER_SIDE_M / 1000)} (${r.barrier.lat.toFixed(5)}, ${r.barrier.lon.toFixed(5)})` : ''} · Acesso livre a reforços
+                  </div>
+                </div>
+              `,
+                    )
+                    .join('')
+                : '<div class="road-cut-card">Nenhuma via condicionada por veículos de combate/abastecimento.</div>'
+            }
+          </div>
+
+          <div style="font-weight:600;font-size:10px;text-transform:uppercase;color:#8b9096;margin-top:4px;">Texto Formatado para Envio Imediato (WhatsApp / Rádio):</div>
           <div class="dispatch-text-box">${escapeHtml(message)}</div>
         `
       } else if (this.currentTab === 'inem') {
