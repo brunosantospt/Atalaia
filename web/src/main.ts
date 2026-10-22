@@ -502,13 +502,13 @@ async function main() {
   const engineDone = new Map<string, EngineRun>()
   const enginePending = new Map<string, Promise<EngineRun>>()
 
-  function ask(request: ScenarioRequest, rows: number, cols: number): Promise<EngineRun> {
+  function ask(request: ScenarioRequest, rows: number, cols: number, onProgress?: (stretch?: string) => void): Promise<EngineRun> {
     const key = JSON.stringify(request)
     const done = engineDone.get(key)
     if (done) return Promise.resolve(done)
     let pending = enginePending.get(key)
     if (!pending) {
-      pending = runScenario(request, rows, cols)
+      pending = runScenario(request, rows, cols, onProgress)
       enginePending.set(key, pending)
       pending.then(
         (r) => engineDone.set(key, r),
@@ -604,7 +604,7 @@ async function main() {
     editor.setEngine({ state: 'running', name })
     const t0 = performance.now()
     try {
-      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols).then((x) => (busy.mark(task), x))
+      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols, (s) => busy.detail(task, s)).then((x) => (busy.mark(task), x))
       const [ra, rb, rf] = await Promise.all([run(requests[0], 'A'), run(requests[1], 'B'), freeRequest ? run(freeRequest, 'Livre') : Promise.resolve(undefined)])
       if (replay?.scenario !== scenario) return busy.hide() // another fire was opened meanwhile
       // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.

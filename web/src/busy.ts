@@ -80,6 +80,12 @@ export class Busy {
     this.timer = window.setInterval(() => this.tick(), 250)
   }
 
+  /** What a run is doing now ("2/5"), next to its name. */
+  detail(task: string, text?: string) {
+    const li = this.tasks.querySelector<HTMLElement>(`[data-task="${task}"]:not(.done)`)
+    if (li && text) li.querySelector('span')!.textContent = `troço ${text}`
+  }
+
   /** A run is in. */
   mark(task: string) {
     const li = this.tasks.querySelector<HTMLElement>(`[data-task="${task}"]`)
