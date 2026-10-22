@@ -45,5 +45,5 @@ Tudo está no `main` local do Atalaia. Ainda não foi feito push nem testado no 
 ## Estado e conhecidos
 
 - O ramo `tests-na-demo` = `main` local com todos os pontos acima + o merge do `origin/main` do Bruno (ILS das linhas, `ils:check`, hindcast). O `ils:check` passa; a referência foi atualizada porque as wet lines mudaram o modelo rápido (ver `docs/ils.md` §5.1).
-- **Bug conhecido, a ser corrigido:** com o novo incêndio da Penha, o Cesium para de renderizar ("normalized result is not a number") por pontos repetidos nos perímetros do `progression.geojson`. Correção a caminho neste ramo.
+- **Corrigido:** o Cesium parava de renderizar ("normalized result is not a number") por pontos repetidos nos perímetros da Penha. As linhas no chão agora descartam pontos repetidos e anéis degenerados (`cleanPath` em `geo.ts`), e o `progression.geojson` foi limpo.
 - Para a demo: Docker ligado, `api/setup.sh` (uma vez), `api/serve.sh` (porta 5181), `cd web && npm run dev`.
