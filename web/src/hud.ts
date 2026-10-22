@@ -108,7 +108,7 @@ const TEMPLATE = `
     <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clica para copiar."></span></div>
     <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clica para copiar."></span></div>
   </section>
-  <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o ELMFIRE com os meios de A e de B. Só se acende quando os meios mudaram desde a última simulação."></button>
+  <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
   <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
     <svg class="toggle-icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 18 15 12 9 6" />

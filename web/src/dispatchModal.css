@@ -615,3 +615,40 @@
   margin-top: 4px;
 }
 
+
+/* Compact field cards: neutral frame, concise bullet facts and a single resource meter. */
+.road-cut-tooltip,
+.road-cut-tooltip.urgente,
+.road-cut-tooltip.preventivo,
+.road-cut-tooltip.inem {
+  box-sizing: border-box;
+  width: 278px;
+  max-width: calc(100vw - 24px);
+  padding: 14px 16px;
+  border: 1px solid #64748b85;
+  border-radius: 10px;
+  background: #101923f5;
+  box-shadow: 0 8px 28px #0007;
+  transform: none;
+  margin: 0;
+  white-space: normal;
+  font: 13px/1.45 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  animation: none;
+}
+.road-cut-tooltip::after { display: none; }
+.hover-title { display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid #ffffff16; font-weight: 650; }
+.hover-title strong { color: var(--unit-color, #f8fafc); font-size: 19px; }
+.hover-title > span { color: #e2e8f0; font-size: 13px; }
+.hover-state { display: flex; gap: 7px; align-items: center; margin: 10px 0; color: #f8fafc; }
+.hover-state i { width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; }
+.hover-state i.arrived { background: #6ee7b7; }
+.hover-facts { padding: 0; margin: 10px 0; list-style: none; }
+.hover-facts li { position: relative; display: grid; grid-template-columns: 86px 1fr; gap: 8px; padding: 3px 0 3px 11px; }
+.hover-facts li::before { content: '•'; position: absolute; left: 0; color: #94a3b8; }
+.hover-facts span { color: #bac6d4; }
+.hover-facts b { color: #f8fafc; font-weight: 550; overflow-wrap: anywhere; }
+.hover-water { display: grid; grid-template-columns: 1fr auto; gap: 5px; color: #e2e8f0; }
+.hover-water meter { grid-column: 1 / -1; width: 100%; height: 12px; accent-color: #67c9e8; }
+.hover-note { margin: 8px 0 0; color: #9daec1; font-size: 11px; }

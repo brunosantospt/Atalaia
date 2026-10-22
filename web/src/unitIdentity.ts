@@ -15,7 +15,7 @@ export function originColor(id: string, stations: readonly { id: string }[]): st
   return AIR_COLORS[hash % AIR_COLORS.length]
 }
 
-/** IDs survive edits, time changes and removals; deleting a group never renumbers another. */
+/** Internal group keys survive edits/removals; visible fieldIds() are recounted separately. */
 export function ensureAssignmentIds(decision: Decision): void {
   const prefix = `${decision.id}-`
   let next = Math.max(1, decision.nextAssignmentId ?? 1)
@@ -30,4 +30,21 @@ export function ensureAssignmentIds(decision: Decision): void {
     used.add(a.id)
   }
   decision.nextAssignmentId = next
+}
+
+/** The same origin letter on a BV/CMA and its field units. */
+export function originLetter(id: string, stations: readonly { id: string }[]): string {
+  const station = stations.findIndex(s => s.id === id)
+  const base = AIR_BASES.findIndex(b => b.id === id)
+  return String.fromCharCode(65 + (station >= 0 ? station : stations.length + Math.max(0, base)))
+}
+
+/** Visible IDs count physical means per origin, so removals compact the remaining numbers. */
+export function fieldIds(decision: Decision, stations: readonly { id: string }[]): string[][] {
+  const counts = new Map<string, number>()
+  return decision.assignments.map(a => Array.from({ length: a.count }, () => {
+    const n = (counts.get(a.from) ?? 0) + 1
+    counts.set(a.from, n)
+    return `${originLetter(a.from, stations)}${n}`
+  }))
 }

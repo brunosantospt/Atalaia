@@ -1,4 +1,4 @@
-// Wind-change gate: pause, recalculate ELMFIRE, then prompt for a new response.
+// Wind-change gate: pause for a new decision and an explicit demo simulation button press.
 
 import type { Alert } from './alerts'
 import type { Fire, WindShift } from './data'
@@ -13,7 +13,6 @@ const EPS_MIN = 1e-6
 export interface WindShiftHost {
   pause(): void
   seek(hours: number): void // pins the fire clock
-  forecast(): Promise<boolean> // run the changed-wind forecast before prompting
   reallocate(): void // "Realocar meios": the drawer opens at the incident, the simulation is stale
   rearmed(): void // the clock went back before the incident: the pre-incident results are the ones to show
 }
@@ -43,8 +42,6 @@ export class WindShiftWatch {
   private shift: WindShift | undefined
   private start = ''
   private head: LonLat | undefined
-  private forecasting = false
-  private generation = 0
   private resolved = false // a run with the new wind is on the screen: playback may go on
   private past = false // the clock is at or after the incident
   private prev = 0 // minutes at the last frame
@@ -66,8 +63,6 @@ export class WindShiftWatch {
   /** A fire opened: its shift (if any) and where its head stands at the shift in the free run. */
   setFire(fire: Fire, grid: Grid, free: Run) {
     this.close()
-    this.generation++
-    this.forecasting = false
     this.shift = fire.windShift
     this.start = fire.start
     this.resolved = false
@@ -93,27 +88,16 @@ export class WindShiftWatch {
       // Before the incident again (restart, slider, back): it is armed again.
       if (this.past) {
         this.past = false
-        this.generation++
-        this.forecasting = false
         this.close()
         this.host.rearmed()
       }
       return
     }
     this.past = true
-    if (playing && !this.resolved && !this.modal && !this.forecasting) {
+    if (playing && !this.resolved && !this.modal) {
       this.host.pause()
       this.host.seek(w.minutes / 60) // a shot still moving must not carry the clock on
-      this.forecasting = true
-      const generation = this.generation
-      void this.host.forecast().then(ok => {
-        if (generation !== this.generation) return
-        this.forecasting = false
-        if (ok) {
-          this.setResolved(true)
-          this.show(w)
-        }
-      }).catch(() => { if (generation === this.generation) this.forecasting = false })
+      this.show(w)
     }
   }
 
@@ -173,7 +157,7 @@ export class WindShiftWatch {
       </div>`
     el.querySelector('.wind-line')!.textContent = windLine(w)
     el.querySelector('.wind-text')!.textContent = w.alert
-    el.querySelector('.wind-means')!.textContent = `${headLine(w)} O ELMFIRE já recalculou a previsão com o vento novo. Reveja os meios e simule as novas decisões.`
+    el.querySelector('.wind-means')!.textContent = `${headLine(w)} Reveja os meios e carregue em Simular com o vento novo para atualizar o modelo rápido.`
     el.querySelector('.wind-review')!.addEventListener('click', () => this.reallocate())
     document.body.append(el)
     this.modal = el

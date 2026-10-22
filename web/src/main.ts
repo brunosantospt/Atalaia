@@ -28,7 +28,7 @@ import { loadDetection } from './detection'
 import { incidentShots } from './director'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
-import { engineName, fetchEngines, runScenario, type EngineRun, type ScenarioRequest } from './engines'
+import { runFast } from './fastClient'
 import { burnedHa, decisionBarriers, type Run, type Scenario } from './scenario'
 import { FireLayer } from './fireLayer'
 import { loadGrid } from './grid'
@@ -41,7 +41,7 @@ import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { OutcomeLayer } from './outcomeLayer'
 import { WindShiftWatch } from './windShift'
-import { computeReach, freeAreaHa } from './reach'
+import { computeReach } from './reach'
 import { ReachLayer } from './reachLayer'
 import { arrivalFromProgression, cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
@@ -59,12 +59,11 @@ const PENHA = { lon: -8.2683, lat: 41.4256 }
 const START: Pose = { ...PENHA, h: 600, heading: 30, pitch: -50, range: 60_000 }
 const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on until the fire stops, or this long, or the cap
 const REPORT_MIN = 360 // the 6 h of the report, kept beside the end
-const FREE_WAIT_MS = 30_000 // the cached free run is waited for this long on load; then the reference's own progression stands in
 const SPOT_K = 0.35 // the light's radius as a share of the camera's distance: the same size on screen at any zoom
 
 /** Before the wind shift (plans made on the forecast without it) or after it (the incident has happened). */
 type Phase = 'pre' | 'post'
-/** One ELMFIRE simulation of A and B, with the means it ran. */
+/** One explicit simulation of A and B, with the means it ran. */
 interface Sim {
   runs: Runs
   decisions: [Decision, Decision]
@@ -79,14 +78,15 @@ interface Replay {
   fire: FireLayer // the observed fire
   markers: MarkerLayer
   player: Player
-  scenario: Scenario // ELMFIRE inputs, forecast and deployment geometry
-  free: SplitLayer // the free run (ELMFIRE, no forces), shown during the simulated shots
+  scenario: Scenario // shared model inputs, forecast and deployment geometry
+  free: SplitLayer // the free run (no forces), shown during the simulated shots
   freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   rings: StationRingsLayer // station approach interception boundaries; follows the free run shown
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
-  story: Story // incident chapters rebuilt from the current ELMFIRE response
-  split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
+  story: Story // incident chapters rebuilt from the current simulated response
+  split?: SplitLayer // the decisions A and B side by side (only after a button-run simulation, shown in their shots or on key A)
+  arrivalPauses: Map<string, number>
   outcome?: OutcomeLayer
   runs?: Runs // Livre, A and B of the simulation on the screen; none before the first
   freeNow: Run // the free run the free layer draws: the forecast's, or the shifted one after the incident
@@ -116,7 +116,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
-  const busy = new Busy() // the loading screen: while an ELMFIRE run is on, nothing can be changed
+  const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
   // Console handle for tuning in dev (atalaia.spotlight.strength = 0, …); absent from the build.
@@ -236,7 +236,7 @@ async function main() {
     hud.settings.setMap(id)
   }
 
-  // The decision editor: placing means runs nothing; the simulate button (here and in the HUD) runs A and B on ELMFIRE.
+  // The decision editor: placing means runs nothing; the simulate button (here and in the HUD) runs the fast demo model.
   const editor = new Editor(viewer, hud.root, suppression, inventory, {
     changed: () => refreshSimulate(),
     simulate: () => void simulate(),
@@ -264,18 +264,6 @@ async function main() {
   // The one incident, the wind shift of a simulated fire: playback stops there and the commander reallocates (windShift.ts).
   const windShift = new WindShiftWatch({
     pause: () => replay?.player.pause(),
-    forecast: async () => {
-      if (!replay) return false
-      const current = replay
-      current.phase = 'post'
-      const post = current.sims.post
-      if (post) { show(post.runs, post.decisions); return true }
-      // Recalculate the response that was actually played, even if an unsimulated draft exists.
-      const ok = await simulate(true)
-      if (replay !== current) return false
-      if (!ok) { current.phase = 'pre'; refreshSimulate() }
-      return ok
-    },
     seek: (h) => replay?.player.seek(h),
     reallocate: () => {
       if (!replay) return
@@ -317,29 +305,14 @@ async function main() {
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
     const durationMin = horizonMin(fire0.start, weather)
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
-    // The free run is the first ELMFIRE prediction, no forces: the API's cached run, or the reference's own
-    // progression (the same ELMFIRE run) while the API is down. It is cut at the cap so the browser stays light.
-    busy.start('A obter a previsão do ELMFIRE…', ['Livre'])
+    const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : weather).catch(() => weather) : weather
+    const scenario: Scenario = { demo: true, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
+    // Loading shows the saved reference; the demo model only runs after a button press.
     const t0 = performance.now()
     const capHa = fire0.referenceCapHa ?? CAP_HA
-    let reference: Run
-    let source: string
-    let shiftNote = ''
-    try {
-      const r = await Promise.race([
-        ask(engineRequest(id, scenario, null, fire0.windShift ? false : undefined), grid.rows, grid.cols),
-        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('sem resposta do ELMFIRE')), FREE_WAIT_MS)),
-      ])
-      reference = engineRun(scenario, r, null)
-      source = r.engine
-      if (r.shiftIgnored) shiftNote = 'A API não aceita wind_shift: corre com o vento da referência.'
-    } catch (e) {
-      console.warn(`ELMFIRE livre: ${e instanceof Error ? e.message : e}; fica a progressão da referência`)
-      reference = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0), durationMin, runtimeMs: 0, engine: fire0.simulated ? 'ELMFIRE (referência)' : 'perímetros observados' }
-      source = `${reference.engine}, sem a API`
-    }
-    busy.hide()
+    const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0), durationMin,
+      runtimeMs: 0, engine: 'Referência guardada' }
+    const source = 'Referência guardada · simule o modelo rápido'
     const free = capRun(grid, reference, capHa)
     const freeEnd = endMinute(grid, free)
     // The story and the observed layer stop where the run does.
@@ -397,6 +370,7 @@ async function main() {
       baseHash: '',
       phase: 'pre',
       sims: {},
+      arrivalPauses: new Map(),
     }
     replay.rings.set(ringList)
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
@@ -406,13 +380,20 @@ async function main() {
     editor.setFire(id, fire, regional, context, scenario, demoDecision(fire, near, suppression.unlimitedWater), reach.intensityKWPerM)
     editor.setRange(freeEnd)
     editor.setFree(free)
-    editor.setEngine({ state: 'done', name: source, seconds: 0, note: shiftNote })
+    editor.setEngine({ state: 'done', name: source, seconds: 0, note: 'ELMFIRE em pausa para a demo.' })
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
+    let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
     hud.setFire(fire, story.shots, {
       known: { fire, weather, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
-      areaHa: (hours) => freeAreaHa(reach, hours),
+      areaHa: (hours) => {
+        const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
+        if (hudRun !== run || hudMinute !== minute) {
+          hudRun = run; hudMinute = minute; hudHa = burnedHa(grid, run, minute)
+        }
+        return hudHa
+      },
       poc: (areaHa) => containmentProbability(suppression, areaHa, reach.intensityKWPerM),
       intensityKWPerM: reach.intensityKWPerM,
     })
@@ -454,7 +435,7 @@ async function main() {
   /** Transport controls leave the planning workspace before playing its real-time consequences. */
   function playback(action: () => void) {
     if (!replay || busy.active) return
-    // A film must use the means actually submitted to ELMFIRE, rather than an unsimulated draft.
+    // A film must use the means actually submitted to the model, rather than an unsimulated draft.
     if (simulateState().enabled) {
       editor.toggle(true)
       refreshSimulate()
@@ -477,7 +458,7 @@ async function main() {
     return Math.max(endMinute(grid, replay.freeNow), runs ? Math.max(endMinute(grid, runs.A), endMinute(grid, runs.B)) : 0)
   }
 
-  /** Livre, A and B of an ELMFIRE simulation on the screen: A and B split, their reports and alerts, the director's shots. */
+  /** Livre, A and B of the simulation on the screen: A and B split, their reports and alerts, the director's shots. */
   function show(runs: Runs, [a, b]: [Decision, Decision]) {
     if (!replay) return
     const { scenario, context } = replay
@@ -559,51 +540,15 @@ async function main() {
     void refreshDirector()
   }
 
-  // ELMFIRE runs through the API (docs/contracts.md). Its answers are kept by request, so a layout seen before
-  // (or an empty one, which is the free run) comes back at once.
-  const engineDone = new Map<string, EngineRun>()
-  const enginePending = new Map<string, Promise<EngineRun>>()
-
-  function ask(request: ScenarioRequest, rows: number, cols: number, onProgress?: (stretch?: string) => void): Promise<EngineRun> {
-    const key = JSON.stringify(request)
-    const done = engineDone.get(key)
-    if (done) return Promise.resolve(done)
-    let pending = enginePending.get(key)
-    if (!pending) {
-      pending = runScenario(request, rows, cols, onProgress)
-      enginePending.set(key, pending)
-      pending.then(
-        (r) => engineDone.set(key, r),
-        () => undefined,
-      ).finally(() => enginePending.delete(key))
-    }
-    return pending
-  }
-
-  /** The scenario of a decision as the API takes it, over the runs' whole horizon (sent explicitly): the barriers
-   *  from the same whole minutes the editor draws (rounding them later moves where a line catches the head). */
-  function engineRequest(id: string, scenario: Scenario, d: Decision | null, windShift?: boolean): ScenarioRequest {
-    const barriers = d ? decisionBarriers(scenario, d) : []
-    return { fire: id, engine: hud.settings.engine, duration_min: scenario.durationMin, decision: { barriers }, wind_shift: windShift }
-  }
-
-  /** Whether a run is for the wind after the incident (true), before it (false), or the fire has no incident (undefined). */
-  const windOf = (phase: Phase) => (replay?.data.windShift ? phase === 'post' : undefined)
-
-  const engineRun = (scenario: Scenario, r: EngineRun, decision: Decision | null): Run => ({
-    decision,
-    arrival: r.arrival,
-    durationMin: scenario.durationMin,
-    runtimeMs: r.runtimeS * 1000,
-    engine: r.engine,
-  })
+  /** Forecast used for the button-run batch: before or after the incident. */
+  const windOf = (phase: Phase) => replay?.data.windShift ? phase === 'post' : undefined
 
   /** The means layout as the engine would get it: each decision's points, lines, assignments and barriers. */
   function layoutKey(): string {
     if (!replay) return ''
     const { scenario } = replay
     return layoutHash({
-      engine: hud.settings.engine,
+      engine: 'fast',
       duration: scenario.durationMin,
       wind: windOf(replay.phase),
       decisions: editor.decisions.map((d) => ({ points: d.points, lines: d.lines, assignments: d.assignments, barriers: decisionBarriers(scenario, d) })),
@@ -613,25 +558,12 @@ async function main() {
   /** The simulate button, in the drawer and in the HUD: lit only when the means differ from the last simulation's,
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
-    if (!replay) return { label: 'Simular no ELMFIRE', enabled: false, note: '' }
-    const [a, b] = editor.decisions
+    if (!replay) return { label: 'Simular modelo rápido', enabled: false, note: '' }
     const sim = replay.sims[replay.phase]
-    if (replay.phase === 'post' && !sim)
-      return { label: 'Simular com o vento novo', enabled: true, note: 'O vento rodou: a simulação mostrada é do vento anterior. Realoca os meios e simula de novo.' }
-    if (layoutKey() === (sim?.hash ?? replay.baseHash))
-      return {
-        label: sim ? 'Simulação atualizada' : 'Sem meios para simular',
-        enabled: false,
-        note: sim ? `A e B simulados no ${engineName(hud.settings.engine)} com os meios que estão no mapa.` : 'Põe meios no mapa (E) e carrega aqui para os simular no ELMFIRE.',
-      }
-    const post = replay.phase === 'post'
-    return {
-      label: post ? 'Simular com o vento novo' : 'Simular no ELMFIRE',
-      enabled: true,
-      note: sim
-        ? 'Os meios mudaram desde a última simulação.'
-        : a.assignments.length + b.assignments.length ? 'A e B ainda não simulados: o mapa mostra só a previsão sem meios.' : 'Os meios foram retirados.',
-    }
+    if (sim && layoutKey() === sim.hash)
+      return { label: 'Simulação atualizada', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
+    return { label: replay.phase === 'post' ? 'Simular com o vento novo' : 'Simular modelo rápido', enabled: true,
+      note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
   }
 
   let lastSimulate = ''
@@ -646,53 +578,39 @@ async function main() {
     editor.setSimulate(state)
   }
 
-  /** Runs A and B on ELMFIRE as they stand now, behind the loading screen, and shows them. Before the incident the
-   *  free run is the cached one; after it, Livre is run again with the new wind, so the comparison stays honest. */
-  async function simulate(automaticWind = false): Promise<boolean> {
-    if (!replay || busy.active || (!automaticWind && !simulateState().enabled)) return false
-    const { scenario } = replay
-    const { rows, cols } = scenario.grid
-    const { phase } = replay
-    const post = phase === 'post'
-    const wind = windOf(phase)
-    const decisions = (automaticWind ? replay.sims.pre?.decisions ?? editor.decisions : editor.decisions).map((d) => structuredClone(d)) as [Decision, Decision]
-    const [a, b] = decisions
-    const hash = layoutKey()
-    const requests = [engineRequest(replay.id, scenario, a, wind), engineRequest(replay.id, scenario, b, wind)]
-    const freeRequest = post ? engineRequest(replay.id, scenario, null, wind) : undefined
-    const name = engineName(requests[0].engine)
-    replay.player.pause()
-    busy.start(automaticWind ? 'Vento mudou · a atualizar o ELMFIRE…' : 'A simular no ELMFIRE…', post ? ['Livre', 'A', 'B'] : ['A', 'B'])
-    editor.setEngine({ state: 'running', name })
+  /** Explicit button-run demo batch. No API requests, Docker jobs or background edit-time simulation. */
+  async function simulate(): Promise<boolean> {
+    if (!replay || busy.active || !simulateState().enabled) return false
+    const current = replay
+    const { scenario, phase } = current
+    const decisions = editor.decisions.map(d => structuredClone(d)) as [Decision, Decision]
+    current.player.pause()
+    busy.start('A simular o modelo rápido…', ['Livre', 'A', 'B'])
+    editor.setEngine({ state: 'running', name: 'Modelo rápido' })
     const t0 = performance.now()
     try {
-      const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols, (s) => busy.detail(task, s)).then((x) => (busy.mark(task), x))
-      const [ra, rb, rf] = await Promise.all([run(requests[0], 'A'), run(requests[1], 'B'), freeRequest ? run(freeRequest, 'Livre') : Promise.resolve(undefined)])
-      if (replay?.scenario !== scenario) { busy.hide(); return false } // another fire was opened meanwhile
-      if (automaticWind && [ra, rb, rf].some(r => r?.shiftIgnored)) throw new Error('A API não suporta a mudança de vento. Atualize a API antes de continuar.')
-      // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.
-      const capHa = replay.data.referenceCapHa ?? CAP_HA
-      const cap = (r: EngineRun, d: Decision | null) => capRun(scenario.grid, engineRun(scenario, r, d), capHa)
-      const free = rf ? cap(rf, null) : replay.freeRun
-      const sim: Sim = { runs: { free, A: cap(ra, a), B: cap(rb, b) }, decisions, hash }
-      replay.sims[phase] = sim
-      if (replay.phase === phase) show(sim.runs, decisions)
-      if (post) windShift.setResolved(true)
-      const note = [ra, rb, rf].some((r) => r?.shiftIgnored) ? 'A API não aceita wind_shift: corre com o vento da referência.' : undefined
-      editor.setEngine({ state: 'done', name: ra.engine, seconds: [ra, rb, rf].some((r) => r && !r.cached) ? (performance.now() - t0) / 1000 : 0, note })
+      const result = await runFast({ scenario: { ...scenario, weather: phase === 'pre' ? scenario.forecastWeather ?? scenario.weather : scenario.weather }, decisions }, task => busy.mark(task))
+      if (replay !== current) { busy.hide(); return false }
+      const capHa = current.data.referenceCapHa ?? CAP_HA
+      const runs: Runs = { free: capRun(scenario.grid, result.free, capHa), A: capRun(scenario.grid, result.A, capHa), B: capRun(scenario.grid, result.B, capHa) }
+      if (phase === 'pre') current.freeRun = runs.free
+      const sim: Sim = { runs, decisions, hash: '' }
+      current.sims[phase] = sim
+      current.arrivalPauses.clear()
+      if (current.phase === phase) show(runs, decisions)
+      sim.hash = layoutKey() // geometry now uses this batch's free forecast
+      if (phase === 'post') windShift.setResolved(true)
+      editor.setEngine({ state: 'done', name: 'Modelo rápido · demo', seconds: (performance.now()-t0)/1000,
+        note: 'Água e autonomia são apenas indicadores visuais.' })
       busy.hide()
       refreshSimulate()
       return true
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e)
-      console.warn(`${name}: ${reason}`)
-      // Only the API's own list tells "not started" from "failed": the dev proxy answers 5xx for both.
-      const down = (await fetchEngines()) === null
-      editor.setEngine({ state: 'down', name, reason })
-      busy.fail(down ? 'ELMFIRE indisponível — inicie api/serve.sh' : `O ELMFIRE falhou: ${reason}`)
+      editor.setEngine({ state: 'down', name: 'Modelo rápido', reason })
+      busy.fail(`O modelo rápido falhou: ${reason}`)
+      return false
     }
-    refreshSimulate()
-    return false
   }
 
   /** The decisions A and B on and off the screen through every shot (key A). */
@@ -731,6 +649,16 @@ async function main() {
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     if (editor.open && player.driving) player.pause()
     const frame = player.update(dt)
+    if (frame.hours < renderedHours - 1e-6) for (const [key, minute] of replay.arrivalPauses)
+      if (minute > frame.hours * 60 + 1e-6) replay.arrivalPauses.delete(key)
+    const arrivalKey = `${replay.phase}:${frame.shot.decision}:${frame.shot.hours}`
+    if (!editor.open && frame.playing && frame.phase === 'hold' && frame.shot.gate === 'arrival' && !replay.arrivalPauses.has(arrivalKey)) {
+      replay.arrivalPauses.set(arrivalKey, frame.shot.hours*60)
+      player.pause()
+      player.seek(frame.shot.hours)
+      editor.syncTime(frame.shot.hours, true)
+      scene.requestRender()
+    }
     if (!editor.open && frame.playing && frame.phase === 'hold' && frame.shot.gate === 'decision' && !replay.runs) {
       player.pause()
       player.seek(frame.shot.hours)

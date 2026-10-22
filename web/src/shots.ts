@@ -12,7 +12,7 @@ import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLo
 import { freeAreaHa, type Reach } from './reach'
 import { AIR_BASES } from './airBases'
 import { DEFAULT_HOSPITAL } from './reporting'
-import { originColor } from './unitIdentity'
+import { originColor, originLetter } from './unitIdentity'
 
 export type ShotKind = 'response' | 'control' | 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
@@ -36,7 +36,7 @@ export interface Shot {
   conceal: string[] // marker ids that go away from this shot on
   // The director's shots (director.ts):
   milestone?: boolean // show one director chapter, while its clock advances in five-minute blocks
-  gate?: 'decision' | 'wind' // pause at a required command/forecast boundary
+  gate?: 'decision' | 'wind' | 'arrival' // pause at a required command/forecast boundary
   split?: boolean // the decisions A and B are shown side by side
   decision?: number // which decision's means are on the ground, 0 or 1
   hoursTo?: number // the clock runs from `hours` to this while holding
@@ -112,14 +112,14 @@ export function buildStory(
   const all = bboxOf([ignition, ...stations], [fire.bbox])
   const allR = bboxRadiusM(all)
   for (const s of stations) {
-    const [prefix, ...name] = s.short.split(' ') // "BV Cabeceirenses": the prefix goes in the badge
+    const [, ...name] = s.short.split(' ') // "BV Cabeceirenses": the prefix goes in the badge
     markers.push({
       id: `station:${s.id}`,
       kind: 'station',
       lon: s.lon,
       lat: s.lat,
       h: 0,
-      badge: prefix,
+      badge: originLetter(s.id, stations),
       label: `${name.join(' ') || 'Bombeiros'} · ${fmtKm(s.km)}`,
       detail: 'em linha reta',
       ringM: 0,
@@ -135,7 +135,7 @@ export function buildStory(
     .sort((a, b) => distanceM(ignition, a) - distanceM(ignition, b)).slice(0, 3)) {
     markers.push({
       id: `airbase:${base.id}`, kind: 'airbase', lon: base.lon, lat: base.lat, h: 0,
-      badge: 'CMA', label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true, color: originColor(base.id, stations),
+      badge: originLetter(base.id, stations), label: base.short, detail: 'Base de meios aéreos', ringM: 0, persistent: true, color: originColor(base.id, stations),
     })
   }
   shots.push({

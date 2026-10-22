@@ -72,7 +72,7 @@ editor.source.entities.values = [{}]
 editor.hover(new Cartesian2(1, 2))
 editor.hover(new Cartesian2(3, 4))
 assert.equal(tooltipBuilds, 1, 'same hovered unit repositions tooltip without rebuilding its DOM')
-assert.equal(tooltip.style.left, '3px')
+assert.equal(tooltip.style.left, '17px', 'tooltip sits beside the cursor, inside viewport bounds')
 editor.minutes++
 editor.hover(new Cartesian2())
 assert.equal(tooltipBuilds, 2, 'clock change refreshes tooltip ETA')

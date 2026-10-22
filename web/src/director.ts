@@ -1,5 +1,5 @@
 // Chronological incident playback. Every interval advances the incident clock by at most five
-// minutes; the editor is a separate, paused working view. Only ELMFIRE can establish containment.
+// minutes; the editor is a separate, paused working view. The simulated arrival field establishes containment.
 import type { Fire, NearStation } from './data'
 import type { Runs } from './editor'
 import type { Detection } from './detection'
@@ -10,6 +10,9 @@ import { lonLatAt, type Grid } from './grid'
 import { endMinute, fireEnd } from './report'
 import type { Shot, ShotKind } from './shots'
 import type { Decision, Suppression } from './suppression'
+import { departures } from './unitMotion'
+import { fieldIds } from './unitIdentity'
+import { findAirBase } from './airBases'
 import { arrivals } from './wetLine'
 
 export const CUT: ShotKind[] = ['ignition', 'response', 'checkpoint', 'control', 'incident', 'outcome']
@@ -37,6 +40,9 @@ export function incidentShots(input: IncidentInput): Shot[] {
   // Before the incident, stop at the wind change. The next forecast is explicitly requested there.
   const stop = !post && shift !== undefined ? shift : Math.max(post ? shift ?? 0 : 0, endMinute(grid, active))
   const eta = decisions ? arrivals({ stations, suppression, dispatchMin: detection.droneMin }, decisions[decision]) : []
+  const selected = decisions?.[decision]
+  const dep = selected ? departures(suppression, selected, detection.droneMin) : []
+  const ids = selected ? fieldIds(selected, stations) : []
   const first = eta.length ? Math.min(...eta) : detection.droneMin
   const points = [fire.ignition]
   for (let i = 0; i < active.arrival.length; i += 5)
@@ -55,36 +61,54 @@ export function incidentShots(input: IncidentInput): Shot[] {
   type Event = { minute: number; kind: ShotKind; word: string; caption: string; gate?: Shot['gate'] }
   const events: Event[] = [
     { minute: 0, kind: 'ignition', word: 'Ignição', caption: 'Início do incêndio. A previsão avança com o relógio.' },
-    { minute: first, kind: 'response', word: eta.length ? 'Primeiros meios' : 'Decidir resposta',
-      caption: eta.length ? `Chega o primeiro meio da decisão ${id}.` : 'Abra o editor, coloque os meios e simule A e B no ELMFIRE.', gate: runs ? undefined : 'decision' },
+    ...(selected && eta.length ? [] : [{ minute: detection.droneMin, kind: 'response' as const, word: 'Decidir resposta',
+      caption: 'Coloque os meios e carregue em Simular modelo rápido.', gate: runs ? undefined : 'decision' as const }]),
     { minute: detection.satelliteMin, kind: 'checkpoint', word: 'Verificação satélite', caption: 'Verificação térmica no instante previsto para o satélite (hipótese do cenário).' },
   ]
+  if (selected && eta.length) {
+    const dispatch = Math.min(...selected.assignments.map(a => a.dispatchMin ?? detection.droneMin))
+    events.push({ minute: dispatch, kind: 'response', word: 'Mobilização', caption: 'Os meios saem das suas bases e seguem para as posições.' })
+    for (const minute of [...new Set(eta)]) {
+      const labels = ids.filter((_, i) => Math.abs(eta[i]-minute) < 1e-6).flat().join(', ')
+      events.push({ minute, kind: 'response', word: minute === first ? 'Primeiros meios' : 'Meios chegam',
+        caption: `${labels} no local. Reprodução em pausa; continue quando decidir.`, gate: 'arrival' })
+    }
+  }
   if (runs) {
     const control = end.minute !== null ? Math.max(first, end.minute) : Math.min(stop, Math.max(first, detection.satelliteMin) + 5)
     events.push({ minute: control, kind: 'control', word: end.minute !== null && end.minute <= stop ? 'Fogo controlado' : 'Combate em curso',
-      caption: end.minute !== null && end.minute <= stop ? 'A previsão ELMFIRE deixa de atingir novas células; sem crescimento na última hora do cálculo.' : 'O ELMFIRE ainda não confirma contenção. Acompanhe a frente e ajuste a resposta.' })
+      caption: end.minute !== null && end.minute <= stop ? 'A previsão do modelo rápido deixa de atingir novas células; sem crescimento na última hora do cálculo.' : 'O modelo ainda não confirma contenção. Acompanhe a frente e ajuste a resposta.' })
   }
   if (shift !== undefined && shift <= stop)
-    events.push({ minute: shift, kind: 'incident', word: 'Mudança de vento', caption: 'Atualizar a previsão ELMFIRE com o novo vento; depois rever as decisões.', gate: !post ? 'wind' : undefined })
+    events.push({ minute: shift, kind: 'incident', word: 'Mudança de vento', caption: 'Reveja as decisões e carregue em Simular com o vento novo.', gate: !post ? 'wind' : undefined })
   if (post && shift !== undefined && stop > shift + 5 && (end.minute === null || end.minute > shift + 5))
     events.push({ minute: shift + 5, kind: 'control', word: 'Resposta revista',
-      caption: `Nova previsão ELMFIRE com a decisão ${id}. Acompanhe a frente até confirmar contenção.` })
+      caption: `Nova previsão do modelo rápido com a decisão ${id}. Acompanhe a frente até confirmar contenção.` })
   // End points include real milestones, so none can be skipped by an accelerated clock.
-  const times = new Set([0, stop, ...events.filter(e => e.minute <= stop).map(e => e.minute)])
+  const times = new Set([0, stop, ...dep.filter(m => m <= stop), ...events.filter(e => e.minute <= stop).map(e => e.minute)])
   for (let m = 5; m < stop; m += MAX_STEP_MIN) times.add(m)
   const ordered = [...times].sort((a, b) => a - b)
   let current = events[0]
   const shots: Shot[] = []
   for (let k = 0; k < ordered.length; k++) {
     const minute = ordered[k]
-    const event = events.filter(e => Math.abs(e.minute - minute) < 1e-6).at(-1)
+    const matching = events.filter(e => Math.abs(e.minute - minute) < 1e-6)
+    const event = matching.find(e => e.gate === 'arrival') ?? matching.at(-1)
     if (event) current = event
     const to = ordered[k + 1] ?? minute
+    const moving = selected?.assignments.flatMap((a, i) => {
+      if (!(dep[i] <= to && eta[i] > minute)) return []
+      const origin = stations.find(s => s.id === a.from) ?? findAirBase(a.from)
+      const target = selected.points[a.target] ?? selected.lines[a.target]?.[0]
+      return origin && target ? [origin, target] : []
+    }) ?? []
+    const travelBox = moving.length ? bboxOf([fire.ignition, ...moving]) : undefined
+    const travelPath = travelBox ? [{ ...bboxCenter(travelBox), h: 0, heading: 0, pitch: -65, range: Math.max(2000, bboxRadiusM(travelBox)*1.5/Math.tan(fovy/2)) }] : undefined
     shots.push({
       kind: current.kind, word: current.word, title: current.word,
       caption: current.caption, place: centre, simulated: true, step: -1,
       hours: minute / 60, hoursTo: to / 60, areaHa: 0, untimed: false,
-      path: current.kind === 'ignition' ? ignitionPath : path, driftDeg: 0, spot: radius * 1.5,
+      path: travelPath ?? (current.kind === 'ignition' ? ignitionPath : path), driftDeg: 0, spot: travelBox ? bboxRadiusM(travelBox)*1.65 : radius * 1.5,
       moveS: k === 0 ? 1.5 : 0.12, holdS: event ? 3 : 0.7,
       reveal: ['ignition:0'], conceal: [], decision: runs ? decision : undefined,
       milestone: !!event, gate: event?.gate, area,
