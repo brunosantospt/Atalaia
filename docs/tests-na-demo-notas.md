@@ -46,12 +46,12 @@ O modelo rápido recupera a aproximação anterior de chegada por caminhos míni
 - A referência ELMFIRE guardada continua no repositório, separada do cálculo rápido da demo. Os seus valores anteriores de 11,3 ha a 1 h e 27,2 ha a 2 h não são resultados do modelo rápido.
 - Três quartéis, hospital e bases próximas persistem desde a abertura. Hospital: **41°26′31.7″N 8°18′20.0″W**. Sem detalhes cinzentos ou raio branco dos quartéis.
 - **Onde o fogo chega primeiro que qualquer resposta** mantém checkbox e explicação dobrável. A previsão usada passa a ser a do modelo rápido após o clique de simulação.
-- Sem mapa de calor, pesquisa ILS ou otimização automática. Renderização a pedido, hover agrupado sem picks durante arrasto/zoom e cache de rotas/relatórios mantêm-se.
+- Sem mapa de calor ou otimização automática. A proposta ILS de B integrada de Bruno mantém-se opcional, apenas no botão **Propor B**; esse botão substitui B, editar A não lança pesquisa nem altera B. A procura pontua no mesmo modelo de faixas fixas da demo e depois é necessário carregar em Simular. Renderização a pedido, hover agrupado sem picks durante arrasto/zoom e cache de rotas/relatórios mantêm-se.
 
 ## Verificação
 
-- `npm run build`, `npm run demo:check`, `npm run director:check`, `npm run demo-units:check`, `npm run placement:check`, `npm run deployment:check` e `npm run interaction:check`.
+- `npm run build`, `npm run ils:check`, `npm run demo:check`, `npm run director:check`, `npm run demo-units:check`, `npm run placement:check`, `npm run deployment:check` e `npm run interaction:check`.
 - Testes cobrem IDs por origem e compactação, 50/100 m por meio, água exclusivamente visual, propagação rápida e faixas temporizadas, trajetos, pausas de chegada, cronologia de 5 min, contenção honesta, ETAs, aproximação, rotação, colocação apeada e cache do hover/relatórios.
-- A verificação de browser usa Firefox/WebGL isolado com todos os pedidos de API bloqueados; o worker rápido real é permitido. Verifica ausência de execução automática, o botão, IDs/remoção, picking e cartão de água, deslocações e pausas, e novo clique após a rotação do vento.
+- A verificação de browser usa Firefox/WebGL isolado com todos os pedidos de API bloqueados; o worker rápido real é permitido. Verifica ausência de execução automática, o botão, IDs/remoção, picking e cartão de água, deslocações e pausas, novo clique após a rotação do vento e pesquisa ILS apenas no botão opcional, preservando A. Sem erros de consola nem pedidos de API.
 
 As alterações de `pitch/` e `docs/tests-na-demo-README.md` da outra sessão ficam fora deste trabalho.

@@ -1,0 +1,18 @@
+{
+  "measured": "2026-10-22 · 2000 plans · seed 1 · commit 6d938a9 + uncommitted changes",
+  "fires": [
+    {
+      "id": "Penha_Guimaraes_hipotetico",
+      "name": "Penha, Guimarães (simulado)",
+      "a": {
+        "places": 5,
+        "ha": 623.4
+      },
+      "b": {
+        "places": 1,
+        "ha": 247.7
+      },
+      "foundAt": 599
+    }
+  ]
+}

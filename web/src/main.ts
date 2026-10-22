@@ -559,6 +559,7 @@ async function main() {
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
     if (!replay) return { label: 'Simular modelo rápido', enabled: false, note: '' }
+    if (editor.searching) return { label: 'À espera da proposta B…', enabled: false, note: 'Termine a procura opcional de B antes de simular.' }
     const sim = replay.sims[replay.phase]
     if (sim && layoutKey() === sim.hash)
       return { label: 'Simulação atualizada', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
@@ -637,6 +638,7 @@ async function main() {
 
   let last = performance.now()
   let frameNo = 0
+  let searching = false
   let renderedHours = NaN
   let readout: CameraReadout = { heading: 0, pitch: 0, range: 0, centre: undefined }
   let revealed = new Set<string>()
@@ -709,6 +711,8 @@ async function main() {
       spotlight.set(centre, replay.director && frame.driving ? frame.spot : SPOT_K * centre.range)
     } else readout = { ...readout, centre: undefined } // the sky: the light stays where the ground last was
     frameNo++
+    if (editor.searching !== searching) refreshSimulate() // the ILS ended: B is final and can be simulated
+    searching = editor.searching
     hud.update(frame, readout, splitOn)
     // Alerts of the run on the screen: the free run, or the side of the split that holds more of it.
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'

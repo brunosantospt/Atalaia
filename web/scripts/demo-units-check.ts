@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { simulateFast } from '../src/demoModel'
+import { simulate as scoreForIls, decisionBarriers as optimizerBarriers } from '../src/fastModel'
 import { demoLines } from '../src/demoLines'
 import { fieldIds, ensureAssignmentIds } from '../src/unitIdentity'
 import { unitStatus } from '../src/unitStatus'
@@ -39,6 +40,8 @@ assert.deepEqual(lines.map(w=>w.lengthM),[50,50,100])
 for(const line of lines) assert.ok(Math.abs(distanceM({lon:line.barrier.path[0][0],lat:line.barrier.path[0][1]},{lon:line.barrier.path[1][0],lat:line.barrier.path[1][1]})-line.lengthM)<.01)
 assert.ok(lines.every(w=>w.barrier.path.length===2&&!w.grown),'only fixed straight segments')
 const run=simulateFast(scenario,d)
+assert.deepEqual(scoreForIls(scenario,d).arrival,run.arrival,'optional optimizer scores the same fixed demo physics')
+assert.deepEqual(optimizerBarriers(scenario,d),lines.map(w=>w.barrier),'optional optimizer uses the same 50/100 m coverage')
 for(const line of lines) for(const cell of stripCells(grid,line.barrier))
   assert.ok(run.arrival[cell]<line.barrier.from_min||run.arrival[cell]===Infinity,'an active strip is not burnable')
 const changed = structuredClone(scenario)
