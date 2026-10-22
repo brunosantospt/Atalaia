@@ -21,6 +21,13 @@ declare -A CFG=(
                                                      # ignition probability follows the fine fuel moisture (Schroeder 1969)
   [K3m]="--fuels sb --scars --canopy-source meta"                                # K3 with the open canopy map
   [K5m]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta"
+  # ensemble members (ensemble.py): the two fuel readings x wind speed, and the wind direction
+  [K3m_w08]="--fuels sb --scars --canopy-source meta --wind-mult 0.8"
+  [K3m_w125]="--fuels sb --scars --canopy-source meta --wind-mult 1.25"
+  [K5m_w08]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta --wind-mult 0.8"
+  [K5m_w125]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta --wind-mult 1.25"
+  [K5m_rm15]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta --wind-rotate -15"
+  [K5m_rp15]="--fuels pt --scars --live-herb 30 --live-woody 70 --canopy-source meta --wind-rotate 15"
   [K6m]="--fuels pt --scars --live-herb 30 --live-woody 70 --spotting --seed 1 --canopy-source meta"
 )
 CONFIGS=${*:-${CONFIGS:-K0 K3 K3s K4 K6}}
