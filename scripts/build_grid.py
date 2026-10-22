@@ -30,7 +30,7 @@ TO_TM06 = Transformer.from_crs(CRS.from_epsg(4326), PTTM06, always_xy=True)
 TO_WGS84 = Transformer.from_crs(PTTM06, CRS.from_epsg(4326), always_xy=True)
 
 
-def build(fire_id: str):
+def build(fire_id: str, allow_corner_error: bool = False):
     fire = json.loads((FIRES / fire_id / "fire.json").read_text())
     # The bbox edges are densified, so the projected box holds the whole curved outline.
     x0, y0, x1, y1 = TO_TM06.transform_bounds(*fire["bbox"], densify_pts=21)
@@ -44,7 +44,10 @@ def build(fire_id: str):
                {"sw": (xmin, ymin), "se": (xmax, ymin), "ne": (xmax, ymax), "nw": (xmin, ymax)}.items()}
     error = corner_error(corners, xmin, ymin, xmax, ymax)
     if error > MAX_CORNER_ERROR_M:
-        raise SystemExit(f"{fire_id}: corner interpolation is off by {error:.2f} m, the grid is too large for it")
+        if not allow_corner_error:
+            raise SystemExit(f"{fire_id}: corner interpolation is off by {error:.2f} m, the grid is too large for it "
+                             "(--allow-corner-error for the engines and the hindcast only)")
+        print(f"{fire_id}: corner interpolation is off by {error:.2f} m: drawing on the globe will be that far off")
 
     grid = {
         "cols": cols,
@@ -73,9 +76,12 @@ def corner_error(corners, xmin, ymin, xmax, ymax):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("fire_ids", nargs="*", help="default: every fire in web/public/fires/index.json")
+    parser.add_argument("--allow-corner-error", action="store_true",
+                        help="write the grid even when the corner interpolation is off by more than a quarter cell "
+                             "(large fires; only the browser's drawing uses the corners)")
     args = parser.parse_args()
     for fire_id in args.fire_ids or [f["id"] for f in json.loads((FIRES / "index.json").read_text())]:
-        build(fire_id)
+        build(fire_id, args.allow_corner_error)
 
 
 if __name__ == "__main__":

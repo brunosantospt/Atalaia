@@ -1,0 +1,161 @@
+{
+  "fire": "CastroMarim_16082021",
+  "incident": {
+    "sgif_id": "AG1211287",
+    "ncco": "2021080035488",
+    "municipality": "Castro Marim",
+    "parish": "Odeleite",
+    "place": "Pernadeiro",
+    "lon": -7.61472222222222,
+    "lat": 37.3072222222222,
+    "alert": "2021-08-16T01:05:00+01:00",
+    "alert_source": "117",
+    "first_intervention": "2021-08-16T01:34:00+01:00",
+    "extinguished": "2021-08-17T20:30:00+01:00",
+    "duration_h": 43.4,
+    "area_ha": {
+      "stands": 2066.0,
+      "shrub": 3531.0,
+      "farmland": 1032.0,
+      "total": 6629.0
+    },
+    "cause": "Intencional",
+    "weather_at_fire": {
+      "temp_c": 26.9,
+      "rh_pct": 30.0,
+      "wind_kmh": 18.5,
+      "wind_from_deg": 332.0,
+      "ffmc": 96.5,
+      "dmc": 330.3,
+      "dc": 1006.1,
+      "isi": 27.4,
+      "bui": 362.8,
+      "fwi": 74.5,
+      "dsr": 56.0
+    },
+    "fuel_model_at_ignition": "236",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2021&MES=8)"
+  },
+  "news": [],
+  "scars": [
+    {
+      "kind": "scar",
+      "ncco": "2021080028664",
+      "parish": "Odeleite",
+      "municipality": "Castro Marim",
+      "alert": "2021-07-14T16:48:00+01:00",
+      "extinguished": "2021-07-14T18:29:00+01:00",
+      "area_ha": 2.4,
+      "reported_ha": 2.436,
+      "cause": "Desconhecida",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/AG1211113.kml"
+    }
+  ],
+  "satellite_passes": [
+    {
+      "time_utc": "2021-08-16T01:48:00+00:00",
+      "time_local": "16 Aug 02:48",
+      "hours_after_alert": 1.72,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 6,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T02:07:00+00:00",
+      "time_local": "16 Aug 03:07",
+      "hours_after_alert": 2.03,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 18,
+      "this_fire": 18,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T11:10:00+00:00",
+      "time_local": "16 Aug 12:10",
+      "hours_after_alert": 11.08,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 3,
+      "this_fire": 3,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T12:52:00+00:00",
+      "time_local": "16 Aug 13:52",
+      "hours_after_alert": 12.78,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 3,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T13:28:00+00:00",
+      "time_local": "16 Aug 14:28",
+      "hours_after_alert": 13.38,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 13,
+      "this_fire": 13,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T14:30:00+00:00",
+      "time_local": "16 Aug 15:30",
+      "hours_after_alert": 14.42,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 8,
+      "this_fire": 7,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-16T22:13:00+00:00",
+      "time_local": "16 Aug 23:13",
+      "hours_after_alert": 22.13,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 37,
+      "this_fire": 34,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-17T01:48:00+00:00",
+      "time_local": "17 Aug 02:48",
+      "hours_after_alert": 25.72,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 75,
+      "this_fire": 75,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-17T02:31:00+00:00",
+      "time_local": "17 Aug 03:31",
+      "hours_after_alert": 26.43,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 20,
+      "this_fire": 19,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2021-08-17T03:28:00+00:00",
+      "time_local": "17 Aug 04:28",
+      "hours_after_alert": 27.38,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 31,
+      "this_fire": 31,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}

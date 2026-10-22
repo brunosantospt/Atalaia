@@ -43,16 +43,22 @@ CANOPY = {
 def build(fire_id: str):
     folder, source = FIRES / fire_id, HINDCAST / fire_id
     grid = json.loads((folder / "grid.json").read_text())
-    for name in ("evidence.geojson", "canopy.npz", "canopy.json"):
-        if not (source / name).exists():
-            raise SystemExit(f"falta {(source / name).relative_to(ROOT)} (hindcast/evidence.py e hindcast/canopy.py)")
+    if not (source / "evidence.geojson").exists():
+        raise SystemExit(f"falta {(source / 'evidence.geojson').relative_to(ROOT)} (hindcast/evidence.py)")
+    lidar = (source / "canopy.npz").exists() and (source / "canopy.json").exists()
 
     features = json.loads((source / "evidence.geojson").read_text())["features"]
     scars = [f for f in features if f["properties"]["kind"] == "scar"]
     (folder / "scars.geojson").write_text(
         json.dumps({"type": "FeatureCollection", "features": scars}, ensure_ascii=False, separators=(",", ":")))
 
-    arrays, about = np.load(source / "canopy.npz"), json.loads((source / "canopy.json").read_text())
+    if lidar:
+        arrays, about = np.load(source / "canopy.npz"), json.loads((source / "canopy.json").read_text())
+    else:  # no LiDAR for this fire yet (hindcast/dgt_tiles.py, canopy.py): no canopy, as --no-canopy
+        zero = np.zeros((grid["rows"], grid["cols"]))
+        arrays = {key: zero for key in CANOPY}
+        about = {"source": "sem copas: não há canopy.npz (LiDAR da DGT) para este incêndio",
+                 "method": {}, "caveat": "camadas a zero: o ELMFIRE corre sem copas (sem fogo de copas e sem abrigo do vento)"}
     layers = {}
     for key, (layer, file, dtype, unit, per, notes) in CANOPY.items():
         a = arrays[key]

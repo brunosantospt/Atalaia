@@ -1,0 +1,184 @@
+{
+  "id": "VilaNovadeCerveira_08082015",
+  "name": "Vila Nova de Cerveira",
+  "parish": "Candemil",
+  "incidentId": "2015160019994",
+  "timeZone": "Europe/Lisbon",
+  "start": "2015-08-08T12:00",
+  "end": "2015-08-09T19:00",
+  "ignition": {
+    "lon": -8.707292,
+    "lat": 41.9368
+  },
+  "ignitions": [
+    {
+      "time": "2015-08-08T12:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 33.8,
+      "lon": -8.707292,
+      "lat": 41.9368
+    },
+    {
+      "time": "2015-08-09T13:30",
+      "hours": 25.5,
+      "chain": 2,
+      "areaHa": 81.8,
+      "lon": -8.742321,
+      "lat": 41.882878
+    }
+  ],
+  "bbox": [
+    -8.803502,
+    41.802197,
+    -8.698829,
+    41.945362
+  ],
+  "areaHa": {
+    "timed": 2610.0,
+    "untimed": 667.3,
+    "total": 3277.3
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2015-08-08T12:00",
+      "hours": 0.0,
+      "areaHa": 33.8,
+      "addedHa": 33.8,
+      "period": null,
+      "center": {
+        "lon": -8.707292,
+        "lat": 41.9368
+      },
+      "bbox": [
+        -8.71127,
+        41.933545,
+        -8.703475,
+        41.940192
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2015-08-08T15:00",
+      "hours": 3.0,
+      "areaHa": 608.1,
+      "addedHa": 574.3,
+      "period": 1,
+      "center": {
+        "lon": -8.714712,
+        "lat": 41.924343
+      },
+      "bbox": [
+        -8.731627,
+        41.910388,
+        -8.698829,
+        41.942881
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2015-08-09T00:00",
+      "hours": 12.0,
+      "areaHa": 1486.2,
+      "addedHa": 878.1,
+      "period": 1,
+      "center": {
+        "lon": -8.730404,
+        "lat": 41.90422
+      },
+      "bbox": [
+        -8.753092,
+        41.8768,
+        -8.698829,
+        41.945362
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2015-08-09T13:30",
+      "hours": 25.5,
+      "areaHa": 1567.7,
+      "addedHa": 81.5,
+      "period": null,
+      "center": {
+        "lon": -8.742371,
+        "lat": 41.88287
+      },
+      "bbox": [
+        -8.760059,
+        41.875882,
+        -8.698829,
+        41.945362
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2015-08-09T15:00",
+      "hours": 27.0,
+      "areaHa": 1814.3,
+      "addedHa": 246.6,
+      "period": 2,
+      "center": {
+        "lon": -8.740379,
+        "lat": 41.880234
+      },
+      "bbox": [
+        -8.763127,
+        41.872358,
+        -8.698829,
+        41.945362
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2015-08-09T19:00",
+      "hours": 31.0,
+      "areaHa": 2610.0,
+      "addedHa": 795.6,
+      "period": 2,
+      "center": {
+        "lon": -8.745621,
+        "lat": 41.867321
+      },
+      "bbox": [
+        -8.777572,
+        41.852565,
+        -8.698829,
+        41.945362
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2015-08-08T12:00",
+      "end": "2015-08-09T00:00",
+      "durationH": 12.0,
+      "areaHa": 1482.8,
+      "growthHaPerH": 123.6,
+      "rosMPerH": 585.0,
+      "maxRosMPerH": 913.0,
+      "spreadTowardDeg": 207.0,
+      "intensityKWPerM": 7026.0
+    },
+    {
+      "period": 2,
+      "start": "2015-08-09T13:30",
+      "end": "2015-08-09T19:00",
+      "durationH": 5.5,
+      "areaHa": 1124.5,
+      "growthHaPerH": 204.5,
+      "rosMPerH": 511.0,
+      "maxRosMPerH": 569.0,
+      "spreadTowardDeg": 193.0,
+      "intensityKWPerM": 7906.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

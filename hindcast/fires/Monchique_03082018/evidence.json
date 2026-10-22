@@ -1,0 +1,498 @@
+{
+  "fire": "Monchique_03082018",
+  "incident": {
+    "sgif_id": "AG118728",
+    "ncco": "2018080033743",
+    "municipality": "Monchique",
+    "parish": "Monchique",
+    "place": "Perna da Negra (Boa Vista)",
+    "lon": -8.58896299997966,
+    "lat": 37.3968349997203,
+    "alert": "2018-08-03T13:32:00+01:00",
+    "alert_source": "112",
+    "first_intervention": "2018-08-03T13:34:00+01:00",
+    "extinguished": "2018-08-11T21:50:00+01:00",
+    "duration_h": 200.3,
+    "area_ha": {
+      "stands": 15835.8218976296,
+      "shrub": 9801.75624434306,
+      "farmland": 1126.24735901912,
+      "total": 26763.8255009918
+    },
+    "cause": "Desconhecida",
+    "weather_at_fire": {
+      "temp_c": 36.9,
+      "rh_pct": 20.0,
+      "wind_kmh": 18.4,
+      "wind_from_deg": 341.0,
+      "ffmc": 96.6,
+      "dmc": 168.2,
+      "dc": 683.1,
+      "isi": 29.1,
+      "bui": 208.3,
+      "fwi": 75.7,
+      "dsr": 57.7
+    },
+    "fuel_model_at_ignition": "",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2018&MES=8)"
+  },
+  "news": [],
+  "scars": [],
+  "satellite_passes": [
+    {
+      "time_utc": "2018-08-03T13:21:00+00:00",
+      "time_local": "03 Aug 14:21",
+      "hours_after_alert": 0.82,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 25,
+      "this_fire": 25,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-03T14:13:00+00:00",
+      "time_local": "03 Aug 15:13",
+      "hours_after_alert": 1.68,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-03T22:00:00+00:00",
+      "time_local": "03 Aug 23:00",
+      "hours_after_alert": 9.47,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 6,
+      "this_fire": 5,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-04T01:41:00+00:00",
+      "time_local": "04 Aug 02:41",
+      "hours_after_alert": 13.15,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 15,
+      "this_fire": 15,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-04T02:14:00+00:00",
+      "time_local": "04 Aug 03:14",
+      "hours_after_alert": 13.7,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 6,
+      "this_fire": 6,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-04T03:21:00+00:00",
+      "time_local": "04 Aug 04:21",
+      "hours_after_alert": 14.82,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 9,
+      "this_fire": 9,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-04T13:02:00+00:00",
+      "time_local": "04 Aug 14:02",
+      "hours_after_alert": 24.5,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 1,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-04T22:43:00+00:00",
+      "time_local": "04 Aug 23:43",
+      "hours_after_alert": 34.18,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 24,
+      "this_fire": 23,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T01:22:00+00:00",
+      "time_local": "05 Aug 02:22",
+      "hours_after_alert": 36.83,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 45,
+      "this_fire": 45,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T02:57:00+00:00",
+      "time_local": "05 Aug 03:57",
+      "hours_after_alert": 38.42,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 11,
+      "this_fire": 9,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T03:03:00+00:00",
+      "time_local": "05 Aug 04:03",
+      "hours_after_alert": 38.52,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 35,
+      "this_fire": 35,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T10:44:00+00:00",
+      "time_local": "05 Aug 11:44",
+      "hours_after_alert": 46.2,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 1,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T12:22:00+00:00",
+      "time_local": "05 Aug 13:22",
+      "hours_after_alert": 47.83,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 4,
+      "this_fire": 4,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T12:44:00+00:00",
+      "time_local": "05 Aug 13:44",
+      "hours_after_alert": 48.2,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 25,
+      "this_fire": 25,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T14:00:00+00:00",
+      "time_local": "05 Aug 15:00",
+      "hours_after_alert": 49.47,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 20,
+      "this_fire": 19,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T14:24:00+00:00",
+      "time_local": "05 Aug 15:24",
+      "hours_after_alert": 49.87,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 72,
+      "this_fire": 72,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T21:48:00+00:00",
+      "time_local": "05 Aug 22:48",
+      "hours_after_alert": 57.27,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 52,
+      "this_fire": 43,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-05T23:26:00+00:00",
+      "time_local": "06 Aug 00:26",
+      "hours_after_alert": 58.9,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 54,
+      "this_fire": 49,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T02:02:00+00:00",
+      "time_local": "06 Aug 03:02",
+      "hours_after_alert": 61.5,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 35,
+      "this_fire": 34,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T02:44:00+00:00",
+      "time_local": "06 Aug 03:44",
+      "hours_after_alert": 62.2,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 272,
+      "this_fire": 271,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T11:27:00+00:00",
+      "time_local": "06 Aug 12:27",
+      "hours_after_alert": 70.92,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 14,
+      "this_fire": 14,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T12:25:00+00:00",
+      "time_local": "06 Aug 13:25",
+      "hours_after_alert": 71.88,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 27,
+      "this_fire": 27,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T13:05:00+00:00",
+      "time_local": "06 Aug 14:05",
+      "hours_after_alert": 72.55,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 14,
+      "this_fire": 14,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T14:05:00+00:00",
+      "time_local": "06 Aug 15:05",
+      "hours_after_alert": 73.55,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 56,
+      "this_fire": 56,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-06T22:31:00+00:00",
+      "time_local": "06 Aug 23:31",
+      "hours_after_alert": 81.98,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 64,
+      "this_fire": 62,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T02:25:00+00:00",
+      "time_local": "07 Aug 03:25",
+      "hours_after_alert": 85.88,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 467,
+      "this_fire": 462,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T02:45:00+00:00",
+      "time_local": "07 Aug 03:45",
+      "hours_after_alert": 86.22,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 76,
+      "this_fire": 72,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T12:10:00+00:00",
+      "time_local": "07 Aug 13:10",
+      "hours_after_alert": 95.63,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 20,
+      "this_fire": 18,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T13:46:00+00:00",
+      "time_local": "07 Aug 14:46",
+      "hours_after_alert": 97.23,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 115,
+      "this_fire": 115,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T13:48:00+00:00",
+      "time_local": "07 Aug 14:48",
+      "hours_after_alert": 97.27,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 58,
+      "this_fire": 55,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-07T23:14:00+00:00",
+      "time_local": "08 Aug 00:14",
+      "hours_after_alert": 106.7,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 14,
+      "this_fire": 11,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T01:49:00+00:00",
+      "time_local": "08 Aug 02:49",
+      "hours_after_alert": 109.28,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 5,
+      "this_fire": 5,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T02:06:00+00:00",
+      "time_local": "08 Aug 03:06",
+      "hours_after_alert": 109.57,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 89,
+      "this_fire": 89,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T03:27:00+00:00",
+      "time_local": "08 Aug 04:27",
+      "hours_after_alert": 110.92,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 6,
+      "this_fire": 6,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T11:15:00+00:00",
+      "time_local": "08 Aug 12:15",
+      "hours_after_alert": 118.72,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 4,
+      "this_fire": 4,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T13:27:00+00:00",
+      "time_local": "08 Aug 14:27",
+      "hours_after_alert": 120.92,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 36,
+      "this_fire": 36,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T14:31:00+00:00",
+      "time_local": "08 Aug 15:31",
+      "hours_after_alert": 121.98,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 19,
+      "this_fire": 19,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T22:18:00+00:00",
+      "time_local": "08 Aug 23:18",
+      "hours_after_alert": 129.77,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 7,
+      "this_fire": 7,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-08T22:19:00+00:00",
+      "time_local": "08 Aug 23:19",
+      "hours_after_alert": 129.78,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-09T01:48:00+00:00",
+      "time_local": "09 Aug 02:48",
+      "hours_after_alert": 133.27,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 12,
+      "this_fire": 12,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-09T02:32:00+00:00",
+      "time_local": "09 Aug 03:32",
+      "hours_after_alert": 134.0,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 1,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-09T03:28:00+00:00",
+      "time_local": "09 Aug 04:28",
+      "hours_after_alert": 134.93,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 9,
+      "this_fire": 9,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-09T13:09:00+00:00",
+      "time_local": "09 Aug 14:09",
+      "hours_after_alert": 144.62,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 1,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-10T01:29:00+00:00",
+      "time_local": "10 Aug 02:29",
+      "hours_after_alert": 156.95,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2018-08-10T03:09:00+00:00",
+      "time_local": "10 Aug 04:09",
+      "hours_after_alert": 158.62,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 2,
+      "this_fire": 1,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}

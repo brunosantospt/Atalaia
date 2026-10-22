@@ -1,0 +1,195 @@
+{
+  "fire": "Guarda_23082017",
+  "incident": {
+    "sgif_id": "BI117852",
+    "ncco": "2017090026098",
+    "municipality": "Guarda",
+    "parish": "Fernão Joanes",
+    "place": "EN 18.1. KM 8.72",
+    "lon": -7.34555555555556,
+    "lat": 40.4713888888889,
+    "alert": "2017-08-23T13:44:00+01:00",
+    "alert_source": "117",
+    "first_intervention": "2017-08-23T13:51:00+01:00",
+    "extinguished": "2017-08-25T20:15:00+01:00",
+    "duration_h": 54.5,
+    "area_ha": {
+      "stands": 400.0,
+      "shrub": 2436.0,
+      "farmland": 100.0,
+      "total": 2936.0
+    },
+    "cause": "Negligente",
+    "weather_at_fire": {
+      "temp_c": 31.5,
+      "rh_pct": 28.0,
+      "wind_kmh": 9.0,
+      "wind_from_deg": 274.0,
+      "ffmc": 94.2,
+      "dmc": 238.9,
+      "dc": 878.4,
+      "isi": 10.3,
+      "bui": 284.4,
+      "fwi": 40.5,
+      "dsr": 19.1
+    },
+    "fuel_model_at_ignition": "233",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2017&MES=8)"
+  },
+  "news": [],
+  "scars": [
+    {
+      "kind": "scar",
+      "ncco": "2017090021682",
+      "parish": "Sé",
+      "municipality": "Guarda",
+      "alert": "2017-07-17T17:25:00+01:00",
+      "extinguished": "2017-07-17T19:12:00+01:00",
+      "area_ha": 1.0,
+      "reported_ha": 1.0,
+      "cause": "Negligente",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/BI117637.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2017090021931",
+      "parish": "Gonçalo",
+      "municipality": "Guarda",
+      "alert": "2017-07-20T12:30:00+01:00",
+      "extinguished": "2017-07-20T14:08:00+01:00",
+      "area_ha": 0.7,
+      "reported_ha": 1.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/BI117647.kmz"
+    },
+    {
+      "kind": "scar",
+      "ncco": "2017090024125",
+      "parish": "Santana da Azinha",
+      "municipality": "Guarda",
+      "alert": "2017-08-07T22:50:00+01:00",
+      "extinguished": "2017-08-08T04:04:00+01:00",
+      "area_ha": 13.1,
+      "reported_ha": 12.0,
+      "cause": "Intencional",
+      "source": "gnr: https://fogos.icnf.pt/sgif2010/ficheiroskml/BI117751.kmz"
+    }
+  ],
+  "satellite_passes": [
+    {
+      "time_utc": "2017-08-23T12:51:00+00:00",
+      "time_local": "23 Aug 13:51",
+      "hours_after_alert": 0.12,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 3,
+      "this_fire": 3,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-23T22:06:00+00:00",
+      "time_local": "23 Aug 23:06",
+      "hours_after_alert": 9.37,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 8,
+      "this_fire": 8,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T02:18:00+00:00",
+      "time_local": "24 Aug 03:18",
+      "hours_after_alert": 13.57,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 16,
+      "this_fire": 14,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T02:50:00+00:00",
+      "time_local": "24 Aug 03:50",
+      "hours_after_alert": 14.1,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 40,
+      "this_fire": 40,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T11:44:00+00:00",
+      "time_local": "24 Aug 12:44",
+      "hours_after_alert": 23.0,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 15,
+      "this_fire": 13,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T12:32:00+00:00",
+      "time_local": "24 Aug 13:32",
+      "hours_after_alert": 23.8,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 38,
+      "this_fire": 38,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T13:23:00+00:00",
+      "time_local": "24 Aug 14:23",
+      "hours_after_alert": 24.65,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 12,
+      "this_fire": 11,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T14:12:00+00:00",
+      "time_local": "24 Aug 15:12",
+      "hours_after_alert": 25.47,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 78,
+      "this_fire": 77,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-24T22:49:00+00:00",
+      "time_local": "24 Aug 23:49",
+      "hours_after_alert": 34.08,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 5,
+      "this_fire": 5,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-25T02:31:00+00:00",
+      "time_local": "25 Aug 03:31",
+      "hours_after_alert": 37.78,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 22,
+      "this_fire": 21,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2017-08-25T03:01:00+00:00",
+      "time_local": "25 Aug 04:01",
+      "hours_after_alert": 38.28,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 2,
+      "this_fire": 2,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}

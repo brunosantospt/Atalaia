@@ -110,6 +110,8 @@ def read_l1(fire_id: str):
         # By index, through the .shx offsets: some L1 files (Cabeceiras) have stray bytes
         # between records, which breaks pyshp's sequential iterShapeRecords().
         for i in range(len(sf)):
+            if sf.shape(i).shapeType == shapefile.NULL:  # an empty record (Vila de Rei 2019 has one)
+                continue
             r = sf.record(i).as_dict()
             pieces.append(
                 {

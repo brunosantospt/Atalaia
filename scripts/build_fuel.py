@@ -71,7 +71,9 @@ RULES = {
     "7.1.3": (GRASS, 101, "vegetação esparsa sobre rocha: erva e arbustos dispersos"),
     "8": (NONE, 98, "zona húmida"),
     "9": (NONE, 98, "água"),
+    "0": (NONE, 99, "fora da COS (Espanha ou mar): sem combustível conhecido, não arde"),
 }
+OUTSIDE = "0"  # the code given to cells outside every COS polygon
 SB_FAMILIES = {91: "NB", 101: "GR", 121: "GS", 141: "SH", 161: "TU", 181: "TL"}
 
 
@@ -140,10 +142,10 @@ def build(db, fire_id: str):
     hit_cell, hit_shape = shapely.STRtree(shapes).query(centres, predicate="intersects")
     owner = np.full(centres.size, -1)
     owner[hit_cell] = hit_shape  # a centre right on a shared edge takes either polygon
-    if (owner < 0).any():
-        raise SystemExit(f"{fire_id}: {(owner < 0).sum()} cells outside every COS polygon")
-
-    cell_codes = codes[owner]
+    cell_codes = np.where(owner >= 0, codes[np.maximum(owner, 0)], OUTSIDE)
+    if (owner < 0).any():  # a grid that reaches Spain or the sea: COS covers mainland Portugal only
+        labels[OUTSIDE] = "Fora da COS (Espanha ou mar)"
+        print(f"{fire_id}: {(owner < 0).sum()} cells outside every COS polygon, made non-burnable")
     present, counts = np.unique(cell_codes, return_counts=True)
     order = np.argsort(-counts)
     legend = []

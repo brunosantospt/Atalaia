@@ -186,8 +186,11 @@ def main(argv=None):
     lines = [b for b in lines if b.get("from_min", 0) < duration]   # the API refuses lines that hold after the end
     if late:
         notes.append(f"{len(late)} linhas começam depois do fim e ficam de fora")
-    scenario = runs.Scenario(fire=args.fire, start_step=args.start_step, duration_min=duration, decision={"barriers": [
-        {k: b[k] for k in ("path", "width_m", "from_min") if k in b} for b in lines]})
+    # validated by the API's own model; a hindcast may run longer than the API's 48 h (Monchique 2018: 128 h)
+    scenario = runs.Scenario(fire=args.fire, start_step=args.start_step,
+                             duration_min=min(duration, runs.MAX_DURATION_MIN), decision={"barriers": [
+                                 {k: b[k] for k in ("path", "width_m", "from_min") if k in b} for b in lines]})
+    scenario = scenario.model_copy(update={"duration_min": duration})
     bars = [(b.from_min, fire.line(b.path, b.width_m)) for b in scenario.decision.barriers]
     foci = [(*fire.point(q["lon"], q["lat"]), (q["hours"] - step["hours"]) * 60) for q in fire.meta["ignitions"]]
     foci = [f for f in foci if 0 < f[2] < duration]

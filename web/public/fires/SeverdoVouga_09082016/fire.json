@@ -1,0 +1,262 @@
+{
+  "id": "SeverdoVouga_09082016",
+  "name": "Sever do Vouga",
+  "parish": "Pessegueiro do Vouga",
+  "incidentId": "2016010058973",
+  "timeZone": "Europe/Lisbon",
+  "start": "2016-08-10T01:00",
+  "end": "2016-08-12T18:00",
+  "ignition": {
+    "lon": -8.410375,
+    "lat": 40.68564
+  },
+  "ignitions": [
+    {
+      "time": "2016-08-10T01:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 1.5,
+      "lon": -8.410375,
+      "lat": 40.68564
+    },
+    {
+      "time": "2016-08-10T15:00",
+      "hours": 14.0,
+      "chain": 2,
+      "areaHa": 20.6,
+      "lon": -8.421989,
+      "lat": 40.674312
+    },
+    {
+      "time": "2016-08-11T12:30",
+      "hours": 35.5,
+      "chain": 4,
+      "areaHa": 8.4,
+      "lon": -8.402759,
+      "lat": 40.663621
+    },
+    {
+      "time": "2016-08-11T12:30",
+      "hours": 35.5,
+      "chain": 3,
+      "areaHa": 19.8,
+      "lon": -8.403636,
+      "lat": 40.678669
+    },
+    {
+      "time": "2016-08-12T12:30",
+      "hours": 59.5,
+      "chain": 5,
+      "areaHa": 19.7,
+      "lon": -8.3805,
+      "lat": 40.6798
+    }
+  ],
+  "bbox": [
+    -8.454898,
+    40.64997,
+    -8.33698,
+    40.697804
+  ],
+  "areaHa": {
+    "timed": 1746.3,
+    "untimed": 75.3,
+    "total": 1821.6
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2016-08-10T01:00",
+      "hours": 0.0,
+      "areaHa": 1.5,
+      "addedHa": 1.5,
+      "period": null,
+      "center": {
+        "lon": -8.410375,
+        "lat": 40.68564
+      },
+      "bbox": [
+        -8.411126,
+        40.684967,
+        -8.409617,
+        40.686314
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2016-08-10T15:00",
+      "hours": 14.0,
+      "areaHa": 388.5,
+      "addedHa": 387.0,
+      "period": 1,
+      "center": {
+        "lon": -8.429049,
+        "lat": 40.676908
+      },
+      "bbox": [
+        -8.454898,
+        40.662786,
+        -8.406024,
+        40.690331
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2016-08-11T03:30",
+      "hours": 26.5,
+      "areaHa": 816.6,
+      "addedHa": 428.1,
+      "period": 2,
+      "center": {
+        "lon": -8.421854,
+        "lat": 40.666652
+      },
+      "bbox": [
+        -8.454898,
+        40.64997,
+        -8.403428,
+        40.690331
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2016-08-11T12:30",
+      "hours": 35.5,
+      "areaHa": 875.0,
+      "addedHa": 58.4,
+      "period": 3,
+      "center": {
+        "lon": -8.403906,
+        "lat": 40.671248
+      },
+      "bbox": [
+        -8.454898,
+        40.64997,
+        -8.399305,
+        40.690331
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2016-08-12T03:00",
+      "hours": 50.0,
+      "areaHa": 1155.2,
+      "addedHa": 280.1,
+      "period": 4,
+      "center": {
+        "lon": -8.396141,
+        "lat": 40.676695
+      },
+      "bbox": [
+        -8.454898,
+        40.64997,
+        -8.3824,
+        40.690331
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2016-08-12T12:30",
+      "hours": 59.5,
+      "areaHa": 1174.9,
+      "addedHa": 19.7,
+      "period": null,
+      "center": {
+        "lon": -8.380497,
+        "lat": 40.6798
+      },
+      "bbox": [
+        -8.454898,
+        40.64997,
+        -8.377482,
+        40.690331
+      ]
+    },
+    {
+      "step": 6,
+      "time": "2016-08-12T18:00",
+      "hours": 65.0,
+      "areaHa": 1746.3,
+      "addedHa": 571.4,
+      "period": 5,
+      "center": {
+        "lon": -8.358845,
+        "lat": 40.678011
+      },
+      "bbox": [
+        -8.454898,
+        40.64997,
+        -8.33698,
+        40.690331
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2016-08-10T01:00",
+      "end": "2016-08-10T15:00",
+      "durationH": 14.0,
+      "areaHa": 366.2,
+      "growthHaPerH": 26.2,
+      "rosMPerH": 303.0,
+      "maxRosMPerH": 303.0,
+      "spreadTowardDeg": 241.0,
+      "intensityKWPerM": 2924.0
+    },
+    {
+      "period": 2,
+      "start": "2016-08-10T15:00",
+      "end": "2016-08-11T03:30",
+      "durationH": 12.5,
+      "areaHa": 446.2,
+      "growthHaPerH": 35.7,
+      "rosMPerH": 208.0,
+      "maxRosMPerH": 208.0,
+      "spreadTowardDeg": 219.0,
+      "intensityKWPerM": 1751.0
+    },
+    {
+      "period": 3,
+      "start": null,
+      "end": "2016-08-11T12:30",
+      "durationH": null,
+      "areaHa": 29.0,
+      "growthHaPerH": null,
+      "rosMPerH": null,
+      "maxRosMPerH": null,
+      "spreadTowardDeg": null,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 4,
+      "start": "2016-08-11T12:30",
+      "end": "2016-08-12T03:00",
+      "durationH": 14.5,
+      "areaHa": 307.2,
+      "growthHaPerH": 21.2,
+      "rosMPerH": 117.0,
+      "maxRosMPerH": 117.0,
+      "spreadTowardDeg": 68.0,
+      "intensityKWPerM": 1215.0
+    },
+    {
+      "period": 5,
+      "start": "2016-08-12T12:30",
+      "end": "2016-08-12T18:00",
+      "durationH": 5.5,
+      "areaHa": 590.8,
+      "growthHaPerH": 107.4,
+      "rosMPerH": 671.0,
+      "maxRosMPerH": 671.0,
+      "spreadTowardDeg": 113.0,
+      "intensityKWPerM": 6214.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

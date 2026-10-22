@@ -1,5 +1,21 @@
 [
   {
+    "id": "VilaNovadeCerveira_08082015",
+    "name": "Vila Nova de Cerveira",
+    "start": "2015-08-08T12:00",
+    "areaHa": 3277.3,
+    "lon": -8.707292,
+    "lat": 41.9368
+  },
+  {
+    "id": "SeverdoVouga_09082016",
+    "name": "Sever do Vouga",
+    "start": "2016-08-10T01:00",
+    "areaHa": 1821.6,
+    "lon": -8.410375,
+    "lat": 40.68564
+  },
+  {
     "id": "VieiradoMinho_10082016",
     "name": "Vieira do Minho",
     "start": "2016-08-10T10:00",
@@ -14,5 +30,45 @@
     "areaHa": 1825.8,
     "lon": -7.936506,
     "lat": 41.552461
+  },
+  {
+    "id": "Guarda_23082017",
+    "name": "Guarda",
+    "start": "2017-08-23T14:00",
+    "areaHa": 3568.2,
+    "lon": -7.343272,
+    "lat": 40.472183
+  },
+  {
+    "id": "Monchique_03082018",
+    "name": "Monchique",
+    "start": "2018-08-03T13:30",
+    "areaHa": 26260.2,
+    "lon": -8.587756,
+    "lat": 37.394485
+  },
+  {
+    "id": "ViladeRei_20072019",
+    "name": "Vila de Rei",
+    "start": "2019-07-20T14:30",
+    "areaHa": 9311.7,
+    "lon": -8.173567,
+    "lat": 39.755682
+  },
+  {
+    "id": "Oleiros_25072020",
+    "name": "Oleiros",
+    "start": "2020-07-25T15:30",
+    "areaHa": 5570.0,
+    "lon": -7.955806,
+    "lat": 39.877063
+  },
+  {
+    "id": "CastroMarim_16082021",
+    "name": "Castro Marim",
+    "start": "2021-08-16T01:00",
+    "areaHa": 6042.1,
+    "lon": -7.612637,
+    "lat": 37.305991
   }
 ]

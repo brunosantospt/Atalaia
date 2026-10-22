@@ -1,0 +1,344 @@
+{
+  "id": "Oleiros_25072020",
+  "name": "Oleiros",
+  "parish": "Sardeiras de Baixo",
+  "incidentId": "2020050017687",
+  "timeZone": "Europe/Lisbon",
+  "start": "2020-07-25T15:30",
+  "end": "2020-07-27T01:00",
+  "ignition": {
+    "lon": -7.955806,
+    "lat": 39.877063
+  },
+  "ignitions": [
+    {
+      "time": "2020-07-25T15:30",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 0.2,
+      "lon": -7.955806,
+      "lat": 39.877063
+    },
+    {
+      "time": "2020-07-25T19:00",
+      "hours": 3.5,
+      "chain": 2,
+      "areaHa": 10.3,
+      "lon": -7.938787,
+      "lat": 39.855691
+    },
+    {
+      "time": "2020-07-26T15:00",
+      "hours": 23.5,
+      "chain": 3,
+      "areaHa": 9.0,
+      "lon": -7.913341,
+      "lat": 39.847371
+    },
+    {
+      "time": "2020-07-26T15:00",
+      "hours": 23.5,
+      "chain": 3,
+      "areaHa": 4.2,
+      "lon": -7.907989,
+      "lat": 39.824595
+    }
+  ],
+  "bbox": [
+    -8.009639,
+    39.782092,
+    -7.876319,
+    39.880075
+  ],
+  "areaHa": {
+    "timed": 5288.4,
+    "untimed": 281.6,
+    "total": 5570.0
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2020-07-25T15:30",
+      "hours": 0.0,
+      "areaHa": 0.2,
+      "addedHa": 0.2,
+      "period": null,
+      "center": {
+        "lon": -7.955806,
+        "lat": 39.877063
+      },
+      "bbox": [
+        -7.956079,
+        39.876791,
+        -7.955515,
+        39.87734
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2020-07-25T18:00",
+      "hours": 2.5,
+      "areaHa": 136.3,
+      "addedHa": 136.1,
+      "period": 1,
+      "center": {
+        "lon": -7.946317,
+        "lat": 39.867641
+      },
+      "bbox": [
+        -7.956347,
+        39.858579,
+        -7.937756,
+        39.877561
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2020-07-25T19:00",
+      "hours": 3.5,
+      "areaHa": 507.9,
+      "addedHa": 371.5,
+      "period": 1,
+      "center": {
+        "lon": -7.932861,
+        "lat": 39.857354
+      },
+      "bbox": [
+        -7.95742,
+        39.848583,
+        -7.916537,
+        39.877561
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2020-07-25T22:30",
+      "hours": 7.0,
+      "areaHa": 1448.2,
+      "addedHa": 940.3,
+      "period": 2,
+      "center": {
+        "lon": -7.934835,
+        "lat": 39.835585
+      },
+      "bbox": [
+        -7.957771,
+        39.816454,
+        -7.916537,
+        39.877561
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2020-07-26T01:30",
+      "hours": 10.0,
+      "areaHa": 2957.1,
+      "addedHa": 1509.0,
+      "period": 2,
+      "center": {
+        "lon": -7.949336,
+        "lat": 39.829345
+      },
+      "bbox": [
+        -7.974821,
+        39.801317,
+        -7.906736,
+        39.877561
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2020-07-26T03:00",
+      "hours": 11.5,
+      "areaHa": 4019.2,
+      "addedHa": 1062.1,
+      "period": 3,
+      "center": {
+        "lon": -7.953774,
+        "lat": 39.826727
+      },
+      "bbox": [
+        -7.989724,
+        39.782092,
+        -7.896425,
+        39.877561
+      ]
+    },
+    {
+      "step": 6,
+      "time": "2020-07-26T11:00",
+      "hours": 19.5,
+      "areaHa": 4120.6,
+      "addedHa": 101.4,
+      "period": 4,
+      "center": {
+        "lon": -7.911785,
+        "lat": 39.829784
+      },
+      "bbox": [
+        -7.989724,
+        39.782092,
+        -7.896425,
+        39.877561
+      ]
+    },
+    {
+      "step": 7,
+      "time": "2020-07-26T13:00",
+      "hours": 21.5,
+      "areaHa": 4466.6,
+      "addedHa": 346.0,
+      "period": 4,
+      "center": {
+        "lon": -7.988619,
+        "lat": 39.850949
+      },
+      "bbox": [
+        -8.009639,
+        39.782092,
+        -7.896425,
+        39.877561
+      ]
+    },
+    {
+      "step": 8,
+      "time": "2020-07-26T15:00",
+      "hours": 23.5,
+      "areaHa": 4479.8,
+      "addedHa": 13.2,
+      "period": null,
+      "center": {
+        "lon": -7.91162,
+        "lat": 39.840054
+      },
+      "bbox": [
+        -8.009639,
+        39.782092,
+        -7.896425,
+        39.877561
+      ]
+    },
+    {
+      "step": 9,
+      "time": "2020-07-26T18:30",
+      "hours": 27.0,
+      "areaHa": 4875.3,
+      "addedHa": 395.5,
+      "period": 5,
+      "center": {
+        "lon": -7.903377,
+        "lat": 39.840738
+      },
+      "bbox": [
+        -8.009639,
+        39.782092,
+        -7.891817,
+        39.877561
+      ]
+    },
+    {
+      "step": 10,
+      "time": "2020-07-26T20:00",
+      "hours": 28.5,
+      "areaHa": 5143.5,
+      "addedHa": 268.2,
+      "period": 5,
+      "center": {
+        "lon": -7.894868,
+        "lat": 39.835708
+      },
+      "bbox": [
+        -8.009639,
+        39.782092,
+        -7.882058,
+        39.877561
+      ]
+    },
+    {
+      "step": 11,
+      "time": "2020-07-27T01:00",
+      "hours": 33.5,
+      "areaHa": 5288.4,
+      "addedHa": 144.9,
+      "period": 5,
+      "center": {
+        "lon": -7.885001,
+        "lat": 39.840032
+      },
+      "bbox": [
+        -8.009639,
+        39.782092,
+        -7.876319,
+        39.877561
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2020-07-25T15:30",
+      "end": "2020-07-25T19:00",
+      "durationH": 3.5,
+      "areaHa": 498.0,
+      "growthHaPerH": 142.3,
+      "rosMPerH": 1232.0,
+      "maxRosMPerH": 2155.0,
+      "spreadTowardDeg": 127.0,
+      "intensityKWPerM": 18232.0
+    },
+    {
+      "period": 2,
+      "start": "2020-07-25T19:00",
+      "end": "2020-07-26T01:30",
+      "durationH": 6.5,
+      "areaHa": 2457.8,
+      "growthHaPerH": 378.1,
+      "rosMPerH": 871.0,
+      "maxRosMPerH": 1050.0,
+      "spreadTowardDeg": 204.0,
+      "intensityKWPerM": 11877.0
+    },
+    {
+      "period": 3,
+      "start": "2020-07-26T01:30",
+      "end": "2020-07-26T03:00",
+      "durationH": 1.5,
+      "areaHa": 1062.2,
+      "growthHaPerH": 708.2,
+      "rosMPerH": 1220.0,
+      "maxRosMPerH": 1233.0,
+      "spreadTowardDeg": 306.0,
+      "intensityKWPerM": 21089.0
+    },
+    {
+      "period": 4,
+      "start": "2020-07-26T03:00",
+      "end": "2020-07-26T13:00",
+      "durationH": 10.0,
+      "areaHa": 448.0,
+      "growthHaPerH": 44.8,
+      "rosMPerH": 182.0,
+      "maxRosMPerH": 185.0,
+      "spreadTowardDeg": 244.0,
+      "intensityKWPerM": 2418.0
+    },
+    {
+      "period": 5,
+      "start": "2020-07-26T15:00",
+      "end": "2020-07-27T01:00",
+      "durationH": 10.0,
+      "areaHa": 820.8,
+      "growthHaPerH": 82.1,
+      "rosMPerH": 314.0,
+      "maxRosMPerH": 938.0,
+      "spreadTowardDeg": 79.0,
+      "intensityKWPerM": 5063.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

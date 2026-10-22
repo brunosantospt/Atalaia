@@ -1,0 +1,158 @@
+{
+  "fire": "Oleiros_25072020",
+  "incident": {
+    "sgif_id": "BI220227",
+    "ncco": "2020050017687",
+    "municipality": "Oleiros",
+    "parish": "Oleiros",
+    "place": "Sardeiras de Baixo (Pontão)",
+    "lon": -7.93554899997181,
+    "lat": 39.8806440003713,
+    "alert": "2020-07-25T15:31:00+01:00",
+    "alert_source": "PV",
+    "first_intervention": "2020-07-25T15:49:00+01:00",
+    "extinguished": "2020-07-29T08:52:00+01:00",
+    "duration_h": 89.3,
+    "area_ha": {
+      "stands": 3996.49900863646,
+      "shrub": 1373.40770518672,
+      "farmland": 220.57017407408,
+      "total": 5590.47688789726
+    },
+    "cause": "Desconhecida",
+    "weather_at_fire": {
+      "temp_c": 33.9,
+      "rh_pct": 28.0,
+      "wind_kmh": 19.2,
+      "wind_from_deg": 320.0,
+      "ffmc": 93.2,
+      "dmc": 137.5,
+      "dc": 554.0,
+      "isi": 11.8,
+      "bui": 169.7,
+      "fwi": 42.2,
+      "dsr": 20.4
+    },
+    "fuel_model_at_ignition": "223",
+    "source": "ICNF SGIF (https://fogos.icnf.pt/localizador/webserviceocorrencias.asp?ANO=2020&MES=7)"
+  },
+  "news": [],
+  "scars": [],
+  "satellite_passes": [
+    {
+      "time_utc": "2020-07-25T21:47:00+00:00",
+      "time_local": "25 Jul 22:47",
+      "hours_after_alert": 7.27,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 21,
+      "this_fire": 15,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-25T23:25:00+00:00",
+      "time_local": "26 Jul 00:25",
+      "hours_after_alert": 8.9,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 23,
+      "this_fire": 16,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T02:00:00+00:00",
+      "time_local": "26 Jul 03:00",
+      "hours_after_alert": 11.48,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 28,
+      "this_fire": 22,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T02:43:00+00:00",
+      "time_local": "26 Jul 03:43",
+      "hours_after_alert": 12.2,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 153,
+      "this_fire": 153,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T11:25:00+00:00",
+      "time_local": "26 Jul 12:25",
+      "hours_after_alert": 20.9,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 8,
+      "this_fire": 8,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T12:25:00+00:00",
+      "time_local": "26 Jul 13:25",
+      "hours_after_alert": 21.9,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 10,
+      "this_fire": 10,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T13:05:00+00:00",
+      "time_local": "26 Jul 14:05",
+      "hours_after_alert": 22.57,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 4,
+      "this_fire": 3,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T14:06:00+00:00",
+      "time_local": "26 Jul 15:06",
+      "hours_after_alert": 23.58,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 27,
+      "this_fire": 27,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-26T22:30:00+00:00",
+      "time_local": "26 Jul 23:30",
+      "hours_after_alert": 31.98,
+      "product": "modis",
+      "satellite": "Terra",
+      "n": 15,
+      "this_fire": 13,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-27T02:24:00+00:00",
+      "time_local": "27 Jul 03:24",
+      "hours_after_alert": 35.88,
+      "product": "viirs-snpp",
+      "satellite": "N",
+      "n": 34,
+      "this_fire": 34,
+      "near_fire_before_alert": 0
+    },
+    {
+      "time_utc": "2020-07-27T02:43:00+00:00",
+      "time_local": "27 Jul 03:43",
+      "hours_after_alert": 36.2,
+      "product": "modis",
+      "satellite": "Aqua",
+      "n": 10,
+      "this_fire": 7,
+      "near_fire_before_alert": 0
+    }
+  ],
+  "sources": {
+    "sgif": "ICNF, Sistema de Gestão de Informação de Incêndios Florestais (SGIF), public web service",
+    "perimeters": "GNR / GTF burn perimeters linked from the SGIF records (KML)",
+    "firms": "NASA FIRMS, VIIRS S-NPP 375 m (VNP14IMGTDL) and MODIS C6.1 1 km active fire detections; https://firms.modaps.eosdis.nasa.gov"
+  }
+}
