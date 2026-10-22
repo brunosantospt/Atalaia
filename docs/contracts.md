@@ -16,8 +16,7 @@ A API está em `api/`, em FastAPI. `api/setup.sh` cria o venv (uma vez), `api/se
   "engine": "elmfire",
   "start_step": 0,
   "duration_min": 300,
-  "moisture": {"dead_1h_pct": 6, "dead_10h_pct": 8, "dead_100h_pct": 10,
-               "live_herb_pct": 60, "live_woody_pct": 90},
+  "moisture": {"live_herb_pct": 60, "live_woody_pct": 90},
   "decision": {
     "barriers": [
       {"path": [[-8.121, 41.551], [-8.105, 41.548]], "width_m": 60, "from_min": 60}
@@ -32,9 +31,9 @@ A API está em `api/`, em FastAPI. `api/setup.sh` cria o venv (uma vez), `api/se
 - **`duration_min`:** quanto tempo correr, até 2880 (48 h).
   - Por omissão, até ao passo observado seguinte, para comparar com o perímetro desse passo (P7). A partir do último passo não há seguinte, e o campo é obrigatório.
   - A corrida tem de caber na meteo do incêndio (`weather.json` cobre uns dias antes e depois).
-- **`moisture`:** humidades dos combustíveis em %, iguais em toda a grade e durante toda a corrida.
-  - São provisórias: 6/8/10 nas mortas (1 h, 10 h, 100 h) e 60/90 nas vivas (herbáceas, lenhosas), um verão seco. Mais tarde passam a vir da meteo de cada hora.
-  - As mortas vão de mais de 0 a 60, as vivas de 30 a 300.
+- **`moisture`:** humidades dos combustíveis em %, iguais em toda a grade.
+  - **Mortas** (`dead_1h_pct`, `dead_10h_pct`, `dead_100h_pct`): por omissão seguem a meteo de cada momento (ver "O que a API junta ao cenário"), e no `scenario` do resultado vêm `null`. Se o cenário der as três, valem a corrida toda; dar só uma ou duas é um erro. Vão de mais de 0 a 60.
+  - **Vivas** (`live_herb_pct`, `live_woody_pct`): 60/90 por omissão, um verão seco, durante toda a corrida. Vão de 30 a 300. Em seca o hindcast usa 30/70 (`hindcast/README.md`).
 - **`decision.barriers`:** linhas onde nada arde a partir de um minuto, por exemplo um aceiro, uma linha molhada ou uma estrada defendida.
   - `path`: a linha em `[[lon, lat], ...]` (WGS84), com pelo menos 2 pontos.
   - `width_m`: a largura, de 0 a 1000 m. Com 0 (por omissão) contam só as células que a linha toca.
@@ -46,8 +45,17 @@ Campos que não estão aqui dão erro, para que um nome mal escrito não passe s
 ### O que a API junta ao cenário
 
 Tudo sai da pasta do incêndio, `web/public/fires/<id>/` (P1 e P4):
-- **Grade e camadas:** a grade de `grid.json`; o combustível em Scott & Burgan, pela legenda de `fuel.json`; elevação, declive e exposição.
-- **Meteo:** o vento a 10 m de `weather.json`, que é horário. Entra de 30 em 30 minutos desde a hora do passo de partida, interpolado em linha reta, com a direção a rodar pelo lado mais curto. As humidades são as do cenário.
+- **Grade e camadas:**
+  - a grade de `grid.json`;
+  - o combustível em Scott & Burgan, pela legenda de `fuel.json`;
+  - as cicatrizes (`scars.geojson`): os perímetros dos incêndios apagados nos 40 dias antes. As células combustíveis com o centro dentro de uma passam a 91 (não combustível), porque o que lá havia já ardeu;
+  - elevação, declive e exposição;
+  - as copas do LiDAR da DGT: cobertura, altura, altura da base e densidade aparente (`canopy_*`, descritas no `canopy.json`). O SimFire não as usa.
+
+  As cicatrizes e as copas vêm do `hindcast/` (`evidence.geojson` e `canopy.npz`), copiadas para o pacote pelo `scripts/build_scars_canopy.py`.
+- **Meteo:** o vento a 10 m, a temperatura e a humidade do ar a 2 m de `weather.json`, que é horário. Entra de 30 em 30 minutos desde a hora do passo de partida, interpolado em linha reta, com a direção do vento a rodar pelo lado mais curto.
+- **Humidades:** as vivas e, se o cenário as der, as mortas são as do cenário. Se não, as mortas saem da meteo de cada momento (`runs.dead_moistures`): a de 1 h é a humidade de equilíbrio de Simard (1968) para a temperatura e a humidade do ar, pelo menos 2 %; a de 10 h soma-lhe 1,5 e a de 100 h soma-lhe 3. Em Vieira do Minho a de 1 h vai de 4,7 a 10 % nas 22,5 h observadas.
+- **Porquê estas:** humidades de hora a hora, copas e cicatrizes são o passo 3 do hindcast, o único que melhora os dois incêndios. O Sørensen do último passo sobe de 0,727 para 0,743 em Vieira do Minho e de 0,627 para 0,732 em Cabeceiras de Basto (`hindcast/README.md`, "Problemas em aberto" 4).
 - **Focos:** os focos do `fire.json` que aparecem depois do início e antes do fim entram como ignições no minuto deles (em Cabeceiras de Basto, o segundo foco às 13:30). Os que já existiam no início estão dentro do perímetro de partida.
 - **Faixas com `from_min` depois de 0:** a corrida parte-se nesse minuto.
   - Cada troço é um pedido ao motor que parte de tudo o que ardeu até aí (`burned`), com as faixas que já seguram no combustível.
@@ -108,7 +116,7 @@ Um motor aparece na lista quando a sua pasta em `engines/` tem um `engine.json` 
 Cada resultado fica em `data/cache/<key>.json`; a variável `ATALAIA_CACHE` muda a pasta.
 - **A chave** é um hash de quatro coisas:
   - o cenário com as omissões preenchidas;
-  - os ficheiros do incêndio que a corrida lê;
+  - os ficheiros do incêndio que a corrida lê (`FILES` em `api/fires.py`, com as cicatrizes e as copas);
   - o código do motor, isto é, tudo na pasta dele menos `test.sh`, `setup.sh` e `vendor/`;
   - o código da API (`api/*.py`).
 

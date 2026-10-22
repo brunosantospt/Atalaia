@@ -5,13 +5,14 @@
 
 Like POST /api/run (api/runs.py) it starts from an observed step (the perimeter of --start-step), splits the run where
 a barrier starts to hold (runs.stretches), rasterises barriers with Fire.line and adds the later foci of fire.json as
-ignitions. It goes through engine/run.sh (engines/elmfire plus four optional request fields) and adds:
+ignitions. It goes through engines/elmfire/run.sh, with its four ELMFIRE-only request fields (engines/CONTRACT.md),
+and adds:
 
   --fuels pt          the Portuguese fuel models (fuels.py) instead of fuel.json's Scott & Burgan codes
   --scars             the burn perimeters of the fires put out shortly before (evidence.py) are non-burnable
   dead moistures      from each hour's temperature and humidity in weather.json (Simard 1968 equilibrium moisture,
-                      as in the US NFDRS; 10 h = 1 h + 1.5 %, 100 h = 1 h + 3 %); --dead fixed keeps the API's 6/8/10 %
-                      (with --fuels sb --no-canopy the run then has the same inputs as POST /api/run)
+                      as in the US NFDRS; 10 h = 1 h + 1.5 %, 100 h = 1 h + 3 %), runs.dead_moistures as in the API;
+                      --dead fixed keeps the 6/8/10 % the API had before
   --live-herb/-woody  live fuel moistures (%); 30/70 for a drought (SGIF's DC and BUI say how dry it was)
   canopy              ELMFIRE's crown fire layers from fires/<id>/canopy.npz when there is one (DGT LiDAR, see README)
   --canopy-fill       the LiDAR is from 2024-25, after the fire: inside the burned area (official and observed
@@ -23,6 +24,10 @@ ignitions. It goes through engine/run.sh (engines/elmfire plus four optional req
   --topowind          the wind per 30 m cell of scripts/build_wind_field.py (feature/cerra-wind-engine)
   --barriers FILE     barriers in decision.barriers format (attack.py writes one); only path, width_m and from_min
                       are used, through the API's own Scenario model
+
+With --scars and the other defaults (Scott & Burgan, dead moistures from the weather, live 60/90 %, the canopy) the
+run has the same inputs as POST /api/run: the package's scars.geojson and canopy files are evidence.geojson's scars and
+canopy.npz (scripts/build_scars_canopy.py).
 
 Writes hindcast/fires/<id>/runs/<name>/result.json (options, scores, see common.score, and the machine and image it
 ran on: the spotting draws differ between machines) and preview.png (arrival in colour, observed perimeter blue,
@@ -48,7 +53,8 @@ import fuels  # noqa: E402
 from common import (CACHE, HERE, alert_offset_min, cells, evidence, fire_dir, fires, observed_arrival, official,  # noqa: E402
                     runs, score)
 
-ENGINE = HERE / "engine" / "run.sh"
+ENGINE = HERE.parent / "engines" / "elmfire" / "run.sh"
+FIXED_DEAD = {"dead_1h_pct": 6.0, "dead_10h_pct": 8.0, "dead_100h_pct": 10.0}   # --dead fixed: the API's old ones
 # ELMFIRE's forecast template (vendor/elmfire/runs/forecasts/templates/default), each range at its middle
 SPOTTING = {"ENABLE_SPOTTING": True, "ENABLE_SURFACE_FIRE_SPOTTING": True, "USE_SUPERSEDED_SPOTTING": True,
             "CRITICAL_SPOTTING_FIRELINE_INTENSITY(:)": 1000.0, "SPOTTING_DISTRIBUTION_TYPE": "LOGNORMAL",
@@ -60,16 +66,6 @@ SPOTTING = {"ENABLE_SPOTTING": True, "ENABLE_SURFACE_FIRE_SPOTTING": True, "USE_
             "GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MIN": 0.065, "GLOBAL_SURFACE_FIRE_SPOTTING_PERCENT_MAX": 0.065,
             "CROWN_FIRE_SPOTTING_PERCENT_MIN": 0.65, "CROWN_FIRE_SPOTTING_PERCENT_MAX": 0.65,
             "PIGN_MIN": 55.0, "PIGN_MAX": 55.0}
-
-
-def emc_pct(temp_c: float, rh: float) -> float:
-    """Equilibrium moisture content of fine dead fuel (%), Simard (1968) as used by NFDRS (temperature in degF)."""
-    t = temp_c * 9 / 5 + 32
-    if rh < 10:
-        return 0.03229 + 0.281073 * rh - 0.000578 * rh * t
-    if rh < 50:
-        return 2.22749 + 0.160107 * rh - 0.01478 * t
-    return 21.0606 + 0.005565 * rh ** 2 - 0.00035 * rh * t - 0.483199 * rh
 
 
 def topowind():
@@ -85,7 +81,7 @@ def topowind():
 def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict]:
     """weather.json (or weather_cerra.json with --weather cerra) at `minutes` after `start`: wind and temperature/
     humidity linear between the hours, the direction the short way round (as Fire.weather), and the dead fuel
-    moistures from them. With --topowind the wind becomes one value per cell (scripts/build_wind_field.py)."""
+    moistures from them (runs.dead_moistures, as the API). With --topowind the wind becomes one value per cell (scripts/build_wind_field.py)."""
     name = "weather.json" if args.weather == "era5" else "weather_cerra.json"
     if not (fire.folder / name).exists():
         raise SystemExit(f"falta web/public/fires/{fire.id}/{name} (scripts/build_weather_cerra.py)")
@@ -99,10 +95,8 @@ def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict
     wfrom = np.degrees(np.interp(minutes, hours, np.unwrap(np.radians(w["windFromDeg"])))) % 360
     out = []
     for t, tc, h, s, d in zip(minutes, temp, rh, speed, wfrom):
-        m1 = max(2.0, emc_pct(tc, h)) if args.dead == "emc" else 6.0
-        m10, m100 = (m1 + 1.5, m1 + 3.0) if args.dead == "emc" else (8.0, 10.0)
-        out.append({"t_min": float(t), "wind_kmh": round(float(s), 2), "wind_from_deg": round(float(d), 1),
-                    "dead_1h_pct": round(m1, 1), "dead_10h_pct": round(m10, 1), "dead_100h_pct": round(m100, 1),
+        dead = runs.dead_moistures(tc, h) if args.dead == "emc" else FIXED_DEAD
+        out.append({"t_min": float(t), "wind_kmh": round(float(s), 2), "wind_from_deg": round(float(d), 1), **dead,
                     "live_herb_pct": args.live_herb, "live_woody_pct": args.live_woody})
     if args.topowind:
         micro = topowind()
@@ -230,7 +224,7 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     result = {"fire": args.fire, "name": args.name, "start": step["time"], "duration_min": duration,
               "options": {k: (rel(v) if isinstance(v, Path) else v) for k, v in vars(args).items()},
-              "engine": f"ELMFIRE {res['version']} (engines/elmfire + hindcast/engine)", "platform": platform_info(),
+              "engine": f"ELMFIRE {res['version']} (engines/elmfire)", "platform": platform_info(),
               "barriers": len(lines),
               "stretches": len(runs.stretches(scenario)), "runtime_s": round(runtime, 1),
               "wall_s": round(time.time() - wall, 1), "notes": notes, "stats": stats}

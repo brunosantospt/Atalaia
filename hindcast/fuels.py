@@ -55,8 +55,8 @@ def codes(legend: list, shrub: str = "V-MAa") -> np.ndarray:
 
 def elmfire_rows() -> list[list]:
     """The models as rows of ELMFIRE's fuel model table (lb/ft2, 1/ft, ft, %, BTU/lb), for the request's fuel_models
-    (engine/adapter.py). Models with a live herbaceous load are dynamic (the herbs cure into dead fuel with their
-    moisture), as in Scott & Burgan; one heat content (the dead one) for both."""
+    (engines/elmfire/adapter.py). Models with a live herbaceous load are dynamic (the herbs cure into dead fuel with
+    their moisture), as in Scott & Burgan; one heat content (the dead one) for both."""
     rows = []
     for code, (name, w, sav, depth, mx, heat) in MODELS.items():
         rows.append([code, name, w[3] > 0, *[x * LB_FT2_PER_T_HA for x in w], *[s * 30.48 for s in sav],
