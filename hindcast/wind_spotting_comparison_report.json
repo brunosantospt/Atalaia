@@ -1,0 +1,571 @@
+{
+  "VieiradoMinho": {
+    "before": {
+      "lines": 33,
+      "score": {
+        "burned_ha": 2454.8,
+        "by_hour": [
+          {
+            "h": 0.0,
+            "observed_ha": 6,
+            "run_ha": 6
+          },
+          {
+            "h": 3,
+            "observed_ha": 103,
+            "run_ha": 194
+          },
+          {
+            "h": 5.0,
+            "observed_ha": 707,
+            "run_ha": 498
+          },
+          {
+            "h": 6,
+            "observed_ha": 731,
+            "run_ha": 636
+          },
+          {
+            "h": 9,
+            "observed_ha": 839,
+            "run_ha": 1036
+          },
+          {
+            "h": 12,
+            "observed_ha": 971,
+            "run_ha": 1357
+          },
+          {
+            "h": 15,
+            "observed_ha": 1188,
+            "run_ha": 1674
+          },
+          {
+            "h": 17.5,
+            "observed_ha": 1573,
+            "run_ha": 1954
+          },
+          {
+            "h": 18,
+            "observed_ha": 1573,
+            "run_ha": 2004
+          },
+          {
+            "h": 21,
+            "observed_ha": 1598,
+            "run_ha": 2294
+          },
+          {
+            "h": 22.5,
+            "observed_ha": 1621,
+            "run_ha": 2455
+          }
+        ],
+        "sorensen_last_step": 0.684,
+        "sorensen_by_step": [
+          {
+            "step": 1,
+            "h": 5.0,
+            "sorensen": 0.569
+          },
+          {
+            "step": 2,
+            "h": 17.5,
+            "sorensen": 0.738
+          },
+          {
+            "step": 3,
+            "h": 22.5,
+            "sorensen": 0.684
+          }
+        ],
+        "official_ha": 1840.0,
+        "sorensen_official": 0.75,
+        "outside_official_ha": 844.5,
+        "satellite": {
+          "passes": [
+            {
+              "time_utc": "2016-08-10T12:02:00+00:00",
+              "h": 3.04,
+              "n": 12,
+              "reached": 0.67
+            },
+            {
+              "time_utc": "2016-08-10T12:39:00+00:00",
+              "h": 3.65,
+              "n": 42,
+              "reached": 0.52
+            },
+            {
+              "time_utc": "2016-08-10T13:42:00+00:00",
+              "h": 4.7,
+              "n": 15,
+              "reached": 0.73
+            },
+            {
+              "time_utc": "2016-08-10T14:20:00+00:00",
+              "h": 5.34,
+              "n": 34,
+              "reached": 0.59
+            },
+            {
+              "time_utc": "2016-08-10T23:08:00+00:00",
+              "h": 14.14,
+              "n": 7,
+              "reached": 0.71
+            },
+            {
+              "time_utc": "2016-08-11T02:37:00+00:00",
+              "h": 17.62,
+              "n": 28,
+              "reached": 0.64
+            }
+          ],
+          "mean_reached": 0.64
+        }
+      }
+    },
+    "after": {
+      "lines": 29,
+      "breaches_km": 1.05,
+      "score": {
+        "burned_ha": 2496.0,
+        "by_hour": [
+          {
+            "h": 0.0,
+            "observed_ha": 6,
+            "run_ha": 6
+          },
+          {
+            "h": 3,
+            "observed_ha": 103,
+            "run_ha": 194
+          },
+          {
+            "h": 5.0,
+            "observed_ha": 707,
+            "run_ha": 502
+          },
+          {
+            "h": 6,
+            "observed_ha": 731,
+            "run_ha": 654
+          },
+          {
+            "h": 9,
+            "observed_ha": 839,
+            "run_ha": 1065
+          },
+          {
+            "h": 12,
+            "observed_ha": 971,
+            "run_ha": 1403
+          },
+          {
+            "h": 15,
+            "observed_ha": 1188,
+            "run_ha": 1719
+          },
+          {
+            "h": 17.5,
+            "observed_ha": 1573,
+            "run_ha": 1988
+          },
+          {
+            "h": 18,
+            "observed_ha": 1573,
+            "run_ha": 2034
+          },
+          {
+            "h": 21,
+            "observed_ha": 1598,
+            "run_ha": 2332
+          },
+          {
+            "h": 22.5,
+            "observed_ha": 1621,
+            "run_ha": 2496
+          }
+        ],
+        "sorensen_last_step": 0.69,
+        "sorensen_by_step": [
+          {
+            "step": 1,
+            "h": 5.0,
+            "sorensen": 0.562
+          },
+          {
+            "step": 2,
+            "h": 17.5,
+            "sorensen": 0.735
+          },
+          {
+            "step": 3,
+            "h": 22.5,
+            "sorensen": 0.69
+          }
+        ],
+        "official_ha": 1840.0,
+        "sorensen_official": 0.755,
+        "outside_official_ha": 859.1,
+        "satellite": {
+          "passes": [
+            {
+              "time_utc": "2016-08-10T12:02:00+00:00",
+              "h": 3.04,
+              "n": 12,
+              "reached": 0.67
+            },
+            {
+              "time_utc": "2016-08-10T12:39:00+00:00",
+              "h": 3.65,
+              "n": 42,
+              "reached": 0.55
+            },
+            {
+              "time_utc": "2016-08-10T13:42:00+00:00",
+              "h": 4.7,
+              "n": 15,
+              "reached": 0.73
+            },
+            {
+              "time_utc": "2016-08-10T14:20:00+00:00",
+              "h": 5.34,
+              "n": 34,
+              "reached": 0.56
+            },
+            {
+              "time_utc": "2016-08-10T23:08:00+00:00",
+              "h": 14.14,
+              "n": 7,
+              "reached": 0.71
+            },
+            {
+              "time_utc": "2016-08-11T02:37:00+00:00",
+              "h": 17.62,
+              "n": 28,
+              "reached": 0.64
+            }
+          ],
+          "mean_reached": 0.64
+        }
+      },
+      "breaches": [
+        {
+          "length_m": 1046,
+          "from_min": 120.0,
+          "wind_kmh": 21.3,
+          "cross_wind_kmh": 20.9,
+          "spot_dist_m": 24.4,
+          "reason": "wind-driven spotting: wind 21.3 km/h towards road (cross 20.9 km/h > 18.0 km/h), spark reach 24.4 m > road width 20.0 m"
+        }
+      ]
+    }
+  },
+  "CabeceirasdeBasto": {
+    "before": {
+      "lines": 44,
+      "score": {
+        "burned_ha": 1672.1,
+        "by_hour": [
+          {
+            "h": 0.0,
+            "observed_ha": 13,
+            "run_ha": 13
+          },
+          {
+            "h": 3,
+            "observed_ha": 29,
+            "run_ha": 60
+          },
+          {
+            "h": 6,
+            "observed_ha": 89,
+            "run_ha": 176
+          },
+          {
+            "h": 9,
+            "observed_ha": 487,
+            "run_ha": 286
+          },
+          {
+            "h": 9.5,
+            "observed_ha": 594,
+            "run_ha": 300
+          },
+          {
+            "h": 12,
+            "observed_ha": 599,
+            "run_ha": 400
+          },
+          {
+            "h": 15,
+            "observed_ha": 618,
+            "run_ha": 557
+          },
+          {
+            "h": 18,
+            "observed_ha": 696,
+            "run_ha": 677
+          },
+          {
+            "h": 20.5,
+            "observed_ha": 1243,
+            "run_ha": 796
+          },
+          {
+            "h": 21,
+            "observed_ha": 1243,
+            "run_ha": 828
+          },
+          {
+            "h": 24,
+            "observed_ha": 1264,
+            "run_ha": 1013
+          },
+          {
+            "h": 27,
+            "observed_ha": 1289,
+            "run_ha": 1191
+          },
+          {
+            "h": 30,
+            "observed_ha": 1315,
+            "run_ha": 1441
+          },
+          {
+            "h": 32.5,
+            "observed_ha": 1334,
+            "run_ha": 1672
+          },
+          {
+            "h": 33,
+            "observed_ha": 1334,
+            "run_ha": 1672
+          }
+        ],
+        "sorensen_last_step": 0.571,
+        "sorensen_by_step": [
+          {
+            "step": 1,
+            "h": 9.5,
+            "sorensen": 0.505
+          },
+          {
+            "step": 2,
+            "h": 20.5,
+            "sorensen": 0.511
+          },
+          {
+            "step": 3,
+            "h": 32.5,
+            "sorensen": 0.571
+          }
+        ],
+        "official_ha": 1392.3,
+        "sorensen_official": 0.593,
+        "outside_official_ha": 763.4,
+        "satellite": {
+          "passes": [
+            {
+              "time_utc": "2016-09-06T11:43:00+00:00",
+              "h": 8.72,
+              "n": 10,
+              "reached": 0.4
+            },
+            {
+              "time_utc": "2016-09-06T12:33:00+00:00",
+              "h": 9.55,
+              "n": 29,
+              "reached": 0.41
+            },
+            {
+              "time_utc": "2016-09-06T13:23:00+00:00",
+              "h": 10.38,
+              "n": 7,
+              "reached": 0.71
+            },
+            {
+              "time_utc": "2016-09-06T14:13:00+00:00",
+              "h": 11.22,
+              "n": 45,
+              "reached": 0.33
+            },
+            {
+              "time_utc": "2016-09-06T22:49:00+00:00",
+              "h": 19.82,
+              "n": 8,
+              "reached": 0.5
+            },
+            {
+              "time_utc": "2016-09-07T02:31:00+00:00",
+              "h": 23.52,
+              "n": 55,
+              "reached": 0.4
+            },
+            {
+              "time_utc": "2016-09-07T03:00:00+00:00",
+              "h": 24.0,
+              "n": 4,
+              "reached": 0.25
+            }
+          ],
+          "mean_reached": 0.43
+        }
+      }
+    },
+    "after": {
+      "lines": 44,
+      "breaches_km": 0.0,
+      "score": {
+        "burned_ha": 1672.1,
+        "by_hour": [
+          {
+            "h": 0.0,
+            "observed_ha": 13,
+            "run_ha": 13
+          },
+          {
+            "h": 3,
+            "observed_ha": 29,
+            "run_ha": 60
+          },
+          {
+            "h": 6,
+            "observed_ha": 89,
+            "run_ha": 176
+          },
+          {
+            "h": 9,
+            "observed_ha": 487,
+            "run_ha": 286
+          },
+          {
+            "h": 9.5,
+            "observed_ha": 594,
+            "run_ha": 300
+          },
+          {
+            "h": 12,
+            "observed_ha": 599,
+            "run_ha": 400
+          },
+          {
+            "h": 15,
+            "observed_ha": 618,
+            "run_ha": 557
+          },
+          {
+            "h": 18,
+            "observed_ha": 696,
+            "run_ha": 677
+          },
+          {
+            "h": 20.5,
+            "observed_ha": 1243,
+            "run_ha": 796
+          },
+          {
+            "h": 21,
+            "observed_ha": 1243,
+            "run_ha": 828
+          },
+          {
+            "h": 24,
+            "observed_ha": 1264,
+            "run_ha": 1013
+          },
+          {
+            "h": 27,
+            "observed_ha": 1289,
+            "run_ha": 1191
+          },
+          {
+            "h": 30,
+            "observed_ha": 1315,
+            "run_ha": 1441
+          },
+          {
+            "h": 32.5,
+            "observed_ha": 1334,
+            "run_ha": 1672
+          },
+          {
+            "h": 33,
+            "observed_ha": 1334,
+            "run_ha": 1672
+          }
+        ],
+        "sorensen_last_step": 0.571,
+        "sorensen_by_step": [
+          {
+            "step": 1,
+            "h": 9.5,
+            "sorensen": 0.505
+          },
+          {
+            "step": 2,
+            "h": 20.5,
+            "sorensen": 0.511
+          },
+          {
+            "step": 3,
+            "h": 32.5,
+            "sorensen": 0.571
+          }
+        ],
+        "official_ha": 1392.3,
+        "sorensen_official": 0.593,
+        "outside_official_ha": 763.4,
+        "satellite": {
+          "passes": [
+            {
+              "time_utc": "2016-09-06T11:43:00+00:00",
+              "h": 8.72,
+              "n": 10,
+              "reached": 0.4
+            },
+            {
+              "time_utc": "2016-09-06T12:33:00+00:00",
+              "h": 9.55,
+              "n": 29,
+              "reached": 0.41
+            },
+            {
+              "time_utc": "2016-09-06T13:23:00+00:00",
+              "h": 10.38,
+              "n": 7,
+              "reached": 0.71
+            },
+            {
+              "time_utc": "2016-09-06T14:13:00+00:00",
+              "h": 11.22,
+              "n": 45,
+              "reached": 0.33
+            },
+            {
+              "time_utc": "2016-09-06T22:49:00+00:00",
+              "h": 19.82,
+              "n": 8,
+              "reached": 0.5
+            },
+            {
+              "time_utc": "2016-09-07T02:31:00+00:00",
+              "h": 23.52,
+              "n": 55,
+              "reached": 0.4
+            },
+            {
+              "time_utc": "2016-09-07T03:00:00+00:00",
+              "h": 24.0,
+              "n": 4,
+              "reached": 0.25
+            }
+          ],
+          "mean_reached": 0.43
+        }
+      },
+      "breaches": []
+    }
+  }
+}
