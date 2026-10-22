@@ -76,20 +76,25 @@ def sorensen(a: np.ndarray, b: np.ndarray) -> float:
     return round(2 * float((a & b).sum()) / max(1, int(a.sum() + b.sum())), 3)
 
 
-def score(fire: fires.Fire, arrival_min: np.ndarray, features: list, alert_offset_min: float = 0.0) -> dict:
+def score(fire: fires.Fire, arrival_min: np.ndarray, features: list, alert_offset_min: float = 0.0,
+          until_min: float | None = None) -> dict:
     """The scores of a run (minutes after step 0, NaN where it did not burn):
     - burned area at each observed step and every few hours, against the observed (interpolated) one;
     - footprint Sørensen against the last observed perimeter and against the official one (if evidence ran), and the
       area burned outside the official perimeter;
     - per satellite pass (>= 3 hotspots on this fire, outside earlier fires), the share of hotspots whose pixel
       footprint the run had reached by the pass time + 30 min. Independent of the perimeters, and attack lines placed
-      along the final perimeter cannot raise it."""
+      along the final perimeter cannot raise it.
+    A run that stops early (until_min, minutes after step 0) is scored up to its last observed step and its satellite
+    passes; the official perimeter is the final one, so its scores then only say how much of it was reached."""
     cell_ha = fire.cellsize ** 2 / 1e4
     obs = observed_arrival(fire)
     sim = np.nan_to_num(arrival_min, nan=np.inf)
     obs_t = np.nan_to_num(obs, nan=np.inf)
-    last = fire.steps[-1]['hours'] * 60
-    marks = sorted({*[s['hours'] for s in fire.steps], *range(0, int(math.ceil(np.nanmax(arrival_min) / 60)) + 1, 3)})
+    steps = [s for s in fire.steps if until_min is None or s['hours'] * 60 <= until_min + 1e-6]
+    last = steps[-1]['hours'] * 60
+    marks = sorted({*[s['hours'] for s in steps], *range(0, int(math.ceil(np.nanmax(arrival_min) / 60)) + 1, 3)})
+    marks = [h for h in marks if until_min is None or h * 60 <= until_min + 1e-6]
     stats = {
         'burned_ha': round(float(np.isfinite(sim).sum()) * cell_ha, 1),
         'by_hour': [{'h': h, 'observed_ha': round(float((obs_t <= h * 60).sum()) * cell_ha),
@@ -97,7 +102,7 @@ def score(fire: fires.Fire, arrival_min: np.ndarray, features: list, alert_offse
         'sorensen_last_step': sorensen(obs_t <= last, sim <= last),
         'sorensen_by_step': [{'step': s['step'], 'h': s['hours'],
                               'sorensen': sorensen(obs_t <= s['hours'] * 60, sim <= s['hours'] * 60)}
-                             for s in fire.steps[1:]],
+                             for s in steps[1:]],
     }
     off = official(features)
     if off is not None:
@@ -123,7 +128,8 @@ def score(fire: fires.Fire, arrival_min: np.ndarray, features: list, alert_offse
         s['n'] += 1
         s['hit'] += bool((sim[r0:r1, c0:c1] <= t + 30).any())
     pl = [{'time_utc': s['time_utc'], 'h': s['h'], 'n': s['n'], 'reached': round(s['hit'] / s['n'], 2)}
-          for s in sorted(passes.values(), key=lambda s: s['time_utc']) if s['n'] >= 3 and s['h'] > 0]
+          for s in sorted(passes.values(), key=lambda s: s['time_utc'])
+          if s['n'] >= 3 and s['h'] > 0 and (until_min is None or s['h'] * 60 <= until_min)]
     if pl:
         stats['satellite'] = {'passes': pl, 'mean_reached': round(float(np.mean([x['reached'] for x in pl])), 2)}
     return stats

@@ -25,7 +25,10 @@ for c in $CONFIGS; do for f in $FIRES; do
   while [ "$(jobs -rp | wc -l)" -ge "$N" ]; do sleep 2; done
   if [ "$MODE" = free ]; then
     [ -f hindcast/fires/$f/runs/mf_$c/result.json ] && continue   # done already (an interrupted batch resumes)
-    ( $PY -I hindcast/run.py $f --name mf_$c ${CFG[$c]} > $LOG/free_${c}_$f.log 2>&1; echo "free $c $f $(date +%H:%M:%S) $(tail -c 160 $LOG/free_${c}_$f.log | tr '\n' ' ')" ) &
+    # Monchique 2018 lasted 128 h: its free run stops at 48 h (ELMFIRE keeps a weather band per half hour per cell,
+    # ~7 GB over 128 h on its million cells)
+    dur=""; [ "$f" = Monchique_03082018 ] && dur="--duration-min 2880"
+    ( $PY -I hindcast/run.py $f --name mf_$c ${CFG[$c]} $dur > $LOG/free_${c}_$f.log 2>&1; echo "free $c $f $(date +%H:%M:%S) $(tail -c 160 $LOG/free_${c}_$f.log | tr '\n' ' ')" ) &
   else
     [ -f hindcast/fires/$f/steps/$c.json ] && continue
     ( $PY -I hindcast/steps.py $f --name $c -- ${CFG[$c]} > $LOG/steps_${c}_$f.log 2>&1; echo "steps $c $f $(date +%H:%M:%S)" ) &

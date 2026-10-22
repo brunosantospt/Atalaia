@@ -224,7 +224,8 @@ def main(argv=None):
     if np.isfinite(arrival).sum() <= fire.perimeter(args.start_step).sum():
         notes.append("AVISO: o fogo não saiu do ponto de partida (o ELMFIRE falha assim com espalhamento muito rápido)")
 
-    stats = score(fire, arrival + step["hours"] * 60, feats, alert_offset_min(fire, ev))   # on step 0's clock
+    stats = score(fire, arrival + step["hours"] * 60, feats, alert_offset_min(fire, ev),   # on step 0's clock
+                  until_min=step["hours"] * 60 + duration)
     out = fire_dir(args.fire) / "runs" / args.name
     out.mkdir(parents=True, exist_ok=True)
     result = {"fire": args.fire, "name": args.name, "start": step["time"], "duration_min": duration,
