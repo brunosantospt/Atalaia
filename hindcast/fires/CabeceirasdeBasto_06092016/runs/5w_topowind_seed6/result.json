@@ -1,0 +1,193 @@
+{
+ "fire": "CabeceirasdeBasto_06092016",
+ "name": "5w_topowind_seed6",
+ "start": "2016-09-06T04:00",
+ "duration_min": 1950.0,
+ "options": {
+  "fire": "CabeceirasdeBasto_06092016",
+  "name": "5w_topowind_seed6",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "spotting": true,
+  "seed": 6,
+  "weather": "era5",
+  "topowind": true,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "hindcast/engine/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire + hindcast/engine)",
+ "platform": {
+  "machine": "arm64",
+  "system": "Darwin 25.3.0",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:95240205c6a2",
+  "image_platform": "linux/arm64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 4.8,
+ "wall_s": 12.7,
+ "notes": [
+  "cicatrizes: 504 ha",
+  "copas do LiDAR"
+ ],
+ "stats": {
+  "burned_ha": 2105.5,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 13,
+    "run_ha": 13
+   },
+   {
+    "h": 3,
+    "observed_ha": 29,
+    "run_ha": 98
+   },
+   {
+    "h": 6,
+    "observed_ha": 89,
+    "run_ha": 220
+   },
+   {
+    "h": 9,
+    "observed_ha": 487,
+    "run_ha": 334
+   },
+   {
+    "h": 9.5,
+    "observed_ha": 594,
+    "run_ha": 357
+   },
+   {
+    "h": 12,
+    "observed_ha": 599,
+    "run_ha": 567
+   },
+   {
+    "h": 15,
+    "observed_ha": 618,
+    "run_ha": 819
+   },
+   {
+    "h": 18,
+    "observed_ha": 696,
+    "run_ha": 1028
+   },
+   {
+    "h": 20.5,
+    "observed_ha": 1243,
+    "run_ha": 1198
+   },
+   {
+    "h": 21,
+    "observed_ha": 1243,
+    "run_ha": 1226
+   },
+   {
+    "h": 24,
+    "observed_ha": 1264,
+    "run_ha": 1438
+   },
+   {
+    "h": 27,
+    "observed_ha": 1289,
+    "run_ha": 1676
+   },
+   {
+    "h": 30,
+    "observed_ha": 1315,
+    "run_ha": 1895
+   },
+   {
+    "h": 32.5,
+    "observed_ha": 1334,
+    "run_ha": 2105
+   },
+   {
+    "h": 33,
+    "observed_ha": 1334,
+    "run_ha": 2105
+   }
+  ],
+  "sorensen_last_step": 0.637,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 9.5,
+    "sorensen": 0.589
+   },
+   {
+    "step": 2,
+    "h": 20.5,
+    "sorensen": 0.675
+   },
+   {
+    "step": 3,
+    "h": 32.5,
+    "sorensen": 0.637
+   }
+  ],
+  "official_ha": 1392.3,
+  "sorensen_official": 0.665,
+  "outside_official_ha": 941.9,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2016-09-06T11:43:00+00:00",
+     "h": 8.72,
+     "n": 10,
+     "reached": 0.7
+    },
+    {
+     "time_utc": "2016-09-06T12:33:00+00:00",
+     "h": 9.55,
+     "n": 29,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2016-09-06T13:23:00+00:00",
+     "h": 10.38,
+     "n": 7,
+     "reached": 0.86
+    },
+    {
+     "time_utc": "2016-09-06T14:13:00+00:00",
+     "h": 11.22,
+     "n": 45,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2016-09-06T22:49:00+00:00",
+     "h": 19.82,
+     "n": 8,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2016-09-07T02:31:00+00:00",
+     "h": 23.52,
+     "n": 55,
+     "reached": 0.73
+    },
+    {
+     "time_utc": "2016-09-07T03:00:00+00:00",
+     "h": 24.0,
+     "n": 4,
+     "reached": 1.0
+    }
+   ],
+   "mean_reached": 0.74
+  }
+ }
+}

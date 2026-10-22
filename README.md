@@ -12,6 +12,7 @@ O twin simula o mesmo cenário de incêndio sob duas decisões, A e B, com os me
 | `api/` | FastAPI: fetchers com cache (a demo corre offline) e `run(scenario)` |
 | `engines/` | Adaptadores dos motores, atrás de um só contrato ([engines/CONTRACT.md](engines/CONTRACT.md)) e escolhidos nas settings do HUD: ELMFIRE (principal) e SimFire (alternativa). ForeFire só se o ELMFIRE falhar; Cell2Fire para a probabilidade de queima |
 | `scenarios/` | Cenários em JSON: perímetro, janela meteorológica, ações |
+| `hindcast/` | Reconstituir os incêndios reais com os registos oficiais (SGIF do ICNF, perímetros da GNR, cicatrizes, focos de satélite), combustíveis portugueses e linhas de ataque inferidas, e medir cada mudança contra o observado ([hindcast/README.md](hindcast/README.md)) |
 | `scripts/` | Preparação de dados |
 | `data/` | Dados brutos e cache, fora do git (ver [data/README.md](data/README.md)) |
 
