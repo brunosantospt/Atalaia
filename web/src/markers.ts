@@ -13,7 +13,7 @@ import {
   SceneTransforms,
   type Viewer,
 } from 'cesium'
-import { destination } from './geo'
+import { cleanLonLat, destination } from './geo'
 import { BEST_CSS } from './reachLayer'
 import type { MarkerKind, MarkerSpec } from './shots'
 
@@ -71,7 +71,8 @@ export class MarkerLayer {
 
     for (const spec of specs) {
       const circle = Array.from({ length: 49 }, (_, i) => destination(spec, (i * 360) / 48, spec.ringM))
-      const ring = spec.ringM
+      const circleOk = cleanLonLat(circle).length > 0
+      const ring = spec.ringM && circleOk
         ? this.source.entities.add({
             show: false,
             polyline: {

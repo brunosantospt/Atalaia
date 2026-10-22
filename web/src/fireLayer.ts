@@ -17,6 +17,7 @@ import {
   type Scene,
 } from 'cesium'
 import type { Progression, Ring } from './data'
+import { cleanPath } from './geo'
 
 export const FIRE_AMBER = Color.fromCssColorString('#f0a33a')
 const FRONT = FIRE_AMBER.withAlpha(0.58) // what the latest step added
@@ -30,9 +31,9 @@ export interface FireState {
   untimed: boolean
 }
 
+/** The ring open (no closing duplicate), without zero-length edges; empty when degenerate. */
 function positions(ring: Ring): Cartesian3[] {
-  const open = ring.length > 1 && ring[0][0] === ring.at(-1)![0] && ring[0][1] === ring.at(-1)![1] ? ring.slice(0, -1) : ring
-  return Cartesian3.fromDegreesArray(open.flat())
+  return Cartesian3.fromDegreesArray(cleanPath(ring, (p) => p, true).flat())
 }
 
 export class FireLayer {
@@ -49,9 +50,14 @@ export class FireLayer {
     const areaInstances: GeometryInstance[] = []
     const add = (id: string, polygons: Ring[][]) => {
       polygons.forEach((rings, i) => {
+        if (positions(rings[0]).length < 3) return
         const hierarchy = new PolygonHierarchy(
           positions(rings[0]),
-          rings.slice(1).map((hole) => new PolygonHierarchy(positions(hole))),
+          rings
+            .slice(1)
+            .map(positions)
+            .filter((h) => h.length >= 3)
+            .map((h) => new PolygonHierarchy(h)),
         )
         areaInstances.push(
           new GeometryInstance({
@@ -70,11 +76,13 @@ export class FireLayer {
     progression.perimeters.forEach((polygons, step) =>
       polygons.forEach((rings, i) =>
         rings.forEach((ring, j) => {
+          const pos = positions(ring)
+          if (pos.length < 3) return
           const id = `per:${step}/${i}/${j}`
           outlineInstances.push(
             new GeometryInstance({
               id,
-              geometry: new GroundPolylineGeometry({ positions: positions(ring), loop: true, width: 2.5 }),
+              geometry: new GroundPolylineGeometry({ positions: pos, loop: true, width: 2.5 }),
               attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.TRANSPARENT) },
             }),
           )
