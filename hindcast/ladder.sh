@@ -33,10 +33,10 @@ wind=0
 canopy=0
 [ -f "$d/canopy.npz" ] && canopy=1
 
-run --name 0_api --fuels sb --dead fixed --no-canopy  # step 0: the same inputs as POST /api/run
+run --name 0_api --fuels sb --dead fixed --no-canopy  # step 0: the inputs POST /api/run had until 21/10/2026
 run --name 1a_humidade_emc --fuels sb --no-canopy      # step 1
 run --name 1_emc_copas --fuels sb                      # step 2 (canopy only if fires/<id>/canopy.npz exists)
-run --name 2_cicatrizes --fuels sb --scars             # step 3
+run --name 2_cicatrizes --fuels sb --scars             # step 3: the same inputs as POST /api/run
 run --name 3_combustiveis_pt --fuels pt --scars        # step 4
 run --name 4_seca $best                                # step 5
 if [ "$canopy" = 1 ]; then

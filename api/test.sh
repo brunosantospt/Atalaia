@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # P5 gate: the API on both fires. It checks what the API reads from each fire's folder (perimeters,
-# weather, lines drawn on the map), the engine requests it builds for a scenario, the scenarios it
-# turns down, and runs on every engine that is ready: from the observed perimeter, read back from the
-# cache, held by a ring of fire break, and with the ring only from a later minute. It keeps its cache
-# in a temporary folder, so data/cache/ is left alone. Needs setup.sh, and Docker for the runs.
+# weather, lines drawn on the map, scars and canopy), the engine requests it builds for a scenario
+# (dead moistures from the weather), the scenarios it turns down, and runs on every engine that is
+# ready: from the observed perimeter, read back from the cache, held by a ring of fire break, and with
+# the ring only from a later minute. It keeps its cache in a temporary folder, so data/cache/ is left
+# alone. Needs setup.sh, and Docker for the runs.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 
@@ -100,8 +101,8 @@ for fire_id in (VIEIRA, CABECEIRAS):
         for a, s in zip(areas, fire.steps)
     })
 
-    # The wind every half hour for the first 10 hours: the hours of weather.json as they are, and
-    # halfway in between, with the direction halfway along the short turn.
+    # The weather every half hour for the first 10 hours: the hours of weather.json as they are, and
+    # halfway in between, with the wind's direction halfway along the short turn.
     w = json.loads((fire.folder / 'weather.json').read_text())
     start = fires.parse_time(fire.steps[0]['time'])
     first = w['time'].index(fire.steps[0]['time'])
@@ -111,10 +112,13 @@ for fire_id in (VIEIRA, CABECEIRAS):
         a = first + k // 2
         if k % 2 == 0:
             speed, direction = w['windKmh'][a], w['windFromDeg'][a]
+            temp, rh = w['tempC'][a], w['rhPct'][a]
         else:
             speed = (w['windKmh'][a] + w['windKmh'][a + 1]) / 2
             direction = w['windFromDeg'][a] + arc(w['windFromDeg'][a], w['windFromDeg'][a + 1]) / 2
-        errors.append((abs(g['wind_kmh'] - speed), abs(arc(g['wind_from_deg'], direction))))
+            temp, rh = (w['tempC'][a] + w['tempC'][a + 1]) / 2, (w['rhPct'][a] + w['rhPct'][a + 1]) / 2
+        errors.append((abs(g['wind_kmh'] - speed), abs(arc(g['wind_from_deg'], direction)),
+                       max(abs(g['temp_c'] - temp), abs(g['rh_pct'] - rh))))
     try:
         fire.weather(start, [0, 7 * 24 * 60])
         outside = False
@@ -123,6 +127,7 @@ for fire_id in (VIEIRA, CABECEIRAS):
     check(f'{fire_id} meteo', {
         'a velocidade de hora a hora e a meio': max(e[0] for e in errors) <= 0.01,
         'a direção de hora a hora e a meio, pelo lado mais curto': max(e[1] for e in errors) <= 0.1,
+        'a temperatura e a humidade do ar de hora a hora e a meio': max(e[2] for e in errors) <= 1e-9,
         'recusa minutos fora da meteo': outside,
     })
 
@@ -140,6 +145,19 @@ for fire_id in (VIEIRA, CABECEIRAS):
         'com 100 m tem mais células e inclui as da linha': wide.sum() > 2 * thin.sum() and (wide >= thin).all(),
         'a linha que vem de fora da grade fica dentro dela': edge.sum() > 0 and joined(edge),
         'uma linha fora da grade não toca nada': off.sum() == 0,
+    })
+
+    # The scars of the fires put out shortly before this one don't burn, and the canopy is the LiDAR's.
+    legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
+    raw = np.array([e['scottBurgan'] for e in legend])[fire.read('fuel.u8', 'u1')]
+    layers, scars = fire.layers(), fire.scars()
+    print(f'{fire_id}: {int(scars.sum())} células nas cicatrizes, copas até {layers["canopy_height_m"].max():.1f} m')
+    check(f'{fire_id} cicatrizes e copas', {
+        'as cicatrizes tapam combustível que arderia': (raw[scars] > 99).sum() > 100,
+        'nas cicatrizes nada arde': (layers['fuel'][scars] <= 99).all(),
+        'fora delas o combustível do pacote': (layers['fuel'][~scars] == raw[~scars]).all(),
+        'as copas em m, % e kg/m³': 0 < layers['canopy_height_m'].max() <= 60 and 0 < layers['canopy_cover_pct'].max() <= 100
+            and 0 < layers['canopy_bulk_kgm3'].max() < 1 and (layers['canopy_base_m'] <= layers['canopy_height_m']).all(),
     })
 
 
@@ -174,7 +192,11 @@ fire, scenario = runs.plan(runs.Scenario(fire=CABECEIRAS, duration_min=600, deci
 recorder = Recorder()
 result = runs.simulate(fire, scenario, recorder)
 first, second = recorder.requests if len(recorder.requests) == 2 else (None, None)
-fuel, perimeter = fire.layers()['fuel'], fire.perimeter(0)
+canopy = fire.layers()
+fuel, perimeter = canopy['fuel'], fire.perimeter(0)
+WIND = ('wind_kmh', 'wind_from_deg')
+MOISTURE = ('dead_1h_pct', 'dead_10h_pct', 'dead_100h_pct', 'live_herb_pct', 'live_woody_pct')
+hourly = fire.weather(fires.parse_time('2016-09-06T04:00'), [30 * k for k in range(21)])
 early_cells, late_cells = fire.line(early, 0), fire.line(late, 60)
 foci = [fire.point(p['lon'], p['lat']) for p in fire.meta['ignitions'] if p['hours'] > 0]
 got = arrival(result)
@@ -185,11 +207,14 @@ check('pedidos de Cabeceiras', {
     'a meteo de 30 em 30 min desde 0 em cada troço': first is not None and all(
         [m['t_min'] for m in r['weather']] == [30 * k for k in range(11)] for r in (first, second)),
     'a meteo do segundo troço começa às 09:00': second is not None and
-        {k: second['weather'][0][k] for k in ('wind_kmh', 'wind_from_deg')} ==
-        fire.weather(fires.parse_time('2016-09-06T04:00'), [300])[0],
-    'as humidades provisórias em cada momento': first is not None and all(
-        (m['dead_1h_pct'], m['dead_10h_pct'], m['dead_100h_pct'], m['live_herb_pct'], m['live_woody_pct']) == (6, 8, 10, 60, 90)
-        for r in (first, second) for m in r['weather']),
+        {k: second['weather'][0][k] for k in WIND} == {k: hourly[10][k] for k in WIND},
+    'as humidades mortas da meteo em cada momento, as vivas fixas': first is not None and all(
+        {k: m[k] for k in MOISTURE} == {**runs.dead_moistures(w['temp_c'], w['rh_pct']), 'live_herb_pct': 60, 'live_woody_pct': 90}
+        for m, w in zip(first['weather'] + second['weather'][1:], hourly)),
+    'as mortas mudam ao longo do dia': first is not None and len({m['dead_1h_pct'] for m in first['weather']}) > 3,
+    'as copas da LiDAR em cada troço': first is not None and all(
+        r['layers'][name] == canopy[name].tolist() for r in (first, second) for name in runs.CANOPY),
+    'as cicatrizes não ardem': first is not None and (np.array(first['layers']['fuel'])[fire.scars()] <= 99).all(),
     'o primeiro troço parte do perímetro observado': first is not None and (np.array(first['burned']) == perimeter).all(),
     'a primeira linha logo no primeiro troço': first is not None and
         (np.array(first['layers']['fuel']) == np.where(early_cells, fires.NONBURNABLE, fuel)).all(),
@@ -203,6 +228,15 @@ check('pedidos de Cabeceiras', {
     'acaba às 14:00': (result['start'], result['end']) == ('2016-09-06T04:00', '2016-09-06T14:00'),
 })
 
+# With all three dead moistures in the scenario they hold for the whole run, as the live ones do.
+given = Recorder()
+runs.simulate(*runs.plan(runs.Scenario(fire=CABECEIRAS, duration_min=180, moisture={
+    'dead_1h_pct': 5, 'dead_10h_pct': 7, 'dead_100h_pct': 9, 'live_herb_pct': 30, 'live_woody_pct': 70})), given)
+check('humidades dadas no cenário', {
+    'as mesmas em todos os momentos': all(
+        tuple(m[k] for k in MOISTURE) == (5, 7, 9, 30, 70) for r in given.requests for m in r['weather']),
+})
+
 # Scenarios the API turns down before it looks for an engine.
 line = [cell_lonlat(fire, 100, 60), cell_lonlat(fire, 100, 160)]
 refused = {
@@ -214,7 +248,8 @@ refused = {
     'para lá da meteo': {'fire': VIEIRA, 'start_step': 3, 'duration_min': 2880},
     'faixa que só começa no fim': {'fire': VIEIRA, 'duration_min': 60, 'decision': {'barriers': [{'path': line, 'from_min': 60}]}},
     'faixa com um ponto só': {'fire': VIEIRA, 'decision': {'barriers': [{'path': line[:1]}]}},
-    'humidade a zero': {'fire': VIEIRA, 'moisture': {'dead_1h_pct': 0}},
+    'humidade a zero': {'fire': VIEIRA, 'moisture': {'dead_1h_pct': 0, 'dead_10h_pct': 8, 'dead_100h_pct': 10}},
+    'só uma humidade morta': {'fire': VIEIRA, 'moisture': {'dead_1h_pct': 6}},
     'campo que não existe': {'fire': VIEIRA, 'wind_kmh': 20},
 }
 for name, body in refused.items():
@@ -262,7 +297,8 @@ for engine in ready:
         'o fogo cresce': free['burned_ha'] > perimeter.sum() * cell_ha + 1,
         'as marcas crescem e acabam na área final': areas['free'] == sorted(areas['free']) and areas['free'][-1] == free['burned_ha'],
         'das 10:00 às 12:00': (free['start'], free['end']) == ('2016-08-10T10:00', '2016-08-10T12:00'),
-        'o cenário volta com as humidades por omissão': free['scenario']['moisture']['dead_1h_pct'] == 6,
+        'o cenário volta com as humidades por omissão, as mortas da meteo':
+            (free['scenario']['moisture']['dead_1h_pct'], free['scenario']['moisture']['live_herb_pct']) == (None, 60),
         'vem comprimido': response.headers.get('content-encoding') == 'gzip',
         'a segunda vez vem da cache': (free['cached'], again['cached']) == (False, True) and again['key'] == free['key'],
         'a cache dá o mesmo resultado': again['arrival_min'] == free['arrival_min'],

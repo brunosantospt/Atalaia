@@ -137,6 +137,10 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - a altitude da ignição bate com a do Open-Meteo a 6 m (Vieira 652 contra 656 m, Cabeceiras 719 contra 725 m);
   - em Vieira o fogo seguiu o vento, não a subida. No período 3 de Cabeceiras, de noite e sem vento, desceu devagar uma encosta de 30° (90 ha em 12 h);
   - é um modelo de superfície: em floresta fica em parte sobre as copas.
+- **Cicatrizes e copas** (`scars.geojson`, `canopy_*` e `canopy.json`, `scripts/build_scars_canopy.py`, desde 22/10/2026):
+  - as cicatrizes são os perímetros dos incêndios apagados nos 40 dias antes, do SGIF do ICNF (`hindcast/evidence.py`): 627 ha dentro da grade em Vieira, 504 ha em Cabeceiras;
+  - as copas vêm do LiDAR da DGT (MDS − MDT a 2 m, `hindcast/canopy.py`): a cobertura e a altura são medidas, a altura da base e a densidade são estimadas por espécie. São de 2024–25, oito ou nove anos depois dos fogos;
+  - entram nos pedidos do ELMFIRE (P5).
 - **Meteo** (`weather.json`, `scripts/fetch_weather.py` e `scripts/build_weather.py`):
   - ERA5 horária via Open-Meteo, de 3 dias antes a 1 dia depois de cada incêndio, no ponto da ignição;
   - o vento do ERA5 bate com a direção de propagação observada em Vieira (13° e 3° de desvio) e nos períodos 2 e 3 de Cabeceiras;
@@ -147,7 +151,7 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - a grade é métrica, em PT-TM06, e as suas constantes ficam num só lugar.
 - **Pronto quando:** os 2 incêndios têm grade, combustível, relevo e meteo. ✅
 - **A seguir:**
-  - humidades dos combustíveis, estimadas a partir da temperatura e da humidade relativa;
+  - humidades dos combustíveis, estimadas a partir da temperatura e da humidade relativa ✅ (22/10/2026, no P5);
   - a meteo horária entra no contrato dos motores com o cenário (P5).
 
 ### P5 · Contrato + API
@@ -162,15 +166,18 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - a API arranca-se à mão com `api/serve.sh`, porque o launcher do preview não pode correr nada em `~/Documents` (permissões do macOS).
 - **O que a API junta ao cenário:**
   - a grade, o combustível, o relevo e a meteo do P4. O vento entra de 30 em 30 minutos e roda pelo lado mais curto;
+  - desde 22/10/2026, o que o hindcast mostrou ajudar nos dois incêndios (o passo 3, P7): as copas do LiDAR e as cicatrizes dos incêndios dos 40 dias antes, que não ardem. Vêm do `hindcast/` para o pacote do incêndio pelo `scripts/build_scars_canopy.py`;
   - os focos que aparecem depois do início, como ignições no minuto deles;
   - as faixas, como combustível 91. Uma faixa com `from_min` parte a corrida nesse minuto, e o troço seguinte parte do que já ardeu.
-- **Humidades:** por agora entram no cenário, iguais em toda a grade e durante toda a corrida: 6/8/10 nas mortas e 60/90 nas vivas, um verão seco. Mais tarde passam a vir da meteo de cada hora.
+- **Humidades:** iguais em toda a grade.
+  - **Mortas:** desde 22/10/2026 seguem a meteo de meia em meia hora: a humidade de equilíbrio de Simard (1968) com a temperatura e a humidade do ar do ERA5, pelo menos 2 %, e mais 1,5 e 3 nas de 10 h e 100 h (`runs.dead_moistures`). Em Vieira a de 1 h vai de 4,7 a 10 % ao longo das 22,5 h. Se o cenário der as três, valem a corrida toda. Até 21/10/2026 eram 6/8/10 fixas.
+  - **Vivas:** 60/90, um verão seco, durante toda a corrida.
 - **Settings:** o painel do HUD (botão Settings ou tecla S) tem o incêndio e o motor.
   - A lista de motores vem de `GET /api/engines` sempre que o painel abre, com o estado de cada um: Pronto, Não instalado (falta `setup.sh`) ou Docker desligado.
   - Com a API desligada não há motores, e uma nota diz para correr `api/serve.sh`.
   - A escolha fica guardada no browser e é a que corre na validação (P7) e nas decisões (P9). Junta-se o modelo rápido no browser (P6).
 - **Cache** em `data/cache/` (fora do git). A chave cobre o cenário, os ficheiros do incêndio e o código do motor e da API. É lida antes de se ver o motor, por isso uma corrida feita uma vez volta sem o Docker, e a demo roda offline.
-- **Primeiras corridas**, do perímetro observado no passo 0 até ao passo 1:
+- **Primeiras corridas**, do perímetro observado no passo 0 até ao passo 1, com as humidades fixas de então e sem copas nem cicatrizes:
 
   | Incêndio | Observado | ELMFIRE | SimFire |
   |---|---|---|---|
@@ -178,6 +185,7 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   | Cabeceiras de Basto, 04:00 → 13:30 | 592,6 ha | 298,3 ha (2,2 s) | 2968,0 ha (41,2 s) |
 
   - O ELMFIRE fica entre um quinto e metade do observado, e o SimFire chega a quase 5 vezes. Calibrar fica para o P7.
+  - Com o que a API usa desde 22/10/2026, o ELMFIRE faz 143,4 ha em Vieira e 237,1 ha em Cabeceiras. Fica mais longe do observado no passo 1, mas mais perto no último (P7).
   - Uma faixa de 60 m num anel a 500 m do perímetro de Vieira segura nos dois motores, em 2 h: no ELMFIRE, 65,4 ha passam a 41,1 ha; no SimFire, 1426,0 ha passam a 84,2 ha. A mesma faixa só a partir das 11:00 já chega tarde: 61,6 ha no ELMFIRE e 1436,8 ha no SimFire. É este o tipo de comparação das decisões A e B (P9).
   - O SimFire escolhe o passo de tempo pelo fogo mais rápido em toda a corrida. Por isso o mesmo minuto muda uns % com a duração: em Vieira, o minuto 60 tem 669,1 ha numa corrida de 300 min e 687,9 ha numa de 120 min. No P7, cada corrida vai até ao passo seguinte.
 - **Ref:** o plugin `fireEngines()` em `vite.config.ts`, `engines/CONTRACT.md`.
@@ -186,7 +194,9 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
   - os motores correm em contentores, não em venvs;
   - a cache e as faixas com hora são novas.
 - **Pronto quando:** `api/test.sh` passa. ✅
-- **A seguir:** humidades dos combustíveis por hora, estimadas a partir da temperatura e da humidade relativa (`scripts/build_moisture.py`).
+- **A seguir:**
+  - humidades dos combustíveis por hora, estimadas a partir da temperatura e da humidade relativa ✅ (22/10/2026, em `api/runs.py`);
+  - os combustíveis portugueses, as vivas de seca e as projeções, quando houver uma configuração que ajude nos dois incêndios. Em Vieira sobem o Sørensen do último passo de 0,74 para 0,78, em Cabeceiras descem-no de 0,73 para 0,62 (`hindcast/README.md`, "Problemas em aberto" 3 e 4). O motor já os aceita (`engines/CONTRACT.md`); falta pô-los no cenário.
 
 ### P6 · Modelo rápido no browser
 - Tempo mínimo de chegada (Dijkstra, 16 vizinhos) com Rothermel simplificado: vento, declive e humidade. Comprimento de chama pela fórmula de Byram.
@@ -201,7 +211,7 @@ Tudo em `web/public/fires/<id>/`, lido tanto pelo Python como pelo TypeScript.
 - **Ref:** `src/replay.ts`.
 - **Muda:** os 2 incêndios e resultados calculados na hora (no protótipo eram tabelas congeladas).
 - **Pronto quando:** há um Sørensen por passo e por motor. Este número vai para o pitch (técnico, 25%).
-- **Hindcast com os registos oficiais** (`hindcast/`): o ELMFIRE com a ficha do SGIF, as cicatrizes, os combustíveis portugueses e as linhas de ataque inferidas, com Sørensen por passo, contra o perímetro oficial e contra os focos de satélite. Em Vieira o Sørensen do último passo vai de 0,73 (como a API) a 0,78 só com dados (combustíveis, cicatrizes, seca, projeções; mediana de 10 sementes, 0,76–0,80), e a 0,83 (0,80–0,85) com as linhas inferidas a segurar antes do fogo do modelo; as linhas estão traçadas ao longo do perímetro final, por isso parte do ganho é por construção. Uma elipse a favor do vento que sabe a área observada já dá 0,69. Em Cabeceiras a mesma configuração não transfere: 0,61, contra 0,73 do melhor passo. O vento do CERRA e do relevo (ramo `feature/cerra-wind-engine`) fica dentro do ruído das sementes (relevo) ou piora (CERRA). Ver `hindcast/README.md`.
+- **Hindcast com os registos oficiais** (`hindcast/`): o ELMFIRE com a ficha do SGIF, as cicatrizes, os combustíveis portugueses e as linhas de ataque inferidas, com Sørensen por passo, contra o perímetro oficial e contra os focos de satélite. Em Vieira o Sørensen do último passo vai de 0,73 (a API até 21/10) e 0,74 (a API desde 22/10: humidades mortas de hora a hora, copas e cicatrizes, o passo 3) a 0,78 só com dados (combustíveis, cicatrizes, seca, projeções; mediana de 10 sementes, 0,76–0,80), e a 0,83 (0,80–0,85) com as linhas inferidas a segurar antes do fogo do modelo; as linhas estão traçadas ao longo do perímetro final, por isso parte do ganho é por construção. Uma elipse a favor do vento que sabe a área observada já dá 0,69. Em Cabeceiras a mesma configuração não transfere: 0,61, contra 0,73 do melhor passo, o 3, que é o que a API usa (antes 0,63). O vento do CERRA e do relevo (ramo `feature/cerra-wind-engine`) fica dentro do ruído das sementes (relevo) ou piora (CERRA). Ver `hindcast/README.md`.
 
 ## Fase 2 · Decisões (qua 21)
 
