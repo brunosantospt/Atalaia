@@ -663,7 +663,9 @@ async function main() {
     try {
       const capHa = replay.data.referenceCapHa ?? CAP_HA
       const cap = (r: Run) => capRun(scenario.grid, r, capHa)
-      const free = replay.freeRun
+      const rFree = fastSimulate(scenario as any, null)
+      rFree.engine = 'Modelo Rápido (livre)'
+      const free = cap(rFree)
       const ra = fastSimulate(scenario as any, a)
       const rb = fastSimulate(scenario as any, b)
       ra.engine = 'Modelo Rápido'

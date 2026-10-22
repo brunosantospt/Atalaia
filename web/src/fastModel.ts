@@ -33,7 +33,7 @@ const FUEL: Record<number, [number, number]> = {
 export const params = {
   // The table is for moderate fuel moisture; a Minho afternoon in August with 25 % humidity burns
   // faster. 2.2 puts the free burn near the 705 ha PT-FireSprd measured at 5 h (743 ha; 90 ha at 1.0).
-  fuelScale: 2.2,
+  fuelScale: 1.55,
   windGain: 0.18, // head ROS = ROS0 × (1 + windGain × wind in km/h)
   slopeDoubleDeg: 10, // ROS doubles every this many degrees uphill
   slopeDown: 1, // and is multiplied by this at the same angle downhill (1 = no slowing)
