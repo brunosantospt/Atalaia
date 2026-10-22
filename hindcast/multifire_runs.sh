@@ -24,6 +24,11 @@ declare -A CFG=(
   # calibrated: a spread factor per fuel class fitted on the OTHER fires' windows (calibrate.py, leave one fire out)
   [K3c]="--fuels sb --scars --adj-class @ADJ_LOFO_K3@"
   [K5c]="--fuels pt --scars --live-herb 30 --live-woody 70 --adj-class @ADJ_LOFO_K5@"
+  # the active edge of the start perimeter (run.py --active-edge): only near the satellite hotspots of the last 6 h,
+  # or (cheating, the bound) only where the observed fire grew; the rest of the edge is held
+  [K5a]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge hotspots --active-window-h 6"
+  [K5o]="--fuels pt --scars --live-herb 30 --live-woody 70 --active-edge oracle"
+  [K3o]="--fuels sb --scars --active-edge oracle"
   # the gusts: effective wind 30 % of the way from the mean to the gusts
   [K3g]="--fuels sb --scars --gust-frac 0.3"
   [K5g]="--fuels pt --scars --live-herb 30 --live-woody 70 --gust-frac 0.3"

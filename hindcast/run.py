@@ -47,6 +47,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
+from scipy import ndimage
 from shapely.geometry import shape
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -216,6 +217,12 @@ def main(argv=None):
                    help="with --spotting: the mean spotting distance times this (eucalyptus bark goes far further than "
                         "ELMFIRE's template, which lands most embers within a few cells)")
     p.add_argument("--spotting-embers", type=int, default=1, help="with --spotting: embers per spotting event (max)")
+    p.add_argument("--active-edge", choices=["all", "hotspots", "oracle"], default="all",
+                   help="which edge of the start perimeter still burns: all of it (default); only near the satellite "
+                        "hotspots of the last --active-window-h hours (what a real-time system knows); or only where the "
+                        "fire grew to the next observed step (cheats: the bound of perfect knowledge). The rest of the "
+                        "edge is held: non-burnable, as a flank the crews put out")
+    p.add_argument("--active-window-h", type=float, default=12.0)
     p.add_argument("--wind-mult", type=float, default=1.0)
     p.add_argument("--barriers", type=Path)
     p.add_argument("--wet-lines", type=Path,
@@ -314,15 +321,20 @@ def main(argv=None):
     arrival = np.full((fire.rows, fire.cols), np.nan)
     burned = fire.perimeter(args.start_step)
     arrival[burned] = 0.0
+    held = np.zeros_like(burned)
+    if args.active_edge != "all":
+        held, how = held_edge(fire, args, burned, ev, feats)
+        notes.append(how)
     runtime, wall = 0.0, time.time()
     for t0, t1, times in runs.stretches(scenario):
         f = fuel.copy()
         for from_min, m in bars:
             if from_min <= t0:
                 f[m] = fires.NONBURNABLE
+        f[held] = fires.NONBURNABLE
         req = {"grid": fire.grid, "duration_min": t1 - t0,
                "ignitions": [{"x": x, "y": y, "t_min": t - t0} for x, y, t in foci if t0 <= t < t1],
-               "burned": burned.astype(np.uint8).tolist(),
+               "burned": (burned & ~held).astype(np.uint8).tolist(),
                "weather": [{**{k: v for k, v in w.items() if k != "temp_c"}, "t_min": w["t_min"] - t0}
                            for w in wet(weather_at(fire, start, times, args), wet_lines, args.wet_tau)],
                "layers": {"fuel": f.tolist(), **base}, **extra}
@@ -365,6 +377,51 @@ def main(argv=None):
           + f" | Sørensen último passo {stats['sorensen_last_step']}, oficial {stats.get('sorensen_official')}, fora "
             f"{stats.get('outside_official_ha')} ha | satélite {sat.get('mean_reached')} | {'; '.join(notes)}")
     return result
+
+
+def held_edge(fire, args, p0: np.ndarray, ev: dict, feats: list) -> tuple[np.ndarray, str]:
+    """The edge cells of the start perimeter that no longer burn (--active-edge), and a note. The edge is every cell of
+    p0 with a neighbour outside it (8 around). Active: within reach of a hotspot (VIIRS 375 m, MODIS 1 km: the larger of
+    500 m and the pixel, plus a cell) seen in the last --active-window-h hours before the start, outside the scars; or,
+    with "oracle", within 2 cells of the observed growth to the next step. With no hotspot in the window the whole edge
+    stays active (nothing is known)."""
+    edge = p0 & ~ndimage.binary_erosion(p0, structure=np.ones((3, 3), bool))
+    active = np.zeros_like(p0)
+    if args.active_edge == "oracle":
+        if args.start_step + 1 >= len(fire.steps):
+            return np.zeros_like(p0), "borda ativa: sem passo seguinte, toda"
+        grow = fire.perimeter(args.start_step + 1) & ~p0
+        active = edge & ndimage.binary_dilation(grow, iterations=2)
+        how = "borda ativa: onde o fogo observado cresceu (oráculo)"
+    else:
+        t_start = fire.steps[args.start_step]["hours"] * 60
+        off = alert_offset_min(fire, ev)
+        rows, cols = np.indices(p0.shape)
+        n = 0
+        for f in feats:
+            q = f["properties"]
+            if q["kind"] != "hotspot" or q.get("in_scar"):
+                continue
+            t = q["hours_after_alert"] * 60 + off
+            if not t_start - args.active_window_h * 60 <= t <= t_start:
+                continue
+            x, y = fire.point(*f["geometry"]["coordinates"])
+            c = (x - fire.grid["xmin"]) / fire.cellsize
+            r = (fire.grid["ymin"] + fire.rows * fire.cellsize - y) / fire.cellsize
+            rad = max(500.0, q.get("pixel_m", 375)) / fire.cellsize + 1
+            r0, r1 = int(max(r - rad, 0)), int(min(r + rad + 1, fire.rows))
+            c0, c1 = int(max(c - rad, 0)), int(min(c + rad + 1, fire.cols))
+            if r0 >= r1 or c0 >= c1:
+                continue
+            near = (rows[r0:r1, c0:c1] - r) ** 2 + (cols[r0:r1, c0:c1] - c) ** 2 <= rad * rad
+            active[r0:r1, c0:c1] |= near
+            n += 1
+        if not (edge & active).any():
+            return np.zeros_like(p0), f"borda ativa: sem focos perto do perímetro nas {args.active_window_h:g} h antes, toda"
+        active &= edge
+        how = f"borda ativa: {n} focos de satélite nas {args.active_window_h:g} h antes"
+    held = edge & ~active
+    return held, f"{how}; {held.sum() / max(1, edge.sum()):.0%} da borda segura"
 
 
 def canopy_fill(fire, c: dict, idx: np.ndarray, feats: list) -> tuple[dict, float]:

@@ -155,6 +155,8 @@ def main():
         lines.append("|---|---|---|---|---|---|")
         seen_rule = {}
         for cfg, by_fire in sorted(steps.items()):
+            if cfg.startswith("shape_"):
+                continue
             ws = [w for v in by_fire.values() for w in v if "model" in w]
             for f, v in by_fire.items():
                 for w in v:
@@ -192,6 +194,47 @@ def main():
                 row.append(f"{np.median([w['model']['ratio'] for w in ws]):.2f} · {np.median([w['model']['sorensen_growth'] for w in ws]):.2f}" if ws else "")
             row.append(f"{np.median([w['ratio'] for w in rr]):.2f} · {np.median([w['sorensen_growth'] for w in rr]):.2f}" if rr else "")
             lines.append("| " + " | ".join(row) + " |")
+
+        # paired: the model against the references on the same windows, and its shape at equal area
+        refs = {r: steps.get(r, {}) for r in ("ref_persist", "ref_area")}
+        lines += ["", "Lado a lado, nas mesmas janelas (mediana do Sørensen do crescimento; entre parênteses, a parte das janelas "
+                  "em que o modelo ganha). A persistência é o crescimento da janela anterior à mesma taxa, numa elipse a "
+                  "favor do vento; a elipse com a área certa sabe a área observada. **Forma** compara o modelo e a elipse "
+                  "cortados à mesma área (`references.py --shape-of`): só conta para onde o fogo vai, não a velocidade.", "",
+                  "| Configuração | Janelas | Modelo | Regra 10 % | Persistência | Elipse com a área certa | Forma: modelo · elipse (janelas) |",
+                  "|---|---|---|---|---|---|---|"]
+        for cfg in [c for c in MAIN + ["K3c", "K5c", "K3g", "K5g"] if c in steps]:
+            row, model_s, r10_s = [], [], []
+            pers, area = [], []
+            for f, v in steps[cfg].items():
+                pk = {w["k"]: w for w in refs["ref_persist"].get(f, [])}
+                ak = {w["k"]: w for w in refs["ref_area"].get(f, [])}
+                for w in v:
+                    if "model" not in w:
+                        continue
+                    model_s.append(w["model"]["sorensen_growth"])
+                    r10_s.append(w["rule10"]["sorensen_growth"] if "rule10" in w else np.nan)
+                    pers.append((w["model"]["sorensen_growth"], pk[w["k"]]["model"]["sorensen_growth"]) if w["k"] in pk else None)
+                    area.append((w["model"]["sorensen_growth"], ak[w["k"]]["model"]["sorensen_growth"]) if w["k"] in ak else None)
+            if not model_s:
+                continue
+            pp = [x for x in pers if x]
+            aa = [x for x in area if x]
+            win = lambda xs: f" ({np.mean([m > r for m, r in xs]):.0%})" if xs else ""   # noqa: E731
+            r10 = [(m, r) for m, r in zip(model_s, r10_s) if r == r]
+            sh = [w for f in steps.get(f"shape_{cfg}", {}).values() for w in f]
+            shape = (f"{np.median([w['model']['sorensen_growth'] for w in sh]):.2f} · "
+                     f"{np.median([w['ellipse']['sorensen_growth'] for w in sh]):.2f} ({len(sh)}; modelo ganha "
+                     f"{np.mean([w['model']['sorensen_growth'] > w['ellipse']['sorensen_growth'] for w in sh]):.0%})") if sh else ""
+            lines.append(f"| {cfg} | {len(model_s)} | {np.median(model_s):.2f} | "
+                         f"{np.median([r for _, r in r10]):.2f}{win(r10)} | "
+                         + (f"{np.median([r for _, r in pp]):.2f}{win(pp)} (n={len(pp)})" if pp else "") + " | "
+                         + (f"{np.median([r for _, r in aa]):.2f}{win(aa)}" if aa else "") + f" | {shape} |")
+            result["steps"].setdefault(cfg, {})["paired"] = {
+                "model_vs_persist_win": float(np.mean([m > r for m, r in pp])) if pp else None,
+                "model_vs_area_ellipse_win": float(np.mean([m > r for m, r in aa])) if aa else None,
+                "shape_model_median": float(np.median([w['model']['sorensen_growth'] for w in sh])) if sh else None,
+                "shape_ellipse_median": float(np.median([w['ellipse']['sorensen_growth'] for w in sh])) if sh else None}
 
         # 3. drivers of the error
         lines += ["", "## 3. Porque falha: o erro do ROS de cabeça contra as condições", "",

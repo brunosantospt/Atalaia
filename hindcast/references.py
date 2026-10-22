@@ -15,6 +15,12 @@ for the window's mean wind) and stop it at a given area, so they only differ fro
 
 The windows (k, length, mean wind) are those of an existing step run (--windows-from, K3 by default), so the scores
 pair window by window with the model's. Same record as steps.py, with the reference's scores under "model".
+
+--shape-of K3 K5 ... adds shape_<cfg>.json: the model's shape against the ellipse's at the same area. In each window
+both are cut to the same number of cells n = min(the model's growth, the observed growth), the first n cells each one
+reaches, and scored against the observed growth: "model" and "ellipse", same n, so only where the fire goes differs,
+not how fast. If the model wins here and loses on area, a real-time speed correction (satellite hotspots) is what it
+needs; if it loses here too, fuel, terrain and wind add nothing over a downwind ellipse.
 """
 
 import argparse
@@ -25,8 +31,14 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import HERE, fire_dir, fires  # noqa: E402
+from common import CACHE, HERE, fire_dir, fires  # noqa: E402
 from steps import rule10, scores  # noqa: E402
+
+
+def first_cells(t: np.ndarray, p0: np.ndarray, cells: int) -> np.ndarray:
+    """The `cells` cells outside p0 that t reaches first (ties at the cut kept), plus p0."""
+    t = np.where(np.isfinite(t), t, np.inf)
+    return grown_to(t, p0, cells)
 
 
 def grown_to(t: np.ndarray, p0: np.ndarray, cells: int) -> np.ndarray:
@@ -42,18 +54,33 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("fires", nargs="*")
     p.add_argument("--windows-from", default="K3")
+    p.add_argument("--shape-of", nargs="*", default=[], help="configurations whose shape to compare at equal area")
     args = p.parse_args(argv)
     ids = args.fires or sorted(f.parent.parent.name for f in (HERE / "fires").glob(f"*/steps/{args.windows_from}.json"))
     for fid in ids:
         fire = fires.Fire(fid)
         src = json.loads((fire_dir(fid) / "steps" / f"{args.windows_from}.json").read_text())
         out = {"ref_persist": [], "ref_area": []}
+        shapes = {c: [] for c in args.shape_of}
+        runs = {c: {w["k"]: w for w in json.loads(f.read_text())["windows"] if "model" in w}
+                for c in args.shape_of if (f := fire_dir(fid) / "steps" / f"{c}.json").exists()}
         for w in src["windows"]:
             k, minutes = w["k"], w["minutes"]
             p0, p1 = fire.perimeter(k), fire.perimeter(k + 1)
             t = rule10(fire, p0, w["wind_to_deg"], w["wind_kmh"])
             base = {key: v for key, v in w.items() if key not in ("model", "rule10")}
             sim = grown_to(t, p0, int((p1 & ~p0).sum()))
+            for c, ws in runs.items():
+                if k not in ws or not (CACHE / fid / f"st_{c}_{k}.npy").exists():
+                    continue
+                arr = np.load(CACHE / fid / f"st_{c}_{k}.npy")
+                reached = np.isfinite(arr) & (arr <= minutes) & ~p0
+                n = min(int(reached.sum()), int((p1 & ~p0).sum()))
+                if n == 0:
+                    continue
+                shapes[c].append({**base, "cells": n,
+                                  "model": scores(fire, p0, p1, first_cells(np.where(reached, arr, np.inf), p0, n), minutes),
+                                  "ellipse": scores(fire, p0, p1, grown_to(t, p0, n), minutes)})
             out["ref_area"].append({**base, "model": scores(fire, p0, p1, sim, minutes)})
             if k >= 1:
                 prev_cells = int((p0 & ~fire.perimeter(k - 1)).sum())
@@ -62,6 +89,13 @@ def main(argv=None):
                 rec = {**base, "model": scores(fire, p0, p1, grown_to(t, p0, target), minutes),
                        "persist_rate_ha_h": round(prev_cells * fire.cellsize ** 2 / 1e4 / (prev_min / 60), 1)}
                 out["ref_persist"].append(rec)
+        for c, ws in shapes.items():
+            if c in runs:
+                (fire_dir(fid) / "steps" / f"shape_{c}.json").write_text(json.dumps(
+                    {"fire": fid, "name": f"shape_{c}", "of": c, "windows": ws}, indent=1, ensure_ascii=False))
+                if ws:
+                    print(f"  shape {c}: model S {np.median([w['model']['sorensen_growth'] for w in ws]):.2f} vs ellipse "
+                          f"{np.median([w['ellipse']['sorensen_growth'] for w in ws]):.2f} at equal area ({len(ws)} windows)")
         for name, ws in out.items():
             (fire_dir(fid) / "steps" / f"{name}.json").write_text(json.dumps(
                 {"fire": fid, "name": name, "windows_from": args.windows_from, "windows": ws}, indent=1, ensure_ascii=False))
