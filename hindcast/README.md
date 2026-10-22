@@ -25,6 +25,12 @@ Experimenta-se aqui. Fora desta pasta só muda o que ajuda nos dois incêndios: 
 
 ## Em resumo (para quem chega agora, pessoa ou agente)
 
+> **22/10/2026: teste em nove incêndios** (ramo `hindcast-multifire`). O ELMFIRE foi corrido em sete incêndios novos do PT-FireSprd (2015–2021), além dos dois do Minho. Houve corridas livres e um teste passo a passo, que recomeça em cada perímetro observado como faria um sistema em tempo real. Ler primeiro:
+> - **[`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md):** o que falha, porquê, que entradas em tempo real ajudam, e as recomendações;
+> - **[`MULTIFIRE.md`](MULTIFIRE.md):** os números, gerados pelo `multifire_report.py`.
+>
+> O resto desta secção é o estado de 21/10, só com Vieira e Cabeceiras.
+
 - **O que é:** um banco de ensaio do ELMFIRE contra incêndios reais. Cada mudança nos dados de entrada é um passo, corrido com as mesmas regras da API e pontuado da mesma maneira. Assim vê-se o que ajuda e o que não ajuda.
 - **Estado em 21/10/2026:**
   - **Vieira do Minho:** completo. São 17 configurações e 2 referências ingénuas, com 10 sementes nas que usam projeções (`ladder.sh` refaz tudo).
@@ -65,7 +71,15 @@ Experimenta-se aqui. Fora desta pasta só muda o que ajuda nos dois incêndios: 
 | `table.py` | As corridas de um incêndio numa tabela Markdown |
 | `ladder.sh` | Refaz todas as corridas da tabela de resultados de um incêndio (10 sementes), as grelhas e a tabela (~10 min em Vieira com `JOBS=2`, ~20 min em Cabeceiras com `JOBS=1`) |
 | `test.sh` | Teste ponta a ponta em Vieira (~20 s) |
-| `common.py` | Pacote do incêndio (via `api/fires.py` e `api/runs.py`), chegada observada interpolada, pontuação |
+| `common.py` | Pacote do incêndio (via `api/fires.py` e `api/runs.py`), chegada observada interpolada, pontuação (`score(..., until_min)` limita os passos e os satélites a uma hora) |
+| `steps.py` | Teste passo a passo: recomeça em cada perímetro observado e prevê o seguinte, com a regra dos 10 % ao lado → `fires/<id>/steps/<cfg>.json`. Com `--assimilate-from <cfg>`, corrige o fator de cada janela com o erro da anterior |
+| `references.py` | Referências sem modelo para as janelas (persistência; elipse com a área certa; a mesma borda ativa com `--active-edge`) e a forma do modelo à mesma área (`--shape-of`) → `fires/<id>/steps/ref_*.json`, `shape_*.json` |
+| `calibrate.py` | Fator de propagação por classe de combustível, ajustado nas janelas dos outros incêndios (deixando um de fora) → `fires/<id>/adj_lofo_<cfg>.json`, `fires/adj_all_<cfg>.json` |
+| `ensemble.py` | Probabilidade de arder por janela a partir de várias configurações, com Brier, Sørensen e cobertura → `hindcast/ensemble.json` |
+| `canopy_open.py` | Copas a partir do mapa global aberto da Meta/WRI (Tolan et al. 2024), para incêndios sem LiDAR → `fires/<id>/canopy_meta.npz` |
+| `multifire_build.sh` | Pacotes dos incêndios novos (os `scripts/build_*.py` do `main`, os registos, as cicatrizes) |
+| `multifire_runs.sh` | As configurações do teste (`CFG`) nos nove incêndios, livres ou passo a passo, `N` ao mesmo tempo |
+| `multifire_report.py` | O relatório → `MULTIFIRE.md`, `multifire.json` |
 | `fuels.py` | Modelos de combustível portugueses e a tradução da COS 2015 |
 | `setup.sh`, `requirements.txt` | O ambiente `hindcast/.venv` |
 | `fires/<id>/` | O que as ferramentas escrevem por incêndio (versionado); ver "Formatos dos ficheiros" |
@@ -103,6 +117,15 @@ hindcast/test.sh                                    # ponta a ponta em Vieira, ~
   - `--barriers`: as linhas;
   - `--start-step`, `--duration-min`: o início e a duração. Por omissão, do passo 0 ao último passo observado;
   - `--no-preview`: não escreve o `preview.png` (o `ladder.sh` só o faz na semente 1).
+  - **Desde 22/10 (teste em nove incêndios):**
+    - `--canopy-source lidar|meta`: `canopy.npz` (LiDAR) ou `canopy_meta.npz` (`canopy_open.py`);
+    - `--gust-frac f`: o vento efetivo vai da média (0) à rajada (1);
+    - `--wind-rotate graus`: roda a direção do vento;
+    - `--adj-class herb=..,shrub=..,euc=..,forest=..`: um fator por classe de combustível (`calibrate.py`);
+    - `--spotting-dynamic`: a probabilidade de ignição das faúlhas segue a humidade de 1 h e a temperatura (Schroeder 1969);
+    - `--spotting-dist-mult`, `--spotting-embers`: projeções mais longas e com mais faúlhas;
+    - `--wet-lines FICHEIRO`, `--wet-tau`: linhas molhadas que secam (ver `NOVE_INCENDIOS.md`);
+    - `--active-edge hotspots|oracle`, `--active-window-h`: só uma parte da borda do perímetro de partida continua a arder, a perto dos focos de satélite recentes ou, como limite, a que cresceu de facto. O resto fica seguro.
 - **A corrida igual à da API:** `--scars`, com as outras opções por omissão (o passo 3), dá os mesmos dados de entrada que o `POST /api/run` desde 22/10/2026: o mesmo pedido ao motor, chave a chave, e a mesma grade de chegada nos dois incêndios. A API de antes era `--fuels sb --dead fixed --no-canopy` (o passo 0).
 - **`ladder.sh`:** `SEEDS` (10 por omissão) é o número de sementes das corridas com projeções; `JOBS` (1 por omissão) quantas correm ao mesmo tempo. Cada uma é um contentor do ELMFIRE de até ~1,7 GiB, e `JOBS` vezes isso tem de caber na memória do Docker, com o que mais lá estiver a correr. Se não couber, o Docker mata os contentores (código 137) e o `run.py` diz isso. Correr em paralelo dá exatamente o mesmo que em série (testado célula a célula).
 - **Copas:** `canopy.py <id> --dgt <pasta>`, com os tiles MDS-2m e MDT-2m do LiDAR da DGT. Os tiles não vão para o repositório. O `dgt_tiles.py` descarrega-os:
