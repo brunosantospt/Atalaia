@@ -29,7 +29,7 @@ import { stockSource, type Inventory } from './inventory'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
 import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
-import { fmtRingKm, inRing, outsideRing } from './stationRings'
+import { fmtRingKm, beyondRing, blockedByRing, approachIntercept } from './stationRings'
 import { findSafeRoute } from './routing'
 import { findAirBase, airBasesForUnit } from './airBases'
 import {
@@ -452,6 +452,7 @@ export class Editor {
     this.refs.reset.addEventListener('click', () => {
       if (!this.loaded) return
       this.decisions[0] = clone(this.loaded.example)
+      for (const a of this.decisions[0].assignments) a.dispatchMin = this.dispatchMinute()
       this.ilsFor = '' // B is searched again even when A already was the example
       this.commit()
     })
@@ -522,6 +523,7 @@ export class Editor {
       if (this.refs.hourText) {
         this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
       }
+      this.updateEtas()
       this.renderReport()
       this.draw()
     }
@@ -533,6 +535,7 @@ export class Editor {
     hour.value = String(minutes)
     const start = this.loaded?.fire.start
     this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
+    this.updateEtas()
     this.renderReport()
     this.draw()
   }
@@ -708,9 +711,9 @@ export class Editor {
     const assignments: Assignment[] = []
     const dropped = new Set<string>()
     for (const a of d.assignments) {
-      // Only the stations in play, and each one's means inside its ring (aircraft are exempt).
+      // Only the stations in play, and each one's means outside its interception boundary (aircraft are exempt).
       const ground = !isAerial(this.sup.units[a.unit])
-      if (ground && (!stations.some((s) => s.id === a.from) || outsideRing(scenario.rings, scenario.ignition, this.sup, d, a.unit, a.from, a.target))) {
+      if (ground && (!stations.some((s) => s.id === a.from) || blockedByRing(scenario.rings, scenario.ignition, this.sup, d, a.unit, a.from, a.target))) {
         dropped.add(a.target)
         continue
       }
@@ -1009,14 +1012,26 @@ export class Editor {
     }
   }
 
-  /** Whether a ground unit of the chosen station may work at p (inside its ring); otherwise says so at p and in the hint. */
+  /** New orders leave at the current fire clock, never before detection. */
+  private dispatchMinute(): number {
+    return Math.max(this.loaded?.scenario.dispatchMin ?? 0, this.minutes)
+  }
+
+  /** Ground units deploy outside the interception ring and must beat the fire along their approach. */
   private checkRing(p: LonLat): boolean {
     if (!this.loaded) return true
     const { scenario, stations } = this.loaded
     const from = this.from(stations)
-    if (inRing(scenario.rings, scenario.ignition, from, p)) return true
     const station = stations.find((s) => s.id === from)
-    const text = `Fora do alcance do ${station?.short ?? from} (máx. ${fmtRingKm(scenario.rings?.[from] ?? 0)})`
+    const d = this.decisions[this.active]
+    const ecin = !d.assignments.some((a) => a.from === from && !isAerial(this.sup.units[a.unit]))
+    const meeting = station && scenario.fireArrival
+      ? approachIntercept(scenario.grid, scenario.fireArrival, station, p, this.sup, this.sup.units[this.unit], this.dispatchMinute(), ecin)
+      : undefined
+    if (beyondRing(scenario.rings, scenario.ignition, from, p) && !meeting) return true
+    const text = meeting
+      ? `O fogo interceta os meios de ${station?.short ?? from} no percurso (T+${Math.round(meeting.arriveMin)} min). Escolhe um ponto antes desse encontro.`
+      : `Dentro da zona de encontro de ${station?.short ?? from}: coloca os meios por fora do anel (${fmtRingKm(scenario.rings?.[from] ?? 0)} da ignição).`
     if (this.dangerTimer !== undefined) window.clearTimeout(this.dangerTimer)
     this.refs.hint.classList.add('danger')
     this.refs.hint.textContent = text
@@ -1136,6 +1151,7 @@ export class Editor {
       from: fromId,
       target: id,
       task: aerial ? 'direct' : this.task,
+      dispatchMin: this.dispatchMinute(),
     })
     this.refs.hint.classList.remove('danger')
     this.refs.hint.textContent = aerial
@@ -1163,7 +1179,7 @@ export class Editor {
     const id = nextId(d.lines, 'l')
     d.lines[id] = this.drawing
     const task = this.tool
-    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task })
+    d.assignments.push({ unit: this.unit, count, from: this.from(this.loaded.stations), target: id, task, dispatchMin: this.dispatchMinute() })
     const lenM = lineLengthM(this.drawing)
     this.drawing = []
     this.setTool(null)
@@ -1597,6 +1613,7 @@ export class Editor {
 
   private row(a: Assignment, k: number): HTMLElement {
     const li = document.createElement('li')
+    li.className = 'assignment'
     const unit = this.sup.units[a.unit]
     const d = this.decisions[this.active]
     const target = d.points[a.target] ?? d.lines[a.target]?.[0]
@@ -1632,7 +1649,11 @@ export class Editor {
     li.querySelector('.n')!.textContent = `×${a.count}`
     li.querySelector('.task')!.textContent = TASK_NAME[a.task]
     li.querySelector('.from')!.textContent = fromText
-    li.querySelector('em')!.textContent = eta === undefined ? '' : `chega T+${Math.round(eta)} min`
+    const etaLabel = li.querySelector('em')!
+    if (eta !== undefined) {
+      etaLabel.dataset.eta = String(eta)
+      etaLabel.textContent = this.etaText(eta)
+    }
     const [info, x] = li.querySelectorAll('button')
     const what = this.whatText(a)
     info.addEventListener('mouseenter', () => this.showTip(info, what))
@@ -1641,6 +1662,17 @@ export class Editor {
     info.addEventListener('blur', () => this.hideTip())
     x.addEventListener('click', () => this.remove(k))
     return li
+  }
+
+  private etaText(eta: number): string {
+    const remaining = Math.ceil(eta - this.minutes - 1e-6)
+    return `${remaining > 0 ? 'chega' : 'no local desde'} ${this.holdsFrom(eta)}${remaining > 0 ? ` · faltam ${remaining} min` : ''}`
+  }
+
+  private updateEtas() {
+    this.refs.list.querySelectorAll<HTMLElement>('[data-eta]').forEach((el) => {
+      el.textContent = this.etaText(Number(el.dataset.eta))
+    })
   }
 
   /** The balloon just outside the drawer, level with an (i): what the assignment can do, kept out of

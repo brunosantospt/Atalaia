@@ -104,7 +104,9 @@ export interface Scenario {
   suppression: Suppression
   durationMin: number
   fwiSeries?: FWIHourly[]
-  rings?: Record<string, number> // by station id: how far from the ignition its ground means may be put (stationRings.ts)
+  dispatchMin?: number // T+ when the fire is detected and the initial call can be made
+  fireArrival?: Float32Array // free ELMFIRE forecast for approach checks
+  rings?: Record<string, number> // inner interception boundary by station id (stationRings.ts)
 }
 
 export function simulate(scenario: Scenario, decision: Decision | null): Run {

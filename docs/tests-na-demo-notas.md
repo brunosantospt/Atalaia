@@ -52,8 +52,8 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
   - O crescimento é limitado pela água, pelos reabastecimentos e por um turno de 12 h.
   - Há no máximo 6 `from_min` por decisão.
 - **Só os 3 quartéis mais próximos:** BV Guimarães, Vizela e Fafe.
-  - Cada um tem um **anel de alcance centrado na ignição**: até onde o fogo chegou quando os meios chegam, mais o alcance de trabalho. Os raios são calculados a partir da previsão e atualizados após o incidente de vento.
-  - Fora do anel, a colocação é recusada, e o ILS também respeita os anéis.
+  - Cada um tem um **anel de interceção centrado na ignição**: a distância até ao primeiro encontro entre o fogo e os meios no percurso do quartel para a ignição, comparando o minuto de chegada do fogo com deteção + saída + viagem até cada ponto. Não se soma o alcance de mangueira. Os raios são atualizados com a previsão após o incidente de vento.
+  - **Colocar por fora do anel**: deixou de existir um limite máximo de distância à ignição. Pontos interiores são recusados; o percurso até ao destino também é verificado para não atravessar o fogo. O ILS usa as mesmas regras de interceção.
 - **Colocação:** um botão por meio, e cada meio coloca-se com um clique no mapa. Saíram "+ colocar meio" e "clicar no mapa".
 - **Rotas:** a azul-escuro.
 - **Início vazio:** os cenários começam sem meios. "Repor exemplo" continua disponível.
@@ -86,7 +86,7 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 ## A verificar no browser
 
 1. Na abertura (T+10, T+30, Previsão), o fogo aparece desde T+0.
-2. Colocar meios só dentro dos anéis acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
+2. Colocar meios por fora dos anéis, com chegada antes do fogo no percurso, acende o botão. O véu de carregamento bloqueia tudo durante a corrida.
 3. Às 12:30 aparece "Realocar meios". Não se avança sem simular, e depois o split mostra o resultado com o vento novo.
 4. As wet lines crescem ao longo da frente. As rotas aparecem a azul-escuro.
 5. A luz e as coordenadas ficam na mira.
@@ -94,7 +94,7 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 ## Limitações conhecidas
 
 - **Referência vs API depois das 6 h:** o handoff relata grande variação entre as corridas de 24 h com projeções; essa comparação longa não foi repetida nesta recuperação. O teste atual confirmou apenas a tolerância às 6 h (−5,85 %).
-- **Anéis e mudança de vento:** os meios já colocados não são retirados se os anéis encolherem depois do vento.
+- **Anéis e mudança de vento:** os meios já colocados não são retirados automaticamente se o vento mudar a zona de interceção.
 
 ## Merge do hindcast step 3 e recuperação do push
 
@@ -103,6 +103,15 @@ Na primeira vez, abrir a Penha com a API ligada. A previsão sem meios (24 h) fi
 - A meteo sem rotação continua disponível e dá uma chave de cache diferente da meteo com rotação.
 - `api/test.sh` verifica o índice público real e usa os incêndios históricos como fixtures isoladas; já não depende de estes aparecerem na seleção da demo. Inclui regressões dos valores da Penha após o merge.
 - O gerador da Penha passa a usar diretamente `engines/elmfire/run.sh`. Foi removido o overlay duplicado, que ficou incompatível depois de o adapter principal incorporar combustíveis portugueses e projeções; a entrada antiga `scripts/elmfire_pt/run.sh` fica como encaminhamento.
-- ILS, 2000 planos, semente 1: Vieira A 128,9 ha / B 88,3 ha, ambos 0 lugares; Cabeceiras A 471,5 ha / B 234,6 ha, 5 / 1 lugares. Os valores batem com `web/scripts/ils-reference.json`. São resultados do modelo rápido usado na pesquisa, não do ELMFIRE.
+- ILS, 2000 planos, semente 1: Vieira A 128,9 ha / B 105,3 ha, ambos 0 lugares; Cabeceiras A 477,5 ha / B 158,3 ha, 5 / 1 lugares. Os valores batem com `web/scripts/ils-reference.json`. São resultados do modelo rápido usado na pesquisa, não do ELMFIRE.
 - SimFire não está instalado neste ambiente; as corridas reais da regressão API usaram ELMFIRE.
 - As edições de `pitch/` da outra sessão ficam fora deste ramo e do PR.
+
+## Interceção e ETA ao colocar meios
+
+- O anel já não representa onde o fogo estará depois da viagem completa à ignição. Compara a propagação com a viagem parcial até cada ponto da aproximação e marca o primeiro encontro, com resolução de meia célula (15 m).
+- A viagem usa a estimativa do modelo: distância quartel–destino × fator rodoviário / velocidade do meio, mais o tempo de saída. O anel de cada quartel toma como referência o primeiro VFCI; a verificação de colocação usa o meio escolhido e o instante da ordem.
+- Cada meio colocado guarda `dispatchMin`, o minuto atual da ordem (nunca antes da deteção). A ETA é esse minuto + saída + viagem ao ponto ou ao primeiro vértice da linha. Os meios aéreos usam a base e a velocidade de voo.
+- A lista mostra a hora prevista, T+ e os minutos que faltam; passa a indicar chegada prevista cumprida quando o relógio a alcança. Avançar o relógio não desloca a ETA de meios já colocados.
+- As linhas enviadas ao ELMFIRE e a procura do B usam o mesmo relógio absoluto. O ILS conserva o instante de saída das unidades ao mudar os seus destinos; ordens de momentos diferentes não são agrupadas como se fossem a mesma.
+- `npm run deployment:check` cobre a interceção contra uma solução analítica, colocação por fora/por dentro, destino por trás do fogo, saída mais tarde, meios terrestres/aéreos/linhas e ativação das barreiras. `npm run build` e `npm run ils:check -- --update` passam; B continua melhor que A nas duas referências.

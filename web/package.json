@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "ils:check": "node scripts/run.mjs scripts/ils-check.ts"
+    "ils:check": "node scripts/run.mjs scripts/ils-check.ts",
+    "deployment:check": "node scripts/run.mjs scripts/deployment-check.ts"
   },
   "dependencies": {
     "cesium": "^1.146.0"

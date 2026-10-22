@@ -583,3 +583,7 @@
 .hud .editor .simulate .simulate-btn:disabled {
   opacity: 0.45;
 }
+
+/* Keep the arrival clock and countdown readable below the origin on narrow drawers. */
+.hud .editor li.assignment .meta { flex-wrap: wrap; }
+.hud .editor li.assignment .meta em[data-eta] { flex-basis: 100%; }

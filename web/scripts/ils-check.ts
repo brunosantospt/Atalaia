@@ -28,7 +28,7 @@ import { loadGrid } from '../src/grid'
 import { loadInventory, type Inventory } from '../src/inventory'
 import { better, groundOf, optimize, type Options, type Score } from '../src/optimize'
 import { buildContext, loadOsm, snapToRoad, type Context } from '../src/osm'
-import { computeRings, outsideRing, radiiOf, stationsInPlay } from '../src/stationRings'
+import { computeRings, blockedByRing, radiiOf, stationsInPlay } from '../src/stationRings'
 import { isAerial, loadSuppression, type Assignment, type Decision, type Suppression, type UnitId } from '../src/suppression'
 
 const DECISION_MIN = 360 // main.ts: the 6 h of the report
@@ -88,8 +88,8 @@ function editorA(example: Decision, context: Context, inventory: Inventory | nul
   const assignments: Assignment[] = []
   const dropped = new Set<string>()
   for (const x of example.assignments) {
-    // Editor.fit: only the stations in play, each one's ground means inside its ring.
-    if (!isAerial(sup.units[x.unit]) && (!scenario.stations.some((s) => s.id === x.from) || outsideRing(scenario.rings, scenario.ignition, sup, { ...example, points }, x.unit, x.from, x.target))) {
+    // Editor.fit: only the stations in play, each one's ground means outside its interception boundary.
+    if (!isAerial(sup.units[x.unit]) && (!scenario.stations.some((s) => s.id === x.from) || blockedByRing(scenario.rings, scenario.ignition, sup, { ...example, points }, x.unit, x.from, x.target))) {
       dropped.add(x.target)
       continue
     }
@@ -162,9 +162,10 @@ for (const ref of reference.fires) {
     suppression,
     durationMin: DECISION_MIN,
     fwiSeries: computeFWISeries(weather),
+    dispatchMin: detection.droneMin,
   }
   // The rings from the fast model's free run (the app uses the ELMFIRE one).
-  const rings = computeRings(grid, freeArrival(scenario), fire.ignition, near, suppression, detection, inventory)
+  const rings = computeRings(grid, freeArrival(scenario), fire.ignition, near, suppression, detection)
   scenario.rings = radiiOf(rings)
   console.log(`  rings: ${rings.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} ${Math.round(r.radiusM)} m`).join(' · ')}`)
   const context = buildContext(grid, osm)

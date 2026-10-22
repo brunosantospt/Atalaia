@@ -25,7 +25,7 @@ import { bearingDeg, destination, distanceM, lerpLonLat, toPTTM06, type LonLat }
 import { cellHa, cellOf, lonLatAt, type Grid } from './grid'
 import type { Context } from './osm'
 import { wetLines, stripCells } from './wetLine'
-import { inRing } from './stationRings'
+import { beyondRing, approachIntercept } from './stationRings'
 import { arrivalMin, isAerial, type Assignment, type Decision, type Task, type UnitId } from './suppression'
 
 /** What the search needs of the OSM context: where units can stand and the places to keep the fire from. */
@@ -122,6 +122,7 @@ interface Unit {
   water: boolean // a ground unit with a tank, that a shuttle serves
   home: number // where A has it: a spot, or line l as -2 - l
   eta: Float32Array // minutes from the call to each spot, the station's crew out as volunteers
+  dispatchMin: number // absolute T+ of this assignment
   etaIgnition: number
 }
 
@@ -198,11 +199,12 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const onLine = x.task === 'line' || x.task === 'drops'
     const home = onLine ? (x.task === can && x.target in a.lines ? -2 - lineIds.indexOf(x.target) : undefined) : homeOf.get(x.target)
     if (home === undefined) return void fixed.push({ x, slot })
-    const etaIgnition = arrivalMin(sup, spec, kmFrom(x.unit, x.from)(scenario.ignition), ecin)
+    const dispatchMin = x.dispatchMin ?? scenario.dispatchMin ?? 0
+    const etaIgnition = dispatchMin + arrivalMin(sup, spec, kmFrom(x.unit, x.from)(scenario.ignition), ecin)
     const task = onLine ? 'direct' : x.task
     const lines = task !== 'shuttle' && kinds.some((k) => can && k.has(can)) ? can : undefined
     for (let c = 0; c < x.count; c++)
-      seeds.push({ unit: x.unit, from: x.from, task, onLine: lines, slot, ecin, aerial, water: !aerial && !!spec.waterL, home, etaIgnition })
+      seeds.push({ unit: x.unit, from: x.from, task, onLine: lines, slot, ecin, aerial, water: !aerial && !!spec.waterL, home, dispatchMin, etaIgnition })
   })
   const n = seeds.length
   const aRun = simulate(scenario, a)
@@ -235,14 +237,27 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     return { ...u, eta }
   })
 
+  // Cache approach checks: many ILS plans reuse the same unit and destination.
+  const approachCache = new Map<string, boolean>()
+  const safeApproach = (u: Unit, p: LonLat, ecin: boolean): boolean => {
+    if (u.aerial) return true
+    const key = `${u.unit}|${u.from}|${u.dispatchMin}|${ecin}|${p.lon}|${p.lat}`
+    const cached = approachCache.get(key)
+    if (cached !== undefined) return cached
+    const origin = scenario.stations.find((s) => s.id === u.from)
+    const safe = !!origin && !approachIntercept(grid, scenario.fireArrival ?? free, origin, p, sup, sup.units[u.unit], u.dispatchMin, ecin)
+    approachCache.set(key, safe)
+    return safe
+  }
+
   /** Whether unit k can be at spot s: on a road it reaches before the fire (an aircraft over the fire before it passes), or where A had it. */
   const open = (k: number, s: number, ecin = units[k].ecin): boolean => {
     const u = units[k]
     const p = spots[s]
     if (s === u.home) return true
     if (u.aerial ? !p.air : !p.road) return false
-    if (!u.aerial && !inRing(scenario.rings, scenario.ignition, u.from, p)) return false // beyond its station's ring
-    return at(free, s) > u.eta[s] - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
+    if (!u.aerial && !beyondRing(scenario.rings, scenario.ignition, u.from, p)) return false // inside its station's interception boundary
+    return at(free, s) > u.dispatchMin + u.eta[s] - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN) && safeApproach(u, p, ecin)
   }
   const isOpen = units.map((_, k) => Uint8Array.from(spots, (_, s) => (open(k, s) ? 1 : 0)))
   // Per unit, the spots it can take, the ones the fire reaches first in front.
@@ -316,9 +331,9 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     if (u.home === -2 - l && v === 0) return true
     const line = shapeAt(l, v)
     if (!line || !u.onLine || !(kinds[l].has(u.onLine) || u.home === -2 - l)) return false
-    if (!u.aerial && !line.every((p) => inRing(scenario.rings, scenario.ignition, u.from, p))) return false // every vertex inside the ring
+    if (!u.aerial && !line.every((p) => beyondRing(scenario.rings, scenario.ignition, u.from, p))) return false // every vertex outside the interception boundary
     const cell = cellOf(grid, line[0])
-    return (cell < 0 ? Infinity : free[cell]) > etaLine(k, l, v) - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN)
+    return (cell < 0 ? Infinity : free[cell]) > u.dispatchMin + etaLine(k, l, v) - (ecin ? ecinGain : 0) + (u.aerial ? 0 : SAFETY_MIN) && safeApproach(u, line[0], ecin)
   }
   const workedBy = (pos: Int32Array, l: number): boolean => {
     for (let k = 0; k < n; k++) if (pos[k] === -2 - l) return true
@@ -342,7 +357,7 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
     const line = d.lines[id]
     const cells = cellsAlong(grid, line)
     if (!slots.size) {
-      const t = Math.min(...d.assignments.filter((x) => x.target === id).map((x) => arrivalMin(sup, sup.units[x.unit], kmFrom(x.unit, x.from)(line[0]), false)))
+      const t = Math.min(...d.assignments.filter((x) => x.target === id).map((x) => (x.dispatchMin ?? scenario.dispatchMin ?? 0) + arrivalMin(sup, sup.units[x.unit], kmFrom(x.unit, x.from)(line[0]), false)))
       return cells.length > 0 && cells.filter((cell) => t <= free[cell]).length >= BUILT_SHARE * cells.length
     }
     return cells.filter((cell) => (ready.get(cell) ?? Infinity) <= free[cell]).length >= BUILT_SHARE * cells.length
@@ -361,13 +376,13 @@ export function optimize(scenario: Scenario, ground: Ground, a: Decision, option
       const u = units[k]
       if (s >= 0 && !names.has(s)) names.set(s, spots[s].id ?? freshIds[fresh++])
       const task = s >= 0 ? u.task : u.onLine!
-      const key = `${s}|${u.unit}|${u.from}|${task}`
+      const key = `${s}|${u.unit}|${u.from}|${task}|${u.dispatchMin}`
       const g = groups.get(key)
       if (g) {
         g.x.count++
         g.members.push(k)
         g.slot = Math.min(g.slot, u.slot)
-      } else groups.set(key, { x: { unit: u.unit, count: 1, from: u.from, target: s >= 0 ? names.get(s)! : lineIds[-2 - s], task }, slot: u.slot, members: [k], s })
+      } else groups.set(key, { x: { unit: u.unit, count: 1, from: u.from, target: s >= 0 ? names.get(s)! : lineIds[-2 - s], task, dispatchMin: u.dispatchMin }, slot: u.slot, members: [k], s })
     }
     const placed = [...groups.values()].sort((p, q) => p.slot - q.slot || q.x.count - p.x.count || p.s - q.s)
     const order = [...fixed.map((f) => ({ ...f, members: [] as number[] })), ...placed].sort((p, q) => p.slot - q.slot)

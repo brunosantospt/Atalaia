@@ -38,7 +38,7 @@ const GROW_MIN_SLICE = 30 // a unit's growth holds in slices of at least this mu
 const GROW_LEAD_MIN = 20 // a growing line is laid on the free run's isochrone this far ahead of the minute it holds
 const FIT_CELLS = [5, 8] // spread from the free run: least squares over the reached cells this many around (150 m; 240 m if too few)
 
-/** Minutes from the call until each assignment is at work, as the fast model counts them: the
+/** Minutes since ignition until each assignment is at work: its dispatch time plus turnout and the
  *  straight line × the road factor from its station (an aircraft flies from its air base), and the
  *  first ground assignment of each station is its ECIN, out in 2 min (a shuttle takes that place too). */
 export function arrivals(scenario: Scenario, decision: Decision): number[] {
@@ -52,7 +52,7 @@ export function arrivals(scenario: Scenario, decision: Decision): number[] {
     const target = decision.points[a.target] ?? decision.lines[a.target]?.[0]
     const origin = aerial ? findAirBase(a.from) : stations.find((s) => s.id === a.from)
     const km = origin && target ? distanceM(origin, target) / 1000 : sup.dispatch.airBaseKm
-    return arrivalMin(sup, unit, km, ecin)
+    return (a.dispatchMin ?? scenario.dispatchMin ?? 0) + arrivalMin(sup, unit, km, ecin)
   })
 }
 

@@ -51,6 +51,7 @@ export interface Assignment {
   from: string // station id (data.ts), or anything else for an air base
   target: string // id in Decision.points (direct, protect, shuttle) or Decision.lines (line, drops)
   task: Task
+  dispatchMin?: number // T+ when ordered out; omitted in older examples
 }
 
 export interface Decision {

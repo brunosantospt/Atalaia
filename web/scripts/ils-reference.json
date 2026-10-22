@@ -1,5 +1,5 @@
 {
-  "measured": "2026-10-22 · 2000 plans · seed 1 · commit 1b17b1b + uncommitted changes",
+  "measured": "2026-10-22 · 2000 plans · seed 1 · interception rings and dispatch-time ETAs",
   "fires": [
     {
       "id": "VieiradoMinho_10082016",
@@ -10,22 +10,22 @@
       },
       "b": {
         "places": 0,
-        "ha": 88.3
+        "ha": 105.3
       },
-      "foundAt": 883
+      "foundAt": 348
     },
     {
       "id": "CabeceirasdeBasto_06092016",
       "name": "Cabeceiras de Basto 2016",
       "a": {
         "places": 5,
-        "ha": 471.5
+        "ha": 477.5
       },
       "b": {
         "places": 1,
-        "ha": 234.6
+        "ha": 158.3
       },
-      "foundAt": 1632
+      "foundAt": 1651
     }
   ]
 }

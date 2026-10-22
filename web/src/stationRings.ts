@@ -1,15 +1,12 @@
-// The stations in play and their rings: for each of the nearest stations, how far from the ignition its
-// means may be put. The fire has grown by the time a station's first vehicle arrives (drone detection +
-// turnout + road, as reach.ts counts it), so the ring is the furthest the free run has got by then, plus
-// the working reach of the station's ground means: they can still work the front from the edge.
+// Each station's ring marks where its first vehicle meets the spreading fire on its approach
+// to the ignition. It is an inner interception boundary, not a maximum deployment distance.
 
 import { Cartesian3, Cartesian2, Color, CustomDataSource, HeightReference, LabelStyle, PolylineDashMaterialProperty, type Viewer } from 'cesium'
 import type { NearStation, Station } from './data'
 import type { Detection } from './detection'
-import { cleanLonLat, destination, distanceM, type LonLat } from './geo'
-import { lonLatAt, type Grid } from './grid'
-import type { Inventory } from './inventory'
-import { arrivalMin, isAerial, type Decision, type Suppression, type UnitId } from './suppression'
+import { cleanLonLat, destination, distanceM, lerpLonLat, type LonLat } from './geo'
+import { cellOf, type Grid } from './grid'
+import { arrivalMin, isAerial, type Decision, type Suppression, type UnitId, type UnitSpec } from './suppression'
 
 /** How many stations are available for now, anywhere means come from; the rest of the map keeps its stations but none is used. */
 export const STATIONS_IN_PLAY = 3
@@ -27,12 +24,40 @@ export function stationsInPlay(stations: Station[], ignition: LonLat, sup: Suppr
 
 export interface StationRing {
   station: NearStation
-  arriveMin: number // T+ minutes since the ignition when its first vehicle is at the fire
-  reachM: number // the working reach added to the fire's extent
-  radiusM: number
+  arriveMin: number // T+ at the interception point, not at the ignition
+  radiusM: number // minimum distance from the ignition on this station's approach
 }
 
-/** The ring of each station, from the free run's arrival minutes (one per cell of the grid). */
+export interface Interception {
+  point: LonLat
+  arriveMin: number
+}
+
+/** First point the fire reaches before (or with) the approaching vehicle. Travel uses the same
+ *  station-to-target road-factor estimate as arrivals(), sampled at half-cell intervals. */
+export function approachIntercept(
+  grid: Grid,
+  arrival: ArrayLike<number>,
+  origin: LonLat,
+  target: LonLat,
+  sup: Suppression,
+  unit: UnitSpec,
+  dispatchMin: number,
+  ecin = true,
+): Interception | undefined {
+  const km = distanceM(origin, target) / 1000
+  const steps = Math.max(1, Math.ceil(km * 1000 / (grid.cellsize / 2)))
+  for (let k = 0; k <= steps; k++) {
+    const fraction = k / steps
+    const point = lerpLonLat(origin, target, fraction)
+    const cell = cellOf(grid, point)
+    const at = dispatchMin + arrivalMin(sup, unit, km * fraction, ecin)
+    if (cell >= 0 && arrival[cell] <= at) return { point, arriveMin: at }
+  }
+  return undefined
+}
+
+/** One interception ring per station. No hose/working reach is added to this boundary. */
 export function computeRings(
   grid: Grid,
   arrival: ArrayLike<number>,
@@ -40,52 +65,38 @@ export function computeRings(
   stations: NearStation[],
   sup: Suppression,
   detection: Detection,
-  inventory: Inventory | null,
+  dispatchMin = detection.droneMin,
 ): StationRing[] {
-  const times = stations.map((s) => detection.droneMin + arrivalMin(sup, sup.units.vfci, s.km, true))
-  const latest = Math.max(...times, 0)
-  const extent = times.map(() => 0)
-  for (let i = 0; i < arrival.length; i++) {
-    const a = arrival[i]
-    if (!(a <= latest)) continue
-    const col = i % grid.cols
-    const d = distanceM(ignition, lonLatAt(grid, col + 0.5, (i - col) / grid.cols + 0.5))
-    for (let k = 0; k < times.length; k++) if (a <= times[k] && d > extent[k]) extent[k] = d
-  }
-  return stations.map((station, k) => {
-    const reachM = groundReachM(station, sup, inventory)
-    return { station, arriveMin: times[k], reachM, radiusM: extent[k] + reachM }
+  return stations.map((station) => {
+    const meet = approachIntercept(grid, arrival, station, ignition, sup, sup.units.vfci, dispatchMin)
+    return {
+      station,
+      arriveMin: meet?.arriveMin ?? dispatchMin + arrivalMin(sup, sup.units.vfci, station.km, true),
+      radiusM: meet ? distanceM(ignition, meet.point) : 0,
+    }
   })
 }
 
-/** The largest working reach among the ground kinds the station has (the VFCI's when its stock is unknown). */
-function groundReachM(station: Station, sup: Suppression, inventory: Inventory | null): number {
-  const stock = inventory?.[station.id]
-  const has = (u: UnitId) => (u === 'crew' ? !!stock && stock.decir.ecin + stock.decir.eip > 0 : !!stock && (stock.units[u] ?? 0) > 0)
-  const kinds = (Object.keys(sup.units) as UnitId[]).filter((u) => !isAerial(sup.units[u]) && sup.units[u].reachM && has(u))
-  return Math.max(sup.units.vfci.reachM ?? 0, ...kinds.map((u) => sup.units[u].reachM!))
-}
-
-/** The radius of each station's ring by station id: what Scenario.rings holds. */
+/** Interception radius by station id; retained in the worker's scenario too. */
 export const radiiOf = (rings: StationRing[]): Record<string, number> => Object.fromEntries(rings.map((r) => [r.station.id, r.radiusM]))
 
-/** Whether p is where a ground unit of station `from` may work; true for stations without a ring (air bases too). */
-export function inRing(rings: Record<string, number> | undefined, ignition: LonLat, from: string, p: LonLat): boolean {
+/** Outside the interception boundary: farther out has no maximum deployment distance. */
+export function beyondRing(rings: Record<string, number> | undefined, ignition: LonLat, from: string, p: LonLat): boolean {
   const r = rings?.[from]
-  return r === undefined || distanceM(ignition, p) <= r
+  return r === undefined || r === 0 || distanceM(ignition, p) > r
 }
 
-/** Whether an assignment of a decision is a ground one with its point or a vertex of its line outside its station's ring. */
-export function outsideRing(rings: Record<string, number> | undefined, ignition: LonLat, sup: Suppression, d: Decision, unit: UnitId, from: string, target: string): boolean {
+/** Whether a ground assignment puts any point inside its station's interception boundary. */
+export function blockedByRing(rings: Record<string, number> | undefined, ignition: LonLat, sup: Suppression, d: Decision, unit: UnitId, from: string, target: string): boolean {
   if (isAerial(sup.units[unit])) return false
   const where = d.points[target] ? [d.points[target]] : (d.lines[target] ?? [])
-  return where.some((p) => !inRing(rings, ignition, from, p))
+  return where.some((p) => !beyondRing(rings, ignition, from, p))
 }
 
 const COLORS = ['#c3a6f5', '#f19ec2', '#d8d2a8'] // lilac, pink, sand: apart from the wet lines, the routes and the fire
 export const fmtRingKm = (m: number) => `${(m / 1000).toFixed(1).replace('.', ',')} km`
 
-/** The rings on the ground (thin, dashed, one colour per station, labelled) and their legend entry, which toggles them. */
+/** Interception boundaries, labelled with the meeting time and distance from the ignition. */
 export class StationRingsLayer {
   private readonly source = new CustomDataSource('station-rings')
   private readonly legend: HTMLElement
@@ -127,7 +138,7 @@ export class StationRingsLayer {
         this.source.entities.add({
           position: Cartesian3.fromDegrees(at.lon, at.lat),
           label: {
-            text: `${r.station.short} · chega T+${Math.round(r.arriveMin)} min · até ${fmtRingKm(r.radiusM)}`,
+            text: `${r.station.short} · fogo/meios T+${Math.round(r.arriveMin)} min · encontro a ${fmtRingKm(r.radiusM)}`,
             font: '11px ui-monospace, Menlo, monospace',
             fillColor: color,
             outlineColor: Color.BLACK,
@@ -141,7 +152,7 @@ export class StationRingsLayer {
       }
       parts.push(`<span class="sw" style="border-color:${COLORS[k % COLORS.length]}"></span>${esc(r.station.short)} ${fmtRingKm(r.radiusM)}`)
     })
-    this.legend.innerHTML = `<input type="checkbox" ${this.wanted ? 'checked' : ''} /><b>Alcance dos quartéis</b>${parts.map((p) => `<span class="ent">${p}</span>`).join('')}`
+    this.legend.innerHTML = `<input type="checkbox" ${this.wanted ? 'checked' : ''} /><b>Encontro fogo/meios · colocar por fora</b>${parts.map((p) => `<span class="ent">${p}</span>`).join('')}`
     this.legend.querySelector('input')!.addEventListener('change', (e) => {
       this.wanted = (e.target as HTMLInputElement).checked
       this.apply()

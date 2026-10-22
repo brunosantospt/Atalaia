@@ -80,7 +80,7 @@ interface Replay {
   free: SplitLayer // the free run (ELMFIRE, no forces), shown during the simulated shots
   freeRun: Run // the same run, cut at the cap
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
-  rings: StationRingsLayer // how far from the ignition each station in play may put its means; follows the free run shown
+  rings: StationRingsLayer // station approach interception boundaries; follows the free run shown
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
   story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
   split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
@@ -282,7 +282,7 @@ async function main() {
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
     const durationMin = horizonMin(fire0.start, weather)
-    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, fwiSeries }
+    const scenario: Scenario = { grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, fwiSeries, dispatchMin: detection.droneMin }
     // The free run is the first ELMFIRE prediction, no forces: the API's cached run, or the reference's own
     // progression (the same ELMFIRE run) while the API is down. It is cut at the cap so the browser stays light.
     busy.start('A obter a previsão do ELMFIRE…', ['Livre'])
@@ -310,7 +310,8 @@ async function main() {
     // The story and the observed layer stop where the run does.
     const { fire, progression } = cutSteps(fire0, progression0, fireEnd(grid, free).cutMin ?? Infinity)
     const reach = computeReach(grid, free, fire, near, suppression, detection)
-    const ringList = computeRings(grid, free.arrival, fire0.ignition, near, suppression, detection, inventory)
+    const ringList = computeRings(grid, free.arrival, fire0.ignition, near, suppression, detection)
+    scenario.fireArrival = free.arrival
     scenario.rings = radiiOf(ringList)
     console.info(`rings: ${ringList.map((r) => `${r.station.short} T+${Math.round(r.arriveMin)} min ${Math.round(r.radiusM)} m`).join(' · ')}`)
     console.info(
@@ -487,8 +488,9 @@ async function main() {
     replay.free.set(replay.player.update(0).hours)
     replay.free.show(false) // the loop shows it in its shots
     replay.freeNow = free
-    // The free run changed (the shifted one after the incident): the rings are where it has got by each arrival.
-    const list = computeRings(replay.scenario.grid, free.arrival, replay.data.ignition, replay.stations, suppression, detection, inventory)
+    // Recompute where approaching units meet this forecast, from the incident time when replanning.
+    const list = computeRings(replay.scenario.grid, free.arrival, replay.data.ignition, replay.stations, suppression, detection, replay.phase === 'post' ? Math.max(detection.droneMin, replay.data.windShift?.minutes ?? 0) : detection.droneMin)
+    replay.scenario.fireArrival = free.arrival
     replay.scenario.rings = radiiOf(list)
     replay.rings.set(list)
   }
