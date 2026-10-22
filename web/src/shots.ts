@@ -14,7 +14,7 @@ import { AIR_BASES } from './airBases'
 import { DEFAULT_HOSPITAL } from './reporting'
 import { originColor } from './unitIdentity'
 
-export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
+export type ShotKind = 'response' | 'control' | 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
 export interface Shot {
   kind: ShotKind
@@ -35,6 +35,8 @@ export interface Shot {
   reveal: string[] // marker ids that appear with this shot
   conceal: string[] // marker ids that go away from this shot on
   // The director's shots (director.ts):
+  milestone?: boolean // show one director chapter, while its clock advances in five-minute blocks
+  gate?: 'decision' | 'wind' // pause at a required command/forecast boundary
   split?: boolean // the decisions A and B are shown side by side
   decision?: number // which decision's means are on the ground, 0 or 1
   hoursTo?: number // the clock runs from `hours` to this while holding
@@ -460,7 +462,7 @@ function addedBox(progression: Progression, step: Step): BBox {
 
 /** Puts every shot target and marker on the terrain, so the camera orbits the ground and not sea level. */
 export async function addHeights(story: Story, terrain: TerrainProvider): Promise<void> {
-  const points: { lon: number; lat: number; h: number }[] = [...story.shots.flatMap((s) => s.path), ...story.markers]
+  const points: { lon: number; lat: number; h: number }[] = [...[...new Set(story.shots.flatMap((s) => s.path))], ...story.markers]
   const cartographics = points.map((p) => Cartographic.fromDegrees(p.lon, p.lat))
   await sampleTerrainMostDetailed(terrain, cartographics)
   cartographics.forEach((c, i) => (points[i].h = Number.isFinite(c.height) ? c.height : 0))

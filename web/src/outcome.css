@@ -1,0 +1,31 @@
+.outcome-legend {
+  position: absolute;
+  top: 160px;
+  right: 24px;
+  padding: 14px 18px;
+  border: 1px solid #ffffff38;
+  background: #101b24ed;
+  color: #f8fafc;
+  font: 500 14px/1.7 system-ui, sans-serif;
+  pointer-events: none;
+}
+.outcome-legend[hidden] { display: none; }
+.outcome-legend > div { opacity: .25; }
+.outcome-legend > div.visible { opacity: 1; }
+.outcome-legend > div::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 9px;
+  background: var(--outcome-color);
+}
+/* The editor is an operational workspace. Cinematic furniture belongs to playback. */
+.hud.editing .title,
+.hud.editing .bottom,
+.hud.editing .ledger,
+.hud.editing .reticle { display: none; }
+
+@media (max-width: 700px) {
+  .outcome-legend { top: auto; bottom: 220px; right: 12px; font-size: 12px; }
+}

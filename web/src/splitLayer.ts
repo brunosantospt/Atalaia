@@ -126,6 +126,10 @@ export class SplitLayer {
     this.setPosition(this.position)
   }
 
+  presentation(on: boolean) {
+    if (this.root) this.root.style.display = on ? '' : 'none'
+  }
+
   /** Where the split stands, 0 (all B) to 1 (all A); the drag keeps a sliver of each side. */
   setPosition(position: number) {
     if (!this.root) return

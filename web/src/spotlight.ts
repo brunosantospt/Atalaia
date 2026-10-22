@@ -54,6 +54,8 @@ export class Spotlight {
     )
   }
 
+  set enabled(on: boolean) { this.stage.enabled = on }
+
   set(center: LonLat & { h: number }, radius: number) {
     Cartesian3.fromDegrees(center.lon, center.lat, center.h, undefined, this.centerWC)
     this.radius = radius

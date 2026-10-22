@@ -20,8 +20,8 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 - Referência ELMFIRE regenerada com `scripts/.venv/bin/python -I scripts/build_hypothetical.py --keep-grid`. O gerador só aceita ELMFIRE; saíram `--model fast` e `--compare`.
 - Abertura mais moderada: **37,4 → 11,3 ha à 1 h**, **65,6 → 27,2 ha às 2 h**. No novo cache sem rotação, T+10 tem 0,45 ha e ROS da cabeça de cerca de **3 m/min**, abaixo do limiar crítico existente de 50 m/min. Não foram alterados os limiares de aviso.
 - Com a rotação e projeções, a referência de 6 h é **341,1 ha**, antes 322,5 ha: reduzir o vento não garante menor área em todas as horas numa corrida com spotting. O pico e a propagação inicial são menores; não se ajustou outro parâmetro para forçar o resultado.
-- O incidente é anunciado às 12:30 (T+150); a rotação decorre das 12:00 às 13:00. A reprodução pausa para realocar e simular com o novo vento.
-- O replay começa no avistamento do drone (T+10); o fogo foi simulado desde T+0. Abrir o editor preserva o relógio, em vez de saltar para o fim das 24 h. Satélite aos T+30.
+- O incidente é anunciado às 12:30 (T+150); a rotação decorre das 12:00 às 13:00. A reprodução pausa, corre automaticamente A/B e a previsão livre com o novo vento no ELMFIRE e só depois pede nova decisão. Se falhar, mantém a pausa e permite tentar novamente.
+- O realizador começa na ignição (T+0). Sem planos simulados, pausa em T+10 para abrir o editor; o fogo é sempre simulado desde T+0. Abrir o editor preserva o relógio, em vez de saltar para o fim das 24 h. Satélite aos T+30.
 
 ## Meios e linhas
 
@@ -34,7 +34,10 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 
 ## Interface e desempenho
 
-- Descrições do realizador reduzidas: deteção, previsão, chegada dos meios, comparação e resultado em frases curtas. Os planos da decisão usam as mesmas ETAs do editor.
+- Realizador cronológico: ignição → primeiros meios (ETA real da decisão selecionada) → verificação satélite → estado de controlo → mudança de vento → previsão ELMFIRE atualizada → pedido de nova decisão. A abertura do editor suspende o relógio e qualquer voo da câmara; legenda, título, retícula, dados do realizador, spotlight, contornos narrativos e apresentação de comparação desaparecem. Meios, POI, previsão operacional e relógio permanecem.
+- Cada bloco de reprodução avança no máximo **5 minutos simulados**; marcos intermédios mantêm a continuidade sem saltos de horas. A navegação mostra apenas as etapas principais e descrições curtas. Abrir/fechar o editor conserva o instante; mudar o slider escolhe o intervalo correspondente e retomar não recua o relógio.
+- Após a revisão do vento, só há final de contenção se a decisão selecionada deixar de atingir novas células, sem crescimento na última hora da corrida, sem sair da grelha nem atingir o limite de área. Não se força o resultado “controlado”.
+- Final: três manchas completas, **sem decisão / decisão A / decisão B**, ordenadas pela área ardida real da maior para a menor; revelação a cada 0,4 s, total 0,8 s. Cores e hectares identificam cada cenário, com “≥” quando a grelha/limite corta a área. Não há ecrã dividido neste final. As manchas comparam o fim de cada corrida, não o instante atual do vídeo.
 - **Onde o fogo chega primeiro que qualquer resposta**: checkbox para mostrar o contorno e dropdown fechado por omissão para a explicação. A expansão mantém-se ao trocar quartel/meio/relógio. Os detalhes identificam a resposta selecionada e explicam a comparação dos tempos.
 - O contorno segue a forma do fogo e a chegada do meio selecionado; a aproximação é verificada em passos de 15 m. Não é um limite radial de colocação.
 - Ícones dos cinco botões centrados, sem compressão: saiu a altura herdada de 26 px; os botões passam a 58 px mínimos para conter ícone e nome.
@@ -49,12 +52,14 @@ Abrir a Penha, editar A e/ou B e carregar em **Simular no ELMFIRE**. Só simula 
 
 ## Verificação
 
-- `npm run build`, `npm run demo:check`, `npm run placement:check`, `npm run deployment:check` e `npm run interaction:check` passam.
+- `npm run build`, `npm run demo:check`, `npm run placement:check`, `npm run deployment:check`, `npm run interaction:check` e `npm run director:check` passam.
 - Testes cobrem previsão ELMFIRE obrigatória (sem fallback de simulação), igualdade das barreiras enviadas/desenhadas, contornos assimétricos, aproximação, ETAs, rotação, água ilimitada, colocação apeada, independência A/B, rotas/cache, hover e relatórios.
 - Verificação de dados: todas as velocidades e rajadas correspondem à metade dos valores anteriores (tolerância de arredondamento 0,05 km/h); direções inalteradas. Cenário e meteorologia regenerados.
 - Firefox/WebGL isolado: perfil antigo de calor migra para satélite; três quartéis e hospital visíveis na abertura, sete ícones persistentes; dropdown expande e mantém-se; cinco ícones centrados; exemplo em A preserva B, rotação funciona e botão ELMFIRE fica disponível; realizador mostra descrições curtas. Sem erros de consola.
 - Verificação posterior em Firefox: IDs mantidos ao mudar o relógio, remover e adicionar grupos; IDs e cores iguais na lista/mapa, incluindo equipas em linhas; stock e origem real das aeronaves; picking no círculo devolve o grupo correto; etiquetas a 13 px mesmo no perfil Leve. Ícones claros e texto verificados visualmente. Sem pedidos de simulação.
 - As corridas de regeneração foram sequenciais, em containers isolados limitados a 2 CPUs e 3 GB. No teste de browser os pedidos de simulação foram bloqueados. Nenhum processo da calibração de outra sessão foi interrompido; ficheiros do motor partilhado mantidos.
+
+- Verificação do novo realizador em Firefox/WebGL com resultados ELMFIRE substituídos por fixtures isoladas: editor aberto durante voo pára câmara/relógio e esconde os assets; reposição do plano e simulação manual; atualização automática com `wind_shift: true` antes do pedido de decisão; regresso ao editor; três manchas sobrepostas no final; reprodução repetida reutiliza a cache e rearma o incidente; falha da previsão mantém a pausa sem apresentar sucesso; sem erros de consola. Nenhum trabalho ELMFIRE real foi lançado neste teste.
 
 ## Limites e integração
 

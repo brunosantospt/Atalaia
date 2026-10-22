@@ -407,6 +407,8 @@ export class Editor {
     return this.el.classList.contains('open')
   }
 
+  get decisionIndex(): number { return this.active }
+
   /** The director shows decision `i` on the ground: it becomes the drawer's tab too. */
   showDecision(i: number) {
     if (i === this.active) return

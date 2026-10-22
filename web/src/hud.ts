@@ -212,10 +212,12 @@ export class Hud {
   private readonly alerts: AlertStack
   private fire: Fire | undefined
   private sim: Simulated | undefined
-  private shots: Shot[] = []
   private ticks: HTMLElement[] = []
   private shown = new Map<string, string>()
   private director = false
+  private tickIndex = -1
+  private chapters: number[] = []
+  private chapterCount = 0
 
   currentRole: AgencyRole = 'cmd'
   private lastDispatch?: MultiAgencyDispatch
@@ -473,13 +475,17 @@ export class Hud {
 
   /** The shots changed (the director's were built, or the cut toggled): the transport's ticks follow. */
   setShots(shots: Shot[]) {
-    this.shots = shots
+    this.tickIndex = -1
+    let chapter = 0
+    this.chapters = shots.map(shot => { if (shot.milestone !== false) chapter++; return chapter })
+    this.chapterCount = chapter
     this.refs.ticks.replaceChildren()
     this.ticks = shots.map((s, i) => {
       const tick = document.createElement('button')
       tick.type = 'button'
       tick.className = 'tick'
-      tick.title = `${pad2(i + 1)} · ${s.word}`
+      tick.title = `${pad2(this.chapters[i])} · ${s.word}`
+      if (s.milestone === false) tick.style.display = 'none'
       tick.innerHTML = '<i></i>'
       tick.addEventListener('click', () => this.actions.goTo(i))
       this.refs.ticks.append(tick)
@@ -519,7 +525,7 @@ export class Hud {
     const editing = this.root.classList.contains('editing')
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
-      bottom: rect('.bottom').top - pad,
+      bottom: editing ? height - pad : rect('.bottom').top - pad,
       avoid: [ledger, guidance, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
@@ -531,7 +537,6 @@ export class Hud {
     const fire = this.fire
     if (!fire) return
     const { shot } = frame
-    const n = this.shots.length
     const lastStep = fire.steps.at(-1)!.step
     const clock = wallClock(fire.start, frame.hours)
     // Simulated shots read the free run at the clock, so the area grows with the fire and not linearly.
@@ -580,14 +585,15 @@ export class Hud {
       this.refs.compassDial.style.transform = `rotate(${-camera.heading}deg)`
     }
 
-    this.set('cardHead', `Plano ${pad2(frame.index + 1)}/${pad2(n)} · ${shot.word}`)
+    this.set('cardHead', `Etapa ${pad2(this.chapters[frame.index] ?? 1)}/${pad2(this.chapterCount)} · ${shot.word}`)
     this.set('cardTitle', shot.title)
     this.set('cardBody', shot.caption)
     this.set('play', frame.playing ? '❚❚' : '▶')
-    this.ticks.forEach((tick, i) => {
-      tick.classList.toggle('past', i < frame.index)
-      tick.classList.toggle('now', i === frame.index)
+    if (this.tickIndex !== frame.index) this.ticks.forEach((tick, i) => {
+      tick.classList.toggle('past', this.chapters[i] < this.chapters[frame.index])
+      tick.classList.toggle('now', this.chapters[i] === this.chapters[frame.index])
     })
+    this.tickIndex = frame.index
   }
 
   /** Writes text only when it changed, so the DOM is not touched every frame. */

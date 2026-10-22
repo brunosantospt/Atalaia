@@ -11,6 +11,7 @@ import type { Shot } from './shots'
 export type Phase = 'move' | 'hold' | 'done'
 
 export interface Frame {
+  progress: number // progress within the current hold, for the rapid final overlay
   index: number
   shot: Shot
   phase: Phase
@@ -62,6 +63,16 @@ export class Player {
     return this.playing || this.phase === 'move'
   }
 
+  /** Stop camera travel as well as the clock when the working editor takes over. */
+  pause() {
+    this.playing = false
+    this.phase = 'hold'
+    this.t = 0
+    this.easeFrom = undefined
+    this.userMoved = true
+    this.seek(this.hours)
+  }
+
   /** Fly to shot `i` from wherever the camera is now. */
   goTo(i: number) {
     this.index = Math.min(Math.max(i, 0), this.shots.length - 1)
@@ -88,14 +99,26 @@ export class Player {
   }
   toggle() {
     if (this.phase === 'done') return this.restart()
-    this.playing = !this.playing
+    if (this.playing) return this.pause()
+    this.playing = true
     // Back into the shot if the mouse took the camera somewhere else meanwhile.
-    if (this.playing && this.userMoved) this.goTo(this.index)
+    if (this.playing && this.userMoved) {
+      const hours = this.hours
+      this.goTo(this.index)
+      this.seek(hours) // returning the camera must not rewind the incident
+    }
   }
 
   /** The editor's hour slider sets the fire clock. It stays there until the next shot, or runs on from
-   *  there in a shot whose clock runs (A vs B); playing or paused, the player goes on as it was. */
+   *  there in the matching incident interval; camera motion is kept only during an explicit flight. */
   seek(hours: number) {
+    // A paused slider must select the matching interval, otherwise the next frame runs
+    // backwards from the new hour towards the old scene's endpoint.
+    if (!this.driving) {
+      this.index = this.shots.reduce((found, shot, i) => shot.hours <= hours + 1e-8 ? i : found, 0)
+      this.phase = 'hold'
+      this.t = 0
+    }
     this.hours = hours
     this.seeked = [hours, this.phase === 'hold' ? Math.min(this.t / this.shots[this.index].holdS, 1) : 0]
   }
@@ -108,6 +131,10 @@ export class Player {
     this.shots = shots
     this.index = index
     if (!rebuilt) return
+    if (this.phase !== 'move') {
+      this.t = 0
+      this.seeked = [this.hours, 0]
+    }
     if (this.driving) [this.easeFrom, this.easeT] = [this.pose, 0]
     else this.userMoved = true
   }
@@ -165,6 +192,7 @@ export class Player {
     if (revealCurrent) shot.reveal.forEach((id) => revealed.add(id))
     for (const s of this.shots.slice(0, this.index + 1)) s.conceal.forEach((id) => revealed.delete(id))
     return {
+      progress: this.phase === 'hold' || this.phase === 'done' ? Math.min(this.t / shot.holdS, 1) : 0,
       index: this.index,
       shot,
       phase: this.phase,

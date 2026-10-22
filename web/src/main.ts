@@ -25,7 +25,7 @@ import {
 } from './data'
 import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
-import { CUT, decisionShots } from './director'
+import { incidentShots } from './director'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
 import { engineName, fetchEngines, runScenario, type EngineRun, type ScenarioRequest } from './engines'
@@ -39,13 +39,14 @@ import { layoutHash } from './layout'
 import { MarkerLayer } from './markers'
 import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
+import { OutcomeLayer } from './outcomeLayer'
 import { WindShiftWatch } from './windShift'
 import { computeReach, freeAreaHa } from './reach'
 import { ReachLayer } from './reachLayer'
 import { arrivalFromProgression, cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
 import { createViewer, setQuality } from './scene'
-import { addHeights, buildStory, type Shot, type ShotKind, type Story } from './shots'
+import { addHeights, buildStory, type Shot, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
 import { computeRings, stationsInPlay } from './stationRings'
@@ -60,7 +61,6 @@ const HORIZON_MIN = 24 * 60 // the free run and the decisions A and B go on unti
 const REPORT_MIN = 360 // the 6 h of the report, kept beside the end
 const FREE_WAIT_MS = 30_000 // the cached free run is waited for this long on load; then the reference's own progression stands in
 const SPOT_K = 0.35 // the light's radius as a share of the camera's distance: the same size on screen at any zoom
-const DIRECTOR_KINDS = new Set<ShotKind>(['decision', 'versus', 'outcome'])
 
 /** Before the wind shift (plans made on the forecast without it) or after it (the incident has happened). */
 type Phase = 'pre' | 'post'
@@ -85,15 +85,16 @@ interface Replay {
   reach: ReachLayer // outlines at the ETAs and at T_sat, scale rings
   rings: StationRingsLayer // station approach interception boundaries; follows the free run shown
   context: Context | undefined // roads, homes and places from OSM, when the fire has them
-  story: Story // the observed replay's shots, then the director's (rebuilt with the decisions)
+  story: Story // incident chapters rebuilt from the current ELMFIRE response
   split?: SplitLayer // the decisions A and B side by side (only after an ELMFIRE simulation, shown in their shots or on key A)
+  outcome?: OutcomeLayer
   runs?: Runs // Livre, A and B of the simulation on the screen; none before the first
   freeNow: Run // the free run the free layer draws: the forecast's, or the shifted one after the incident
   baseHash: string // the means layout of the start (empty): what Livre alone stands for
   phase: Phase // which wind the screen and the next simulation are for
   sims: Partial<Record<Phase, Sim>> // the last simulation of each phase, both kept for going back
-  showSplit: boolean // key A: the split stays on through every shot
-  director: boolean // key D: the director's cut plays instead of the whole story
+  showSplit: boolean // key A: manual side-by-side inspection outside the editor
+  director: boolean // key D: presentation lighting and restart
   shotShown: Shot | undefined // the shot the split and the editor were last set for
 }
 
@@ -206,10 +207,10 @@ async function main() {
   }
 
   const hud = new Hud(document.getElementById('hud')!, index, {
-    toggle: () => replay?.player.toggle(),
-    prev: () => replay?.player.prev(),
-    next: () => replay?.player.next(),
-    goTo: (i) => replay?.player.goTo(i),
+    toggle: () => playback(() => replay?.player.toggle()),
+    prev: () => playback(() => replay?.player.prev()),
+    next: () => playback(() => replay?.player.next()),
+    goTo: (i) => playback(() => replay?.player.goTo(i)),
     pickFire: (id) => (location.hash = id),
     pickEngine: () => refreshSimulate(),
     simulate: () => void simulate(),
@@ -243,10 +244,16 @@ async function main() {
       hud.setEditing(open)
       if (!replay) return
       if (open) {
-        replay.player.playing = false // the mouse has the camera and the map takes the clicks
+        replay.player.pause() // stop camera travel as well as the clock
         // Start planning at detection, keeping the same clock as the replay.
         if (!(replay.player.update(0).hours > 0)) replay.player.seek(detection.droneMin / 60)
-        replay.showSplit = true // only draws once A and B have been simulated
+        replay.showSplit = false
+        replay.outcome?.show(false)
+        replay.reach.update(new Set())
+        replay.markers.update(new Set()) // persistent operational landmarks stay visible
+        scene.requestRender()
+      } else {
+        void refreshDirector()
       }
     },
   })
@@ -256,13 +263,25 @@ async function main() {
 
   // The one incident, the wind shift of a simulated fire: playback stops there and the commander reallocates (windShift.ts).
   const windShift = new WindShiftWatch({
-    pause: () => replay && (replay.player.playing = false),
+    pause: () => replay?.player.pause(),
+    forecast: async () => {
+      if (!replay) return false
+      const current = replay
+      current.phase = 'post'
+      const post = current.sims.post
+      if (post) { show(post.runs, post.decisions); return true }
+      // Recalculate the response that was actually played, even if an unsimulated draft exists.
+      const ok = await simulate(true)
+      if (replay !== current) return false
+      if (!ok) { current.phase = 'pre'; refreshSimulate() }
+      return ok
+    },
     seek: (h) => replay?.player.seek(h),
     reallocate: () => {
       if (!replay) return
       replay.phase = 'post'
       const post = replay.sims.post
-      if (post) show(post.runs, post.decisions) // a run with the new wind is there already: it is the one shown
+      if (post && replay.runs !== post.runs) show(post.runs, post.decisions)
       windShift.setResolved(!!post)
       refreshSimulate()
       editor.toggle(true)
@@ -340,6 +359,7 @@ async function main() {
       endMin: freeEnd,
       text: `${describeEnd(fireEnd(grid, free), fire.start, free.durationMin)} (${source})`,
     })
+    story.shots = incidentShots({ fire, grid, stations: near, suppression, detection, free, post: false, decision: 0, fovy })
     await addHeights(story, viewer.terrainProvider)
     if (loading !== id) return // another fire was picked meanwhile
     loading = undefined
@@ -352,6 +372,7 @@ async function main() {
     replay?.reach.destroy()
     replay?.rings.destroy()
     replay?.split?.destroy()
+    replay?.outcome?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
     replay = {
@@ -371,7 +392,7 @@ async function main() {
       context,
       story,
       showSplit: false,
-      director: replay?.director ?? false,
+      director: true,
       shotShown: undefined,
       baseHash: '',
       phase: 'pre',
@@ -403,37 +424,46 @@ async function main() {
     refreshSimulate()
   }
 
-  /** The player's shots: the whole story, or the director's cut of it. The HUD's ticks follow. */
+  /** Keep the current incident time when a forecast or active decision rebuilds the film. */
   function setShots() {
     if (!replay) return
-    const { story, player, director } = replay
-    const shots = director ? story.shots.filter((s) => CUT.includes(s.kind)) : story.shots
-    const current = player.shots[player.index]
-    // The same shot, or the one built again in its place: the director's are new after every run, in the same order.
-    const nth = player.shots.filter((s) => s.kind === current.kind).indexOf(current)
-    const index = shots.includes(current) ? shots.indexOf(current) : shots.indexOf(shots.filter((s) => s.kind === current.kind)[nth])
-    hud.setShots(shots)
-    if (index < 0) {
-      player.shots = shots
-      player.goTo(Math.min(player.index, shots.length - 1))
-      return
-    }
-    // A rerun moves neither the camera nor, as a new shot would, the editor's tab and the split.
-    if (replay.shotShown === current) replay.shotShown = shots[index]
-    player.keep(shots, index)
+    const { story, player } = replay
+    const hours = player.update(0).hours
+    const index = Math.max(0, story.shots.reduce((found, shot, i) => shot.hours <= hours + 1e-8 ? i : found, 0))
+    hud.setShots(story.shots)
+    player.keep(story.shots, index)
+    replay.shotShown = undefined
   }
 
-  /** The director's shots follow the decisions of the last simulation: built again after it, on the terrain. */
-  async function refreshDirector(runs: Runs, reports: Reports | undefined, decisions: [Decision, Decision]) {
+  async function refreshDirector() {
     if (!replay) return
-    const { story, data, scenario, stations } = replay
-    const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
-    const fresh = decisionShots(data, scenario.grid, stations, suppression, decisions, runs, reports, fovy)
+    const current = replay
+    const { story, data: fire, scenario, stations, phase } = current
+    const sim = current.sims[phase]
+    const fresh = incidentShots({ fire, grid: scenario.grid, stations, suppression, detection,
+      free: current.freeNow, decisions: sim?.decisions, runs: sim?.runs,
+      post: phase === 'post', decision: editor.decisionIndex,
+      fovy: (scene.camera.frustum as PerspectiveFrustum).fovy! })
     await addHeights({ shots: fresh, markers: [] }, viewer.terrainProvider)
-    if (replay?.story !== story) return // another fire meanwhile
-    const kept = story.shots.filter((s) => !DIRECTOR_KINDS.has(s.kind))
-    story.shots = [...kept, ...fresh]
+    if (replay !== current || current.phase !== phase || current.sims[phase] !== sim) return
+    story.shots = fresh
     setShots()
+    scene.requestRender()
+  }
+
+  /** Transport controls leave the planning workspace before playing its real-time consequences. */
+  function playback(action: () => void) {
+    if (!replay || busy.active) return
+    // A film must use the means actually submitted to ELMFIRE, rather than an unsimulated draft.
+    if (simulateState().enabled) {
+      editor.toggle(true)
+      refreshSimulate()
+      return
+    }
+    const wasEditing = editor.open
+    editor.toggle(false)
+    if (wasEditing) void refreshDirector().then(action)
+    else action()
   }
 
   // The special alerts of the three runs, prepared in rerun() and read at the clock in the loop.
@@ -493,7 +523,9 @@ async function main() {
     editor.setRange(shownEndMin())
     editor.setRuns(runs, reports, judged)
     alerts = prepareAlerts({ scenario, context, decisions: [a, b], runs })
-    void refreshDirector(runs, judged, [a, b])
+    replay.outcome?.destroy()
+    replay.outcome = new OutcomeLayer(viewer, overlay, grid, runs)
+    void refreshDirector()
   }
 
   /** The free layer draws this run (the forecast's, or the shifted one after the incident). */
@@ -513,7 +545,7 @@ async function main() {
   /** Only Livre is simulated (the start, or the pre-incident results were never run): A and B are "ainda não simulado". */
   function showFreeOnly(free: Run) {
     if (!replay) return
-    const { scenario, context, story } = replay
+    const { scenario, context } = replay
     replay.runs = undefined
     replay.split?.destroy()
     replay.split = undefined
@@ -522,8 +554,9 @@ async function main() {
     editor.setRuns(undefined, undefined)
     editor.setRange(endMinute(scenario.grid, free))
     alerts = prepareAlerts({ scenario, context, decisions: editor.decisions, runs: { free, A: free, B: free } }) // A and B are never read before they are simulated
-    story.shots = story.shots.filter((s) => !DIRECTOR_KINDS.has(s.kind))
-    setShots()
+    replay.outcome?.destroy()
+    replay.outcome = undefined
+    void refreshDirector()
   }
 
   // ELMFIRE runs through the API (docs/contracts.md). Its answers are kept by request, so a layout seen before
@@ -615,27 +648,28 @@ async function main() {
 
   /** Runs A and B on ELMFIRE as they stand now, behind the loading screen, and shows them. Before the incident the
    *  free run is the cached one; after it, Livre is run again with the new wind, so the comparison stays honest. */
-  async function simulate() {
-    if (!replay || busy.active || !simulateState().enabled) return
+  async function simulate(automaticWind = false): Promise<boolean> {
+    if (!replay || busy.active || (!automaticWind && !simulateState().enabled)) return false
     const { scenario } = replay
     const { rows, cols } = scenario.grid
     const { phase } = replay
     const post = phase === 'post'
     const wind = windOf(phase)
-    const decisions = editor.decisions.map((d) => structuredClone(d)) as [Decision, Decision]
+    const decisions = (automaticWind ? replay.sims.pre?.decisions ?? editor.decisions : editor.decisions).map((d) => structuredClone(d)) as [Decision, Decision]
     const [a, b] = decisions
     const hash = layoutKey()
     const requests = [engineRequest(replay.id, scenario, a, wind), engineRequest(replay.id, scenario, b, wind)]
     const freeRequest = post ? engineRequest(replay.id, scenario, null, wind) : undefined
     const name = engineName(requests[0].engine)
-    replay.player.playing = false
-    busy.start('A simular no ELMFIRE…', post ? ['Livre', 'A', 'B'] : ['A', 'B'])
+    replay.player.pause()
+    busy.start(automaticWind ? 'Vento mudou · a atualizar o ELMFIRE…' : 'A simular no ELMFIRE…', post ? ['Livre', 'A', 'B'] : ['A', 'B'])
     editor.setEngine({ state: 'running', name })
     const t0 = performance.now()
     try {
       const run = (r: ScenarioRequest, task: string) => ask(r, rows, cols, (s) => busy.detail(task, s)).then((x) => (busy.mark(task), x))
       const [ra, rb, rf] = await Promise.all([run(requests[0], 'A'), run(requests[1], 'B'), freeRequest ? run(freeRequest, 'Livre') : Promise.resolve(undefined)])
-      if (replay?.scenario !== scenario) return busy.hide() // another fire was opened meanwhile
+      if (replay?.scenario !== scenario) { busy.hide(); return false } // another fire was opened meanwhile
+      if (automaticWind && [ra, rb, rf].some(r => r?.shiftIgnored)) throw new Error('A API não suporta a mudança de vento. Atualize a API antes de continuar.')
       // Every simulated run on the screen is cut where it has burned the cap: the browser draws every cell.
       const capHa = replay.data.referenceCapHa ?? CAP_HA
       const cap = (r: EngineRun, d: Decision | null) => capRun(scenario.grid, engineRun(scenario, r, d), capHa)
@@ -647,6 +681,8 @@ async function main() {
       const note = [ra, rb, rf].some((r) => r?.shiftIgnored) ? 'A API não aceita wind_shift: corre com o vento da referência.' : undefined
       editor.setEngine({ state: 'done', name: ra.engine, seconds: [ra, rb, rf].some((r) => r && !r.cached) ? (performance.now() - t0) / 1000 : 0, note })
       busy.hide()
+      refreshSimulate()
+      return true
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e)
       console.warn(`${name}: ${reason}`)
@@ -656,6 +692,7 @@ async function main() {
       busy.fail(down ? 'ELMFIRE indisponível — inicie api/serve.sh' : `O ELMFIRE falhou: ${reason}`)
     }
     refreshSimulate()
+    return false
   }
 
   /** The decisions A and B on and off the screen through every shot (key A). */
@@ -665,13 +702,13 @@ async function main() {
     if (!replay.showSplit) editor.toggle(false)
   }
 
-  /** The director's cut (key D): the 90 s of the demo, from the start. */
+  /** Toggle presentation lighting; enabling it restarts the incident film. */
   function toggleDirector() {
     if (!replay) return
     replay.director = !replay.director
     hud.setDirector(replay.director)
     setShots()
-    if (replay.director) replay.player.restart()
+    if (replay.director) playback(() => replay?.player.restart())
   }
 
   // The mouse takes the camera only while the player is not driving it.
@@ -692,17 +729,29 @@ async function main() {
     if (!replay) return
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
+    if (editor.open && player.driving) player.pause()
     const frame = player.update(dt)
+    if (!editor.open && frame.playing && frame.phase === 'hold' && frame.shot.gate === 'decision' && !replay.runs) {
+      player.pause()
+      player.seek(frame.shot.hours)
+      editor.toggle(true)
+      return
+    }
     // Cesium handles camera/tile changes itself. A paused fire needs no continuous GPU redraw;
     // playback and timeline changes still draw each new state.
     if (frame.driving || frame.hours !== renderedHours) scene.requestRender()
     renderedHours = frame.hours
     // The split shows in the director's shots, or through every shot on key A.
-    const splitOn = !!split && (replay.showSplit || !!frame.shot.split)
+    const finale = !editor.open && frame.shot.kind === 'outcome'
+    const splitOn = !finale && !!split
+    split?.presentation(!editor.open && replay.showSplit)
+    const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
+    if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
+    replay.outcome?.show(finale, frame.progress * frame.shot.holdS)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     // With the drawer open and nothing simulated yet, the free run is what the means are up against.
-    const freeOn = !splitOn && (frame.shot.simulated || editor.open)
-    fire.set(freeOn || splitOn ? { step: -1, fade: 1, untimed: false } : frame.fire)
+    const freeOn = !finale && !splitOn && (frame.shot.simulated || editor.open)
+    fire.set(finale || freeOn || splitOn ? { step: -1, fade: 1, untimed: false } : frame.fire)
     free.show(freeOn)
     free.set(frame.hours)
     replay.rings.setEligible(editor.open)
@@ -711,17 +760,17 @@ async function main() {
     split?.set(frame.hours)
     // The player's clock is the only one: the editor's hour slider and overlays (cut roads, perimeters) follow it.
     editor.syncTime(frame.hours)
-    // The director's shots put one decision's means on the ground and its side of the split alone on the screen;
-    // the comparison starts with the split in the middle.
+    // Playback follows the decision selected when leaving the editor.
     if (frame.shot !== replay.shotShown) {
       replay.shotShown = frame.shot
       const { decision, kind } = frame.shot
-      if (decision !== undefined) {
+      if (decision !== undefined && !editor.open) {
         editor.showDecision(decision)
         split?.setPosition(decision === 0 ? 1 : 0)
       } else if (kind === 'versus') split?.setPosition(0.5)
     }
-    revealed = frame.revealed
+    revealed = editor.open ? new Set() : frame.revealed
+    spotlight.enabled = !editor.open
 
     // The crosshair, its coordinates and the light are on the ground at the centre of the screen, picked every
     // frame now that the camera has its pose; while the player drives, its target is there too (the camera orbits it).
@@ -758,10 +807,10 @@ async function main() {
     if (!replay || field) return
     const { player } = replay
     const actions: Record<string, () => void> = {
-      ' ': () => player.toggle(),
-      ArrowLeft: () => player.prev(),
-      ArrowRight: () => player.next(),
-      r: () => player.restart(),
+      ' ': () => playback(() => player.toggle()),
+      ArrowLeft: () => playback(() => player.prev()),
+      ArrowRight: () => playback(() => player.next()),
+      r: () => playback(() => player.restart()),
       s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
       l: () => hud.toggleLedger(),
