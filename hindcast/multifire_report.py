@@ -31,7 +31,7 @@ from scipy.stats import spearmanr
 
 HERE = Path(__file__).resolve().parent
 FIRES = HERE / "fires"
-FREE = ["K0", "K3", "K3m", "K4", "K5", "K5m", "K3s", "K6", "K6m", "K6d"]
+FREE = ["K0", "K3", "K3m", "K4", "K5", "K5b", "K5mm", "K5m", "K3g", "K5g", "K3s", "K6", "K6m", "K6d"]
 MAIN = ["K3", "K3m", "K5", "K5m"]
 EXTRA = ["K5o", "K5a", "K3o", "K5as", "K3as", "K5c", "K3c", "K3x", "K3g", "K5g"]
 ACTIVE = {"K5o": "_oracle", "K3o": "_oracle", "K5a": "_hotspots"}   # their references grow from the same active edge

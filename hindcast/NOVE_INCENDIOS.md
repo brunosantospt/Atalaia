@@ -60,6 +60,13 @@ O Sørensen no último passo observado, mediana dos nove incêndios: a elipse qu
   - **Com S&B** (K3) o fogo fica muito curto onde há pinhal e eucalipto: Oleiros 0,28×, Vila de Rei 0,25×, Sever do Vouga 0,48×. Nestes três, 70–90 % da área ardida é pinhal-bravo (COS 5.1.2.1) e eucaliptal (5.1.1.5). A tradução da COS dá-lhes o TU5 (folhada com sub-bosque), que com estes ventos anda devagar, sobretudo debaixo do abrigo das copas.
   - **Com os combustíveis portugueses** (K4, K5) esses três passam a arder de mais (1,3–3,6×): pinhal M-PIN, eucaliptal M-EUC.
   - **Os incêndios de mato disparam:** Vila Nova de Cerveira 4,4× (75 % de matos), Monchique 6,4× em 48 h. Todos os matos (COS 6.1.1.1) recebem o V-MAa, o mato alto com muita carga morta, escolhido para o tojo e a urze dos montes do Minho. No S&B são SH5, e Cerveira fica em 1,7×.
+- **O modelo de mato muda muito.** Com o mato médio V-MMb (K5mm) em vez do V-MAa (K5), a mediana sobe de 0,62 para 0,65:
+  - Cerveira 0,37 → 0,55 (área 4,4× → 2,4×);
+  - Guarda 0,73 → 0,82;
+  - Cabeceiras 0,63 → 0,70;
+  - Vila de Rei 0,48 → 0,57.
+
+  O V-MAb (mato alto com menos carga, K5b) dá quase o mesmo (0,655). O modelo de mato deve ser escolhido por região e não um só para o país: o V-MAa foi escolhido para os tojais do Minho, e no Algarve os matos são de esteva. Atenção: aqui a escolha foi feita nos mesmos incêndios em que se mede, por isso é uma pista e não uma prova. Fica por confirmar com incêndios de fora deste conjunto.
 - **As copas da Meta** (K3m) travam o fogo onde o S&B já queimava de mais (Cerveira 1,71× → 1,29×), mas também onde já era lento (Oleiros 0,28× → 0,21×). Nas copas o ELMFIRE abriga o vento (~10–15 % do vento a 10 m), e isso pesa mais do que o fogo de copas.
 - **As vivas de seca** (K5 contra K4) aceleram tudo mais 20–30 %. Ajudam onde o K4 era curto e estragam onde já era comprido.
 - **As projeções** com os parâmetros de origem quase não mudam nada: +0 a 4 % de área (K6 contra K5, K3s contra K3). O que queima de mais nas corridas com projeções são os combustíveis portugueses e as vivas de seca, não as projeções. A probabilidade de ignição de Schroeder (K6d) dá entre 24 e 60 % conforme o incêndio, contra 55 % fixos, e muda ainda menos.
