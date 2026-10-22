@@ -1,0 +1,230 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "mf_K6d",
+ "start": "2016-08-10T01:00",
+ "duration_min": 3900.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "mf_K6d",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": true,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": true,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 13.0,
+ "wall_s": 16.1,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "projeções: probabilidade de ignição 48 %"
+ ],
+ "stats": {
+  "burned_ha": 6236.0,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 1
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 125
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 212
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 246
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 282
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 314
+   },
+   {
+    "h": 15,
+    "observed_ha": 392,
+    "run_ha": 333
+   },
+   {
+    "h": 18,
+    "observed_ha": 415,
+    "run_ha": 413
+   },
+   {
+    "h": 21,
+    "observed_ha": 459,
+    "run_ha": 518
+   },
+   {
+    "h": 24,
+    "observed_ha": 581,
+    "run_ha": 564
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 817,
+    "run_ha": 590
+   },
+   {
+    "h": 27,
+    "observed_ha": 817,
+    "run_ha": 594
+   },
+   {
+    "h": 30,
+    "observed_ha": 827,
+    "run_ha": 617
+   },
+   {
+    "h": 33,
+    "observed_ha": 851,
+    "run_ha": 637
+   },
+   {
+    "h": 35.5,
+    "observed_ha": 875,
+    "run_ha": 661
+   },
+   {
+    "h": 36,
+    "observed_ha": 875,
+    "run_ha": 669
+   },
+   {
+    "h": 39,
+    "observed_ha": 893,
+    "run_ha": 765
+   },
+   {
+    "h": 42,
+    "observed_ha": 937,
+    "run_ha": 1040
+   },
+   {
+    "h": 45,
+    "observed_ha": 992,
+    "run_ha": 1513
+   },
+   {
+    "h": 48,
+    "observed_ha": 1086,
+    "run_ha": 1904
+   },
+   {
+    "h": 50.0,
+    "observed_ha": 1156,
+    "run_ha": 2234
+   },
+   {
+    "h": 51,
+    "observed_ha": 1156,
+    "run_ha": 2451
+   },
+   {
+    "h": 54,
+    "observed_ha": 1160,
+    "run_ha": 3217
+   },
+   {
+    "h": 57,
+    "observed_ha": 1168,
+    "run_ha": 3940
+   },
+   {
+    "h": 59.5,
+    "observed_ha": 1176,
+    "run_ha": 4389
+   },
+   {
+    "h": 60,
+    "observed_ha": 1177,
+    "run_ha": 4477
+   },
+   {
+    "h": 63,
+    "observed_ha": 1253,
+    "run_ha": 5453
+   },
+   {
+    "h": 65.0,
+    "observed_ha": 1746,
+    "run_ha": 6236
+   }
+  ],
+  "sorensen_last_step": 0.342,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 0.639
+   },
+   {
+    "step": 2,
+    "h": 26.5,
+    "sorensen": 0.56
+   },
+   {
+    "step": 3,
+    "h": 35.5,
+    "sorensen": 0.568
+   },
+   {
+    "step": 4,
+    "h": 50.0,
+    "sorensen": 0.495
+   },
+   {
+    "step": 5,
+    "h": 59.5,
+    "sorensen": 0.404
+   },
+   {
+    "step": 6,
+    "h": 65.0,
+    "sorensen": 0.342
+   }
+  ]
+ }
+}

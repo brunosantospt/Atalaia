@@ -1,0 +1,289 @@
+{
+ "fire": "Oleiros_25072020",
+ "name": "mf_K0",
+ "start": "2020-07-25T15:30",
+ "duration_min": 2010.0,
+ "options": {
+  "fire": "Oleiros_25072020",
+  "name": "mf_K0",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": false,
+  "dead": "fixed",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": false,
+  "canopy_fill": false,
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 14.9,
+ "wall_s": 17.6,
+ "notes": [],
+ "stats": {
+  "burned_ha": 3257.5,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.5,
+    "observed_ha": 137,
+    "run_ha": 5
+   },
+   {
+    "h": 3,
+    "observed_ha": 193,
+    "run_ha": 7
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 508,
+    "run_ha": 9
+   },
+   {
+    "h": 6,
+    "observed_ha": 895,
+    "run_ha": 90
+   },
+   {
+    "h": 7.0,
+    "observed_ha": 1449,
+    "run_ha": 177
+   },
+   {
+    "h": 9,
+    "observed_ha": 2018,
+    "run_ha": 350
+   },
+   {
+    "h": 10.0,
+    "observed_ha": 2957,
+    "run_ha": 429
+   },
+   {
+    "h": 11.5,
+    "observed_ha": 4018,
+    "run_ha": 542
+   },
+   {
+    "h": 12,
+    "observed_ha": 4018,
+    "run_ha": 582
+   },
+   {
+    "h": 15,
+    "observed_ha": 4053,
+    "run_ha": 786
+   },
+   {
+    "h": 18,
+    "observed_ha": 4099,
+    "run_ha": 1045
+   },
+   {
+    "h": 19.5,
+    "observed_ha": 4120,
+    "run_ha": 1209
+   },
+   {
+    "h": 21,
+    "observed_ha": 4291,
+    "run_ha": 1398
+   },
+   {
+    "h": 21.5,
+    "observed_ha": 4466,
+    "run_ha": 1471
+   },
+   {
+    "h": 23.5,
+    "observed_ha": 4480,
+    "run_ha": 1862
+   },
+   {
+    "h": 24,
+    "observed_ha": 4484,
+    "run_ha": 1975
+   },
+   {
+    "h": 27.0,
+    "observed_ha": 4875,
+    "run_ha": 2511
+   },
+   {
+    "h": 28.5,
+    "observed_ha": 5143,
+    "run_ha": 2722
+   },
+   {
+    "h": 30,
+    "observed_ha": 5164,
+    "run_ha": 2891
+   },
+   {
+    "h": 33,
+    "observed_ha": 5265,
+    "run_ha": 3208
+   },
+   {
+    "h": 33.5,
+    "observed_ha": 5288,
+    "run_ha": 3257
+   }
+  ],
+  "sorensen_last_step": 0.586,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.5,
+    "sorensen": 0.053
+   },
+   {
+    "step": 2,
+    "h": 3.5,
+    "sorensen": 0.028
+   },
+   {
+    "step": 3,
+    "h": 7.0,
+    "sorensen": 0.211
+   },
+   {
+    "step": 4,
+    "h": 10.0,
+    "sorensen": 0.244
+   },
+   {
+    "step": 5,
+    "h": 11.5,
+    "sorensen": 0.23
+   },
+   {
+    "step": 6,
+    "h": 19.5,
+    "sorensen": 0.421
+   },
+   {
+    "step": 7,
+    "h": 21.5,
+    "sorensen": 0.429
+   },
+   {
+    "step": 8,
+    "h": 23.5,
+    "sorensen": 0.477
+   },
+   {
+    "step": 9,
+    "h": 27.0,
+    "sorensen": 0.555
+   },
+   {
+    "step": 10,
+    "h": 28.5,
+    "sorensen": 0.564
+   },
+   {
+    "step": 11,
+    "h": 33.5,
+    "sorensen": 0.586
+   }
+  ],
+  "official_ha": 5589.8,
+  "sorensen_official": 0.598,
+  "outside_official_ha": 612.1,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2020-07-25T21:47:00+00:00",
+     "h": 7.29,
+     "n": 15,
+     "reached": 0.33
+    },
+    {
+     "time_utc": "2020-07-25T23:25:00+00:00",
+     "h": 8.92,
+     "n": 16,
+     "reached": 0.12
+    },
+    {
+     "time_utc": "2020-07-26T02:00:00+00:00",
+     "h": 11.5,
+     "n": 22,
+     "reached": 0.09
+    },
+    {
+     "time_utc": "2020-07-26T02:43:00+00:00",
+     "h": 12.22,
+     "n": 153,
+     "reached": 0.08
+    },
+    {
+     "time_utc": "2020-07-26T11:25:00+00:00",
+     "h": 20.92,
+     "n": 8,
+     "reached": 0.25
+    },
+    {
+     "time_utc": "2020-07-26T12:25:00+00:00",
+     "h": 21.92,
+     "n": 10,
+     "reached": 0.7
+    },
+    {
+     "time_utc": "2020-07-26T13:05:00+00:00",
+     "h": 22.59,
+     "n": 3,
+     "reached": 0.67
+    },
+    {
+     "time_utc": "2020-07-26T14:06:00+00:00",
+     "h": 23.6,
+     "n": 27,
+     "reached": 0.33
+    },
+    {
+     "time_utc": "2020-07-26T22:30:00+00:00",
+     "h": 32.0,
+     "n": 13,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2020-07-27T02:24:00+00:00",
+     "h": 35.9,
+     "n": 34,
+     "reached": 0.29
+    },
+    {
+     "time_utc": "2020-07-27T02:43:00+00:00",
+     "h": 36.22,
+     "n": 7,
+     "reached": 0.57
+    }
+   ],
+   "mean_reached": 0.37
+  }
+ }
+}
