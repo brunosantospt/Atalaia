@@ -20,7 +20,7 @@ const MARGIN = 1.35
 const MIN_RANGE_M = 1500
 const SPOT = 1.25
 /** The kinds the director's cut keeps (key D): the 90 s of the demo, without the step-by-step observed spread. */
-export const CUT: ShotKind[] = ['known', 'checkpoint', 'prediction', 'overview', 'ignition', 'known', 'reach', 'checkpoint', 'balance', 'decision', 'versus', 'outcome']
+export const CUT: ShotKind[] = ['known', 'checkpoint', 'prediction', 'overview', 'ignition', 'reach', 'incident', 'balance', 'decision', 'versus', 'outcome']
 
 export function decisionShots(
   fire: Fire,

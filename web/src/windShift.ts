@@ -1,6 +1,7 @@
-// The abrupt wind shift of a simulated fire (fire.json windShift): when the fire clock crosses it
-// while playing, the player pauses and a modal asks the commander for a new strategy. Also the
-// 'wind' alert of the stack: a warning before the shift, critical after it. The clock is the
+// The one incident of a simulated fire: its wind shift (fire.json windShift). Plans are made on the forecast
+// without it; when the fire clock reaches it while playing, the player pauses and a modal has one action,
+// "Realocar meios". Playback cannot go past it until an ELMFIRE run with the new wind has been shown
+// (main.ts); play just shows the prompt again. Until then the stack carries one alert. The clock is the
 // player's, in hours, as main passes it each frame.
 
 import type { Alert } from './alerts'
@@ -10,16 +11,14 @@ import { fmtNumber, fmtTime, wallClock } from './format'
 import { compass, type LonLat } from './geo'
 import { cellOf, lonLatAt, type Grid } from './grid'
 
-const WARN_MIN = 30 // the warning stands this long before the shift
-const AFTER_MIN = 60 // the critical alert stands this long after it
 const EPS_MIN = 1e-6
 
 /** What main gives the controller: the player's controls and the drawer. */
 export interface WindShiftHost {
   pause(): void
-  resume(): void
   seek(hours: number): void // pins the fire clock
-  openEditor(): void
+  reallocate(): void // "Realocar meios": the drawer opens at the incident, the simulation is stale
+  rearmed(): void // the clock went back before the incident: the pre-incident results are the ones to show
 }
 
 /** "E 23 km/h → NNO 36 km/h (rajadas 63)" */
@@ -47,7 +46,8 @@ export class WindShiftWatch {
   private shift: WindShift | undefined
   private start = ''
   private head: LonLat | undefined
-  private armed = true
+  private resolved = false // a run with the new wind is on the screen: playback may go on
+  private past = false // the clock is at or after the incident
   private prev = 0 // minutes at the last frame
   private modal: HTMLElement | undefined
   private cache: { base: Alert[]; key: string; out: Alert[] } | undefined
@@ -58,7 +58,6 @@ export class WindShiftWatch {
       'keydown',
       (e) => {
         if (!this.modal) return
-        if (e.key === 'Escape') this.resume()
         if (e.key !== 'Tab') e.stopImmediatePropagation()
       },
       true,
@@ -70,10 +69,17 @@ export class WindShiftWatch {
     this.close()
     this.shift = fire.windShift
     this.start = fire.start
-    this.armed = true
+    this.resolved = false
+    this.past = false
     this.prev = 0
     this.cache = undefined
     this.head = this.shift ? headAt(grid, fire.ignition, free, this.shift.minutes) : undefined
+  }
+
+  /** A run with the new wind is on the screen (or the clock went back to the old wind). */
+  setResolved(resolved: boolean) {
+    this.resolved = resolved
+    this.cache = undefined
   }
 
   /** Once per frame, with the fire clock (hours) and whether the player is playing. */
@@ -81,30 +87,30 @@ export class WindShiftWatch {
     const w = this.shift
     if (!w) return
     const m = hours * 60
-    const crossed = this.prev < w.minutes - EPS_MIN && m >= w.minutes - EPS_MIN
     this.prev = m
-    if (m < w.minutes - EPS_MIN) this.armed = true // before the shift again (restart, slider, back)
-    else if (crossed && this.armed && playing) {
-      this.armed = false
+    if (m < w.minutes - EPS_MIN) {
+      // Before the incident again (restart, slider, back): it is armed again.
+      if (this.past) {
+        this.past = false
+        this.close()
+        this.host.rearmed()
+      }
+      return
+    }
+    this.past = true
+    if (playing && !this.resolved && !this.modal) {
       this.host.pause()
       this.host.seek(w.minutes / 60) // a shot still moving must not carry the clock on
       this.show(w)
-    } else if (crossed) this.armed = false // jumped over it while paused
+    }
   }
 
-  /** The stack's alerts with the wind's at the clock: a warning before the shift, critical after it. */
+  /** The stack's alerts with the incident's: one, from the shift until a run with the new wind is shown. */
   alerts(base: Alert[]): Alert[] {
     const w = this.shift
-    if (!w) return base
-    const m = this.prev
-    let alert: Alert | undefined
-    if (m >= w.minutes - WARN_MIN && m < w.minutes - EPS_MIN) {
-      alert = this.alert(w, 'warning', `Vento vai rodar em ${Math.ceil(w.minutes - m - EPS_MIN)} min`)
-    } else if (m >= w.minutes - EPS_MIN && m < w.minutes + AFTER_MIN) {
-      alert = this.alert(w, 'critical', 'Vento rodou')
-    }
-    if (!alert) return base
-    const key = `${alert.level}|${alert.title}`
+    if (!w || this.resolved || this.prev < w.minutes - EPS_MIN) return base
+    const alert = this.alert(w, 'critical', 'Incidente: mudança de vento — realocar meios')
+    const key = alert.title
     if (this.cache?.base !== base || this.cache.key !== key) this.cache = { base, key, out: [...base, alert] }
     return this.cache.out
   }
@@ -121,14 +127,9 @@ export class WindShiftWatch {
     }
   }
 
-  private resume() {
+  private reallocate() {
     this.close()
-    this.host.resume()
-  }
-
-  private review() {
-    this.close()
-    this.host.openEditor() // pauses the player and shows the split
+    this.host.reallocate()
     if (this.shift) this.host.seek(this.shift.minutes / 60)
   }
 
@@ -155,15 +156,13 @@ export class WindShiftWatch {
         <p class="wind-text"></p>
         <p class="wind-means"></p>
         <footer>
-          <button type="button" class="wind-review">Rever estratégia</button>
-          <button type="button" class="wind-continue">Continuar sem alterar</button>
+          <button type="button" class="wind-review">Realocar meios</button>
         </footer>
       </div>`
     el.querySelector('.wind-line')!.textContent = windLine(w)
     el.querySelector('.wind-text')!.textContent = w.alert
-    el.querySelector('.wind-means')!.textContent = `${headLine(w)} A estratégia pensada para o vento anterior pode já não servir: reveja onde coloca os meios.`
-    el.querySelector('.wind-review')!.addEventListener('click', () => this.review())
-    el.querySelector('.wind-continue')!.addEventListener('click', () => this.resume())
+    el.querySelector('.wind-means')!.textContent = `${headLine(w)} A estratégia pensada para o vento anterior pode já não servir: realoque os meios; o ELMFIRE corre de novo com o vento novo.`
+    el.querySelector('.wind-review')!.addEventListener('click', () => this.reallocate())
     document.body.append(el)
     this.modal = el
     el.querySelector<HTMLButtonElement>('.wind-review')!.focus()

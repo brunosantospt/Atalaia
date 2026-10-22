@@ -75,7 +75,7 @@ export type Reports = Record<'free' | 'A' | 'B', Report>
 /** Where the shown runs stand with the engine (main.ts): running, shown, or not there. */
 export type EngineStatus =
   | { state: 'running'; name: string }
-  | { state: 'done'; name: string; seconds: number } // 0: all from the API's cache
+  | { state: 'done'; name: string; seconds: number; note?: string } // 0: all from the API's cache; the note is a small caveat
   | { state: 'down'; name: string; reason: string }
 
 /** The "Simular no ELMFIRE" button: lit only when the means differ from what the last simulation ran. */
@@ -1476,7 +1476,7 @@ export class Editor {
     this.refs.engine.title = status?.state === 'down' ? status.reason : ''
     this.refs.engineNote.textContent = !runs
       ? ''
-      : `Corrido com ${runs.A.engine ?? 'ELMFIRE'} (API). Só as linhas entram no motor; as descargas aéreas não. Cada fogo pára no corte da referência.`
+      : `Corrido com ${runs.A.engine ?? 'ELMFIRE'} (API). Só as linhas entram no motor; as descargas aéreas não. Cada fogo pára no corte da referência.${status?.state === 'done' && status.note ? ` ${status.note}` : ''}`
     if (!runs && this.free && this.loaded) {
       // Before the first simulation: Livre is the cached run, A and B have not run.
       const free = this.free

@@ -11,7 +11,7 @@ import { fmtDate, fmtHa, fmtHours, fmtKm, fmtNumber, fmtPct, fmtTime, wallClock 
 import { bboxCenter, bboxOf, bboxRadiusM, bearingDeg, compass, distanceM, lerpLonLat, type BBox, type LonLat } from './geo'
 import { freeAreaHa, type Reach } from './reach'
 
-export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction'
+export type ShotKind = 'overview' | 'ignition' | 'known' | 'reach' | 'checkpoint' | 'spread' | 'axis' | 'balance' | 'decision' | 'versus' | 'outcome' | 'prediction' | 'incident'
 
 export interface Shot {
   kind: ShotKind
@@ -201,7 +201,7 @@ export function buildStory(
       spot: SPOT * framed(2200),
       moveS: 4,
       holdS: 6,
-      reveal: [],
+      reveal: ['ignition:0'], // the opening comes before the overview that reveals it
       conceal: [],
     })
 
@@ -303,7 +303,7 @@ export function buildStory(
   }
 
   // ---- one shot per step (observed, or the simulated reference) ----
-  // The wind shift of a simulated fire has its own shot, so the timeline has a tick there.
+  // The wind shift of a simulated fire is the one incident: its own shot, so the timeline has a single tick there.
   const shift = fire.windShift
   let shiftShot = !shift
   const pushShift = () => {
@@ -311,9 +311,9 @@ export function buildStory(
     const at = steps.filter((s) => s.hours <= shift!.minutes / 60).at(-1) ?? steps[0]
     const r = bboxRadiusM(at.bbox)
     shots.push({
-      kind: 'spread',
-      word: 'Vento roda',
-      title: `Vento roda · ${fmtTime(clock(shift!.minutes / 60))}`,
+      kind: 'incident',
+      word: 'Incidente',
+      title: `Incidente: vento roda · ${fmtTime(clock(shift!.minutes / 60))}`,
       caption: shift!.alert,
       place: at.center,
       simulated: false,
