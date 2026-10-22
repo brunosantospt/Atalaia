@@ -24,7 +24,10 @@ only in this reference, so the web's fast model and the API's re-plans run a tam
 --model fast uses the browser's fast model instead (web/src/fastModel.ts, run by Node through
 scripts/fastmodel/free_run.ts), which spreads this fire some 5x faster in its eucalyptus;
 --compare records the other model's areas in windShift.compare. Steps are hourly through the 6 h decision window, then at 9 and 12 h, and further
-only while the fire stays off the grid's edge. Each perimeter is the cells reached by then, smoothed
+only while the fire stays off the grid's edge, and never past --cap-ha (default 2000 ha): the last step is the
+first at or above it, at the minute the reference gets there (fire.json referenceCapHa/referenceCapMin; the
+villages and windShift still read the whole run). The ignition is --ign-lat/--ign-lon (Monte da Penha, near the top);
+fire.json `engine` holds the reference's settings for the API (api/runs.py). Each perimeter is the cells reached by then, smoothed
 a little and joined with the previous one, so they only grow; areas are counted in cells. The same
 run under the observed wind gives windShift.noShift.
 """
@@ -81,7 +84,7 @@ STEP_HOURS = [0, 1, 2, 3, 4, 5, 6, 9, 12, 18, 24]  # cut at the first one that t
 WINDOW_MIN = 360  # the app's decision window (main.ts DECISION_MIN)
 IGNITION_R_M = 45  # step 0: a disc around the ignition that holds its cell centre (api/runs.py)
 SMOOTH_M = 15  # half a cell: takes the staircase off the cell outlines
-SIMPLIFY_M = 4.0
+SIMPLIFY_M = 15.0  # perimeters are simplified to this (was 4 m): fewer rings and vertices for the browser
 PLACE_RADIUS_M = 250  # a village is reached when the fire gets this close (osm.ts)
 HOMES_NEAR_M = 100  # homes this close to the front: OSM puts them in non-burnable cells
 
@@ -108,6 +111,9 @@ DRY = 3.0  # points off the Simard equilibrium moisture: dead 1 h of 2-3 % at RH
 DEAD_FLOOR = 2.0
 FARMLAND_FUEL = 102  # S&B GR2 for COS 2.1.1.1 (dry fallow and stubble in September); 0 keeps it non-burnable
 SEED = 2
+CAP_HA = 2000.0  # the reference stops at the first step at or above this area; the web stops simulated runs there too
+# Monte da Penha, near the top: 41°25'42.8"N 8°16'17.4"W (the scenario's ignition; the UE package's is ~2 km east)
+IGN_LAT, IGN_LON = 41.428556, -8.2715
 GUST_FACTOR = 1.4  # gust/mean: the observed afternoon has ~2.0, a steadier flow a little less
 
 PTTM06 = CRS.from_epsg(3763)
@@ -439,7 +445,7 @@ def build(model, compare, opts):
     folder = OUT / FIRE_ID
     folder.mkdir(parents=True, exist_ok=True)
     package = json.loads((PACKAGE / "fire.json").read_text())
-    ign = {"lon": package["ignition"]["lon"], "lat": package["ignition"]["lat"]}
+    ign = {"lon": opts.ign_lon, "lat": opts.ign_lat}
     g = make_grid(ign, opts.grid_km, (opts.centre_east_km * 1000, opts.centre_north_km * 1000))
     (OUT / "index.json").write_text("[]\n") if not (OUT / "index.json").exists() else None
     make_layers(folder, g)
@@ -462,7 +468,16 @@ def build(model, compare, opts):
     # The steps, up to the last one whose perimeter stays off the grid's edge.
     edge = np.concatenate([arrival[0], arrival[-1], arrival[:, 0], arrival[:, -1]])
     edge_min = float(edge.min())
-    step_hours = [h for h in STEP_HOURS if h * 60 < edge_min]
+    full_hours = [h for h in STEP_HOURS if h * 60 < edge_min]
+    # The minute the reference first holds CAP_HA (cells counted, whole minute). The steps are the usual ones
+    # before it plus one at that minute, so the last step is the first at or above the cap: ~CAP_HA, not
+    # whatever the next coarse step (9, 12, 18 h) would give.
+    arrived = np.sort(arrival[np.isfinite(arrival)])
+    need = int(np.ceil(opts.cap_ha / cell_ha))
+    cap_min = int(np.ceil(arrived[need - 1])) if len(arrived) >= need else None
+    if cap_min is not None and cap_min > full_hours[-1] * 60:
+        cap_min = None
+    step_hours = full_hours if cap_min is None else [h for h in full_hours if h * 60 < cap_min] + [cap_min / 60]
     if edge_min <= RUN_MIN:
         print(f"the fire reaches the grid edge at T+{edge_min:.0f} min: steps end at T+{step_hours[-1]} h")
 
@@ -476,7 +491,7 @@ def build(model, compare, opts):
             shape, mask = clean(disc), shapely.contains_xy(disc, xs, ys)
             area = round(disc.area / HA, 1)
         else:
-            mask = (arrival <= h * 60) | prev_mask
+            mask = (arrival <= h * 60 + 1e-6) | prev_mask
             shape = cells_shape(mask, g).buffer(SMOOTH_M).buffer(-SMOOTH_M)
             shape = clean(shapely.union(shape.simplify(SIMPLIFY_M, preserve_topology=True), prev_shape))
             area = round(mask.sum() * cell_ha, 1)
@@ -508,7 +523,7 @@ def build(model, compare, opts):
     # ---- the shift, for the alert and the re-plan ----
     i_from, i_to = weather["time"].index(SHIFT_FROM), weather["time"].index(SHIFT_TO)
     m_from, m_to = ((parse(x) - start).total_seconds() / 60 for x in (SHIFT_FROM, SHIFT_TO))
-    until = step_hours[-1] * 60
+    until = full_hours[-1] * 60  # villages and the no-shift area read the whole run, not just the capped steps
     hit, hit_base = exposure.villages(arrival, until), exposure.villages(baseline, until)
     villages = sorted(
         ({"name": n, "kind": p["kind"], "lon": p["lon"], "lat": p["lat"], "minutes": m, "noShiftMinutes": hit_base.get(n, (None, None))[1]}
@@ -538,7 +553,7 @@ def build(model, compare, opts):
         "atShift": summary(arrival, m_from),
         "within6h": summary(arrival, WINDOW_MIN),
         "villages": villages,
-        "noShift": {"within6h": summary(baseline, WINDOW_MIN), f"areaHa{step_hours[-1]}h": summary(baseline, until)["areaHa"]},
+        "noShift": {"within6h": summary(baseline, WINDOW_MIN), f"areaHa{full_hours[-1]}h": summary(baseline, until)["areaHa"]},
         "note": f"sintético, afinado: injetado para a demo, não observado. O vento do IFS foi multiplicado por {opts.wind_mult:g} (já incluído no weather.json) e o das {SHIFT_TO[-5:]} às 21:00 é inventado. Sem a mudança, a cabeça segue para {compass(head(baseline, g, ign_xy, 0, WINDOW_MIN))} e só atinge {len(base_in6)} lugares em 6 h; com ela, roda para {compass(head_after)} e atinge {len(villages_in6)}. Meteorologia horária: o vento roda linearmente da primeira hora da janela para a segunda (fastModel.ts, api/fires.py).",
         "alert": (
             f"Mudança brusca de vento: de {compass(weather['windFromDeg'][i_from])} a {weather['windKmh'][i_from]:.0f} km/h para "
@@ -573,6 +588,9 @@ def build(model, compare, opts):
         "areaHa": {"timed": steps[-1]["areaHa"], "untimed": 0.0, "total": steps[-1]["areaHa"]},
         "steps": steps,
         "periods": periods,
+        "referenceCapHa": opts.cap_ha,
+        "referenceCapMin": cap_min,
+        "engine": ENGINE_BLOCK(opts),
         "windShift": wind_shift,
         "source": {k: v.replace("{model}", MODELS[model]).replace("{model_pt}", MODEL_PT[model]).replace("{wind_mult}", f"{opts.wind_mult:g}").replace("{tuning}", tuning_pt(opts))
                    for k, v in SOURCE.items()},
@@ -582,6 +600,12 @@ def build(model, compare, opts):
     index = [{"id": FIRE_ID, "name": NAME, "start": fire["start"], "areaHa": fire["areaHa"]["total"], **ign}]
     (OUT / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n")
     report(fire, folder)
+
+
+def ENGINE_BLOCK(opts):  # noqa: N802
+    """What the API's /api/run applies by default to this fire (api/runs.py), the reference's settings."""
+    return {"fuels": opts.fuels, "spotting": opts.spotting, "seed": opts.seed, "canopy": "typical" if opts.canopy else None,
+            "deadMoisture": {"simardDryPoints": opts.dry, "floorPct": opts.dead_floor}, "liveHerbPct": opts.live_herb, "liveWoodyPct": opts.live_woody}
 
 
 def tuning(opts, g):
@@ -632,6 +656,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--model", choices=MODELS, default="elmfire", help="the reference spread (default ELMFIRE, Docker)")
     parser.add_argument("--compare", action="store_true", help="also run the other model and record its areas")
+    parser.add_argument("--ign-lat", type=float, default=IGN_LAT, help="ignition latitude (WGS84)")
+    parser.add_argument("--ign-lon", type=float, default=IGN_LON, help="ignition longitude (WGS84)")
+    parser.add_argument("--cap-ha", type=float, default=CAP_HA, help="the reference ends at the first step at or above this area (ha)")
     parser.add_argument("--grid-km", type=float, default=GRID_KM, help="side of the square 30 m grid (cells: km*1000/30, keep under ~1000)")
     parser.add_argument("--centre-east-km", type=float, default=CENTRE_E_KM, help="grid centre east of the ignition")
     parser.add_argument("--centre-north-km", type=float, default=CENTRE_N_KM, help="grid centre north of the ignition")

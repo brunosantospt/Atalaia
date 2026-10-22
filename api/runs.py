@@ -53,6 +53,16 @@ class Moisture(Strict):
     live_woody_pct: float = Field(90, ge=30, le=300)
 
 
+class WeatherMoisture(Strict):
+    """Moistures that follow the weather, as the reference of a built fire has them (fire.json `engine`):
+    dead 1 h is the Simard equilibrium moisture of the hour's temperature and humidity less `dry` points
+    (floor `floor_pct`), 10 h and 100 h a little above it; live fuels are constant."""
+    dry: float = Field(ge=0, le=20)
+    floor_pct: float = Field(gt=0, le=60)
+    live_herb_pct: float = Field(ge=30, le=300)
+    live_woody_pct: float = Field(ge=30, le=300)
+
+
 class Barrier(Strict):
     """A line where nothing burns from `from_min` on: a fire break, a wetted line, a road held."""
     path: list[tuple[float, float]] = Field(min_length=2)  # [[lon, lat], ...]
@@ -69,13 +79,37 @@ class Scenario(Strict):
     engine: str = 'elmfire'
     start_step: int = Field(0, ge=0)
     duration_min: float | None = Field(None, gt=0, le=MAX_DURATION_MIN)
-    moisture: Moisture = Moisture()
+    # Left out, a fire's own `engine` block in fire.json decides (the reference's settings); a fire without
+    # one gets the plain defaults below. Explicit values always win.
+    moisture: Moisture | None = None
+    weather_moisture: WeatherMoisture | None = None
     decision: Decision = Decision()
     # ELMFIRE only (hindcast-registos): Scott & Burgan (sb) or the Portuguese models of Fernandes et al.
     # 2009 (pt) for the COS classes that have one; ELMFIRE's ember model, and the seed it draws from.
-    fuels: Literal['sb', 'pt'] = 'sb'
-    spotting: bool = False
-    seed: int = Field(1, ge=1)
+    fuels: Literal['sb', 'pt'] | None = None
+    spotting: bool | None = None
+    seed: int | None = Field(None, ge=1)
+    canopy: bool | None = None  # typical canopy in the forest classes (fuels.canopy_layers), so it can crown
+
+
+def with_engine_defaults(scenario: Scenario, fire: Fire) -> Scenario:
+    """Every setting the request left out, from the fire's `engine` block when the engine is ELMFIRE, else the
+    plain defaults. The result is what the cache key covers."""
+    block = fire.meta.get('engine', {}) if scenario.engine == 'elmfire' else {}
+    update = {
+        'fuels': scenario.fuels or block.get('fuels', 'sb'),
+        'spotting': block.get('spotting', False) if scenario.spotting is None else scenario.spotting,
+        'seed': scenario.seed or block.get('seed', 1),
+        'canopy': bool(block.get('canopy')) if scenario.canopy is None else scenario.canopy,
+    }
+    if scenario.moisture is None and scenario.weather_moisture is None and block.get('deadMoisture'):
+        dead = block['deadMoisture']
+        update['weather_moisture'] = WeatherMoisture(
+            dry=dead['simardDryPoints'], floor_pct=dead['floorPct'],
+            live_herb_pct=block['liveHerbPct'], live_woody_pct=block['liveWoodyPct'])
+    elif scenario.moisture is None and scenario.weather_moisture is None:
+        update['moisture'] = Moisture()
+    return scenario.model_copy(update=update)
 
 
 def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
@@ -92,8 +126,11 @@ def plan(scenario: Scenario) -> tuple[Fire, Scenario]:
         if scenario.start_step + 1 == len(steps):
             raise ScenarioError(f'duration_min: o passo {scenario.start_step} é o último observado, diz quanto tempo correr')
         duration = (steps[scenario.start_step + 1]['hours'] - steps[scenario.start_step]['hours']) * 60
-    if scenario.engine != 'elmfire' and (scenario.fuels != 'sb' or scenario.spotting):
-        raise ScenarioError('fuels e spotting: só o ELMFIRE os tem')
+    scenario = with_engine_defaults(scenario, fire)
+    if scenario.engine != 'elmfire' and (scenario.fuels != 'sb' or scenario.spotting or scenario.canopy or scenario.weather_moisture):
+        raise ScenarioError('fuels, spotting, canopy e weather_moisture: só o ELMFIRE os tem')
+    if scenario.engine != 'elmfire' and scenario.moisture is None:
+        scenario = scenario.model_copy(update={'moisture': Moisture()})
     for barrier in scenario.decision.barriers:
         if barrier.from_min >= duration:
             raise ScenarioError(f'decision.barriers: from_min {barrier.from_min:g} não é antes do fim ({duration:g} min)')
@@ -148,6 +185,27 @@ def write_cache(key: str, result: dict):
     os.replace(temp, CACHE / f'{key}.json')
 
 
+def emc_pct(temp_c: float, rh: float) -> float:
+    """Equilibrium moisture of fine dead fuel (%), Simard (1968) as NFDRS uses it (scripts/build_hypothetical.py)."""
+    t = temp_c * 9 / 5 + 32
+    if rh < 10:
+        return 0.03229 + 0.281073 * rh - 0.000578 * rh * t
+    if rh < 50:
+        return 2.22749 + 0.160107 * rh - 0.01478 * t
+    return 21.0606 + 0.005565 * rh**2 - 0.00035 * rh * t - 0.483199 * rh
+
+
+def moisture(scenario: Scenario, fire: Fire, start, minute: float) -> dict:
+    """The fuel moistures of a request's weather entry at `minute` after `start`."""
+    wm = scenario.weather_moisture
+    if wm is None:
+        return scenario.moisture.model_dump()
+    temp, rh = (fire.series(start, [minute], name)[0] for name in ('tempC', 'rhPct'))
+    m1 = max(wm.floor_pct, emc_pct(temp, rh) - wm.dry)
+    return {'dead_1h_pct': round(m1, 1), 'dead_10h_pct': round(m1 + 1.5, 1), 'dead_100h_pct': round(m1 + 3.0, 1),
+            'live_herb_pct': wm.live_herb_pct, 'live_woody_pct': wm.live_woody_pct}
+
+
 def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
     """Runs the scenario. A barrier that only holds from a later minute splits the run there: the
     next stretch starts from what has burned so far, with the barrier in the fuel."""
@@ -159,6 +217,9 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
         legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
         layers['fuel'] = fuels.codes(legend)[fire.read('fuel.u8', 'u1')]
         extra['fuel_models'] = fuels.elmfire_rows()
+    if scenario.canopy:
+        legend = json.loads((fire.folder / 'fuel.json').read_text())['legend']
+        layers.update(fuels.canopy_layers(legend, fire.read('fuel.u8', 'u1')))
     if scenario.spotting:
         extra.update(spotting=SPOTTING, seed=scenario.seed)
     barriers = [(b.from_min, fire.line(b.path, b.width_m)) for b in scenario.decision.barriers]
@@ -183,12 +244,13 @@ def simulate(fire: Fire, scenario: Scenario, engine: Engine) -> dict:
             'duration_min': t1 - t0,
             'ignitions': [{'x': x, 'y': y, 't_min': t - t0} for x, y, t in ignitions if t0 <= t < t1],
             'burned': burned.astype(np.uint8).tolist(),
-            'weather': [{'t_min': t - t0, **w, **scenario.moisture.model_dump()} for t, w in zip(times, weather)],
+            'weather': [{'t_min': t - t0, **w, **moisture(scenario, fire, start, t)} for t, w in zip(times, weather)],
             'layers': {
                 'fuel': fuel.tolist(),
                 'elevation_m': np.round(layers['elevation_m'], 1).tolist(),
                 'slope_deg': layers['slope_deg'].tolist(),
                 'aspect_deg': layers['aspect_deg'].tolist(),
+                **{k: layers[k].tolist() for k in fuels.CANOPY if k in layers},
             },
             **extra,
         }

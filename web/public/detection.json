@@ -1,9 +1,9 @@
 {
-  "notes": "Instantes da deteção na linha do tempo da simulação, em minutos desde a ignição. O incêndio real é só o pacote de dados; o relógio é o da simulação. O drone deteta quase de imediato e os ETA dos meios contam a partir de droneMin. A deteção convencional por satélite é um valor paramétrico, marcado na mesma linha do tempo como o instante em que o ataque começaria sem o drone.",
-  "droneMin": 2,
-  "satelliteMin": 180,
+  "notes": "Instantes da deteção na linha do tempo da simulação, em minutos desde a ignição. O incêndio real é só o pacote de dados; o relógio é o da simulação. O drone avista o fogo pouco depois da ignição e os ETA dos meios contam a partir de droneMin. A deteção convencional por satélite é marcada na mesma linha do tempo como o instante em que o ataque começaria sem o drone.",
+  "droneMin": 10,
+  "satelliteMin": 30,
   "sources": {
-    "droneMin": "Hipótese do cenário: drone em vigilância sobre a área, deteção e confirmação em 2 min.",
-    "satelliteMin": "Paramétrico. Sobre Portugal há 4 passagens diárias de deteção térmica (MODIS Terra e Aqua, VIIRS S-NPP e NOAA-20), separadas de 2 a 6 h, e o FIRMS NRT tinha ~3 h de latência em 2016 (NASA FIRMS FAQ). 180 min é um meio-termo; a primeira deteção FIRMS real do incêndio fica como referência a obter (Should)."
+    "droneMin": "Hipótese do cenário da demo da Penha: o drone avista o fogo 10 min após a ignição. Pressuposto do cenário, não medido.",
+    "satelliteMin": "Hipótese do cenário da demo da Penha: o satélite deteta o fogo 30 min após a ignição. Pressuposto do cenário, não medido; uma passagem real de deteção térmica (MODIS, VIIRS) pode demorar horas."
   }
 }
