@@ -287,7 +287,7 @@ export class Hud {
     const copyText = (val: string) => {
       if (!val) return
       const cleanVal = val.trim()
-      const finishToast = () => this.toast(`Coordenadas ${cleanVal} copiadas!`)
+      const finishToast = () => this.toast(`Coordenadas ${cleanVal} copiadas.`)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(cleanVal).then(finishToast).catch(() => {
           const ta = document.createElement('textarea')
@@ -423,6 +423,9 @@ export class Hud {
         this.refs.alertDispatchBtn.textContent = emergency
           ? 'Mobilizar Avião Anfíbio Pesado (AVBP)'
           : 'Mobilizar Helicóptero Bombardeiro (HEBL)'
+        // It pops up by itself when it first appears or escalates; ✕ (or a click elsewhere) folds it to the badge.
+        this.isAlertPopoverOpen = true
+        this.refs.alertPopover.hidden = false
       }
 
       this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
