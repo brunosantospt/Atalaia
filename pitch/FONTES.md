@@ -180,6 +180,9 @@ Regras (do README do hindcast, não negociáveis):
   mencionar os dois horários.
 - As setas passam a nomear a medida acrescentada ("+ Dados públicos", "+ Linhas
   de ataque") antes do detalhe, em vez de só o detalhe solto.
+- A sequência de números ganhou um rótulo ("Sobreposição com o incêndio real ·
+  índice de Sørensen") e ficou centrada, em vez de alinhada à esquerda por
+  baixo das imagens.
 - As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial parou
   ao longo das estradas: melhoram o Sørensen em parte por construção. Nunca dizer
   que vêm "dos registos".
