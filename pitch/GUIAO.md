@@ -69,9 +69,8 @@ se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 ## 5 · O desafio da UMinho — 1:00–1:10 — Narrador
 
-> "O desafio da Universidade do Minho: como simular alternativas de atuação
-> antes de comprometer meios no terreno, e como melhorar a coordenação nos
-> primeiros minutos?"
+> "O desafio da Universidade do Minho: como simular alternativas de atuação,
+> e melhorar a coordenação nos primeiros minutos?"
 
 **[clique]** *(mostrar as três pílulas: Rápida, Precisa, Prática)*
 

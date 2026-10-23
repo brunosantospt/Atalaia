@@ -101,9 +101,12 @@ Sem notas técnicas.
 
 ## 5 · O desafio da UMinho
 
-- Pergunta do enunciado, tal como confirmada: "Como simular alternativas de
-  atuação antes de comprometer meios no terreno, e como melhorar a coordenação
-  nos primeiros minutos?" O enunciado fala também em "pouca ajuda de simulação" e
+- Pergunta literal do enunciado: "Como simular alternativas de atuação antes de
+  comprometer meios no terreno, e como melhorar a coordenação nos primeiros
+  minutos?" No slide fica encurtada ("...de atuação, e melhorar a coordenação
+  nos primeiros minutos?", sem "antes de comprometer meios no terreno") para
+  caber num relance; se perguntarem no Q&A pela redação exata do desafio, usar
+  a frase completa acima. O enunciado fala também em "pouca ajuda de simulação" e
   em mostrar o efeito das decisões "de forma compreensível para quem decide" —
   usar se fizer falta no Q&A.
 - "Todas as entidades envolvidas": bombeiros, proteção civil, câmara, GNR/PSP,
