@@ -51,13 +51,16 @@ A nossa resposta chama-se…
 
 …Atalaia.
 
-## 6 · A proposta
+## 6 · A proposta + validação + métodos
 
 Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca
 os meios, prevê o comportamento do incêndio e comunica o comando de ação.
+Dados reais. Meios reais. Um só mapa.
 
-Dados reais. Meios reais. Um só mapa. Que estradas cortar. Quanto tempo até
-ao fogo. Que casas estão em risco. Para todos os que combatem.
+E isto já foi testado: contra um incêndio real, Vieira do Minho 2016,
+chegamos a 0,89 de sobreposição — 0,76 no modelo base, 0,83 só com dados
+públicos. Por baixo: o motor ELMFIRE, LiDAR da DGT, e a otimização
+premiada de um dos nossos orientadores, Filipe Alvelos.
 
 Vamos ver ao vivo.
 
@@ -65,50 +68,22 @@ Vamos ver ao vivo.
 
 *(guião da demo ainda por fechar)*
 
-E podemos confiar nisto? Testámos contra um incêndio real.
-
-## 8 · Validação
-
-Reconstituímos um incêndio real: Vieira do Minho, 2016, com o motor
-ELMFIRE.
-
-O modelo base está a 0,76 de sobreposição. Só com dados públicos sobe para
-0,83. Com as linhas de ataque inferidas, 0,89.
-
-E esta precisão não caiu do céu. Deixem-me mostrar o que está por baixo.
-
-## 8b · A tecnologia
-
-O motor é o ELMFIRE, do Fire Lab da UC Berkeley, afinado para Portugal com
-LiDAR da DGT.
-
-Motor de vento próprio, a combinar CERRA com o relevo, para captar o vento
-local.
-
-A otimização usa a meta-heurística premiada de um dos nossos orientadores,
-Filipe Alvelos.
-
-Um tradutor próprio liga cada decisão ao motor de propagação.
-
-No fundo: integrámos e calibrámos vários modelos, cada um a fazer o que faz
-melhor.
-
 E isto não acaba hoje.
 
-## 9 · A seguir
+## 8 · A seguir
 
 A seguir: ferramenta de testes para cenários futuros; IA a afinar a
 estratégia; e drones para detetar mais cedo.
 
 Ver sempre mais cedo. Decidir sempre melhor.
 
-## 10 · Fecho + obrigado
+## 9 · Fecho + obrigado
 
 Em 2025 arderam 11 Guimarães. Com a Atalaia, quem decide vê o que vai
 arder, para cada decisão, antes de enviar os meios.
 
 Obrigado.
 
-## 11 · Créditos
+## 10 · Créditos
 
 *(fora do tempo, não se lê em voz alta)*

@@ -5,9 +5,10 @@ em `index.html` para as deixar limpas (só o texto a dizer + cliques). Usar isto
 preparar o Q&A, não para ler em palco.
 
 ⚠️ **Tempo (23 out):** tudo o que não é a demo (112 s) tinha de caber em
-2 min. Cortaram-se ~37 s de texto no gancho, problema, ferramentas,
-proposta, validação, tecnologia e "a seguir" — ver a nota de cada slide
-abaixo. Total sem demo agora: 1:59.
+2 min. Primeiro cortaram-se ~37 s de texto no gancho, problema, ferramentas,
+proposta, validação, tecnologia e "a seguir" (total sem demo: 1:59); depois
+fundiram-se os slides "proposta", "validação" e "tecnologia" num só, o que
+tira mais ~15 s e dois slides inteiros. Total sem demo agora: 1:44.
 
 ---
 
@@ -135,32 +136,103 @@ Sem notas técnicas; ver `index.html` para a descrição da animação.
 
 ---
 
-## 6 · A proposta
+## 6 · A proposta + validação + métodos
 
+FUNDIDO (23 out): este slide era três slides separados — "A proposta",
+"Validação" e "A tecnologia" — juntados num só para caber a apresentação em
+menos tempo. Fica: roadmap da proposta → "Dados reais. Meios reais. Um só
+mapa." → prova de validação + créditos técnicos, tudo no mesmo slide, antes
+da demo.
+
+**O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
+- A imagem de validação fica pequena (520px de largura, ~42% do slide, em
+  vez do slide inteiro): já não se leem os pormenores das três áreas
+  ardidas, só a forma geral e a cor. Os três números continuam bem
+  legíveis.
+- As legendas por painel ("área prevista pelo modelo" / "perímetro
+  observado") e os rótulos de cada seta ("+ Dados públicos" / "+ Linhas de
+  ataque") saíram do slide — ficam só os números em sequência.
+- O grid de 4 cartões da tecnologia (com ícone e descrição por peça) virou
+  uma frase única; o "tradutor de estratégia" e a frase de fecho "cada peça
+  a fazer o que faz melhor" saíram por completo.
+- Se o júri pedir mais detalhe em algum destes pontos, está tudo neste
+  ficheiro, mais abaixo nesta secção.
+
+**Proposta (texto original, ainda válido):**
 - Verbos impessoais de propósito ("colocar", "alocar", "comunicar"), sem
   imperativo a apontar para quem vê o pitch. Manter esse registo no resto do
   slide.
-- As quatro linhas do topo (monitorizar, alocar, prever, comunicar) são as
+- As quatro linhas do roadmap (monitorizar, alocar, prever, comunicar) são as
   quatro forças a vender: 1) prevê o incêndio (01, 03); 2) permite testar
   estratégias de ataque e ver a consequência; 3) sugere uma otimização da
-  estratégia (ILS); 4) é um ponto de comunicação comum a todos os corpos de ação
-  (04 + linha final + lista de entidades).
-- As fontes de dados do incêndio (IPMA, ERA5, CERRA, Copernicus DEM, LiDAR DGT,
-  COS DGT, PT-FireSprd) estão creditadas no último slide (créditos).
-- CERRA e o FWI do IPMA vêm dos ramos feature/cerra-wind-engine e hindcast;
-  confirmar que estão no main antes do lock.
+  estratégia (ILS); 4) é um ponto de comunicação comum a todos os corpos de ação.
 - "Alocar com eficácia" cobre tanto a colocação manual como a sugestão
   otimizada (ILS); não especificar no slide qual dos dois corre na demo.
 - "Tempo real" = o modelo rápido no browser (milissegundos por corrida); o
   ELMFIRE confirma em 10–40 s.
-- Os dados úteis listados no fecho existem em reporting.ts (cortes de via, PMA
-  e corredor) e no relatório do editor (aldeias, área por hora, ETA dos meios);
-  a lista no slide ficou reduzida a 3 para caber num só olhar, o resto fica
-  para o Q&A.
-- Slide a 13 s (23 out: era 18 s). Tirou-se da fala a frase "Nós trabalhamos
-  com dados precisos, com os meios que estão disponíveis ao momento em cada
-  quartel, e tudo isto num só mapa.", que duplicava o "Dados reais. Meios
-  reais. Um só mapa." logo a seguir — redundante e caro em tempo.
+- Os dados úteis (estradas a cortar, tempo de chegada, casas em risco)
+  existem em reporting.ts (cortes de via, PMA e corredor) e no relatório do
+  editor (aldeias, área por hora, ETA dos meios); a lista de 3 no antigo
+  slide 6 saiu da fala nesta fusão, mas continua no Q&A.
+- Tirou-se da fala a frase "Nós trabalhamos com dados precisos, com os
+  meios que estão disponíveis ao momento em cada quartel, e tudo isto num
+  só mapa.", que duplicava o "Dados reais. Meios reais. Um só mapa." logo a
+  seguir — redundante e caro em tempo.
+
+**Validação — regras do README do hindcast, não negociáveis:**
+- Mostrar SEMPRE os três números em sequência: 0,76 (modelo base) → 0,83 (só
+  dados) → 0,89 (com linhas). Nunca o 0,89 sozinho, nem o 0,76 omitido.
+- IMAGEM TROCADA (23 out): a imagem atual (`img/vieira_validation_scenarioB.png`)
+  tem 3 painéis; os números mudaram de 0,73→0,76–0,79→0,84–0,85 (versão
+  antiga) para 0,76→0,83→0,89 (versão atual) — é outra corrida/versão do
+  hindcast. Confirmar com quem gerou a imagem que esta é a versão final
+  antes do pitch; se não for, repor os números antigos e a imagem antiga
+  (`img/vieira_validation_0830.png`, 4 painéis).
+- IMAGEM CORTADA (23 out): os títulos em inglês de cada painel vinham
+  gravados nos pixéis da imagem; cortámos a faixa do topo (os primeiros
+  58 px da imagem original, 3040×757). Se a imagem for regenerada, repetir
+  o corte ou gerar já sem o texto.
+- As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial
+  parou ao longo das estradas: melhoram o Sørensen em parte por construção.
+  Nunca dizer que vêm "dos registos".
+- O satélite nunca se lê sozinho: a imagem traz "hotspots reached" por
+  painel (0,21→0,54→0,54 de dia; 0,25→0,68→0,68 de noite), diferente do KPI
+  antigo (71–77% dos focos, NASA FIRMS). Decidir qual dos dois citar no
+  Q&A, não os dois ao mesmo tempo.
+- Para o Q&A: a corrida principal (10:00–15:00) fica 1,4 a 1,9× lenta de
+  mais (380–490 ha contra 707 às 15:00) — confirmar se este número ainda se
+  aplica à corrida da nova imagem.
+- Os resultados estão no ramo hindcast-registos, ainda não no main:
+  integrar antes do lock de sexta.
+- A fala tirou "aqui no distrito de Braga" e o detalhe "combustíveis
+  portugueses, LiDAR, cicatrizes, projeções" (agora só no Q&A); os três
+  números continuam todos ditos, como a regra acima pede.
+
+**Métodos (antiga "A tecnologia"):**
+- ELMFIRE: motor open-source (EPL 2.0) de Chris Lautenberger, listado no
+  software do Fire Lab da UC Berkeley (firelab.berkeley.edu/software);
+  Lautenberger é antigo aluno de Berkeley, hoje na CloudFire Inc. Dizer "do
+  Fire Lab da UC Berkeley" é defensável; não dizer que a Berkeley o
+  construiu de raiz como projeto institucional.
+- Copas: vêm do LiDAR da DGT (MDS − MDT a 2 m, hindcast/canopy.py). Cobertura
+  e altura são medidas; altura da base e densidade são estimadas por
+  espécie. São de 2024-25 (docs/plan.md).
+- Motor de vento (CERRA + relevo, ramo feature/cerra-wind-engine): ainda não
+  é uma vitória clara. No hindcast, em Vieira do Minho fica dentro do ruído
+  das sementes (relevo) e em Cabeceiras de Basto piora com CERRA
+  (docs/plan.md, linha do Sørensen por passo). Dizer "a tentar captar" e
+  não prometer que já funciona melhor; é trabalho em curso, não um
+  resultado fechado.
+- ILS: Mendes, A.B. & Alvelos, F.P. (2023), "Iterated local search for the
+  placement of wildland fire suppression resources", EJOR 304(3), 887-900.
+  Projeto O3F (FCT), Prémio Isabel Themido 2025 da APDIO. Filipe Alvelos é
+  um dos orientadores do projeto (com Elsa Silva) — confirmar como querem
+  ser creditados antes de nomear em palco.
+- Tradutor de estratégia (saiu da fala e do slide nesta fusão, mas continua
+  no código): corresponde ao código que passa as decisões do editor (meios,
+  linhas de água) para o grafo do ELMFIRE/ILS (barreiras, retardantes, Δ).
+
+Slide a 28 s (23 out: antes eram três slides, 13+15+15 = 43 s).
 
 ---
 
@@ -179,82 +251,7 @@ e o condutor continua a falar.
 
 ---
 
-## 8 · Validação
-
-Regras (do README do hindcast, não negociáveis):
-- Mostrar SEMPRE os três números em sequência: 0,76 (modelo base) → 0,83 (só
-  dados) → 0,89 (com linhas). Nunca o 0,89 sozinho, nem o 0,76 omitido.
-- IMAGEM TROCADA (23 out): a imagem atual (`img/vieira_validation_scenarioB.png`)
-  tem 3 painéis (sem o "Observado" sozinho); os números mudaram de
-  0,73→0,76–0,79→0,84–0,85 (versão antiga) para 0,76→0,83→0,89 (versão atual) —
-  é outra corrida/versão do hindcast. Confirmar com quem gerou a imagem que esta
-  é a versão final antes do pitch; se não for, repor os números antigos e a
-  imagem antiga (`img/vieira_validation_0830.png`, 4 painéis).
-- IMAGEM CORTADA (23 out): os títulos em inglês de cada painel ("Before: Atalaia
-  setup (S&B fuels)", etc.) vinham gravados nos pixéis da imagem; cortámos a
-  faixa do topo (os primeiros 58 px da imagem original, 3040×757) para tirá-los
-  do slide. Se a imagem for regenerada, repetir o corte ou gerar já sem o texto.
-- A imagem atual mostra dois pontos no tempo por painel (15:00 e 08:30), não só o
-  08:30 único que está no título do slide; confirmar se o título deve passar a
-  mencionar os dois horários.
-- As setas passam a nomear a medida acrescentada ("+ Dados públicos", "+ Linhas
-  de ataque") antes do detalhe, em vez de só o detalhe solto.
-- A sequência de números ganhou um rótulo ("Sobreposição com o incêndio real ·
-  índice de Sørensen") e ficou centrada, em vez de alinhada à esquerda por
-  baixo das imagens.
-- As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial parou
-  ao longo das estradas: melhoram o Sørensen em parte por construção. Nunca dizer
-  que vêm "dos registos".
-- O satélite nunca se lê sozinho: a imagem traz "hotspots reached" por painel
-  (0,21→0,54→0,54 de dia; 0,25→0,68→0,68 de noite), diferente do KPI antigo
-  (71–77% dos focos, NASA FIRMS). Decidir qual dos dois citar no Q&A, não os
-  dois ao mesmo tempo.
-- Os valores S nos mosaicos usam ponto decimal (gerados pelo grid.py).
-- Intervalos = 3 sementes das projeções.
-- Para o Q&A: a corrida principal (10:00–15:00) fica 1,4 a 1,9× lenta de mais
-  (380–490 ha contra 707 às 15:00) — confirmar se este número ainda se aplica à
-  corrida da nova imagem.
-- Os resultados estão no ramo hindcast-registos, ainda não no main: integrar
-  antes do lock de sexta.
-- Slide a 15 s (23 out: era 20 s). A fala tirou "aqui no distrito de Braga" e
-  o detalhe "combustíveis portugueses, LiDAR, cicatrizes, projeções" (já
-  visível no ecrã, na seta "+ Dados públicos"); os três números continuam
-  todos ditos, como a regra acima pede.
-
----
-
-## 8b · A tecnologia
-
-- ELMFIRE: motor open-source (EPL 2.0) de Chris Lautenberger, listado no
-  software do Fire Lab da UC Berkeley (firelab.berkeley.edu/software);
-  Lautenberger é antigo aluno de Berkeley, hoje na CloudFire Inc. Dizer "do Fire
-  Lab da UC Berkeley" é defensável; não dizer que a Berkeley o construiu de raiz
-  como projeto institucional.
-- Copas: vêm do LiDAR da DGT (MDS − MDT a 2 m, hindcast/canopy.py). Cobertura e
-  altura são medidas; altura da base e densidade são estimadas por espécie. São
-  de 2024-25 (docs/plan.md).
-- Declives: método de Horn, como nos rasters LANDFIRE que o ELMFIRE lê
-  (docs/plan.md).
-- Motor de vento (CERRA + relevo, ramo feature/cerra-wind-engine): ainda não é
-  uma vitória clara. No hindcast, em Vieira do Minho fica dentro do ruído das
-  sementes (relevo) e em Cabeceiras de Basto piora com CERRA (docs/plan.md,
-  linha do Sørensen por passo). Dizer "a tentar captar" e não prometer que já
-  funciona melhor; é trabalho em curso, não um resultado fechado.
-- ILS: Mendes, A.B. & Alvelos, F.P. (2023), "Iterated local search for the
-  placement of wildland fire suppression resources", EJOR 304(3), 887-900.
-  Projeto O3F (FCT), Prémio Isabel Themido 2025 da APDIO. Filipe Alvelos é um
-  dos orientadores do projeto (com Elsa Silva) — confirmar como querem ser
-  creditados antes de nomear em palco.
-- Tradutor de estratégia: corresponde ao código que passa as decisões do editor
-  (meios, linhas de água) para o grafo do ELMFIRE/ILS (barreiras, retardantes,
-  Δ).
-- Slide a 15 s (23 out: era 20 s, cortado na passagem para 2 min sem demo).
-  Falas mais curtas: tirou-se "mas afinado", "com grande precisão", "que os
-  dados abertos não apanham", "passa... a inputs que... entende".
-
----
-
-## 9 · A seguir
+## 8 · A seguir
 
 - ORDEM TROCADA (23 out): passa a ser 1) ferramenta de testes, 2) IA,
   3) drones — antes era drones, ferramenta, IA. O passo final (agora drones)
@@ -280,15 +277,15 @@ Regras (do README do hindcast, não negociáveis):
   um drone numa estação de patrulha, em loop, mudo, sem controlos — arranca
   sozinho ao entrar no slide. Confirmar se é material próprio (nosso render)
   ou de terceiros antes do pitch final; se for de terceiros, falta o crédito
-  nos "Créditos" (slide 13).
+  nos "Créditos" (slide 10).
 - O "piloto em Guimarães" saiu do roadmap a pedido; já não é preciso confirmar
   o apoio do Prof. Paulo Afonso para este slide.
 - Este slide ficou só com o roadmap; o fecho ("Em 2025 arderam 11 Guimarães" +
-  "Obrigado") passou para um slide à parte (10), para dar espaço às duas ideias.
+  "Obrigado") passou para um slide à parte (9), para dar espaço às duas ideias.
 - O slide ficava muito vazio só com o roadmap (muito espaço em branco por
   baixo): acrescentou-se uma frase curta por passo e uma frase de fecho ("Ver
   sempre mais cedo. Decidir sempre melhor.") a seguir ao roadmap, no mesmo
-  estilo do "Dados reais..." do slide 7.
+  estilo do "Dados reais..." do slide 6.
 - Vídeo a 2× (23 out): sem ffmpeg disponível para reencodar, a velocidade é
   ajustada por JS (`video.playbackRate`) em vez de no ficheiro.
 - Slide a 11 s (23 out: era 15 s). A frase de introdução ficou mais curta
@@ -298,7 +295,7 @@ Regras (do README do hindcast, não negociáveis):
 
 ---
 
-## 10 · Fecho + obrigado
+## 9 · Fecho + obrigado
 
 - "11 Guimarães" em 2025: mesmo cálculo do slide 2 (270 695 ha ÷ 241,7 km² do
   concelho ≈ 11,2). O fecho repete esse número de propósito, agora com o valor
@@ -306,7 +303,7 @@ Regras (do README do hindcast, não negociáveis):
 
 ---
 
-## 11 · Créditos
+## 10 · Créditos
 
 Fora do tempo. Fica no fim para o júri e para o PDF da submissão. O marcador
 `.tbd` sobre o ILS saiu: `docs/ils.md` no main já documenta a funcionalidade

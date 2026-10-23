@@ -16,19 +16,19 @@ Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e
 | 4 | O que já existe e porque falha: FARSITE, FlamMap, fogos.pt, IPMA/EFFIS, incendiosportugal.pt | 0:33–0:44 |
 | 5 | O desafio da UMinho: rápida, precisa, prática | 0:44–0:52 |
 | 5b | Logótipo ao centro, drone e chama | 0:52–0:55 |
-| 6 | Proposta: roadmap + "um só mapa" | 0:55–1:08 |
-| 7 | **Demo ao vivo (placeholder)** | 1:08–3:00 |
-| 8 | Validação: Vieira do Minho | 3:00–3:15 |
-| 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:15–3:30 |
-| 9 | A seguir: testes de cenários, IA, deteção por drones (+ vídeo) | 3:30–3:41 |
-| 10 | Fecho + obrigado | 3:41–3:51 |
-| 11 | Créditos (fora do tempo) | |
+| 6 | Proposta + validação + métodos: roadmap, "um só mapa", 0,76→0,83→0,89, ELMFIRE/LiDAR/ILS | 0:55–1:23 |
+| 7 | **Demo ao vivo (placeholder)** | 1:23–3:15 |
+| 8 | A seguir: testes de cenários, IA, deteção por drones (+ vídeo) | 3:15–3:26 |
+| 9 | Fecho + obrigado | 3:26–3:36 |
+| 10 | Créditos (fora do tempo) | |
 
 O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Copernicus EMS, incendiosportugal.pt) foi cortado por repetir o argumento do slide 4; esse argumento agora é o próprio slide 4, mais completo (ferramenta vs. o que falha), separado do desafio da UMinho (slide 5).
 
 O antigo slide 9 ("a seguir" + fecho juntos) também foi dividido em dois: o roadmap "a seguir" fica sozinho, e "Em 2025 arderam 11 Guimarães" + "Obrigado" passam a ser o fecho, no seu próprio slide.
 
-Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma dá 3:51. Fora da demo (112 s), os restantes slides somam 1:59 — foram cortados ~37 s de texto em vários slides (gancho, problema, ferramentas, proposta, validação, tecnologia, a seguir) para caber em 2 minutos. Por fazer: cronometrar a fala real de cada slide antes do pitch final.
+Os antigos slides "Proposta", "Validação" e "A tecnologia" (três slides separados) foram fundidos num só (slide 6), para caber a apresentação em menos tempo: a imagem de validação fica pequena (só a forma e os três números, sem as legendas de cada painel) e o grid de 4 cartões da tecnologia virou uma frase única com os créditos técnicos; os detalhes que saíram do slide continuam em `FONTES.md`.
+
+Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma dá 3:36. Fora da demo (112 s), os restantes slides somam 1:44 — primeiro cortaram-se ~37 s de texto em vários slides, depois fundiram-se proposta, validação e tecnologia num só slide, tirando mais ~15 s e dois slides inteiros. Por fazer: cronometrar a fala real de cada slide antes do pitch final.
 
 - Os números grandes (gancho, sequência de precisão) usam JetBrains Mono (Bold/ExtraBold), guardado em `vendor/fonts/` (SIL OFL) para correr sem rede, tal como o resto do `vendor/`.
 - A demo corre numa janela própria do browser, não dentro dos slides: a app e o reveal usam as mesmas teclas.
