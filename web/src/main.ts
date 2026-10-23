@@ -906,7 +906,14 @@ async function main() {
   mapLogo(viewer.bottomContainer as HTMLElement)
   // After the intro the settings come first (map and widgets); closing them starts the director's cut.
   showIntro(() => {
-    hud.settings.closed = () => { hud.settings.closed = undefined; if (replay) playback(() => replay!.player.restart()) }
+    // Straight to the film, not through playback(): that opens the editor when the means are unsimulated.
+    hud.settings.closed = () => {
+      hud.settings.closed = undefined
+      if (!replay || editor.open) return
+      editor.toggleReports(false)
+      replay.player.restart()
+      scene.requestRender()
+    }
     hud.settings.toggle(true)
   })
 }
