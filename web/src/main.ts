@@ -27,6 +27,7 @@ import {
 import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
 import { incidentShots } from './director'
+import { DroneClips, type Clip } from './droneClips'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
 import { runFast } from './fastClient'
@@ -131,6 +132,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
+  const drone = new DroneClips()
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -764,6 +766,7 @@ async function main() {
       } else if (kind === 'versus') split?.setPosition(0.5)
     }
     revealed = editor.open ? new Set() : frame.revealed
+    drone.set(editor.open || !replay.director ? undefined : droneClip(frame.shot, frame.hours * 60, replay.phase === 'post', replay.data.windShift?.minutes))
     spotlight.enabled = !editor.open
 
     // The crosshair, its coordinates and the light are on the ground at the centre of the screen, picked every
@@ -857,8 +860,20 @@ function showIntro(start: () => void) {
   }
   video.addEventListener('timeupdate', reveal)
   video.addEventListener('ended', reveal) // it holds on the last frame
-  el.querySelector('button')!.addEventListener('click', () => { el.remove(); start() })
+  const go = () => { el.remove(); document.removeEventListener('keydown', esc); start() }
+  const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); go() } } // Esc skips the video
+  el.querySelector('button')!.addEventListener('click', go)
+  document.addEventListener('keydown', esc)
   document.body.append(el)
+}
+
+/** Which drone footage goes with the shot: units on the move, units fighting, the revised plan after the wind, the endings. */
+function droneClip(shot: Shot, minute: number, post: boolean, shift: number | undefined): Clip {
+  if (shot.kind === 'outcome') return 'finale'
+  if (post && shift !== undefined && minute >= shift) return 'first_look'
+  if (shot.word === 'Mobilização') return 'closeup1'
+  if (shot.word === 'Primeiros meios' || shot.kind === 'control') return 'closeup'
+  return undefined
 }
 
 /** The Atalaia mark on the map, bottom right beside the Cesium logo. */
