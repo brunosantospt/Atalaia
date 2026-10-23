@@ -2,8 +2,6 @@
 
 Os números são do `MULTIFIRE.md`, gerado pelo `multifire_report.py`. Este texto lê-os e diz o que fazer com eles.
 
-> **Estado em 22/10/2026, 13:40:** a meio. As secções marcadas *(a completar)* esperam por corridas que estavam na fila.
-
 ## Em resumo
 
 1. **As primeiras horas** são as que interessam ao Atalaia (o primeiro ataque):
