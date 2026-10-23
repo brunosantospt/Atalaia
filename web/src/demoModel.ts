@@ -1,6 +1,7 @@
 // Button-run demo approximation, restored from the former browser model. Fuel, slope and
 // directional weather drive a shortest-arrival calculation. This is not an ELMFIRE substitute
 // for operational forecasts. The worker keeps its computation off the map/UI thread.
+import { dropStrip } from './dropStrip'
 import { computeFWISeries, fwiAt } from './fwi'
 import { toPTTM06 } from './geo'
 import { cellOf, cellOfXY, centerXY } from './grid'
@@ -104,16 +105,14 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
       if (!isAerial(spec)) return
       const history=placements(scenario,decision,slot)
       for(const [index,placement] of history.entries()) {
-      const points=[placement.point]
-      const cells = new Set<number>(), radius = spec.radiusM * Math.sqrt(a.count)
-      for (const point of points) {
-        const xy = toPTTM06(point), rc = cellOfXY(grid, xy.x, xy.y), extent = Math.ceil(radius/cellsize)
-        for (let r = Math.max(0,rc.row-extent); r <= Math.min(rows-1,rc.row+extent); r++)
-          for (let c = Math.max(0,rc.col-extent); c <= Math.min(cols-1,rc.col+extent); c++) {
-            const at = centerXY(grid,r*cols+c)
-            if (Math.hypot(at.x-xy.x,at.y-xy.y) <= radius) cells.add(r*cols+c)
-          }
-      }
+      // The drop strip across the spread (dropStrip.ts), the same one drawn on the map.
+      const cells = new Set<number>(), strip = dropStrip(scenario, a, placement.point, spec.radiusM * Math.sqrt(a.count))
+      const xy = toPTTM06(placement.point), rc = cellOfXY(grid, xy.x, xy.y), extent = Math.ceil(strip.lengthM/2/cellsize)
+      for (let r = Math.max(0,rc.row-extent); r <= Math.min(rows-1,rc.row+extent); r++)
+        for (let c = Math.max(0,rc.col-extent); c <= Math.min(cols-1,rc.col+extent); c++) {
+          const at = centerXY(grid,r*cols+c)
+          if (strip.contains(at.x-xy.x, at.y-xy.y)) cells.add(r*cols+c)
+        }
       airZones.push({ cells, from: placement.arrivalMin, until:history[index+1]?.orderedMin??Infinity, slot, factor: spec.rosFactor })
       }
     })

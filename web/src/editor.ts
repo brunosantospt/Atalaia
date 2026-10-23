@@ -1,4 +1,5 @@
 import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { dropStrip } from './dropStrip'
 import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
@@ -29,7 +30,7 @@ import type { Fire, NearStation } from './data'
 import { burnedHa, forecastArrival, type Run, type Scenario } from './scenario'
 import { cellOf, type Grid } from './grid'
 import { fmtElapsed, fmtHa, fmtKm, fmtNumber, fmtTime, wallClock } from './format'
-import { cleanLonLat, cleanPath, distanceM, bearingDeg, compass, destination, type LonLat } from './geo'
+import { cleanLonLat, cleanPath, distanceM, bearingDeg, compass, destination, lerpLonLat, type LonLat } from './geo'
 import { snapToRoad, type Context } from './osm'
 import { stockSource, type Inventory } from './inventory'
 import { lateAt, SAFETY_MIN } from './deployment'
@@ -351,7 +352,7 @@ export class Editor {
   private readonly hazards = new CustomDataSource('hazards')
   private readonly agency = new CustomDataSource('agency')
   // One ring per engine on the ground, kept across redraws: its radius follows the water left without a rebuild.
-  private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean } }>()
+  private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean; outline?: LonLat[] } }>()
   private dangerTimer?: number
   /** The assignments of a decision last shown late, so that only a new one warns. */
   private lateShown: { id: string; keys: Set<string> } = { id: '', keys: new Set() }
@@ -1958,8 +1959,8 @@ export class Editor {
       if(isAerial(this.sup.units[a.unit])) { // the drop zone, dashed while the aircraft is on its way
         const now=this.playbackMinute,p=placementAt(combat.lists[slot],now)
         if(!p||!ordered(a))continue
-        const r=this.sup.units[a.unit].radiusM*Math.sqrt(a.count)
-        const zone=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,r,now<p.arrivalMin))
+        const strip=dropStrip(scenario,a,p.point,this.sup.units[a.unit].radiusM*Math.sqrt(a.count))
+        const zone=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,0,now<p.arrivalMin,strip.corners))
         ;(zone as any)._unitInfo=unitInfo(a,p.point,[a])
         continue
       }
@@ -2213,19 +2214,23 @@ export class Editor {
   }
 
   /** A ring whose positions follow its state: drawn at the ground height of the centre, seen through the relief. */
-  private coverageRing(key: string, at: LonLat, radius: number, waiting: boolean) {
+  private coverageRing(key: string, at: LonLat, radius: number, waiting: boolean, outline?: LonLat[]) {
     let ring = this.coverageRings.get(key)
     if (!ring) {
-      const state = { lon: NaN, lat: NaN, h: 0, radius, waiting }
+      const state = { lon: NaN, lat: NaN, h: 0, radius, waiting, outline }
       // Each vertex sits on the ground under it (a dynamic line cannot be clamped or drawn through the
       // relief), recomputed only when the ring moves or changes size.
       const globe = this.viewer.scene.globe
       let memo = { key: '', positions: [] as Cartesian3[] }
       const circle = () => {
-        const key = `${state.lon},${state.lat},${state.radius.toFixed(1)}`
+        const key = `${state.lon},${state.lat},${state.radius.toFixed(1)},${state.outline?.map((q) => q.lon.toFixed(6) + q.lat.toFixed(6)).join()}`
         if (memo.key === key) return memo.positions
         let missing = false
-        const positions = Array.from({ length: 65 }, (_, i) => destination(state, i * 360 / 64, state.radius)).map((q) => {
+        // A circle, or a closed outline (an aircraft's drop strip), densified so it follows the ground.
+        const shape = state.outline
+          ? [...state.outline, state.outline[0]].flatMap((q, i, all) => i ? Array.from({ length: 8 }, (_, k) => lerpLonLat(all[i - 1], q, (k + 1) / 8)) : [q])
+          : Array.from({ length: 65 }, (_, i) => destination(state, i * 360 / 64, state.radius))
+        const positions = shape.map((q) => {
           const ground = globe.getHeight(Cartographic.fromDegrees(q.lon, q.lat))
           if (ground === undefined) missing = true
           return Cartesian3.fromDegrees(q.lon, q.lat, (ground ?? state.h) + 4)
@@ -2247,6 +2252,7 @@ export class Editor {
     }
     state.radius = radius
     state.waiting = waiting
+    state.outline = outline
     return ring.entity
   }
 
