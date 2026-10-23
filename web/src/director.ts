@@ -51,6 +51,11 @@ export function incidentShots(input: IncidentInput): Shot[] {
   const radius = Math.max(650, bboxRadiusM(box))
   const path = [{ ...centre, h: 0, heading: 0, pitch: -65, range: Math.max(1500, radius * 1.35 / Math.tan(fovy / 2)) }]
   const firstTarget = selected && eta.length ? selected.points[selected.assignments[eta.indexOf(first)].target] ?? selected.lines[selected.assignments[eta.indexOf(first)].target]?.[0] : undefined
+  // While the means drive out, a wider view that takes in the bases they leave from and the fire.
+  const bases = selected ? selected.assignments.map(a => stations.find(st => st.id === a.from)).filter(st => !!st) : []
+  const outBox = bboxOf([...points, ...bases.map(st => ({ lon: st!.lon, lat: st!.lat }))])
+  const mobilizePath = bases.length ? [{ ...bboxCenter(outBox), h: 0, heading: 0, pitch: -70, range: Math.max(1800, bboxRadiusM(outBox) * 1.25 / Math.tan(fovy / 2)) }] : path
+  const dispatchMin = selected ? Math.min(...selected.assignments.map(a => a.dispatchMin ?? detection.droneMin)) : Infinity
   const arrivalPath = [{ ...(firstTarget ?? centre), h: 0, heading: 0, pitch: -60, range: 1100 }]
   const cache = new Map<number, number>()
   const area = (h: number) => {
@@ -95,7 +100,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
     if (event) current = event
     const to = ordered[k + 1] ?? minute
     const close = !!firstTarget && minute >= first && minute < first + 5
-    const shotPath = close ? arrivalPath : path
+    const shotPath = close ? arrivalPath : minute >= dispatchMin && minute < first ? mobilizePath : path
     const previousPath = shots.at(-1)?.path
     const cameraChange = !previousPath || previousPath !== shotPath
     shots.push({
