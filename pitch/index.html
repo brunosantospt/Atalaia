@@ -200,6 +200,7 @@
     .roadmap.visible .track { animation: track-grow .35s ease forwards; }
     .roadmap .node { flex: 0 0 auto; width: 1.5em; height: 1.5em; border-radius: 50%; border: 2px solid var(--ink-faint); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: .6em; color: var(--ink-dim); background: var(--bg); }
     .roadmap .label { font-size: 1.45em; font-weight: 700; letter-spacing: -.01em; }
+    .roadmap .desc { display: block; font-size: 1em; font-weight: 400; color: var(--ink-dim); margin-top: .35em; line-height: 1.35; }
     .roadmap .stop.final .node { border-color: var(--amber); color: var(--bg); background: var(--amber); box-shadow: 0 0 14px rgba(240, 163, 58, .55); }
     .roadmap .stop.final .label { color: var(--amber); }
     @keyframes stop-in { to { opacity: 1; transform: none; } }
@@ -678,16 +679,21 @@
   <section data-timing="15">
     <span class="tag">A seguir · defender bem não basta, é preciso ver primeiro</span>
     <div class="roadmap horizontal fragment">
-      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Deteção por drones, mais rápida e económica</span></div>
+      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Deteção por drones, mais rápida e económica</span><span class="desc">Patrulha e deteção mais cedo, sem esperar pelos meios aéreos</span></div>
       <div class="track" style="animation-delay:.35s"></div>
-      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span></div>
+      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span><span class="desc">Testar decisões em incêndios passados, antes de decidir a sério</span></div>
       <div class="track" style="animation-delay:.9s"></div>
-      <div class="stop final" style="animation-delay:1.15s"><span class="node">03</span><span class="label">IA a afinar a estratégia mais otimizada</span></div>
+      <div class="stop final" style="animation-delay:1.15s"><span class="node">03</span><span class="label">IA a afinar a estratégia mais otimizada</span><span class="desc">A estratégia a afinar-se sozinha, cenário a cenário</span></div>
+    </div>
+    <hr class="divider">
+    <div class="punch fragment">
+      <div class="line">Ver sempre mais cedo. <span class="fire">Decidir sempre melhor.</span></div>
     </div>
     <aside class="notes">
       15 s · Continuidade
 
       "A seguir: drones para detetar mais cedo, não só defender melhor; uma ferramenta de testes para potenciais cenários futuros; e, mais à frente, IA a afinar a própria estratégia."
+      [clique] "Ver sempre mais cedo. Decidir sempre melhor."
 
       Passagem: "Em 2025 arderam 11 Guimarães."
     </aside>

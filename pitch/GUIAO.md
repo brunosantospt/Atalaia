@@ -187,6 +187,10 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 > ferramenta de testes para potenciais cenários futuros; e, mais à frente, IA a
 > afinar a própria estratégia."
 
+**[clique]**
+
+> "Ver sempre mais cedo. Decidir sempre melhor."
+
 *Passagem: "Em 2025 arderam 11 Guimarães."*
 
 ---

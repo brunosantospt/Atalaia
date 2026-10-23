@@ -250,6 +250,10 @@ Regras (do README do hindcast, não negociáveis):
   o apoio do Prof. Paulo Afonso para este slide.
 - Este slide ficou só com o roadmap; o fecho ("Em 2025 arderam 11 Guimarães" +
   "Obrigado") passou para um slide à parte (10), para dar espaço às duas ideias.
+- O slide ficava muito vazio só com o roadmap (muito espaço em branco por
+  baixo): acrescentou-se uma frase curta por passo e uma frase de fecho ("Ver
+  sempre mais cedo. Decidir sempre melhor.") a seguir ao roadmap, no mesmo
+  estilo do "Dados reais..." do slide 7.
 
 ---
 
