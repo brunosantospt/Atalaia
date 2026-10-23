@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "relocation-optimizer:check": "node scripts/run.mjs scripts/relocation-optimizer-check.ts",
     "ils:check": "node scripts/run.mjs scripts/ils-check.ts",
     "deployment:check": "node scripts/run.mjs scripts/deployment-check.ts",
     "placement:check": "node scripts/run.mjs scripts/placement-check.ts",

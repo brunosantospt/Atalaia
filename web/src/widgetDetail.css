@@ -1,0 +1,24 @@
+/* The detail window of a floating card, in the middle of the screen over a dimmed globe. */
+.hud .detail-backdrop { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; background: #050a0f8c; pointer-events: auto; }
+.hud .detail-backdrop[hidden] { display: none; }
+.hud .detail-panel { width: min(420px, calc(100% - 32px)); max-height: calc(100% - 64px); overflow: auto; box-sizing: border-box; padding: 12px 16px 16px; border: 1px solid #8098ab66; border-radius: 10px; background: #0b141d; box-shadow: 0 12px 48px #000a; color: #e7f0f7; font: 13px/1.5 system-ui, sans-serif; letter-spacing: 0; text-transform: none; text-shadow: none; }
+.hud .detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.hud .detail-head h2 { margin: 0; color: #b8cad8; font: 600 11px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .12em; }
+.hud .detail-close { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: #8da7bb; font: 20px/1 system-ui, sans-serif; cursor: pointer; }
+.hud .detail-close:hover { background: #7dd3fc15; color: #e7f0f7; }
+.hud .detail-close:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+.hud .detail-group { padding: 8px 0; border-top: 1px solid #8098ab33; }
+.hud .detail-group:first-child { border-top: 0; }
+.hud .detail-group h3 { margin: 0 0 4px; color: #8da7bb; font: 600 10px/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .1em; }
+.hud .detail-group dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 16px; margin: 0; }
+.hud .detail-group dt { color: #8da7bb; }
+.hud .detail-group dd { display: flex; align-items: center; gap: 6px; margin: 0; font-variant-numeric: tabular-nums; }
+.hud .detail-group dd i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.hud .detail-group dd i.good { background: #0ca30c; }
+.hud .detail-group dd i.warning { background: #fbbf24; }
+.hud .detail-group dd i.serious { background: #f27a2e; }
+.hud .detail-group dd i.critical { background: #d03b3b; }
+.hud .detail-group dd i.forecast { border-radius: 2px; background: #f0a33a; }
+.hud .detail-extra:empty { display: none; }
+.hud .detail-extra { padding: 8px 0 0; border-top: 1px solid #8098ab33; }
+.hud .detail-note { margin: 10px 0 0; color: #8da7bb; font: 11px/1.5 system-ui, sans-serif; white-space: pre-line; }

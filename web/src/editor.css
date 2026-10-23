@@ -38,8 +38,7 @@
   transform: none;
   transition: transform 0.25s ease;
 }
-.hud.editing .title,
-.hud.editing .ledger {
+.hud.editing .title {
   display: none;
 }
 /* The caption card and the transport step out from under the drawer. */
@@ -113,13 +112,6 @@
 .hud .editor .tabs button.on {
   background: rgba(220, 224, 228, 0.07);
   border-left-color: var(--ink);
-}
-.hud .editor .name {
-  box-sizing: border-box;
-  width: 100%;
-  margin-top: 6px;
-  padding: 6px 10px;
-  cursor: text;
 }
 .hud .editor section {
   margin-top: 18px;
@@ -637,3 +629,81 @@
 .hud .editor .ring-key .selected { color: white; font-weight: 650; }
 .hud .editor .ring-legend summary { cursor: pointer; font-size: 12px; color: #d8e6f3; }
 .hud .editor .ring-legend summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 4px; }
+.card-resources { display:grid; gap:5px; margin:8px 0; font:12px/1.4 system-ui,sans-serif; }
+.card-resources label { display:flex; align-items:center; gap:7px; }
+.card-resources meter { flex:1; min-width:45px; }
+.placement-history { padding-left:18px; font:12px/1.6 system-ui,sans-serif; color:#b8cad8; }
+.placement-history li { margin-bottom: 6px; }
+.placement-history button { margin-left: 8px; padding: 3px 7px; font: inherit; color: #f4ad42; border: 1px solid #796039; background: transparent; cursor: pointer; }
+.placement-history button:hover, .placement-history button:focus-visible { background: #392c18; border-color: #f4ad42; }
+
+.assignment .ctl { display: flex; flex-direction: row; gap: 4px; align-self: flex-start; }
+.assignment .unit-action, .placement-history .unit-action { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 3px; margin: 0; background: transparent; border: 1px solid #796039; color: #f4ad42; cursor: pointer; }
+.assignment .unit-action svg { width: 15px; height: 15px; }
+.assignment .unit-action:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Compact unit cards: state and resources on one line, the current order on one line, earlier ones folded. */
+.hud .editor li.assignment { gap: 2px; padding: 6px 8px; }
+.hud .editor li.assignment .card-resources { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 2px 0 0; font: 11px/1.4 system-ui, sans-serif; color: #b8cad8; }
+.hud .editor li.assignment .card-resources .state { color: #d8e6f3; }
+.hud .editor li.assignment .card-resources label { gap: 4px; }
+.hud .editor li.assignment .card-resources meter { flex: none; width: 34px; min-width: 0; height: 8px; }
+.hud .editor li.assignment .placement-now { font: 11px/1.4 system-ui, sans-serif; color: #8fa3b5; }
+.hud .editor li.assignment .placement-earlier summary { cursor: pointer; font: 11px/1.4 system-ui, sans-serif; color: #8fa3b5; }
+.hud .editor li.assignment .placement-history { margin: 2px 0 0; font-size: 11px; }
+.hud .editor li.assignment .placement-history li { margin-bottom: 2px; }
+.hud .editor li.assignment .move-why { margin: 0; font-size: 10.5px; }
+.assignment .unit-action:hover, .assignment .unit-action:focus-visible { background: #392c18; border-color: #f4ad42; }
+.placement-history .unit-action { margin-left: 6px; vertical-align: middle; }
+
+/* Top decision B proposal section */
+.hud .editor section.ils.top-ils {
+  margin-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor section.ils.top-ils h3 {
+  color: var(--amber);
+  font-weight: 600;
+}
+.hud .editor .ils-btn {
+  width: 100%;
+}
+.hud .editor .ils-details summary { cursor: pointer; font-size: 12px; color: #d8e6f3; margin-top: 6px; }
+.hud .editor .ils-details summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 4px; }
+/* What B changed: long "where" texts wrap inside their card instead of running out of it. */
+.hud .editor .changes li { min-width: 0; }
+.hud .editor .changes .meta { flex-wrap: wrap; }
+.hud .editor .changes .meta em { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.hud .editor .move-why { margin: 4px 0 0; }
+
+/* Posto de Socorro (INEM) section */
+.hud .editor .pma-section {
+  margin-top: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-faint);
+}
+.hud .editor .pma-btn {
+  background: #059669;
+  border: 1px solid #10b981;
+  color: #fff;
+  width: 100%;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.hud .editor .pma-btn:hover {
+  background: #10b981;
+  border-color: #34d399;
+}
+.hud .editor .pma-btn.active {
+  background: #047857;
+  border-color: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.4);
+}

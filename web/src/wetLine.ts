@@ -50,7 +50,7 @@ export function arrivals(scenario: Pick<Scenario, 'stations' | 'suppression' | '
     const target = decision.points[a.target] ?? decision.lines[a.target]?.[0]
     const origin = aerial ? findAirBase(a.from) : stations.find((s) => s.id === a.from)
     const km = origin && target ? distanceM(origin, target) / 1000 : sup.dispatch.airBaseKm
-    return (a.dispatchMin ?? scenario.dispatchMin ?? 0) + arrivalMin(sup, unit, km, ecin)
+    return a.arrivalMin ?? (a.dispatchMin ?? scenario.dispatchMin ?? 0) + arrivalMin(sup, unit, km, ecin)
   })
 }
 

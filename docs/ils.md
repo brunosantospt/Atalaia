@@ -250,9 +250,9 @@ O Atalaia já cobre três extensões que os autores deixam como trabalho futuro:
 
 | Incêndio | A | B | Melhor B no plano |
 |---|---|---|---|
-| Penha, Guimarães (simulado) | 5 lugares · 623,4 ha | 1 lugar · 247,7 ha | 599 |
+| Penha, Guimarães (simulado) | 3 lugares · 304,9 ha | 1 lugar · 204,0 ha | 31 |
 
-Estes valores batem com `web/scripts/ils-reference.json`. A Penha tem ~90 000 acessos e cada plano custa ~12 ms, por isso cabem ~700 planos em 10 s (`--time`, este Mac: B com 1 lugar · 259,6 ha, achado no plano 174 aos 3,9 s). A tabela e os exemplos seguintes, medidos no Chrome, são de Vieira e Cabeceiras com o modelo anterior.
+Estes valores batem com `web/scripts/ils-reference.json` (commit 8f3c6d4). Desde `b879350`, a cabeça do exemplo A fica a 350 m da ignição em vez de 600 m, ao alcance da frente mais lenta da demo de 3 h: o A passou de 5 lugares · 623,4 ha para 3 lugares · 304,9 ha, e o B de 247,7 ha para 204,0 ha. A Penha tem ~90 000 acessos e cada plano custa ~14 ms, por isso cabem ~700 planos em 10 s (`--time`, este Mac: 693 planos, o mesmo B, achado no plano 31 aos 2,2 s). A tabela e os exemplos seguintes, medidos no Chrome, são de Vieira e Cabeceiras com o modelo anterior.
 
 - **Vieira:** os meios do A mudam 78–350 m (VFCI e VTTU 210 m para O, ECIN 350 m para NO, os HEBL 78 m e 292 m). Os terrestres ficam sempre ≥ 10 min antes do fogo livre; os aéreos só têm de chegar antes dele, contando o voo desde a sua base.
 - **Cabeceiras:** os meios do A mudam 275 m–2 km (VFCI 524 m, as ECIN 1030 m e 2045 m, os HEBL 275 m e 1560 m).
@@ -261,3 +261,34 @@ Estes valores batem com `web/scripts/ils-reference.json`. A Penha tem ~90 000 ac
   - a maior parte aparece na construção, nos primeiros 0,5 s (A 871,9 → 172,7 ha);
   - a pesquisa local e a perturbação afinam no fim (→ 149,6 ha aos 8 s, → 138,4 ha aos 8,3 s).
 - **Cada plano custa ~5 ms** (`simulate()` + lugares + ha), por isso cabem ~2000–2400 planos em 10 s.
+
+
+## Demo timeline replanning
+
+In the demo, **Propor B** passes the selected timeline minute to the optimizer.
+The relocation search in `web/src/optimizeRelocations.ts` keeps A's initial
+placements, issued orders, unit counts, tasks and resource history. It proposes
+at most one new destination per available unit, starting at its actual position
+at that minute (including an in-progress journey). If a unit is redirected, its
+unissued future relocation orders are replaced; otherwise its complete schedule
+is retained. Units not yet ordered, not yet departed, or out of autonomy are not
+redirected. Empty tankers are not deployed again.
+
+Vehicle routes follow the supplied OSM network; foot crews and aircraft can use
+terrain destinations. ETAs use the saved route length and travel speed, without
+another base turnout delay. Ground routes are sampled against the fire at each
+passage time, and checked again against the candidate simulation after protection
+has been withdrawn. Candidates without a valid route are rejected.
+
+A fresh free run supplies resource contact under the same wind phase as
+**Simular**. Every candidate replays the whole preserved history through the same
+demo model, so relocating does not reset water or autonomy or change prior
+burning. Candidates may pair an attack unit with a tanker. The search retains A
+unless a candidate improves the places/area score; it does not promise a global
+optimum. Up to twelve nearby candidates per unit are visited round-robin in two
+passes, within the existing worker time budget. This is a bounded relocation
+search, not optimization of a multi-step future schedule.
+
+The non-demo initial-deployment ILS path remains unchanged.
+Run `npm --prefix web run relocation-optimizer:check` for chronology, resource,
+wind, road-route, score, and future-order regressions.

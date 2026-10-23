@@ -10,6 +10,9 @@ export interface UnitMarker extends LonLat {
   unit: UnitId
   code: string
   position?: () => LonLat
+  visible?: () => boolean
+  pending?: boolean
+  eta?: () => number
   label: string
   color: string
   offsetX: number
@@ -38,8 +41,9 @@ export class UnitMarkers {
       if (element.style.getPropertyValue('--origin-color') !== marker.color) element.style.setProperty('--origin-color', marker.color)
       if (!element.firstChild) {
         element.hidden = true
-        element.innerHTML = '<i class="unit-tether"></i><img alt=""/><span class="unit-map-label"><b></b></span>'
+        element.innerHTML = '<span class="unit-map-eta"></span><i class="unit-tether"></i><img alt=""/><span class="unit-map-label"><b></b></span>'
       }
+      element.classList.toggle('pending', !!marker.pending)
       const tether = element.querySelector<HTMLElement>('.unit-tether')!
       tether.style.width = `${Math.hypot(marker.offsetX, marker.offsetY)}px`
       tether.style.transform = `rotate(${Math.atan2(-marker.offsetY, -marker.offsetX)}rad)`
@@ -61,8 +65,14 @@ export class UnitMarkers {
     const positions = this.items.map(({ marker }) => marker.position?.() ?? marker)
     const key = (p: LonLat) => `${p.lon.toFixed(6)}:${p.lat.toFixed(6)}`
     const groups = new Map<string, number[]>()
-    positions.forEach((p, i) => groups.set(key(p), [...(groups.get(key(p)) ?? []), i]))
+    positions.forEach((p, i) => { if (this.items[i].marker.visible?.() !== false) groups.set(key(p), [...(groups.get(key(p)) ?? []), i]) })
     for (const [i, { marker: m, element }] of this.items.entries()) {
+      if (m.visible?.() === false) { element.hidden = true; continue }
+      const eta = element.querySelector<HTMLElement>('.unit-map-eta')!
+      const remaining = m.eta?.() ?? 0
+      eta.hidden = remaining <= 0
+      const text = remaining > 0 ? `ETA ${Math.max(1, Math.ceil(remaining))} min` : ''
+      if (eta.textContent !== text) eta.textContent = text
       const at = positions[i]
       const group = groups.get(key(at))!
       const index = group.indexOf(i), row = Math.floor(index / 3)

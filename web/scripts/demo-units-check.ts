@@ -1,3 +1,5 @@
+import { combatResources, resourceAt } from '../src/combatResources'
+import { placements, editPlacement, addPlacement, placementAt, relocationPosition } from '../src/placementTimeline'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { simulateFast } from '../src/demoModel'
@@ -45,12 +47,6 @@ assert.ok(lines.every(w=>w.barrier.path.length===2&&!w.grown),'only fixed straig
 const run=simulateFast(scenario,d)
 assert.deepEqual(scoreForIls(scenario,d).arrival,run.arrival,'optional optimizer scores the same fixed demo physics')
 assert.deepEqual(optimizerBarriers(scenario,d),lines.map(w=>w.barrier),'optional optimizer uses the same 100/200 m coverage')
-for(const line of lines) for(const cell of stripCells(grid,line.barrier))
-  assert.ok(run.arrival[cell]<line.barrier.from_min||run.arrival[cell]===Infinity,'an active strip is not burnable')
-const changed = structuredClone(scenario)
-changed.suppression.units.vfci.waterL=1
-changed.suppression.units.vfci.flowLPerMin=1e6
-assert.deepEqual(simulateFast(changed,d).arrival,run.arrival,'UI water values cannot change propagation')
 assert.equal(JSON.stringify(d),before,'simulation does not mutate the manual plan')
 const arrival=20
 assert.equal(unitStatus(sup.units.vfci,'vfci',arrival,19).elapsed,0)
@@ -106,17 +102,17 @@ const wallScenario={...scenario,durationMin:360}
 const freeWall=simulateFast(wallScenario,null), singleWall=simulateFast(wallScenario,defence), strongWall=simulateFast(wallScenario,reinforced)
 const pastFront=(run: typeof freeWall) => Array.from(run.arrival).filter((t,i)=>Number.isFinite(t) && (grid.xmin+(i%grid.cols+.5)*grid.cellsize)>xyP.x+60).length
 assert.ok(pastFront(freeWall)>pastFront(singleWall),'growing protection suppresses more fire than no response')
-assert.equal(pastFront(strongWall),0,'enough timely sections close the front and block the fire rather than letting it flow between units')
+assert.ok(pastFront(strongWall)<pastFront(freeWall),'timely circular protection reduces spread even with finite resources')
 const late = {...reinforced,assignments:[{...reinforced.assignments[0],dispatchMin:350}]}
 assert.ok(pastFront(simulateFast(wallScenario,late))>0,'late reinforcements cannot undo fire that has already passed')
 const crewWall = {...reinforced,assignments:[{...reinforced.assignments[0],unit:'crew' as const,count:12}]}
-assert.equal(pastFront(simulateFast(wallScenario,crewWall)),0,'cooperating foot teams can close the same front')
+assert.ok(pastFront(simulateFast(wallScenario,crewWall))<pastFront(freeWall),'foot-team protection reduces spread')
 const turned = {...defence,assignments:[...defence.assignments,{...defence.assignments[0],wetLineBearingDeg:90}]}
 const turnedLine=demoLines(scenario,turned)[1]
 const mid={lon:(turnedLine.barrier.path[0][0]+turnedLine.barrier.path[1][0])/2,lat:(turnedLine.barrier.path[0][1]+turnedLine.barrier.path[1][1])/2}
 assert.ok(distanceM(mid,p)<1,'deliberately rotated sections remain at their selected point')
 console.log('COOPERATIVE FRONT:',{free:pastFront(freeWall),one:pastFront(singleWall),six:pastFront(strongWall)})
-console.log('OK: physical-unit BV IDs/renumbering, 100/200 m fixed lines, water/endurance display only, journeys, real fast propagation and timed barriers')
+console.log('OK: physical-unit IDs, legacy geometry, journeys and circular resource-aware propagation')
 
 // The demo ends at three hours even when the caller requests a longer horizon.
 assert.equal(freeWall.durationMin,180)
@@ -143,3 +139,62 @@ for (const elapsed of [0,10,30]) {
   assert.ok(Math.abs(demoAttackHeldAt(zone,radius)-(zone.from+elapsed))<.001,'drawn radius and model protection share the same schedule')
 }
 assert.equal(demoAttackRadius(zone,zone.from+10),zone.initialRadius+10*zone.growthPerMin,'rewinding restores the smaller circle')
+
+const episodes=structuredClone(scenario)
+episodes.fireArrival=new Float32Array(n*n).fill(Infinity)
+const centre=Math.floor(n/2)*n+Math.floor(n/2)+5
+episodes.fireArrival[centre-1]=20
+episodes.fireArrival[centre+1]=80
+const history=combatResources(episodes,defence)
+assert.equal(resourceAt(history,0,60).waterPct,resourceAt(history,0,45).waterPct,'quiet containment pauses water consumption')
+assert.ok(resourceAt(history,0,90).waterPct<resourceAt(history,0,60).waterPct,'fresh contact from another sector resumes consumption')
+const moving=structuredClone(defence),initialPlacement=placements(scenario,moving,0)[0]
+const nextPoint=destination(p,180,100)
+const moveEta=addPlacement(scenario,moving,0,nextPoint,60)
+assert.deepEqual(placementAt(placements(scenario,moving,0),59),initialPlacement,'relocation preserves the original placement on rewind')
+assert.ok(moveEta>60)
+assert.ok(distanceM(relocationPosition(placements(scenario,moving,0),moveEta)!,nextPoint)<.01)
+assert.equal(moving.assignments.length,1,'relocation does not allocate another physical unit')
+const low=structuredClone(episodes);low.suppression.units.vfci.waterL=600
+const depleted=combatResources(low,defence)
+assert.equal(resourceAt(depleted,0,35).active,false,'empty water disables protection')
+const withTank={...defence,assignments:[...defence.assignments,{unit:'vttu' as const,count:1,from:'bv1',target:'p',task:'shuttle' as const,dispatchMin:0}]}
+assert.ok(resourceAt(combatResources(low,withTank),0,35).waterPct>0,'a supplied tanker keeps attack water available')
+console.log('OK: containment pause/resume, depletion, tanker supply and relocation history')
+
+const sustained=structuredClone(episodes)
+sustained.fireArrival!.fill(Infinity)
+;[1,n+1,n,n-1,-1,-n-1,-n,-n+1].forEach((offset,index)=>sustained.fireArrival![centre+offset]=10+index*14)
+assert.ok(resourceAt(combatResources(sustained,defence),0,150).exhausted,'sustained contact exhausts autonomy even when water runs out')
+const rich=structuredClone(low);rich.suppression.units.vfci.waterL=30000
+const countBurned=(run:ReturnType<typeof simulateFast>)=>Array.from(run.arrival).filter(Number.isFinite).length
+assert.ok(countBurned(simulateFast(low,defence))>countBurned(simulateFast(rich,defence)),'water depletion releases protection and allows more fire spread')
+
+const sameSector=structuredClone(episodes)
+sameSector.fireArrival!.fill(Infinity);sameSector.fireArrival![centre-1]=20;sameSector.fireArrival![centre-2]=80
+const renewed=combatResources(sameSector,defence)
+assert.ok(resourceAt(renewed,0,90).waterPct<resourceAt(renewed,0,60).waterPct,'fresh contact after a quiet gap resumes consumption from the same direction too')
+const delayedTank={...withTank,assignments:[withTank.assignments[0],{...withTank.assignments[1],arrivalMin:50}]}
+const refilled=combatResources(low,delayedTank)
+assert.equal(resourceAt(refilled,0,49).waterPct,0,'a future tanker cannot replenish water before arrival')
+assert.ok(resourceAt(refilled,0,55).waterPct>0,'a later tanker replenishes an empty unit during a quiet interval')
+const outOfRange=structuredClone(episodes)
+outOfRange.fireArrival!.fill(Infinity)
+outOfRange.fireArrival![centre-8]=10
+const untouched=combatResources(outOfRange,defence)
+assert.equal(resourceAt(untouched,0,150).waterPct,100,'fire beyond the current growing ring cannot spend water')
+assert.equal(resourceAt(untouched,0,150).autonomyPct,100,'fire beyond the current growing ring cannot spend autonomy')
+
+const corrected=structuredClone(moving)
+const correctedPoint=destination(p,90,80)
+editPlacement(scenario,corrected,0,1,correctedPoint)
+assert.deepEqual(placements(scenario,corrected,0)[1].point,correctedPoint)
+assert.deepEqual(placements(scenario,corrected,0)[0],initialPlacement)
+assert.equal(corrected.assignments.length,1)
+addPlacement(scenario,corrected,0,p,100)
+const beforeEdit=JSON.stringify(corrected)
+assert.throws(()=>editPlacement(scenario,corrected,0,1,destination(p,90,1000000)))
+assert.equal(JSON.stringify(corrected),beforeEdit,'invalid correction is atomic')
+editPlacement(scenario,corrected,0,0,destination(p,90,10))
+assert.notDeepEqual(placements(scenario,corrected,0)[0].point,initialPlacement.point)
+console.log('OK: placement corrections preserve history, recalculate ETAs and reject overlapping journeys')

@@ -35,3 +35,6 @@ export const fmtKm = (km: number) => `${(km < 10 ? upToOne : whole).format(km)} 
 /** A probability as a percentage; under half a percent it reads "< 1 %", never a flat zero. */
 export const fmtPct = (p: number) => (p < 0.005 ? '< 1 %' : `${Math.round(p * 100)} %`)
 export const fmtRange = (m: number) => (m < 1000 ? `${whole.format(m)} m` : `${upToOne.format(m / 1000)} km`)
+
+/** A span of minutes ahead: "25 min", "2 h", "2 h 05". */
+export const fmtMinutes = (min: number) => min < 60 ? `${min} min` : `${Math.floor(min/60)} h${min%60 ? ` ${pad(min%60)}` : ''}`

@@ -7,11 +7,9 @@ import type { MapId } from './basemap'
 import type { Fire, FireIndexEntry } from './data'
 import { fmtDate, fmtElapsed, fmtHa, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
-import { Ledger, type Known } from './ledger'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
-import type { Quality } from './scene'
-import { SettingsPanel } from './settings'
+import { SettingsPanel, type WidgetId } from './settings'
 import type { Shot } from './shots'
 import type { AgencyRole, MultiAgencyDispatch } from './reporting'
 import {
@@ -28,11 +26,9 @@ export interface HudActions {
   prev(): void
   next(): void
   goTo(i: number): void
-  pickFire(id: string): void
-  pickEngine?(): void // the settings' engine changed: the next simulation runs on it
   simulate?(): void // the "Simular no ELMFIRE" button
   pickMap(id: MapId): void
-  pickQuality(id: Quality): void
+  showWidget(id: WidgetId, on: boolean): void
   roleChanged?(role: AgencyRole): void
   toggleEditor?(): void
   toggleReports?(): void
@@ -44,7 +40,6 @@ export interface HudActions {
 
 /** The free run (ELMFIRE, no forces) behind the simulated shots, as the HUD reads it. */
 export interface Simulated {
-  known: Known
   areaHa(hours: number): number
   poc(areaHa: number): number
   intensityKWPerM: number
@@ -179,9 +174,9 @@ const TEMPLATE = `
       <button type="button" data-ref="play" title="Play / pausa (espaço)"></button>
       <button type="button" data-ref="next" title="Plano seguinte (→)">▸</button>
       <div class="ticks" data-ref="ticks"></div>
-      <button type="button" class="open-settings" data-ref="gear" title="Incêndio, mapa e motor (S)">Definições</button>
+      <button type="button" class="open-settings" data-ref="gear" title="Mapa e widgets (S)">Definições</button>
     </nav>
-    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · L dados · M mapa · S definições · H esconde o HUD</div>
+    <div class="keys">Espaço play/pausa · ← → plano · R recomeça · D realizador · A decisões A/B · E editor · M mapa · S definições · H esconde o HUD</div>
   </section>
 `
 
@@ -199,7 +194,6 @@ type Refs = Record<
 export class Hud {
   readonly settings: SettingsPanel
   private readonly refs: Refs
-  private readonly ledger: Ledger
   private readonly alerts: AlertStack
   private fire: Fire | undefined
   private sim: Simulated | undefined
@@ -230,13 +224,10 @@ export class Hud {
       [...root.querySelectorAll<HTMLElement>('[data-ref]')].map((el) => [el.dataset.ref, el]),
     ) as unknown as Refs
 
-    this.ledger = new Ledger(root)
     this.alerts = new AlertStack(root, (at) => actions.flyTo?.(at))
-    this.settings = new SettingsPanel(root, fires, {
-      pickFire: actions.pickFire,
-      pickEngine: actions.pickEngine,
+    this.settings = new SettingsPanel(root, fires[0] ?? { lon: -8.27, lat: 41.42 }, {
       pickMap: actions.pickMap,
-      pickQuality: actions.pickQuality,
+      showWidget: actions.showWidget,
     })
     this.refs.gear.addEventListener('click', () => this.settings.toggle())
     this.refs.prev.addEventListener('click', () => actions.prev())
@@ -337,17 +328,31 @@ export class Hud {
     if (this.lastDispatch === dispatch) return
     this.lastDispatch = dispatch
     if (this.refs.pspBriefingBody) {
-      const roads = dispatch.psp.roads
-      this.refs.pspBriefingBody.innerHTML = roads.length
-        ? roads.slice(0, 4).map((r) => `
+      const { fireCutRoads = [], firefighterRoads = [] } = dispatch.psp
+      const hasAny = fireCutRoads.length > 0 || firefighterRoads.length > 0
+      if (!hasAny) {
+        this.refs.pspBriefingBody.innerHTML = '<div class="briefing-item">Nenhuma via cortada ou ameaçada neste momento.</div>'
+      } else {
+        const fireItems = fireCutRoads.slice(0, 3).map((r) => `
           <div class="briefing-item ${r.urgency}">
-            <div style="font-weight:600;color:#fff;">⛔ Cortar: ${r.label}</div>
+            <div style="font-weight:600;color:#ff6b6b;">⛔ Fogo: ${r.label}</div>
             <div style="color:${r.urgency === 'cortado' ? '#ff6b6b' : '#f0a33a'};font-size:9px;">
               ${r.minutesToImpact <= 0 ? 'Fogo ativo na via' : `Impacto previsto em ~${r.minutesToImpact} min`}
             </div>
           </div>
         `).join('')
-        : '<div class="briefing-item">Nenhuma via ameaçada neste momento.</div>'
+
+        const ffItems = firefighterRoads.slice(0, 2).map((r) => `
+          <div class="briefing-item" style="border-left:2px solid #3b82f6;">
+            <div style="font-weight:600;color:#60a5fa;">🚒 Veículo: ${r.label}</div>
+            <div style="color:#93c5fd;font-size:9px;">
+              Corte do fogo ao veículo${r.barrier ? ' e no sentido oposto' : ''} · Reforços autorizados
+            </div>
+          </div>
+        `).join('')
+
+        this.refs.pspBriefingBody.innerHTML = fireItems + ffItems
+      }
     }
     if (this.refs.inemBriefingBody) {
       const pma = dispatch.inem.pmaList[0]
@@ -381,9 +386,6 @@ export class Hud {
   setFire(fire: Fire, shots: Shot[], sim: Simulated | undefined) {
     this.fire = fire
     this.sim = sim
-    this.ledger.el.hidden = !sim
-    if (sim) this.ledger.set({ ...sim.known, metrics: sim })
-    this.settings.setFire(fire.id)
     this.setShots(shots)
 
     if (this.refs.alertPopover) this.refs.alertPopover.hidden = true
@@ -488,12 +490,6 @@ export class Hud {
     this.root.classList.toggle('hidden')
   }
 
-  /** Folds or opens the ledger of the instant (key L). */
-  toggleLedger() {
-    this.ledger.toggle()
-  }
-
-  /** The decision editor is open on the left: the title and the ledger give it the room. */
   setReports(on: boolean) {
     this.refs.btnReports.setAttribute('aria-expanded', String(on))
     this.root.classList.toggle('reporting', on)
@@ -513,18 +509,18 @@ export class Hud {
     if (this.root.classList.contains('hidden')) return { top: pad, bottom: height - pad, left: pad, right: width - pad, avoid: [] }
     const rect = (sel: string) => this.root.querySelector(sel)!.getBoundingClientRect()
     const rail = rect('.rail')
-    const ledger = rect('.ledger')
     const guidance = document.querySelector('.ring-legend:not([hidden])')?.getBoundingClientRect()
-    const wind = this.root.querySelector('.wind-compass')?.getBoundingClientRect()
-    // The rail and the ledger are hidden on narrow screens and then have no size.
+    // The rail is hidden on narrow screens and then has no size.
     let right = rail.width ? rail.left - pad : width - pad
     if (this.root.classList.contains('reporting')) right = Math.min(right, rect('.reports-panel').left - pad)
     if (this.settings.open) right = Math.min(right, rect('.settings').left - pad)
     const editing = this.root.classList.contains('editing')
+    // The floating cards, but not those the open editor covers.
+    const cards = [...this.root.querySelectorAll('.float-card')].map((card) => card.getBoundingClientRect()).filter((r) => !editing || r.left >= rect('.editor').right)
     return {
       top: Math.max(editing ? 0 : rect('.title').bottom, rect('.clock').bottom) + pad,
       bottom: editing ? height - pad : rect('.bottom').top - pad,
-      avoid: [ledger, guidance, wind, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
+      avoid: [guidance, ...cards, this.alerts.el.getBoundingClientRect()].filter((r): r is DOMRect => !!r?.height),
       left: editing ? rect('.editor').right + pad : pad + 8,
       right,
     }
@@ -570,7 +566,6 @@ export class Hud {
           : ''
         : `Passo ${frame.fire.step < 0 ? '–' : frame.fire.step}/${lastStep}`,
     )
-    this.ledger.update(frame.hours)
 
     this.set('hdg', `${pad3(Math.round(((camera.heading % 360) + 360) % 360))}° ${compass(camera.heading)}`)
     this.set('pitch', `${Math.round(camera.pitch)}°`.replace('-', '−'))

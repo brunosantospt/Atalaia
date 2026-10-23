@@ -1,26 +1,31 @@
 // The settings drawer, on the right of the HUD: choices that hold across shots, one section each.
-// Today the fire on screen, the map under it, how sharp it is drawn and the spread engine. The fire lives in the URL hash,
-// so a link opens it; the rest is remembered by this browser. The demo runs locally; ELMFIRE stays on hold.
+// Today the map under the fire, remembered by this browser, and which screen widgets are on, all of them
+// on each new page. The globe is always drawn sharp and the spread runs on the fast model.
 
 import { DEFAULT_MAP, MAPS, type MapId } from './basemap'
-import type { FireIndexEntry } from './data'
-import { DEFAULT_ENGINE } from './engines'
-import { fmtDate, fmtHa, wallClock } from './format'
-import { DEFAULT_QUALITY, QUALITIES, type Quality } from './scene'
+import type { LonLat } from './geo'
 
 const STORAGE_KEY = 'atalaia.settings'
 
+export type WidgetId = 'wind' | 'intensity' | 'water' | 'danger' | 'detection' | 'means' | 'growth'
+
+export const WIDGETS: { id: WidgetId; name: string; detail: string }[] = [
+  { id: 'wind', name: 'Vento', detail: 'Rumo e velocidade, a rotação prevista' },
+  { id: 'intensity', name: 'Intensidade', detail: 'A frente contra o que a segura' },
+  { id: 'water', name: 'Água', detail: 'Litros nos meios em campo' },
+  { id: 'danger', name: 'Perigo', detail: 'FWI e classe do IPMA' },
+  { id: 'detection', name: 'Deteção', detail: 'Drone e satélite na linha do tempo' },
+  { id: 'means', name: 'Meios', detail: 'No local e próxima chegada' },
+  { id: 'growth', name: 'Crescimento', detail: 'Hectares por hora sem combate' },
+]
+
 interface Stored {
-  engine: string
   map: MapId
-  quality: Quality
 }
 
 export interface SettingsActions {
-  pickFire(id: string): void
-  pickEngine?(): void
   pickMap(id: MapId): void
-  pickQuality(id: Quality): void
+  showWidget(id: WidgetId, on: boolean): void
 }
 
 const TEMPLATE = `
@@ -29,31 +34,35 @@ const TEMPLATE = `
     <button type="button" data-ref="close" title="Fechar (Esc)">×</button>
   </header>
   <section>
-    <h3>Incêndio</h3>
-    <div class="choices" data-ref="fires"></div>
-  </section>
-  <section>
     <h3>Mapa</h3>
-    <div class="choices" data-ref="maps"></div>
-    <p class="note">Satélite, estradas, carta ou curvas de nível. A tecla M muda de mapa.</p>
+    <div class="map-choices" data-ref="maps"></div>
+    <p class="note">A tecla M muda de mapa.</p>
   </section>
   <section>
-    <h3>Imagem</h3>
-    <div class="choices" data-ref="qualities"></div>
-  </section>
-  <section>
-    <h3>Motor de propagação</h3>
-    <div class="choices" data-ref="engines"></div>
-    <p class="note" data-ref="no-api" hidden>A API está desligada, por isso não há motores. Corre api/serve.sh.</p>
-    <p class="note">O modelo rápido calcula a previsão e as decisões A/B ao carregar em Simular. ELMFIRE em pausa para a demo.</p>
+    <h3>Widgets</h3>
+    <div class="choices" data-ref="widgets"></div>
   </section>
 `
+
+// The previews: one tile of each map around the fire, from tile servers that need no key. The satellite's
+// is Esri's imagery, the same kind of picture as the globe's; the contours are drawn over a darkened one.
+const PREVIEW_ZOOM = 14
+const SATELLITE_TILE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const PREVIEW_TILES: Record<MapId, string> = {
+  satellite: SATELLITE_TILE,
+  roads: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  topo: 'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+  contours: SATELLITE_TILE,
+}
+const CONTOUR_LINES = `<svg viewBox="0 0 60 60" aria-hidden="true">${[8, 17, 26, 35, 44, 53].map((y, k) =>
+  `<path d="M-2 ${y} C 14 ${y - 9}, 26 ${y + 7}, 38 ${y - 3} S 56 ${y - 8}, 62 ${y - 1}" stroke-width="${k % 3 === 1 ? 1.4 : 0.7}"/>`).join('')}</svg>`
 
 export class SettingsPanel {
   readonly el: HTMLElement
   private stored = load()
+  private readonly shown = new Set<WidgetId>(WIDGETS.map((w) => w.id))
 
-  constructor(parent: HTMLElement, fires: FireIndexEntry[], private readonly actions: SettingsActions) {
+  constructor(parent: HTMLElement, at: LonLat, actions: SettingsActions) {
     this.el = document.createElement('aside')
     this.el.className = 'settings'
     this.el.setAttribute('aria-label', 'Definições')
@@ -62,16 +71,10 @@ export class SettingsPanel {
     const ref = (name: string) => this.el.querySelector<HTMLElement>(`[data-ref="${name}"]`)!
 
     ref('close').addEventListener('click', () => this.toggle(false))
-    ref('fires').append(
-      ...fires.map((f) =>
-        choice('fire', f.id, { name: f.name, detail: `${fmtDate(wallClock(f.start, 0))} · ${fmtHa(f.areaHa)}` }, () =>
-          actions.pickFire(f.id),
-        ),
-      ),
-    )
+    const tile = tileAt(at, PREVIEW_ZOOM)
     ref('maps').append(
       ...MAPS.map((m) =>
-        choice('map', m.id, { name: m.name, detail: m.detail }, () => {
+        mapChoice(m, PREVIEW_TILES[m.id].replace('{z}', String(PREVIEW_ZOOM)).replace('{x}', String(tile.x)).replace('{y}', String(tile.y)), () => {
           this.stored = { ...this.stored, map: m.id }
           save(this.stored)
           actions.pickMap(m.id)
@@ -79,18 +82,16 @@ export class SettingsPanel {
       ),
     )
     this.input('map', this.map).checked = true
-    ref('qualities').append(
-      ...QUALITIES.map((q) =>
-        choice('quality', q.id, { name: q.name, detail: q.detail }, () => {
-          this.stored = { ...this.stored, quality: q.id }
-          save(this.stored)
-          actions.pickQuality(q.id)
+    ref('widgets').append(
+      ...WIDGETS.map((w) =>
+        widgetChoice(w, (on) => {
+          if (on) this.shown.add(w.id)
+          else this.shown.delete(w.id)
+          actions.showWidget(w.id, on)
         }),
       ),
     )
-    this.input('quality', this.quality).checked = true
     this.toggle(false)
-    void this.loadEngines()
   }
 
   /** The map picked here, remembered by this browser. */
@@ -98,9 +99,9 @@ export class SettingsPanel {
     return this.stored.map
   }
 
-  /** How finely the globe is drawn, remembered by this browser. */
-  get quality(): Quality {
-    return this.stored.quality
+  /** Whether a screen widget is on: all of them on a new page. */
+  showing(id: WidgetId): boolean {
+    return this.shown.has(id)
   }
 
   /** Marks a map picked elsewhere (key M) and remembers it. */
@@ -110,34 +111,12 @@ export class SettingsPanel {
     this.input('map', id).checked = true
   }
 
-  /** The engine picked here, or the default while the API has not listed it. */
-  get engine(): string {
-    return DEFAULT_ENGINE
-  }
-
   get open(): boolean {
     return this.el.classList.contains('open')
   }
 
   toggle(open = !this.open) {
-    if (open && !this.open) void this.loadEngines()
     this.el.classList.toggle('open', open)
-  }
-
-  setFire(id: string) {
-    this.input('fire', id).checked = true
-  }
-
-  private async loadEngines() {
-    this.el.querySelector<HTMLElement>('[data-ref="no-api"]')!.hidden = true
-    this.el.querySelector('[data-ref="engines"]')!.replaceChildren(
-      choice('engine', 'fast', { name: 'Modelo rápido', detail: 'Demo · corre apenas com o botão Simular',
-        state: { label: 'Pronto', ready: true, hint: '' } }, () => this.actions.pickEngine?.()),
-      choice('engine', 'elmfire', { name: 'ELMFIRE', detail: 'Em pausa durante a demo',
-        state: { label: 'Em pausa', ready: false, hint: 'Calibração continua em separado.' } }, () => {}),
-    )
-    this.input('engine', 'fast').checked = true
-    this.input('engine', 'elmfire').disabled = true
   }
 
   private input(group: string, value: string): HTMLInputElement {
@@ -145,28 +124,40 @@ export class SettingsPanel {
   }
 }
 
-interface Choice {
-  name: string
-  detail: string
-  state?: { label: string; ready: boolean; hint: string } // shown for engines: whether it can run here
+/** The Web Mercator tile with the point in it. */
+function tileAt({ lon, lat }: LonLat, z: number) {
+  const n = 2 ** z, phi = (lat * Math.PI) / 180
+  return {
+    x: Math.floor(((lon + 180) / 360) * n),
+    y: Math.floor(((1 - Math.log(Math.tan(phi) + 1 / Math.cos(phi)) / Math.PI) / 2) * n),
+  }
 }
 
-/** One option of a section: a radio with a name, its state on the right and a detail line. */
-function choice(group: string, value: string, { name, detail, state }: Choice, onPick: () => void) {
+/** One map: a square of it around the fire with its name under, a radio like the other choices. */
+function mapChoice(map: { id: MapId; name: string; detail: string }, src: string, onPick: () => void) {
   const label = document.createElement('label')
-  label.className = 'choice'
-  label.innerHTML = '<input type="radio"><b></b><span class="state"></span><small></small>'
+  label.className = `map-choice map-${map.id}`
+  label.title = map.detail
+  label.innerHTML = `<input type="radio" name="map"><span class="map-preview"><img alt="" loading="lazy" referrerpolicy="no-referrer">${map.id === 'contours' ? CONTOUR_LINES : ''}</span><b></b>`
   const input = label.querySelector('input')!
-  input.name = group
-  input.value = value
+  input.value = map.id
   input.addEventListener('change', onPick)
-  label.querySelector('b')!.textContent = name
-  label.querySelector('small')!.textContent = detail
-  if (state) {
-    label.querySelector('.state')!.textContent = state.label
-    label.classList.toggle('pending', !state.ready)
-    label.title = state.hint
-  }
+  label.querySelector('img')!.src = src
+  label.querySelector('b')!.textContent = map.name
+  return label
+}
+
+/** One widget: a checkbox with its name and what it shows. */
+function widgetChoice(widget: { id: WidgetId; name: string; detail: string }, onToggle: (on: boolean) => void) {
+  const label = document.createElement('label')
+  label.className = 'choice check'
+  label.innerHTML = '<input type="checkbox" checked><b></b><span class="state"></span><small></small>'
+  const input = label.querySelector('input')!
+  input.name = 'widget'
+  input.value = widget.id
+  input.addEventListener('change', () => onToggle(input.checked))
+  label.querySelector('b')!.textContent = widget.name
+  label.querySelector('small')!.textContent = widget.detail
   return label
 }
 
@@ -174,13 +165,9 @@ function choice(group: string, value: string, { name, detail, state }: Choice, o
 function load(): Stored {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
-    return {
-      engine: typeof raw.engine === 'string' ? raw.engine : DEFAULT_ENGINE,
-      map: MAPS.some((m) => m.id === raw.map) ? raw.map : DEFAULT_MAP,
-      quality: QUALITIES.some((q) => q.id === raw.quality) ? raw.quality : DEFAULT_QUALITY,
-    }
+    return { map: MAPS.some((m) => m.id === raw.map) ? raw.map : DEFAULT_MAP }
   } catch {
-    return { engine: DEFAULT_ENGINE, map: DEFAULT_MAP, quality: DEFAULT_QUALITY }
+    return { map: DEFAULT_MAP }
   }
 }
 

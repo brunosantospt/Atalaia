@@ -9,8 +9,9 @@ import type { Run, Scenario } from './scenario'
 import { fmtNumber } from './format'
 import { distanceM, type LonLat } from './geo'
 import { cellOf, lonLatAt, type Grid } from './grid'
+import { fineLoadKgPerM2 } from './fastModel'
 import type { Context } from './osm'
-import { arrivalMin, isAerial, refillMin, workMin, type Decision, type UnitSpec } from './suppression'
+import { arrivalMin, intensityKWPerM, isAerial, refillMin, workMin, type Decision, type Suppression, type UnitSpec } from './suppression'
 
 export type AlertKind = 'homes' | 'water' | 'ros' | 'wind'
 export type AlertLevel = 'warning' | 'critical'
@@ -40,6 +41,7 @@ export const RULES = {
   rosHoldMin: 5, // the alert reads the highest ROS of the last 5 min, so it does not blink at the threshold
   rosWarnMPerMin: (50 * CHAIN_M) / 60, // 16.8 m/min: "very high", 50–150 ch/h (Scott & Burgan 2005)
   rosCriticalMPerMin: 50, // extreme wildfire event, ROS > 50 m/min (Tedim et al. 2018)
+  intensityExtremeKWPerM: 10000, // extreme wildfire event, I ≥ 10 000 kW/m (Tedim et al. 2018)
 }
 
 export const ROS_SOURCE =
@@ -56,7 +58,7 @@ const WATER_SOURCE =
   'meios revezam-se no reabastecimento; um VTTU em abastecimento poupa-lhes a viagem ao ponto de água e, com o ' +
   'tanque gasto nessas recargas, vai reabastecer (contabilidade aproximada, que o modelo não usa).'
 
-const PLACES_SOURCE = 'Lugares do OpenStreetMap (aldeias, lugarejos), atingidos quando o fogo entra no círculo de 250 m à sua volta, como no relatório das 6 h.'
+const PLACES_SOURCE = 'Aldeias do OpenStreetMap (aldeias, lugarejos e localidades com nome), atingidas quando o fogo entra no círculo de 250 m à sua volta, como no relatório das 6 h.'
 
 const HOMES_SOURCE =
   'Habitações do OpenStreetMap. Em risco quando o fogo chega a menos de 50 m: a faixa de gestão de combustível ' +
@@ -72,6 +74,7 @@ interface RunAlerts {
   headM: Float32Array // per minute: distance from the ignition of the farthest burned cell, m
   headAt: Int32Array // per minute: that cell, -1 before the fire starts
   ros: Float32Array // per minute: the highest head ROS of the last rosHoldMin minutes, m/min
+  intensity: Float32Array // per minute: Byram's intensity of the head at that ROS, kW/m
   water: WaterTrack[]
   shuttles: Shuttle[]
 }
@@ -125,10 +128,12 @@ export function prepareAlerts({ scenario, context, decisions, runs }: AlertInput
   const prepare = (run: Run, decision: Decision | null): RunAlerts => {
     const ecin = decision ? ecinOf(scenario, decision) : []
     const water = decision && !scenario.suppression.unlimitedWater ? waterTracks(scenario, decision, ecin) : []
+    const head = headOf(grid, scenario.ignition, run)
     return {
       ...homesReached(homes, run),
       ...placesReached(context, run),
-      ...headOf(grid, scenario.ignition, run),
+      ...head,
+      intensity: headIntensityOf(grid, scenario.suppression, head),
       water,
       shuttles: decision && !scenario.suppression.unlimitedWater ? shuttles(scenario, decision, ecin, water) : [],
     }
@@ -288,7 +293,7 @@ function placesAlert(run: RunAlerts, m: number, name: string): Alert | undefined
     id: 'places',
     kind: 'homes',
     level: inMin < RULES.homesCriticalMin ? 'critical' : 'warning',
-    title: n === 1 ? `${place.name}: fogo a < 250 m em ~${inMin} min` : `${n} lugares com fogo a < 250 m na próxima hora`,
+    title: n === 1 ? `${place.name}: fogo a < 250 m em ~${inMin} min` : `${n} aldeias com fogo a < 250 m na próxima hora`,
     detail: [n === 1 ? '' : `${place.name} em ~${inMin} min`, others.length ? `depois ${others.join(', ')}` : '', name]
       .filter(Boolean)
       .join(' · '),
@@ -320,8 +325,14 @@ function headOf(grid: Grid, ignition: LonLat, run: Run): Pick<RunAlerts, 'headM'
     const d = Math.hypot(c - c0, (i - c) / cols - r0) * cellsize
     if (headAt[m] < 0 || d > headM[m]) (headM[m] = d), (headAt[m] = i)
   }
+  const steps: number[] = []
+  for (let m = 0; m < minutes; m++) if (headAt[m] >= 0) steps.push(m)
   for (let m = 1; m < minutes; m++)
     if (headAt[m] < 0 || headM[m - 1] > headM[m]) (headM[m] = headM[m - 1]), (headAt[m] = headAt[m - 1])
+  // A run read from isochrones (the saved reference) only moves at them: the head goes from one to the next in a
+  // line, so its ROS is the mean of each interval, not a burst after each step and nothing in between.
+  for (let s = 1; s < steps.length; s++)
+    for (let a = steps[s - 1], b = steps[s], m = a + 1; m < b; m++) headM[m] = headM[a] + ((headM[b] - headM[a]) * (m - a)) / (b - a)
   for (let m = 0; m < minutes; m++)
     for (let k = Math.max(0, m - RULES.rosHoldMin + 1); k <= m; k++) ros[m] = Math.max(ros[m], headRos(headM, k))
   return { headM, headAt, ros }
@@ -332,6 +343,42 @@ export function headRos(headM: Float32Array, m: number): number {
   const window = Math.min(RULES.rosWindowMin, m)
   if (window < 10) return 0 // the first minutes are the ignition and the grid's steps, not a front
   return (headM[m] - headM[m - window]) / window
+}
+
+/**
+ * Byram's intensity of the head per minute: its ROS on the mean fine load of the cells the head went
+ * through over the ROS window (the cells with nothing that burns aside), as the fast model weighs flames.
+ */
+function headIntensityOf(grid: Grid, sup: Suppression, { headAt, ros }: Pick<RunAlerts, 'headAt' | 'ros'>): Float32Array {
+  const out = new Float32Array(ros.length)
+  for (let m = 0; m < ros.length; m++) {
+    if (!ros[m]) continue
+    let sum = 0
+    let n = 0
+    for (let k = Math.max(0, m - RULES.rosWindowMin), last = -1; k <= m; k++) {
+      const cell = headAt[k]
+      if (cell < 0 || cell === last) continue
+      last = cell
+      const load = fineLoadKgPerM2(grid.fuelCode[cell])
+      if (load > 0) (sum += load), n++
+    }
+    out[m] = n ? intensityKWPerM(sup, sum / n, ros[m]) : 0
+  }
+  return out
+}
+
+/** The head of the run on the screen at `minute`: ROS (m/min), intensity (kW/m), the highest intensity of the
+ *  next `aheadMin` minutes with its minute, and those minutes (from `minute` on). Undefined past the run. */
+export function headAt(prepared: PreparedAlerts, minute: number, side: AlertSide, aheadMin = 60) {
+  const m = Math.floor(minute)
+  const run = prepared.runs[side]
+  if (!(m >= 0 && m < run.intensity.length)) return undefined
+  let peak = run.intensity[m]
+  let peakMin = m
+  for (let k = m + 1; k <= Math.min(m + aheadMin, run.intensity.length - 1); k++)
+    if (run.intensity[k] > peak) (peak = run.intensity[k]), (peakMin = k)
+  return { ros: run.ros[m], intensity: run.intensity[m], peak, peakInMin: peakMin - m, started: m >= 10,
+    ahead: run.intensity.subarray(m, m + aheadMin + 1) }
 }
 
 function rosAlert(run: RunAlerts, m: number, name: string, grid: Grid): Alert | undefined {

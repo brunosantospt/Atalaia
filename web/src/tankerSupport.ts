@@ -20,9 +20,11 @@ export function tankerRecipients(scenario: Scenario, d: Decision, slot: number):
   })
 }
 
+/** Per assignment: time on scene, minutes of water left (`remaining`, `capacity`, `waterPct`) and the litres in
+ *  its own tanks (`litres` of `tankL`; a tanker's share in a VFCI bucket stays counted on the tanker). */
 export function supplyStatuses(scenario: Scenario, d: Decision, now: number) {
   const eta = arrivals(scenario, d)
-  const statuses = d.assignments.map((a, k) => ({ ...unitStatus(scenario.suppression.units[a.unit], a.unit, eta[k], now), suppliedBy: 0, recipients: 0 }))
+  const statuses = d.assignments.map((a, k) => ({ ...unitStatus(scenario.suppression.units[a.unit], a.unit, eta[k], now), suppliedBy: 0, recipients: 0, litres: 0, tankL: 0 }))
   const tanks = d.assignments.flatMap((a, slot) => a.unit === 'vttu' ? [{ slot, volume: (scenario.suppression.units.vttu.waterL ?? 12000) * a.count, recipients: tankerRecipients(scenario, d, slot), remaining: 0, rate: 0 }] : [])
   tanks.forEach(t => { t.remaining = t.volume })
   for (const [slot, a] of d.assignments.entries()) {
@@ -57,12 +59,14 @@ export function supplyStatuses(scenario: Scenario, d: Decision, now: number) {
     }
     const remaining = buckets.reduce((sum, b) => sum+b.remaining, 0)
     statuses[slot] = { ...statuses[slot], remaining: remaining/flow, capacity: capacity/flow,
-      waterPct: Math.max(0, Math.round(100*remaining/capacity)), suppliedBy: connected, recipients: 0 }
+      waterPct: Math.max(0, Math.round(100*remaining/capacity)), suppliedBy: connected, recipients: 0,
+      litres: buckets[0].remaining*a.count, tankL: base*a.count }
   }
   for (const t of tanks) {
     const s = statuses[t.slot], rate = t.rate
     statuses[t.slot] = { ...s, remaining: rate ? t.remaining/rate : Infinity, capacity: rate ? t.volume/rate : Infinity,
-      waterPct: Math.max(0, Math.round(100*t.remaining/t.volume)), recipients: t.recipients.reduce((n,k)=>n+d.assignments[k].count,0) }
+      waterPct: Math.max(0, Math.round(100*t.remaining/t.volume)), recipients: t.recipients.reduce((n,k)=>n+d.assignments[k].count,0),
+      litres: Math.max(0, t.remaining), tankL: t.volume }
   }
   return statuses
 }

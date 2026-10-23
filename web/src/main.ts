@@ -27,6 +27,7 @@ import {
 import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
 import { incidentShots } from './director'
+import { DroneClips, type Clip } from './droneClips'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
 import { runFast } from './fastClient'
@@ -42,12 +43,20 @@ import { buildContext, loadOsm, type Context } from './osm'
 import { Player } from './player'
 import { OutcomeLayer } from './outcomeLayer'
 import { WindLayer } from './windLayer'
+import { IntensityGauge } from './intensityGauge'
+import { WaterGauge } from './waterGauge'
+import { DangerGauge } from './dangerGauge'
+import { DetectionGauge } from './detectionGauge'
+import { MeansGauge } from './meansGauge'
+import { restack } from './floating'
+import { GrowthGauge } from './growthGauge'
 import { WindShiftWatch } from './windShift'
 import { computeReach } from './reach'
 import { ReachLayer } from './reachLayer'
-import { arrivalFromProgression, cutSteps } from './reference'
+import { cutSteps } from './reference'
 import { CAP_HA, capRun, describeEnd, endMinute, fireEnd, makeReport, recommend } from './report'
 import { createViewer, setQuality } from './scene'
+import type { WidgetId } from './settings'
 import { addHeights, buildStory, type Shot, type Story } from './shots'
 import { SplitLayer } from './splitLayer'
 import { Spotlight } from './spotlight'
@@ -79,6 +88,12 @@ interface Replay {
   credits: Credit[]
   fire: FireLayer // the observed fire
   wind: WindLayer
+  intensity: IntensityGauge // under the wind compass: the head's intensity against what can hold it
+  water: WaterGauge // under it: the water of the engines and tankers on scene
+  danger: DangerGauge // a second column, right of the wind: the weather's danger
+  detection: DetectionGauge // under it: drone and satellite on one timeline
+  means: MeansGauge // under it: the means of the decision on scene
+  growth: GrowthGauge // under it: how fast the free run grows
   markers: MarkerLayer
   player: Player
   scenario: Scenario // shared model inputs, forecast and deployment geometry
@@ -119,6 +134,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
+  const drone = new DroneClips()
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -214,11 +230,9 @@ async function main() {
     prev: () => playback(() => replay?.player.prev()),
     next: () => playback(() => replay?.player.next()),
     goTo: (i) => playback(() => replay?.player.goTo(i)),
-    pickFire: (id) => (location.hash = id),
-    pickEngine: () => refreshSimulate(),
     simulate: () => void simulate(),
     pickMap: (id) => setMap(id),
-    pickQuality: (id) => setQuality(viewer, id),
+    showWidget: () => replay && showWidgets(replay),
     roleChanged: (role) => {
       editor.setRole(role)
       const dispatch = editor.getMultiAgencyDispatch()
@@ -232,7 +246,7 @@ async function main() {
     flyTo: (at) => void flyToAlert(at),
   })
   setMap(hud.settings.map)
-  setQuality(viewer, hud.settings.quality)
+  setQuality(viewer, 'sharp')
 
   /** The map under the fire (settings or key M). */
   function setMap(id: MapId) {
@@ -259,7 +273,7 @@ async function main() {
         replay.showSplit = false
         replay.outcome?.show(false)
         replay.reach.update(new Set())
-        replay.markers.update(new Set()) // persistent operational landmarks stay visible
+        replay.markers.update(new Set(['ignition:0'])) // the ignition and persistent operational landmarks stay visible
         scene.requestRender()
       } else {
         void refreshDirector()
@@ -317,7 +331,7 @@ async function main() {
       loadOsm(id),
     ])
     const forecastWeather = fire0.windShift ? await fetch(`/fires/${id}/weather_noshift.json`).then(r => r.ok ? r.json() as Promise<Weather> : structuredClone(weather)).catch(() => structuredClone(weather)) : structuredClone(weather)
-    const movedDemo = configurePenhaDemo(fire0, weather, forecastWeather, progression0)
+    configurePenhaDemo(fire0, weather, forecastWeather, progression0)
     const fovy = (scene.camera.frustum as PerspectiveFrustum).fovy!
     // Only the stations in play are available anywhere means come from (stationRings.ts).
     const near = stationsInPlay(stations, fire0.ignition, suppression)
@@ -327,14 +341,16 @@ async function main() {
     const fwiSeries = computeFWISeries(weather)
     const durationMin = Math.min(180, horizonMin(fire0.start, weather))
     const scenario: Scenario = { demo: true, windShiftMin: fire0.windShift?.minutes, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
-    // Loading shows the saved reference; the demo model only runs after a button press.
+    // Opening runs the empty-plan forecast once in a worker; subsequent edits stay button-run.
     const t0 = performance.now()
+    const emptyPlan = (id: string): Decision => ({ id, name: `Decisão ${id}`, points: {}, lines: {}, assignments: [] })
+    const emptyPlans: [Decision, Decision] = [emptyPlan('A'), emptyPlan('B')]
+    const initial = await runFast({ scenario: { ...scenario, weather: forecastWeather, windShiftMin: undefined }, decisions: emptyPlans }, () => {})
+    if (loading !== id) return
     const capHa = fire0.referenceCapHa ?? CAP_HA
-    const reference: Run = { decision: null, arrival: arrivalFromProgression(grid, fire0, progression0).map(t => t <= durationMin ? t : Infinity), durationMin,
-      runtimeMs: 0, engine: 'Referência guardada' }
-    const source = movedDemo ? 'Nova ignição · carregue em Simular' : 'Referência guardada · simule o modelo rápido'
-    const free = capRun(grid, reference, capHa)
-    const freeEnd = movedDemo ? durationMin : endMinute(grid, free)
+    const source = 'Modelo rápido · previsão inicial sem meios'
+    const free = capRun(grid, initial.free, capHa)
+    const freeEnd = durationMin
     // The story and the observed layer stop where the run does.
     const { fire, progression } = cutSteps(fire0, progression0, Math.min(durationMin, fireEnd(grid, free).cutMin ?? Infinity))
     const reach = computeReach(grid, free, fire, near, suppression, detection)
@@ -362,6 +378,12 @@ async function main() {
     replay?.fire.destroy()
     replay?.markers.destroy()
     replay?.wind.destroy()
+    replay?.intensity.destroy()
+    replay?.water.destroy()
+    replay?.danger.destroy()
+    replay?.detection.destroy()
+    replay?.means.destroy()
+    replay?.growth.destroy()
     replay?.free.destroy()
     replay?.reach.destroy()
     replay?.rings.destroy()
@@ -369,13 +391,56 @@ async function main() {
     replay?.outcome?.destroy()
     replay?.credits.forEach((c) => viewer.creditDisplay.removeStaticCredit(c))
     const overlay = document.getElementById('overlay')!
+    // The floating cards stack in two columns until the commander moves them, the widgets turned off taking
+    // no room; a move reflows the map labels.
+    const reflow = () => viewer.scene.requestRender()
+    const columns: { el: HTMLElement }[][] = [[], []]
+    const wind = new WindLayer(viewer, hud.root, fire.ignition)
+    const stack = (column: number) => {
+      const k = columns[column].length
+      return () => {
+        const above = columns[column].slice(0, k).reverse().find((c) => !c.el.hidden)
+        if (above) return { x: above.el.offsetLeft, y: above.el.offsetTop + above.el.offsetHeight + 10 }
+        const left = column ? columns[0].find((c) => !c.el.hidden) : undefined
+        return left ? { x: left.el.offsetLeft + left.el.offsetWidth + 10, y: left.el.offsetTop } : wind.home()
+      }
+    }
+    columns[0].push(wind)
+    const intensity = new IntensityGauge(hud.root, stack(0), scenario.suppression, reflow)
+    columns[0].push(intensity)
+    const water = new WaterGauge(hud.root, stack(0), reflow)
+    columns[0].push(water)
+    let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
+    const areaHa = (hours: number) => {
+      const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
+      if (hudRun !== run || hudMinute !== minute) {
+        hudRun = run; hudMinute = minute; hudHa = burnedHa(grid, run, minute)
+      }
+      return hudHa
+    }
+    const poc = (ha: number) => containmentProbability(suppression, ha, reach.intensityKWPerM)
+    const known = { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries }
+    const danger = new DangerGauge(hud.root, known, stack(1), reflow)
+    columns[1].push(danger)
+    const detectionCard = new DetectionGauge(hud.root, known, stack(1), reflow)
+    columns[1].push(detectionCard)
+    const means = new MeansGauge(hud.root, { stations: near, inventory, poc: (minute) => poc(areaHa(minute / 60)) }, stack(1), reflow)
+    columns[1].push(means)
+    const growth = new GrowthGauge(hud.root, { areaHa, poc }, stack(1), reflow)
+    columns[1].push(growth)
     replay = {
       id,
       data: fire,
       stations: regional,
       credits: sourceCredits(fire),
       fire: new FireLayer(scene, progression),
-      wind: new WindLayer(viewer, hud.root, fire.ignition),
+      wind,
+      intensity,
+      water,
+      danger,
+      detection: detectionCard,
+      means,
+      growth,
       markers: new MarkerLayer(viewer, overlay, story.markers, () => hud.safeArea()),
       player: new Player(scene, story.shots, from),
       scenario,
@@ -395,6 +460,7 @@ async function main() {
       arrivalPauses: new Map(),
     }
     replay.rings.set(ringList)
+    showWidgets(replay)
     // Paused on the first shot: the first fire waits over Penha for play, another one is flown to.
     if (switched) replay.player.goTo(0)
     else replay.player.seek(story.shots[0].hours)
@@ -406,22 +472,15 @@ async function main() {
     windShift.setFire(fire, grid, free)
     replay.free.show(false)
     replay.credits.forEach((c) => viewer.creditDisplay.addStaticCredit(c))
-    let hudRun: Run | undefined, hudMinute = -1, hudHa = 0
     hud.setFire(fire, story.shots, {
-      known: { fire, weather, forecastWeather, windShiftMin: fire.windShift?.minutes, startIndex, stations: near, inventory, detection, satHa: reach.tsat.areaHa, fwiSeries },
-      areaHa: (hours) => {
-        const run = replay?.freeNow ?? free, minute = Math.round(hours*60)
-        if (hudRun !== run || hudMinute !== minute) {
-          hudRun = run; hudMinute = minute; hudHa = burnedHa(grid, run, minute)
-        }
-        return hudHa
-      },
-      poc: (areaHa) => containmentProbability(suppression, areaHa, reach.intensityKWPerM),
+      areaHa,
+      poc,
       intensityKWPerM: reach.intensityKWPerM,
     })
     document.title = `${fire.name} · Atalaia`
     // Nothing is simulated yet but Livre: the means layout of the start (empty) is what the button compares against.
     replay.baseHash = layoutKey()
+    replay.sims.pre = { runs: { free, A: { ...free, decision: emptyPlans[0] }, B: { ...free, decision: emptyPlans[1] } }, decisions: emptyPlans, hash: replay.baseHash }
     alerts = prepareAlerts({ scenario, context, decisions: editor.decisions, runs: { free, A: free, B: free } }) // A and B are never read before they are simulated
     setShots()
     refreshSimulate()
@@ -587,9 +646,19 @@ async function main() {
     if (replay.phase === 'post' && !sim)
       return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
-      return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
-    return { label: 'Simular', enabled: true,
+      return { label: 'Simular', enabled: false, note: '' }
+    return { label: 'Simular', enabled: true, quiet: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
+  }
+
+  /** The widgets the settings have on, the others hidden; every card back at home, stacked with no holes. */
+  function showWidgets(r: Replay) {
+    const cards: Record<WidgetId, { el: HTMLElement }> = {
+      wind: r.wind, intensity: r.intensity, water: r.water, danger: r.danger, detection: r.detection, means: r.means, growth: r.growth,
+    }
+    for (const [id, card] of Object.entries(cards)) card.el.hidden = !hud.settings.showing(id as WidgetId)
+    restack(hud.root)
+    viewer.scene.requestRender()
   }
 
   let lastSimulate = ''
@@ -627,7 +696,7 @@ async function main() {
       sim.hash = layoutKey() // geometry now uses this batch's free forecast
       if (phase === 'post') windShift.setResolved(true)
       editor.setEngine({ state: 'done', name: 'Modelo rápido · demo', seconds: (performance.now()-t0)/1000,
-        note: 'Água e autonomia são apenas indicadores visuais.' })
+        note: 'Água e autonomia limitam a proteção; o consumo pausa enquanto a frente está contida.' })
       busy.hide()
       refreshSimulate()
       return true
@@ -675,7 +744,10 @@ async function main() {
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     if (editor.open && player.driving) player.pause()
-    const frame = player.update(dt, replay.director ? 4 : 1)
+    // After the wind change the revised plan plays out 4× faster: the story there is the outcome, not each minute.
+    const shift = replay.data.windShift?.minutes
+    const afterWind = replay.phase === 'post' && shift !== undefined && renderedHours * 60 >= shift
+    const frame = player.update(dt, replay.director ? (afterWind ? 16 : 4) : 1)
     if (frame.hours < renderedHours - 1e-6) for (const [key, minute] of replay.arrivalPauses)
       if (minute > frame.hours * 60 + 1e-6) replay.arrivalPauses.delete(key)
     const arrivalKey = `${replay.phase}:${frame.shot.decision}:${frame.shot.hours}`
@@ -702,7 +774,7 @@ async function main() {
     split?.presentation(!editor.open && replay.showSplit)
     const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
     if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
-    replay.outcome?.show(finale, frame.progress * frame.shot.holdS)
+    replay.outcome?.show(finale)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     // With the drawer open and nothing simulated yet, the free run is what the means are up against.
     const freeOn = !finale && !splitOn && (frame.shot.simulated || editor.open)
@@ -725,6 +797,7 @@ async function main() {
       } else if (kind === 'versus') split?.setPosition(0.5)
     }
     revealed = editor.open ? new Set() : frame.revealed
+    drone.set(editor.open || !replay.director ? undefined : droneClip(frame.shot, frame.hours * 60, replay.phase === 'post', replay.data.windShift?.minutes))
     spotlight.enabled = !editor.open
 
     // The crosshair, its coordinates and the light are on the ground at the centre of the screen, picked every
@@ -743,6 +816,12 @@ async function main() {
     const side: AlertSide = !splitOn ? 'free' : (frame.shot.decision ?? ((split?.position ?? 0.5) >= 0.5 ? 0 : 1)) === 0 ? 'A' : 'B'
     const shifted = frame.hours*60 >= (replay.data.windShift?.minutes ?? Infinity)
     replay.wind.update(shifted ? replay.scenario.weather : replay.scenario.forecastWeather ?? replay.scenario.weather, replay.scenario.startIndex, shifted ? Math.max(frame.hours*60, Math.ceil((replay.data.windShift?.minutes ?? 0)/60)*60) : frame.hours*60)
+    replay.intensity.update(alerts, frame.hours * 60, side)
+    replay.water.update(replay.scenario, editor.decisions[editor.decisionIndex], frame.hours * 60) // the units on the globe
+    replay.danger.update(frame.hours * 60)
+    replay.detection.update(frame.hours * 60)
+    replay.means.update(replay.scenario, editor.decisions[editor.decisionIndex], frame.hours * 60)
+    replay.growth.update(frame.hours * 60)
     windShift.update(frame.hours, frame.playing)
     if (alerts) hud.setAlerts(windShift.alerts(computeAlerts(alerts, frame.hours * 60, side)))
     if (frameNo % 60 === 0) {
@@ -752,7 +831,7 @@ async function main() {
   })
   // Tags are placed after the render, when the camera has its final pose for the frame.
   scene.postRender.addEventListener(() => {
-    replay?.markers.update(revealed)
+    replay?.markers.update(editor.open ? new Set(['ignition:0']) : revealed) // planning keeps the ignition
     replay?.reach.update(revealed)
   })
 
@@ -764,7 +843,7 @@ async function main() {
     // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.
     const { target } = e
     const field = target instanceof HTMLSelectElement || (target instanceof HTMLInputElement && (target.type !== 'range' || e.key.startsWith('Arrow')))
-    if (!replay || field) return
+    if (!replay || field || document.querySelector('.intro')) return // nothing runs behind the intro
     const { player } = replay
     const actions: Record<string, () => void> = {
       ' ': () => playback(() => player.toggle()),
@@ -773,7 +852,6 @@ async function main() {
       r: () => playback(() => player.restart()),
       s: () => hud.settings.toggle(),
       h: () => hud.toggleHidden(),
-      l: () => hud.toggleLedger(),
       a: () => toggleDecisions(),
       d: () => toggleDirector(),
       e: () => editor.toggle(),
@@ -787,12 +865,63 @@ async function main() {
 
   window.addEventListener('hashchange', () => open(fireFromHash(index.map((f) => f.id))))
   await open(fireFromHash(index.map((f) => f.id)))
+  mapLogo(viewer.bottomContainer as HTMLElement)
+  showIntro(() => replay && playback(() => replay!.player.restart()))
+}
+
+/** First load: the fleet's takeoff shot; at the thermal view the alert, then the director's cut starts on the button. */
+function showIntro(start: () => void) {
+  const ALERT_S = 15
+  const REC_S = 10
+  const THERMAL_S = 14 // the thermal camera's scale is on screen
+  const warn = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="10.9" y="8.5" width="2.2" height="7" rx="1.1" fill="#a0140a"/><circle cx="12" cy="18" r="1.25" fill="#a0140a"/></svg>'
+  const el = document.createElement('div')
+  el.className = 'intro'
+  el.innerHTML = `<div class="intro-frame">
+    <video src="${import.meta.env.BASE_URL}drone/takeoff_detect.mp4" autoplay muted playsinline></video>
+    <img class="intro-logo" src="${import.meta.env.BASE_URL}drone/atalaia-logo.svg" alt="Atalaia">
+    <div class="intro-rec"><span></span>REC</div>
+    <div class="intro-unit">ºC</div>
+    <div class="intro-panel"><div class="intro-alert">${warn}Alerta: Incêndio detetado pela frota!${warn}</div>
+    <button type="button">Começar planeamento de combate</button></div>
+    <div class="intro-legend">Guimarães 3D Digital Twin · Atalaia IP · Drone de vigilância · Câmara térmica</div></div>`
+  const video = el.querySelector('video')!
+  const reveal = () => {
+    if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
+    if (video.currentTime >= THERMAL_S || video.ended) el.classList.add('thermal')
+    if (video.currentTime >= ALERT_S || video.ended) el.classList.add('alerted')
+  }
+  video.addEventListener('timeupdate', reveal)
+  video.addEventListener('ended', reveal) // it holds on the last frame
+  const go = () => { el.remove(); document.removeEventListener('keydown', esc); start() }
+  const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); go() } } // Esc skips the video
+  el.querySelector('button')!.addEventListener('click', go)
+  document.addEventListener('keydown', esc)
+  document.body.append(el)
+}
+
+/** Which drone footage goes with the shot: units on the move, units fighting, the revised plan after the wind, the endings. */
+function droneClip(shot: Shot, minute: number, post: boolean, shift: number | undefined): Clip {
+  if (shot.kind === 'outcome') return 'finale'
+  if (post && shift !== undefined && minute >= shift) return 'first_look'
+  if (shot.word === 'Mobilização') return 'closeup1'
+  if (shot.word === 'Primeiros meios' || shot.kind === 'control') return 'closeup'
+  return undefined
+}
+
+/** The Atalaia mark on the map, bottom right beside the Cesium logo. */
+function mapLogo(beside: HTMLElement) {
+  const img = document.createElement('img')
+  img.className = 'map-logo'
+  img.src = `${import.meta.env.BASE_URL}drone/atalaia-logo.svg`
+  img.alt = 'Atalaia'
+  beside.prepend(img)
 }
 
 /** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
 function sourceCredits(fire: Fire): Credit[] {
   const { data, cite } = fire.source
-  return [data, cite, 'Quartéis, estradas, casas e lugares © contribuidores do OpenStreetMap (ODbL)'].map(
+  return [data, cite, 'Quartéis, estradas, casas e aldeias © contribuidores do OpenStreetMap (ODbL)'].map(
     (text) => new Credit(text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')),
   )
 }

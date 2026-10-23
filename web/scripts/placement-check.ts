@@ -22,7 +22,7 @@ function place(unit: UnitId) {
     decisions: [{ id: 'A', name: 'Test', points: {}, assignments: [], lines: {} }],
     refs: { hint: { classList: { remove: () => {} }, textContent: '' } },
     pick: () => ({ ...click }), placeable: () => 1, checkRing: () => true,
-    from: () => 'quartel', dispatchMinute: () => 30, commit: () => {},
+    minutes: 25, from: () => 'quartel', dispatchMinute: () => 30, commit: () => {},
   })
   ;(editor as unknown as { click(position: unknown): void }).click({})
   return editor.decisions[0]
@@ -31,6 +31,7 @@ function place(unit: UnitId) {
 const foot = place('crew')
 assert.deepEqual(Object.values(foot.points)[0], click, 'crew remains at the clicked terrain coordinate, even beside a road')
 assert.equal(foot.assignments[0].dispatchMin, 30, 'off-road placement preserves current-clock dispatch')
+assert.equal(foot.assignments[0].orderedMin, 25, 'placement is visible immediately even when dispatch is delayed')
 const vehicle = place('vfci')
 assert.deepEqual(Object.values(vehicle.points)[0], { lon: road.lon, lat: road.lat }, 'vehicles retain road snapping')
 assert.equal(sup.unlimitedWater, true, 'demo enables unlimited ground water')
