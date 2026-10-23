@@ -1,0 +1,119 @@
+{
+ "fire": "Guarda_23082017",
+ "name": "st_K5m_w08_0",
+ "start": "2017-08-23T14:00",
+ "duration_min": 810.0,
+ "options": {
+  "fire": "Guarda_23082017",
+  "name": "st_K5m_w08_0",
+  "start_step": 0,
+  "duration_min": 810.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 0.8,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 3.8,
+ "wall_s": 4.9,
+ "notes": [
+  "cicatrizes: 14 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 1552.5,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 14,
+    "run_ha": 14
+   },
+   {
+    "h": 3,
+    "observed_ha": 18,
+    "run_ha": 215
+   },
+   {
+    "h": 6,
+    "observed_ha": 38,
+    "run_ha": 628
+   },
+   {
+    "h": 9,
+    "observed_ha": 74,
+    "run_ha": 1115
+   },
+   {
+    "h": 12,
+    "observed_ha": 448,
+    "run_ha": 1432
+   },
+   {
+    "h": 13.5,
+    "observed_ha": 989,
+    "run_ha": 1552
+   }
+  ],
+  "sorensen_last_step": 0.391,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 13.5,
+    "sorensen": 0.391
+   }
+  ],
+  "official_ha": 3118.5,
+  "sorensen_official": 0.593,
+  "outside_official_ha": 168.5,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2017-08-23T22:06:00+00:00",
+     "h": 9.1,
+     "n": 8,
+     "reached": 0.62
+    },
+    {
+     "time_utc": "2017-08-24T02:18:00+00:00",
+     "h": 13.3,
+     "n": 14,
+     "reached": 0.64
+    }
+   ],
+   "mean_reached": 0.63
+  }
+ }
+}

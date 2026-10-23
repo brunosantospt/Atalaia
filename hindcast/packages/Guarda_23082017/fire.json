@@ -1,0 +1,208 @@
+{
+  "id": "Guarda_23082017",
+  "name": "Guarda",
+  "parish": "Fernão Joanes",
+  "incidentId": "2017090026098",
+  "timeZone": "Europe/Lisbon",
+  "start": "2017-08-23T14:00",
+  "end": "2017-08-25T02:00",
+  "ignition": {
+    "lon": -7.343272,
+    "lat": 40.472183
+  },
+  "ignitions": [
+    {
+      "time": "2017-08-23T14:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 13.9,
+      "lon": -7.343272,
+      "lat": 40.472183
+    },
+    {
+      "time": "2017-08-24T11:30",
+      "hours": 21.5,
+      "chain": 2,
+      "areaHa": 118.8,
+      "lon": -7.300364,
+      "lat": 40.469544
+    }
+  ],
+  "bbox": [
+    -7.36334,
+    40.42872,
+    -7.255647,
+    40.500914
+  ],
+  "areaHa": {
+    "timed": 3144.3,
+    "untimed": 423.9,
+    "total": 3568.2
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2017-08-23T14:00",
+      "hours": 0.0,
+      "areaHa": 13.9,
+      "addedHa": 13.9,
+      "period": null,
+      "center": {
+        "lon": -7.343272,
+        "lat": 40.472183
+      },
+      "bbox": [
+        -7.346343,
+        40.470478,
+        -7.340457,
+        40.473764
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2017-08-24T03:30",
+      "hours": 13.5,
+      "areaHa": 989.5,
+      "addedHa": 975.6,
+      "period": 1,
+      "center": {
+        "lon": -7.325297,
+        "lat": 40.458454
+      },
+      "bbox": [
+        -7.347746,
+        40.437746,
+        -7.298746,
+        40.474483
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2017-08-24T11:30",
+      "hours": 21.5,
+      "areaHa": 1306.1,
+      "addedHa": 316.6,
+      "period": 2,
+      "center": {
+        "lon": -7.316332,
+        "lat": 40.473181
+      },
+      "bbox": [
+        -7.347746,
+        40.437746,
+        -7.291164,
+        40.487618
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2017-08-24T15:00",
+      "hours": 25.0,
+      "areaHa": 2082.9,
+      "addedHa": 776.8,
+      "period": 3,
+      "center": {
+        "lon": -7.301708,
+        "lat": 40.479448
+      },
+      "bbox": [
+        -7.347746,
+        40.437746,
+        -7.282789,
+        40.493104
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2017-08-24T23:30",
+      "hours": 33.5,
+      "areaHa": 2522.1,
+      "addedHa": 439.2,
+      "period": 4,
+      "center": {
+        "lon": -7.287497,
+        "lat": 40.479111
+      },
+      "bbox": [
+        -7.347746,
+        40.437746,
+        -7.272087,
+        40.499817
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2017-08-25T02:00",
+      "hours": 36.0,
+      "areaHa": 3144.3,
+      "addedHa": 622.2,
+      "period": 4,
+      "center": {
+        "lon": -7.270544,
+        "lat": 40.477045
+      },
+      "bbox": [
+        -7.347746,
+        40.437746,
+        -7.255647,
+        40.500914
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2017-08-23T14:00",
+      "end": "2017-08-24T03:30",
+      "durationH": 13.5,
+      "areaHa": 989.8,
+      "growthHaPerH": 73.3,
+      "rosMPerH": 286.0,
+      "maxRosMPerH": 286.0,
+      "spreadTowardDeg": 109.0,
+      "intensityKWPerM": 4042.0
+    },
+    {
+      "period": 2,
+      "start": "2017-08-24T03:30",
+      "end": "2017-08-24T11:30",
+      "durationH": 8.0,
+      "areaHa": 197.2,
+      "growthHaPerH": 24.7,
+      "rosMPerH": 188.0,
+      "maxRosMPerH": 192.0,
+      "spreadTowardDeg": 353.0,
+      "intensityKWPerM": 2080.0
+    },
+    {
+      "period": 3,
+      "start": "2017-08-24T11:30",
+      "end": "2017-08-24T15:00",
+      "durationH": 3.5,
+      "areaHa": 895.2,
+      "growthHaPerH": 255.8,
+      "rosMPerH": 628.0,
+      "maxRosMPerH": 628.0,
+      "spreadTowardDeg": 33.0,
+      "intensityKWPerM": 7230.0
+    },
+    {
+      "period": 4,
+      "start": "2017-08-24T15:00",
+      "end": "2017-08-25T02:00",
+      "durationH": 11.0,
+      "areaHa": 1061.8,
+      "growthHaPerH": 96.5,
+      "rosMPerH": 232.0,
+      "maxRosMPerH": 784.0,
+      "spreadTowardDeg": 87.0,
+      "intensityKWPerM": 3224.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

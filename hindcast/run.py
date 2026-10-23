@@ -37,6 +37,7 @@ goes to data/hindcast/<id>/<name>.npy (minutes after the start, NaN where it did
 
 import argparse
 import json
+import math
 import platform
 import subprocess
 import sys
@@ -46,6 +47,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
+from scipy import ndimage
 from shapely.geometry import shape
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -78,6 +80,69 @@ def topowind():
     return calculate_micro_wind
 
 
+WET_1H_PCT = 60.0   # wetted fine fuel: above every model's dead moisture of extinction (12-45 %)
+
+
+def line_cover(fire, path: list, width_m: float) -> np.ndarray:
+    """The share of each cell's area that a line `width_m` wide covers (not every touched cell in full, as Fire.line
+    does for barriers): a 10 m wet line over 30 m cells wets a third of each."""
+    import shapely
+    from shapely.geometry import LineString
+    shape = fire.project(LineString(path)).buffer(width_m / 2, cap_style="flat")
+    cs = fire.cellsize
+    x0, y0, x1, y1 = shape.bounds
+    top = fire.grid["ymin"] + fire.rows * cs
+    c0, c1 = max(int((x0 - fire.grid["xmin"]) // cs), 0), min(int((x1 - fire.grid["xmin"]) // cs), fire.cols - 1)
+    r0, r1 = max(int((top - y1) // cs), 0), min(int((top - y0) // cs), fire.rows - 1)
+    cover = np.zeros((fire.rows, fire.cols))
+    if c0 > c1 or r0 > r1:
+        return cover
+    cols, rows = np.meshgrid(np.arange(c0, c1 + 1), np.arange(r0, r1 + 1))
+    west, north = fire.grid["xmin"] + cols * cs, top - rows * cs
+    boxes = shapely.box(west, north - cs, west + cs, north)
+    cover[rows, cols] = shapely.area(shapely.intersection(boxes, shape)) / cs ** 2
+    return cover
+
+
+def wet(weather: list[dict], lines: list, tau: float) -> list[dict]:
+    """The weather with the wet lines in it: under a line dropped at d, the 1 h dead moisture is
+    m + cover x exp(-(t - d) / tau) x (WET - m) from the latest drop on (one grid per half hour while any water is
+    left, the plain value otherwise)."""
+    if not lines:
+        return weather
+    out = []
+    for w in weather:
+        t = w["t_min"]
+        effect = 0.0
+        for cover, drops in lines:
+            done = drops[drops <= t]
+            if len(done):
+                effect = np.maximum(effect, cover * math.exp(-(t - done.max()) / tau))
+        if np.max(effect) < 0.01:
+            out.append(w)
+            continue
+        m = w["dead_1h_pct"]
+        out.append({**w, "dead_1h_pct": np.round(m + effect * (WET_1H_PCT - m), 1).tolist()})
+    return out
+
+
+def ignition_probability(weather: list[dict], start) -> float:
+    """The chance (%) that an ember landing on fine dead fuel lights it, over a run: Schroeder's (1969) heat of
+    ignition as in Rothermel (1983) and BehavePlus, Qig = 144.5 - 0.266 Tf - 0.00058 Tf^2 - Tf M + 18.54 (1 - e^-15.1M)
+    + 640 M (cal/g; Tf fuel temperature, degC; M the 1 h moisture, fraction), X = (400 - Qig) / 10,
+    P = 0.000048 X^4.3 / 50. The fuel is taken 10 degC above the air in the day (10-19 h, sun on the litter). The mean
+    of the run's half hours."""
+    ps = []
+    for w in weather:
+        hour = (start + timedelta(minutes=w["t_min"])).hour
+        tf = w.get("temp_c", 25.0) + (10.0 if 10 <= hour <= 19 else 0.0)
+        m = w["dead_1h_pct"] / 100
+        q = 144.5 - 0.266 * tf - 0.00058 * tf * tf - tf * m + 18.54 * (1 - math.exp(-15.1 * m)) + 640 * m
+        x = max(0.0, (400 - q) / 10)
+        ps.append(min(1.0, 0.000048 * x ** 4.3 / 50))
+    return round(100 * float(np.mean(ps)), 1)
+
+
 def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict]:
     """weather.json (or weather_cerra.json with --weather cerra) at `minutes` after `start`: wind and temperature/
     humidity linear between the hours, the direction the short way round (as Fire.weather), and the dead fuel
@@ -92,12 +157,16 @@ def weather_at(fire: fires.Fire, start, minutes: list[float], args) -> list[dict
     temp = np.interp(minutes, hours, w["tempC"])
     rh = np.interp(minutes, hours, w["rhPct"])
     speed = np.interp(minutes, hours, w["windKmh"]) * args.wind_mult
-    wfrom = np.degrees(np.interp(minutes, hours, np.unwrap(np.radians(w["windFromDeg"])))) % 360
+    if args.gust_frac:   # part of the way from the mean wind to the gusts (both in the weather and the forecasts)
+        gust = np.interp(minutes, hours, w["gustKmh"]) * args.wind_mult
+        speed = speed + args.gust_frac * (gust - speed)
+    wfrom = (np.degrees(np.interp(minutes, hours, np.unwrap(np.radians(w["windFromDeg"])))) + args.wind_rotate) % 360
     out = []
     for t, tc, h, s, d in zip(minutes, temp, rh, speed, wfrom):
         dead = runs.dead_moistures(tc, h) if args.dead == "emc" else FIXED_DEAD
         out.append({"t_min": float(t), "wind_kmh": round(float(s), 2), "wind_from_deg": round(float(d), 1), **dead,
-                    "live_herb_pct": args.live_herb, "live_woody_pct": args.live_woody})
+                    "live_herb_pct": args.live_herb, "live_woody_pct": args.live_woody,
+                    "temp_c": round(float(tc), 1)})   # for ignition_probability; not sent to the engine
     if args.topowind:
         micro = topowind()
         layers = fire.layers()
@@ -126,6 +195,8 @@ def main(argv=None):
                    help="use fires/<id>/canopy.npz when there is one")
     p.add_argument("--canopy-fill", action="store_true",
                    help="inside the burned area, the canopy of each COS class's median outside it (before the fire)")
+    p.add_argument("--canopy-source", choices=["lidar", "meta"], default="lidar",
+                   help="canopy.npz (DGT LiDAR, canopy.py) or canopy_meta.npz (Meta/WRI global map, canopy_open.py)")
     p.add_argument("--spotting", action="store_true")
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--weather", choices=["era5", "cerra"], default="era5",
@@ -134,8 +205,32 @@ def main(argv=None):
                    help="the wind per 30 m cell from scripts/build_wind_field.py (slope/aspect speed-up, deflection, "
                         "daytime upslope wind)")
     p.add_argument("--adj", type=float, default=1.0)
+    p.add_argument("--adj-class", default="", help="spread adjustment per fuel class of fuel.json, times --adj, e.g. "
+                   "herb=1.2,shrub=1.6,euc=2.0,forest=1.4 (classes: herb, shrub, euc, forest)")
+    p.add_argument("--gust-frac", type=float, default=0.0,
+                   help="effective wind = mean + f x (gust - mean), f from 0 (mean wind) to 1 (the gusts)")
+    p.add_argument("--wind-rotate", type=float, default=0.0, help="degrees added to the direction the wind comes from")
+    p.add_argument("--spotting-dynamic", action="store_true",
+                   help="with --spotting: the embers' ignition probability (PIGN) from the run's fine fuel moisture and "
+                        "temperature (Schroeder 1969, Rothermel 1983, as BehavePlus), instead of a fixed 55 %%")
+    p.add_argument("--spotting-dist-mult", type=float, default=1.0,
+                   help="with --spotting: the mean spotting distance times this (eucalyptus bark goes far further than "
+                        "ELMFIRE's template, which lands most embers within a few cells)")
+    p.add_argument("--spotting-embers", type=int, default=1, help="with --spotting: embers per spotting event (max)")
+    p.add_argument("--active-edge", choices=["all", "hotspots", "oracle"], default="all",
+                   help="which edge of the start perimeter still burns: all of it (default); only near the satellite "
+                        "hotspots of the last --active-window-h hours (what a real-time system knows); or only where the "
+                        "fire grew to the next observed step (cheats: the bound of perfect knowledge). The rest of the "
+                        "edge is held: non-burnable, as a flank the crews put out")
+    p.add_argument("--active-window-h", type=float, default=12.0)
     p.add_argument("--wind-mult", type=float, default=1.0)
     p.add_argument("--barriers", type=Path)
+    p.add_argument("--wet-lines", type=Path,
+                   help="wet lines (same JSON as --barriers: path, width_m, from_min; optional repeat_min, until_min): "
+                        "the water raises the fine dead fuel moisture under the line, by the share of each cell it "
+                        "covers, and it dries back with the 1 h fuels' time lag; no cell becomes non-burnable for good")
+    p.add_argument("--wet-tau", type=float, default=60.0, help="minutes for a wet line to lose 63 %% of its water "
+                   "(the 1 h timelag of fine fuels)")
     p.add_argument("--engine", type=Path, default=ENGINE)
     p.add_argument("--preview", action=argparse.BooleanOptionalAction, default=True, help="write preview.png")
     args = p.parse_args(argv)
@@ -164,10 +259,10 @@ def main(argv=None):
         notes.append(f"cicatrizes: {scar.sum() * fire.cellsize ** 2 / 1e4:.0f} ha")
     base = {"elevation_m": np.round(layers["elevation_m"], 1).tolist(), "slope_deg": layers["slope_deg"].tolist(),
             "aspect_deg": layers["aspect_deg"].tolist()}
-    can = fire_dir(args.fire) / "canopy.npz"
+    can = fire_dir(args.fire) / ("canopy.npz" if args.canopy_source == "lidar" else "canopy_meta.npz")
     if args.canopy and can.exists():
         c = dict(np.load(can))
-        notes.append("copas do LiDAR")
+        notes.append("copas do LiDAR" if args.canopy_source == "lidar" else "copas do mapa global da Meta/WRI")
         if args.canopy_fill:
             c, ha = canopy_fill(fire, c, idx, feats)
             notes.append(f"copas dentro da área ardida ({ha:.0f} ha): mediana da classe COS fora dela")
@@ -175,10 +270,30 @@ def main(argv=None):
                      "canopy_base_m": (c["base_dm"] / 10).tolist(), "canopy_bulk_kgm3": (c["bulk_cg_m3"] / 100).tolist()})
     elif args.canopy_fill:
         raise SystemExit("--canopy-fill precisa das copas (fires/<id>/canopy.npz, canopy.py)")
-    if args.adj != 1.0:
+    if args.adj_class:
+        factor = {"herb": 1, "shrub": 2, "euc": 3, "forest": 4}   # fuel.json classes (build_fuel.py CLASSES)
+        per = np.ones(len(legend))
+        for item in args.adj_class.split(","):
+            key, val = item.split("=")
+            per[[i for i, l in enumerate(legend) if l["class"] == factor[key.strip()]]] = float(val)
+        adj = np.round(np.clip(args.adj * per[idx], 0.1, 2.2), 3)   # ELMFIRE burns nothing from ~2.5 (README)
+        base["adj"] = adj.tolist()
+        notes.append(f"ajuste por classe: {args.adj_class}")
+    elif args.adj != 1.0:
         base["adj"] = args.adj
     if args.spotting:
         extra.update(spotting=SPOTTING, seed=args.seed)
+        if args.spotting_dynamic:
+            pign = ignition_probability(weather_at(fire, start, list(np.arange(0, duration + 1, 30)), args), start)
+            extra["spotting"] = {**SPOTTING, "PIGN_MIN": pign, "PIGN_MAX": pign}
+            notes.append(f"projeções: probabilidade de ignição {pign:.0f} %")
+        if args.spotting_dist_mult != 1.0 or args.spotting_embers != 1:
+            sp = dict(extra["spotting"])
+            for key in ("MEAN_SPOTTING_DIST_MIN", "MEAN_SPOTTING_DIST_MAX"):
+                sp[key] = SPOTTING[key] * args.spotting_dist_mult
+            sp["NEMBERS_MAX_LO"] = sp["NEMBERS_MAX_HI"] = args.spotting_embers
+            extra["spotting"] = sp
+            notes.append(f"projeções: distância ×{args.spotting_dist_mult:g}, até {args.spotting_embers} faúlhas")
 
     # barriers and stretches exactly as the API (api/runs.py)
     lines = json.loads(args.barriers.read_text())["barriers"] if args.barriers else []
@@ -186,25 +301,42 @@ def main(argv=None):
     lines = [b for b in lines if b.get("from_min", 0) < duration]   # the API refuses lines that hold after the end
     if late:
         notes.append(f"{len(late)} linhas começam depois do fim e ficam de fora")
-    scenario = runs.Scenario(fire=args.fire, start_step=args.start_step, duration_min=duration, decision={"barriers": [
-        {k: b[k] for k in ("path", "width_m", "from_min") if k in b} for b in lines]})
+    # validated by the API's own model; a hindcast may run longer than the API's 48 h (Monchique 2018: 128 h)
+    scenario = runs.Scenario(fire=args.fire, start_step=args.start_step,
+                             duration_min=min(duration, runs.MAX_DURATION_MIN), decision={"barriers": [
+                                 {k: b[k] for k in ("path", "width_m", "from_min") if k in b} for b in lines]})
+    scenario = scenario.model_copy(update={"duration_min": duration})
     bars = [(b.from_min, fire.line(b.path, b.width_m)) for b in scenario.decision.barriers]
+    wet_lines = []
+    if args.wet_lines:
+        for b in json.loads(args.wet_lines.read_text())["barriers"]:
+            cover = line_cover(fire, b["path"], b.get("width_m", 0) or fire.cellsize / 3)
+            drops = np.arange(b.get("from_min", 0), b.get("until_min", b.get("from_min", 0)) + 1e-6,
+                              b.get("repeat_min") or 1e9)
+            wet_lines.append((cover, drops - step["hours"] * 60 if args.start_step else drops))
+        notes.append(f"{len(wet_lines)} linhas molhadas (secam com tau {args.wet_tau:g} min)")
     foci = [(*fire.point(q["lon"], q["lat"]), (q["hours"] - step["hours"]) * 60) for q in fire.meta["ignitions"]]
     foci = [f for f in foci if 0 < f[2] < duration]
 
     arrival = np.full((fire.rows, fire.cols), np.nan)
     burned = fire.perimeter(args.start_step)
     arrival[burned] = 0.0
+    held = np.zeros_like(burned)
+    if args.active_edge != "all":
+        held, how = held_edge(fire, args, burned, ev, feats)
+        notes.append(how)
     runtime, wall = 0.0, time.time()
     for t0, t1, times in runs.stretches(scenario):
         f = fuel.copy()
         for from_min, m in bars:
             if from_min <= t0:
                 f[m] = fires.NONBURNABLE
+        f[held] = fires.NONBURNABLE
         req = {"grid": fire.grid, "duration_min": t1 - t0,
                "ignitions": [{"x": x, "y": y, "t_min": t - t0} for x, y, t in foci if t0 <= t < t1],
-               "burned": burned.astype(np.uint8).tolist(),
-               "weather": [{**w, "t_min": w["t_min"] - t0} for w in weather_at(fire, start, times, args)],
+               "burned": (burned & ~held).astype(np.uint8).tolist(),
+               "weather": [{**{k: v for k, v in w.items() if k != "temp_c"}, "t_min": w["t_min"] - t0}
+                           for w in wet(weather_at(fire, start, times, args), wet_lines, args.wet_tau)],
                "layers": {"fuel": f.tolist(), **base}, **extra}
         done = subprocess.run([str(args.engine)], input=json.dumps(req), text=True, capture_output=True)
         if done.returncode != 0:
@@ -219,7 +351,8 @@ def main(argv=None):
     if np.isfinite(arrival).sum() <= fire.perimeter(args.start_step).sum():
         notes.append("AVISO: o fogo não saiu do ponto de partida (o ELMFIRE falha assim com espalhamento muito rápido)")
 
-    stats = score(fire, arrival + step["hours"] * 60, feats, alert_offset_min(fire, ev))   # on step 0's clock
+    stats = score(fire, arrival + step["hours"] * 60, feats, alert_offset_min(fire, ev),   # on step 0's clock
+                  until_min=step["hours"] * 60 + duration)
     out = fire_dir(args.fire) / "runs" / args.name
     out.mkdir(parents=True, exist_ok=True)
     result = {"fire": args.fire, "name": args.name, "start": step["time"], "duration_min": duration,
@@ -244,6 +377,51 @@ def main(argv=None):
           + f" | Sørensen último passo {stats['sorensen_last_step']}, oficial {stats.get('sorensen_official')}, fora "
             f"{stats.get('outside_official_ha')} ha | satélite {sat.get('mean_reached')} | {'; '.join(notes)}")
     return result
+
+
+def held_edge(fire, args, p0: np.ndarray, ev: dict, feats: list) -> tuple[np.ndarray, str]:
+    """The edge cells of the start perimeter that no longer burn (--active-edge), and a note. The edge is every cell of
+    p0 with a neighbour outside it (8 around). Active: within reach of a hotspot (VIIRS 375 m, MODIS 1 km: the larger of
+    500 m and the pixel, plus a cell) seen in the last --active-window-h hours before the start, outside the scars; or,
+    with "oracle", within 2 cells of the observed growth to the next step. With no hotspot in the window the whole edge
+    stays active (nothing is known)."""
+    edge = p0 & ~ndimage.binary_erosion(p0, structure=np.ones((3, 3), bool))
+    active = np.zeros_like(p0)
+    if args.active_edge == "oracle":
+        if args.start_step + 1 >= len(fire.steps):
+            return np.zeros_like(p0), "borda ativa: sem passo seguinte, toda"
+        grow = fire.perimeter(args.start_step + 1) & ~p0
+        active = edge & ndimage.binary_dilation(grow, iterations=2)
+        how = "borda ativa: onde o fogo observado cresceu (oráculo)"
+    else:
+        t_start = fire.steps[args.start_step]["hours"] * 60
+        off = alert_offset_min(fire, ev)
+        rows, cols = np.indices(p0.shape)
+        n = 0
+        for f in feats:
+            q = f["properties"]
+            if q["kind"] != "hotspot" or q.get("in_scar"):
+                continue
+            t = q["hours_after_alert"] * 60 + off
+            if not t_start - args.active_window_h * 60 <= t <= t_start:
+                continue
+            x, y = fire.point(*f["geometry"]["coordinates"])
+            c = (x - fire.grid["xmin"]) / fire.cellsize
+            r = (fire.grid["ymin"] + fire.rows * fire.cellsize - y) / fire.cellsize
+            rad = max(500.0, q.get("pixel_m", 375)) / fire.cellsize + 1
+            r0, r1 = int(max(r - rad, 0)), int(min(r + rad + 1, fire.rows))
+            c0, c1 = int(max(c - rad, 0)), int(min(c + rad + 1, fire.cols))
+            if r0 >= r1 or c0 >= c1:
+                continue
+            near = (rows[r0:r1, c0:c1] - r) ** 2 + (cols[r0:r1, c0:c1] - c) ** 2 <= rad * rad
+            active[r0:r1, c0:c1] |= near
+            n += 1
+        if not (edge & active).any():
+            return np.zeros_like(p0), f"borda ativa: sem focos perto do perímetro nas {args.active_window_h:g} h antes, toda"
+        active &= edge
+        how = f"borda ativa: {n} focos de satélite nas {args.active_window_h:g} h antes"
+    held = edge & ~active
+    return held, f"{how}; {held.sum() / max(1, edge.sum()):.0%} da borda segura"
 
 
 def canopy_fill(fire, c: dict, idx: np.ndarray, feats: list) -> tuple[dict, float]:

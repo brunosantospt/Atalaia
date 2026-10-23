@@ -1,0 +1,154 @@
+{
+ "fire": "CabeceirasdeBasto_06092016",
+ "name": "K5o",
+ "run_args": [
+  "--fuels",
+  "pt",
+  "--scars",
+  "--live-herb",
+  "30",
+  "--live-woody",
+  "70",
+  "--active-edge",
+  "oracle"
+ ],
+ "assimilate_from": null,
+ "assimilate_beta": null,
+ "windows": [
+  {
+   "k": 0,
+   "start": "2016-09-06T04:00",
+   "end": "2016-09-06T13:30",
+   "minutes": 570.0,
+   "mid_hour": 8,
+   "wind_to_deg": 260.4,
+   "wind_from_deg": 80.4,
+   "wind_kmh": 9.9,
+   "wind_vector_kmh": 9.4,
+   "gust_kmh": 26.8,
+   "temp_c": 23.3,
+   "rh_pct": 44.0,
+   "start_ha": 12.5,
+   "growth_fuel": {
+    "Não combustível": 0.12,
+    "Herbáceo": 0.05,
+    "Mato": 0.69,
+    "Eucalipto e acácia": 0.05,
+    "Pinhal e folhosas": 0.1
+   },
+   "growth_slope_deg": 17.3,
+   "rule10": {
+    "growth_obs_ha": 581.7,
+    "growth_run_ha": 5964.5,
+    "ratio": 10.254,
+    "sorensen_growth": 0.178,
+    "sorensen_total": 0.181,
+    "reach_obs_m": 2376,
+    "reach_run_m": 7339,
+    "ros_obs": 250,
+    "ros_run": 772
+   },
+   "model": {
+    "growth_obs_ha": 581.7,
+    "growth_run_ha": 360.6,
+    "ratio": 0.62,
+    "sorensen_growth": 0.586,
+    "sorensen_total": 0.597,
+    "reach_obs_m": 2376,
+    "reach_run_m": 1716,
+    "ros_obs": 250,
+    "ros_run": 181
+   }
+  },
+  {
+   "k": 1,
+   "start": "2016-09-06T13:30",
+   "end": "2016-09-07T00:30",
+   "minutes": 660.0,
+   "mid_hour": 19,
+   "wind_to_deg": 41.2,
+   "wind_from_deg": 221.2,
+   "wind_kmh": 7.3,
+   "wind_vector_kmh": 4.7,
+   "gust_kmh": 25.6,
+   "temp_c": 27.8,
+   "rh_pct": 40.0,
+   "start_ha": 594.2,
+   "growth_fuel": {
+    "Não combustível": 0.03,
+    "Herbáceo": 0.12,
+    "Mato": 0.36,
+    "Eucalipto e acácia": 0.01,
+    "Pinhal e folhosas": 0.48
+   },
+   "growth_slope_deg": 12.0,
+   "rule10": {
+    "growth_obs_ha": 649.0,
+    "growth_run_ha": 9968.7,
+    "ratio": 15.36,
+    "sorensen_growth": 0.122,
+    "sorensen_total": 0.211,
+    "reach_obs_m": 2995,
+    "reach_run_m": 6704,
+    "ros_obs": 272,
+    "ros_run": 609
+   },
+   "model": {
+    "growth_obs_ha": 649.0,
+    "growth_run_ha": 557.5,
+    "ratio": 0.859,
+    "sorensen_growth": 0.7,
+    "sorensen_total": 0.849,
+    "reach_obs_m": 2995,
+    "reach_run_m": 1959,
+    "ros_obs": 272,
+    "ros_run": 178
+   }
+  },
+  {
+   "k": 2,
+   "start": "2016-09-07T00:30",
+   "end": "2016-09-07T12:30",
+   "minutes": 720.0,
+   "mid_hour": 6,
+   "wind_to_deg": 101.2,
+   "wind_from_deg": 281.2,
+   "wind_kmh": 2.2,
+   "wind_vector_kmh": 1.5,
+   "gust_kmh": 14.8,
+   "temp_c": 20.0,
+   "rh_pct": 55.0,
+   "start_ha": 1243.2,
+   "growth_fuel": {
+    "Não combustível": 0.0,
+    "Herbáceo": 0.0,
+    "Mato": 0.7,
+    "Eucalipto e acácia": 0.0,
+    "Pinhal e folhosas": 0.3
+   },
+   "growth_slope_deg": 30.4,
+   "rule10": {
+    "growth_obs_ha": 90.4,
+    "growth_run_ha": 5334.0,
+    "ratio": 59.031,
+    "sorensen_growth": 0.033,
+    "sorensen_total": 0.337,
+    "reach_obs_m": 495,
+    "reach_run_m": 2352,
+    "ros_obs": 41,
+    "ros_run": 196
+   },
+   "model": {
+    "growth_obs_ha": 90.4,
+    "growth_run_ha": 184.0,
+    "ratio": 2.036,
+    "sorensen_growth": 0.562,
+    "sorensen_total": 0.956,
+    "reach_obs_m": 495,
+    "reach_run_m": 1172,
+    "ros_obs": 41,
+    "ros_run": 98
+   }
+  }
+ ]
+}

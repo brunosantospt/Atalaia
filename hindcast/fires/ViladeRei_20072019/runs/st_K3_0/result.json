@@ -1,0 +1,77 @@
+{
+ "fire": "ViladeRei_20072019",
+ "name": "st_K3_0",
+ "start": "2019-07-20T14:30",
+ "duration_min": 150.0,
+ "options": {
+  "fire": "ViladeRei_20072019",
+  "name": "st_K3_0",
+  "start_step": 0,
+  "duration_min": 150.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 3.0,
+ "wall_s": 6.7,
+ "notes": [
+  "cicatrizes: 1 ha"
+ ],
+ "stats": {
+  "burned_ha": 8.2,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 1
+   },
+   {
+    "h": 2.5,
+    "observed_ha": 523,
+    "run_ha": 8
+   }
+  ],
+  "sorensen_last_step": 0.03,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.5,
+    "sorensen": 0.03
+   }
+  ],
+  "official_ha": 9354.0,
+  "sorensen_official": 0.002,
+  "outside_official_ha": 0.2
+ }
+}

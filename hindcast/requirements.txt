@@ -7,3 +7,4 @@ pydantic>=2.7
 requests>=2.32
 pillow>=10.4
 rasterio>=1.4   # canopy.py only (DGT LiDAR tiles)
+matplotlib

@@ -1,0 +1,77 @@
+{
+ "fire": "VieiradoMinho_10082016",
+ "name": "ref_persist_hotspots",
+ "windows_from": "K3",
+ "windows": [
+  {
+   "k": 1,
+   "start": "2016-08-10T15:00",
+   "end": "2016-08-11T03:30",
+   "minutes": 750.0,
+   "mid_hour": 21,
+   "wind_to_deg": 265.7,
+   "wind_from_deg": 85.7,
+   "wind_kmh": 14.0,
+   "wind_vector_kmh": 14.0,
+   "gust_kmh": 41.8,
+   "temp_c": 22.0,
+   "rh_pct": 32.0,
+   "start_ha": 706.9,
+   "growth_fuel": {
+    "Não combustível": 0.01,
+    "Herbáceo": 0.08,
+    "Mato": 0.45,
+    "Eucalipto e acácia": 0.22,
+    "Pinhal e folhosas": 0.24
+   },
+   "growth_slope_deg": 16.4,
+   "model": {
+    "growth_obs_ha": 866.3,
+    "growth_run_ha": 1751.3,
+    "ratio": 2.022,
+    "sorensen_growth": 0.631,
+    "sorensen_total": 0.76,
+    "reach_obs_m": 2399,
+    "reach_run_m": 2120,
+    "ros_obs": 192,
+    "ros_run": 170
+   },
+   "persist_rate_ha_h": 140.1
+  },
+  {
+   "k": 2,
+   "start": "2016-08-11T03:30",
+   "end": "2016-08-11T08:30",
+   "minutes": 300.0,
+   "mid_hour": 6,
+   "wind_to_deg": 263.7,
+   "wind_from_deg": 83.7,
+   "wind_kmh": 14.8,
+   "wind_vector_kmh": 14.7,
+   "gust_kmh": 42.8,
+   "temp_c": 14.4,
+   "rh_pct": 50.0,
+   "start_ha": 1573.1,
+   "growth_fuel": {
+    "Não combustível": 0.05,
+    "Herbáceo": 0.03,
+    "Mato": 0.0,
+    "Eucalipto e acácia": 0.87,
+    "Pinhal e folhosas": 0.06
+   },
+   "growth_slope_deg": 15.1,
+   "model": {
+    "growth_obs_ha": 48.1,
+    "growth_run_ha": 346.9,
+    "ratio": 7.217,
+    "sorensen_growth": 0.153,
+    "sorensen_total": 0.906,
+    "reach_obs_m": 526,
+    "reach_run_m": 335,
+    "ros_obs": 105,
+    "ros_run": 67
+   },
+   "persist_rate_ha_h": 69.3
+  }
+ ]
+}

@@ -1,0 +1,540 @@
+{
+  "id": "Monchique_03082018",
+  "name": "Monchique",
+  "parish": "Monchique",
+  "incidentId": "2018080033743",
+  "timeZone": "Europe/Lisbon",
+  "start": "2018-08-03T13:30",
+  "end": "2018-08-08T22:00",
+  "ignition": {
+    "lon": -8.587756,
+    "lat": 37.394485
+  },
+  "ignitions": [
+    {
+      "time": "2018-08-03T13:30",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 3.1,
+      "lon": -8.587756,
+      "lat": 37.394485
+    },
+    {
+      "time": "2018-08-05T13:30",
+      "hours": 48.0,
+      "chain": 3,
+      "areaHa": 13.1,
+      "lon": -8.578565,
+      "lat": 37.360421
+    },
+    {
+      "time": "2018-08-05T13:30",
+      "hours": 48.0,
+      "chain": 3,
+      "areaHa": 8.6,
+      "lon": -8.537588,
+      "lat": 37.37497
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 5,
+      "areaHa": 1.0,
+      "lon": -8.482377,
+      "lat": 37.361695
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 7,
+      "areaHa": 83.6,
+      "lon": -8.457481,
+      "lat": 37.282998
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 8,
+      "areaHa": 34.5,
+      "lon": -8.550409,
+      "lat": 37.288402
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 10,
+      "areaHa": 34.6,
+      "lon": -8.579793,
+      "lat": 37.349479
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 6,
+      "areaHa": 29.5,
+      "lon": -8.454547,
+      "lat": 37.31426
+    },
+    {
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "chain": 9,
+      "areaHa": 7.0,
+      "lon": -8.569662,
+      "lat": 37.334651
+    },
+    {
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "chain": 12,
+      "areaHa": 272.9,
+      "lon": -8.44434,
+      "lat": 37.254273
+    },
+    {
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "chain": 14,
+      "areaHa": 19.8,
+      "lon": -8.588965,
+      "lat": 37.341679
+    },
+    {
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "chain": 11,
+      "areaHa": 0.5,
+      "lon": -8.451951,
+      "lat": 37.354448
+    },
+    {
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "chain": 11,
+      "areaHa": 92.9,
+      "lon": -8.446084,
+      "lat": 37.329519
+    },
+    {
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "chain": 13,
+      "areaHa": 34.6,
+      "lon": -8.580241,
+      "lat": 37.31236
+    },
+    {
+      "time": "2018-08-08T14:30",
+      "hours": 121.0,
+      "chain": 16,
+      "areaHa": 7.3,
+      "lon": -8.416202,
+      "lat": 37.250736
+    },
+    {
+      "time": "2018-08-08T14:30",
+      "hours": 121.0,
+      "chain": 15,
+      "areaHa": 129.0,
+      "lon": -8.41684,
+      "lat": 37.312226
+    },
+    {
+      "time": "2018-08-08T14:30",
+      "hours": 121.0,
+      "chain": 16,
+      "areaHa": 25.1,
+      "lon": -8.421122,
+      "lat": 37.273972
+    },
+    {
+      "time": "2018-08-08T14:30",
+      "hours": 121.0,
+      "chain": 16,
+      "areaHa": 5.2,
+      "lon": -8.430226,
+      "lat": 37.289898
+    }
+  ],
+  "bbox": [
+    -8.619581,
+    37.186311,
+    -8.349872,
+    37.412802
+  ],
+  "areaHa": {
+    "timed": 24445.6,
+    "untimed": 1814.6,
+    "total": 26260.2
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2018-08-03T13:30",
+      "hours": 0.0,
+      "areaHa": 3.1,
+      "addedHa": 3.1,
+      "period": null,
+      "center": {
+        "lon": -8.587756,
+        "lat": 37.394485
+      },
+      "bbox": [
+        -8.588878,
+        37.393575,
+        -8.58664,
+        37.395404
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2018-08-03T17:00",
+      "hours": 3.5,
+      "areaHa": 209.9,
+      "addedHa": 206.8,
+      "period": 1,
+      "center": {
+        "lon": -8.595251,
+        "lat": 37.396391
+      },
+      "bbox": [
+        -8.608265,
+        37.389,
+        -8.584849,
+        37.403168
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2018-08-04T01:30",
+      "hours": 12.0,
+      "areaHa": 530.1,
+      "addedHa": 320.2,
+      "period": 2,
+      "center": {
+        "lon": -8.59477,
+        "lat": 37.38692
+      },
+      "bbox": [
+        -8.611976,
+        37.374531,
+        -8.582127,
+        37.404353
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2018-08-05T02:00",
+      "hours": 36.5,
+      "areaHa": 2506.8,
+      "addedHa": 1976.6,
+      "period": 3,
+      "center": {
+        "lon": -8.564064,
+        "lat": 37.382704
+      },
+      "bbox": [
+        -8.611976,
+        37.354611,
+        -8.533668,
+        37.412802
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2018-08-05T13:30",
+      "hours": 48.0,
+      "areaHa": 2528.5,
+      "addedHa": 21.7,
+      "period": null,
+      "center": {
+        "lon": -8.56228,
+        "lat": 37.366202
+      },
+      "bbox": [
+        -8.611976,
+        37.354611,
+        -8.533668,
+        37.412802
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2018-08-06T00:30",
+      "hours": 59.0,
+      "areaHa": 12639.6,
+      "addedHa": 10111.2,
+      "period": 4,
+      "center": {
+        "lon": -8.510072,
+        "lat": 37.308948
+      },
+      "bbox": [
+        -8.611976,
+        37.220609,
+        -8.45353,
+        37.412802
+      ]
+    },
+    {
+      "step": 6,
+      "time": "2018-08-06T15:00",
+      "hours": 73.5,
+      "areaHa": 12829.4,
+      "addedHa": 189.8,
+      "period": null,
+      "center": {
+        "lon": -8.50037,
+        "lat": 37.303249
+      },
+      "bbox": [
+        -8.611976,
+        37.220609,
+        -8.447732,
+        37.412802
+      ]
+    },
+    {
+      "step": 7,
+      "time": "2018-08-07T03:00",
+      "hours": 85.5,
+      "areaHa": 17397.7,
+      "addedHa": 4568.1,
+      "period": 5,
+      "center": {
+        "lon": -8.502539,
+        "lat": 37.274687
+      },
+      "bbox": [
+        -8.611976,
+        37.192727,
+        -8.442728,
+        37.412802
+      ]
+    },
+    {
+      "step": 8,
+      "time": "2018-08-07T12:00",
+      "hours": 94.5,
+      "areaHa": 17899.3,
+      "addedHa": 501.6,
+      "period": 6,
+      "center": {
+        "lon": -8.556935,
+        "lat": 37.262785
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.442728,
+        37.412802
+      ]
+    },
+    {
+      "step": 9,
+      "time": "2018-08-07T14:30",
+      "hours": 97.0,
+      "areaHa": 18319.6,
+      "addedHa": 420.2,
+      "period": null,
+      "center": {
+        "lon": -8.462716,
+        "lat": 37.279903
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.437779,
+        37.412802
+      ]
+    },
+    {
+      "step": 10,
+      "time": "2018-08-08T03:00",
+      "hours": 109.5,
+      "areaHa": 20297.0,
+      "addedHa": 1977.0,
+      "period": 7,
+      "center": {
+        "lon": -8.458726,
+        "lat": 37.292096
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.413003,
+        37.412802
+      ]
+    },
+    {
+      "step": 11,
+      "time": "2018-08-08T14:30",
+      "hours": 121.0,
+      "areaHa": 20463.0,
+      "addedHa": 166.0,
+      "period": null,
+      "center": {
+        "lon": -8.417859,
+        "lat": 37.303
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.410249,
+        37.412802
+      ]
+    },
+    {
+      "step": 12,
+      "time": "2018-08-08T18:00",
+      "hours": 124.5,
+      "areaHa": 22881.8,
+      "addedHa": 2418.7,
+      "period": 8,
+      "center": {
+        "lon": -8.404463,
+        "lat": 37.272367
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.374021,
+        37.412802
+      ]
+    },
+    {
+      "step": 13,
+      "time": "2018-08-08T22:00",
+      "hours": 128.5,
+      "areaHa": 24445.6,
+      "addedHa": 1563.8,
+      "period": 9,
+      "center": {
+        "lon": -8.380206,
+        "lat": 37.262286
+      },
+      "bbox": [
+        -8.611976,
+        37.187831,
+        -8.351824,
+        37.412802
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2018-08-03T13:30",
+      "end": "2018-08-03T17:00",
+      "durationH": 3.5,
+      "areaHa": 209.5,
+      "growthHaPerH": 59.9,
+      "rosMPerH": 503.0,
+      "maxRosMPerH": 503.0,
+      "spreadTowardDeg": 279.0,
+      "intensityKWPerM": 5754.0
+    },
+    {
+      "period": 2,
+      "start": "2018-08-03T17:00",
+      "end": "2018-08-04T01:30",
+      "durationH": 8.5,
+      "areaHa": 318.2,
+      "growthHaPerH": 37.4,
+      "rosMPerH": 193.0,
+      "maxRosMPerH": 195.0,
+      "spreadTowardDeg": 173.0,
+      "intensityKWPerM": 1997.0
+    },
+    {
+      "period": 3,
+      "start": null,
+      "end": "2018-08-05T02:00",
+      "durationH": null,
+      "areaHa": 1970.8,
+      "growthHaPerH": null,
+      "rosMPerH": null,
+      "maxRosMPerH": null,
+      "spreadTowardDeg": null,
+      "intensityKWPerM": null
+    },
+    {
+      "period": 4,
+      "start": "2018-08-05T13:30",
+      "end": "2018-08-06T00:30",
+      "durationH": 11.0,
+      "areaHa": 10123.0,
+      "growthHaPerH": 920.3,
+      "rosMPerH": 1635.0,
+      "maxRosMPerH": 1635.0,
+      "spreadTowardDeg": 150.0,
+      "intensityKWPerM": 17692.0
+    },
+    {
+      "period": 5,
+      "start": "2018-08-06T15:00",
+      "end": "2018-08-07T03:00",
+      "durationH": 12.0,
+      "areaHa": 4749.2,
+      "growthHaPerH": 395.8,
+      "rosMPerH": 809.0,
+      "maxRosMPerH": 809.0,
+      "spreadTowardDeg": 184.0,
+      "intensityKWPerM": 9923.0
+    },
+    {
+      "period": 6,
+      "start": "2018-08-07T03:00",
+      "end": "2018-08-07T12:00",
+      "durationH": 9.0,
+      "areaHa": 501.0,
+      "growthHaPerH": 55.7,
+      "rosMPerH": 466.0,
+      "maxRosMPerH": 468.0,
+      "spreadTowardDeg": 190.0,
+      "intensityKWPerM": 4971.0
+    },
+    {
+      "period": 7,
+      "start": "2018-08-07T14:30",
+      "end": "2018-08-08T03:00",
+      "durationH": 12.5,
+      "areaHa": 2394.0,
+      "growthHaPerH": 191.5,
+      "rosMPerH": 226.0,
+      "maxRosMPerH": 226.0,
+      "spreadTowardDeg": 3.0,
+      "intensityKWPerM": 2342.0
+    },
+    {
+      "period": 8,
+      "start": "2018-08-08T14:30",
+      "end": "2018-08-08T18:00",
+      "durationH": 3.5,
+      "areaHa": 2579.0,
+      "growthHaPerH": 736.9,
+      "rosMPerH": 1170.0,
+      "maxRosMPerH": 1170.0,
+      "spreadTowardDeg": 74.0,
+      "intensityKWPerM": 15162.0
+    },
+    {
+      "period": 9,
+      "start": "2018-08-08T18:00",
+      "end": "2018-08-08T22:00",
+      "durationH": 4.0,
+      "areaHa": 1559.8,
+      "growthHaPerH": 389.9,
+      "rosMPerH": 1094.0,
+      "maxRosMPerH": 1102.0,
+      "spreadTowardDeg": 122.0,
+      "intensityKWPerM": 13574.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

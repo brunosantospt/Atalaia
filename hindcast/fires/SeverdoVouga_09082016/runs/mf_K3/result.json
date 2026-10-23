@@ -1,0 +1,222 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "mf_K3",
+ "start": "2016-08-10T01:00",
+ "duration_min": 3900.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "mf_K3",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 40.0,
+ "wall_s": 42.5,
+ "notes": [
+  "cicatrizes: 0 ha"
+ ],
+ "stats": {
+  "burned_ha": 834.8,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 1
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 11
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 26
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 51
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 82
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 108
+   },
+   {
+    "h": 15,
+    "observed_ha": 392,
+    "run_ha": 123
+   },
+   {
+    "h": 18,
+    "observed_ha": 415,
+    "run_ha": 178
+   },
+   {
+    "h": 21,
+    "observed_ha": 459,
+    "run_ha": 231
+   },
+   {
+    "h": 24,
+    "observed_ha": 581,
+    "run_ha": 261
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 817,
+    "run_ha": 271
+   },
+   {
+    "h": 27,
+    "observed_ha": 817,
+    "run_ha": 273
+   },
+   {
+    "h": 30,
+    "observed_ha": 827,
+    "run_ha": 283
+   },
+   {
+    "h": 33,
+    "observed_ha": 851,
+    "run_ha": 289
+   },
+   {
+    "h": 35.5,
+    "observed_ha": 875,
+    "run_ha": 297
+   },
+   {
+    "h": 36,
+    "observed_ha": 875,
+    "run_ha": 298
+   },
+   {
+    "h": 39,
+    "observed_ha": 893,
+    "run_ha": 317
+   },
+   {
+    "h": 42,
+    "observed_ha": 937,
+    "run_ha": 364
+   },
+   {
+    "h": 45,
+    "observed_ha": 992,
+    "run_ha": 412
+   },
+   {
+    "h": 48,
+    "observed_ha": 1086,
+    "run_ha": 449
+   },
+   {
+    "h": 50.0,
+    "observed_ha": 1156,
+    "run_ha": 478
+   },
+   {
+    "h": 51,
+    "observed_ha": 1156,
+    "run_ha": 493
+   },
+   {
+    "h": 54,
+    "observed_ha": 1160,
+    "run_ha": 541
+   },
+   {
+    "h": 57,
+    "observed_ha": 1168,
+    "run_ha": 602
+   },
+   {
+    "h": 59.5,
+    "observed_ha": 1176,
+    "run_ha": 638
+   },
+   {
+    "h": 60,
+    "observed_ha": 1177,
+    "run_ha": 644
+   },
+   {
+    "h": 63,
+    "observed_ha": 1253,
+    "run_ha": 731
+   },
+   {
+    "h": 65.0,
+    "observed_ha": 1746,
+    "run_ha": 835
+   }
+  ],
+  "sorensen_last_step": 0.505,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 0.435
+   },
+   {
+    "step": 2,
+    "h": 26.5,
+    "sorensen": 0.467
+   },
+   {
+    "step": 3,
+    "h": 35.5,
+    "sorensen": 0.467
+   },
+   {
+    "step": 4,
+    "h": 50.0,
+    "sorensen": 0.517
+   },
+   {
+    "step": 5,
+    "h": 59.5,
+    "sorensen": 0.563
+   },
+   {
+    "step": 6,
+    "h": 65.0,
+    "sorensen": 0.505
+   }
+  ]
+ }
+}

@@ -1,0 +1,155 @@
+{
+ "fire": "CabeceirasdeBasto_06092016",
+ "name": "st_K3m_1",
+ "start": "2016-09-06T13:30",
+ "duration_min": 660.0,
+ "options": {
+  "fire": "CabeceirasdeBasto_06092016",
+  "name": "st_K3m_1",
+  "start_step": 1,
+  "duration_min": 660.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 4.5,
+ "wall_s": 7.6,
+ "notes": [
+  "cicatrizes: 504 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 1206.6,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 13,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 29,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 89,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 487,
+    "run_ha": 0
+   },
+   {
+    "h": 9.5,
+    "observed_ha": 594,
+    "run_ha": 594
+   },
+   {
+    "h": 12,
+    "observed_ha": 599,
+    "run_ha": 791
+   },
+   {
+    "h": 15,
+    "observed_ha": 618,
+    "run_ha": 1011
+   },
+   {
+    "h": 18,
+    "observed_ha": 696,
+    "run_ha": 1129
+   },
+   {
+    "h": 20.5,
+    "observed_ha": 1243,
+    "run_ha": 1207
+   }
+  ],
+  "sorensen_last_step": 0.729,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 9.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 2,
+    "h": 20.5,
+    "sorensen": 0.729
+   }
+  ],
+  "official_ha": 1392.3,
+  "sorensen_official": 0.722,
+  "outside_official_ha": 268.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2016-09-06T11:43:00+00:00",
+     "h": 8.72,
+     "n": 10,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2016-09-06T12:33:00+00:00",
+     "h": 9.55,
+     "n": 29,
+     "reached": 0.9
+    },
+    {
+     "time_utc": "2016-09-06T13:23:00+00:00",
+     "h": 10.38,
+     "n": 7,
+     "reached": 1.0
+    },
+    {
+     "time_utc": "2016-09-06T14:13:00+00:00",
+     "h": 11.22,
+     "n": 45,
+     "reached": 0.87
+    },
+    {
+     "time_utc": "2016-09-06T22:49:00+00:00",
+     "h": 19.82,
+     "n": 8,
+     "reached": 0.62
+    }
+   ],
+   "mean_reached": 0.68
+  }
+ }
+}

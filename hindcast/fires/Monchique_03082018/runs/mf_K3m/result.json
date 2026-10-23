@@ -1,0 +1,237 @@
+{
+ "fire": "Monchique_03082018",
+ "name": "mf_K3m",
+ "start": "2018-08-03T13:30",
+ "duration_min": 2880.0,
+ "options": {
+  "fire": "Monchique_03082018",
+  "name": "mf_K3m",
+  "start_step": 0,
+  "duration_min": 2880.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 72.4,
+ "wall_s": 79.4,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 3417.3,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 3,
+    "run_ha": 3
+   },
+   {
+    "h": 3,
+    "observed_ha": 136,
+    "run_ha": 27
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 209,
+    "run_ha": 30
+   },
+   {
+    "h": 6,
+    "observed_ha": 244,
+    "run_ha": 49
+   },
+   {
+    "h": 9,
+    "observed_ha": 337,
+    "run_ha": 73
+   },
+   {
+    "h": 12.0,
+    "observed_ha": 530,
+    "run_ha": 94
+   },
+   {
+    "h": 15,
+    "observed_ha": 544,
+    "run_ha": 142
+   },
+   {
+    "h": 18,
+    "observed_ha": 567,
+    "run_ha": 197
+   },
+   {
+    "h": 21,
+    "observed_ha": 593,
+    "run_ha": 289
+   },
+   {
+    "h": 24,
+    "observed_ha": 623,
+    "run_ha": 472
+   },
+   {
+    "h": 27,
+    "observed_ha": 739,
+    "run_ha": 682
+   },
+   {
+    "h": 30,
+    "observed_ha": 1040,
+    "run_ha": 966
+   },
+   {
+    "h": 33,
+    "observed_ha": 1479,
+    "run_ha": 1218
+   },
+   {
+    "h": 36,
+    "observed_ha": 2373,
+    "run_ha": 1534
+   },
+   {
+    "h": 36.5,
+    "observed_ha": 2506,
+    "run_ha": 1597
+   },
+   {
+    "h": 39,
+    "observed_ha": 2509,
+    "run_ha": 1924
+   },
+   {
+    "h": 42,
+    "observed_ha": 2515,
+    "run_ha": 2397
+   },
+   {
+    "h": 45,
+    "observed_ha": 2522,
+    "run_ha": 2898
+   },
+   {
+    "h": 48.0,
+    "observed_ha": 2528,
+    "run_ha": 3417
+   }
+  ],
+  "sorensen_last_step": 0.504,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 3.5,
+    "sorensen": 0.253
+   },
+   {
+    "step": 2,
+    "h": 12.0,
+    "sorensen": 0.301
+   },
+   {
+    "step": 3,
+    "h": 36.5,
+    "sorensen": 0.509
+   },
+   {
+    "step": 4,
+    "h": 48.0,
+    "sorensen": 0.504
+   }
+  ],
+  "official_ha": 26848.6,
+  "sorensen_official": 0.127,
+  "outside_official_ha": 1499.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2018-08-03T13:21:00+00:00",
+     "h": 0.85,
+     "n": 25,
+     "reached": 0.2
+    },
+    {
+     "time_utc": "2018-08-03T22:00:00+00:00",
+     "h": 9.5,
+     "n": 5,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T01:41:00+00:00",
+     "h": 13.18,
+     "n": 15,
+     "reached": 0.13
+    },
+    {
+     "time_utc": "2018-08-04T02:14:00+00:00",
+     "h": 13.73,
+     "n": 6,
+     "reached": 0.33
+    },
+    {
+     "time_utc": "2018-08-04T03:21:00+00:00",
+     "h": 14.85,
+     "n": 9,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-04T22:43:00+00:00",
+     "h": 34.21,
+     "n": 23,
+     "reached": 0.35
+    },
+    {
+     "time_utc": "2018-08-05T01:22:00+00:00",
+     "h": 36.86,
+     "n": 45,
+     "reached": 0.18
+    },
+    {
+     "time_utc": "2018-08-05T02:57:00+00:00",
+     "h": 38.45,
+     "n": 9,
+     "reached": 0.33
+    },
+    {
+     "time_utc": "2018-08-05T03:03:00+00:00",
+     "h": 38.55,
+     "n": 35,
+     "reached": 0.26
+    },
+    {
+     "time_utc": "2018-08-05T12:22:00+00:00",
+     "h": 47.86,
+     "n": 4,
+     "reached": 0.5
+    }
+   ],
+   "mean_reached": 0.23
+  }
+ }
+}

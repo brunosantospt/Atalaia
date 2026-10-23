@@ -1,0 +1,508 @@
+{
+  "id": "CastroMarim_16082021",
+  "name": "Castro Marim",
+  "parish": "Pernadeira",
+  "incidentId": "2021080035488",
+  "timeZone": "Europe/Lisbon",
+  "start": "2021-08-16T01:00",
+  "end": "2021-08-17T12:00",
+  "ignition": {
+    "lon": -7.612637,
+    "lat": 37.305991
+  },
+  "ignitions": [
+    {
+      "time": "2021-08-16T01:00",
+      "hours": 0.0,
+      "chain": 1,
+      "areaHa": 0.4,
+      "lon": -7.612637,
+      "lat": 37.305991
+    },
+    {
+      "time": "2021-08-16T11:30",
+      "hours": 10.5,
+      "chain": 2,
+      "areaHa": 9.2,
+      "lon": -7.595522,
+      "lat": 37.285612
+    },
+    {
+      "time": "2021-08-16T23:00",
+      "hours": 22.0,
+      "chain": 3,
+      "areaHa": 1.7,
+      "lon": -7.600146,
+      "lat": 37.228301
+    },
+    {
+      "time": "2021-08-17T00:00",
+      "hours": 23.0,
+      "chain": 4,
+      "areaHa": 1.5,
+      "lon": -7.549766,
+      "lat": 37.260961
+    },
+    {
+      "time": "2021-08-17T03:30",
+      "hours": 26.5,
+      "chain": 5,
+      "areaHa": 1.1,
+      "lon": -7.610814,
+      "lat": 37.203926
+    }
+  ],
+  "bbox": [
+    -7.615023,
+    37.173601,
+    -7.524622,
+    37.307474
+  ],
+  "areaHa": {
+    "timed": 5948.2,
+    "untimed": 93.9,
+    "total": 6042.1
+  },
+  "steps": [
+    {
+      "step": 0,
+      "time": "2021-08-16T01:00",
+      "hours": 0.0,
+      "areaHa": 0.4,
+      "addedHa": 0.4,
+      "period": null,
+      "center": {
+        "lon": -7.612637,
+        "lat": 37.305991
+      },
+      "bbox": [
+        -7.613044,
+        37.305663,
+        -7.612179,
+        37.30633
+      ]
+    },
+    {
+      "step": 1,
+      "time": "2021-08-16T03:00",
+      "hours": 2.0,
+      "areaHa": 66.0,
+      "addedHa": 65.6,
+      "period": 1,
+      "center": {
+        "lon": -7.606146,
+        "lat": 37.302612
+      },
+      "bbox": [
+        -7.613138,
+        37.298168,
+        -7.598919,
+        37.307474
+      ]
+    },
+    {
+      "step": 2,
+      "time": "2021-08-16T04:00",
+      "hours": 3.0,
+      "areaHa": 106.8,
+      "addedHa": 40.8,
+      "period": 1,
+      "center": {
+        "lon": -7.599006,
+        "lat": 37.2988
+      },
+      "bbox": [
+        -7.613138,
+        37.295682,
+        -7.593835,
+        37.307474
+      ]
+    },
+    {
+      "step": 3,
+      "time": "2021-08-16T05:00",
+      "hours": 4.0,
+      "areaHa": 183.0,
+      "addedHa": 76.1,
+      "period": 1,
+      "center": {
+        "lon": -7.595,
+        "lat": 37.293657
+      },
+      "bbox": [
+        -7.613138,
+        37.287455,
+        -7.587096,
+        37.307474
+      ]
+    },
+    {
+      "step": 4,
+      "time": "2021-08-16T07:30",
+      "hours": 6.5,
+      "areaHa": 262.3,
+      "addedHa": 79.3,
+      "period": 1,
+      "center": {
+        "lon": -7.592279,
+        "lat": 37.29082
+      },
+      "bbox": [
+        -7.614536,
+        37.284519,
+        -7.579958,
+        37.307474
+      ]
+    },
+    {
+      "step": 5,
+      "time": "2021-08-16T08:30",
+      "hours": 7.5,
+      "areaHa": 320.5,
+      "addedHa": 58.1,
+      "period": 1,
+      "center": {
+        "lon": -7.58212,
+        "lat": 37.283638
+      },
+      "bbox": [
+        -7.614536,
+        37.279492,
+        -7.570322,
+        37.307474
+      ]
+    },
+    {
+      "step": 6,
+      "time": "2021-08-16T11:30",
+      "hours": 10.5,
+      "areaHa": 329.6,
+      "addedHa": 9.2,
+      "period": null,
+      "center": {
+        "lon": -7.595522,
+        "lat": 37.285612
+      },
+      "bbox": [
+        -7.614536,
+        37.279492,
+        -7.570322,
+        37.307474
+      ]
+    },
+    {
+      "step": 7,
+      "time": "2021-08-16T14:30",
+      "hours": 13.5,
+      "areaHa": 429.8,
+      "addedHa": 100.0,
+      "period": 2,
+      "center": {
+        "lon": -7.591281,
+        "lat": 37.282589
+      },
+      "bbox": [
+        -7.614536,
+        37.271281,
+        -7.570322,
+        37.307474
+      ]
+    },
+    {
+      "step": 8,
+      "time": "2021-08-16T16:00",
+      "hours": 15.0,
+      "areaHa": 781.0,
+      "addedHa": 351.2,
+      "period": 2,
+      "center": {
+        "lon": -7.593814,
+        "lat": 37.271147
+      },
+      "bbox": [
+        -7.614536,
+        37.257819,
+        -7.570322,
+        37.307474
+      ]
+    },
+    {
+      "step": 9,
+      "time": "2021-08-16T16:30",
+      "hours": 15.5,
+      "areaHa": 1122.8,
+      "addedHa": 341.8,
+      "period": 2,
+      "center": {
+        "lon": -7.587918,
+        "lat": 37.258772
+      },
+      "bbox": [
+        -7.614536,
+        37.241756,
+        -7.570322,
+        37.307474
+      ]
+    },
+    {
+      "step": 10,
+      "time": "2021-08-16T17:30",
+      "hours": 16.5,
+      "areaHa": 2358.9,
+      "addedHa": 1236.1,
+      "period": 2,
+      "center": {
+        "lon": -7.577877,
+        "lat": 37.243591
+      },
+      "bbox": [
+        -7.614536,
+        37.211705,
+        -7.55218,
+        37.307474
+      ]
+    },
+    {
+      "step": 11,
+      "time": "2021-08-16T18:30",
+      "hours": 17.5,
+      "areaHa": 2949.9,
+      "addedHa": 591.0,
+      "period": 2,
+      "center": {
+        "lon": -7.568803,
+        "lat": 37.234938
+      },
+      "bbox": [
+        -7.614536,
+        37.201202,
+        -7.547957,
+        37.307474
+      ]
+    },
+    {
+      "step": 12,
+      "time": "2021-08-16T19:30",
+      "hours": 18.5,
+      "areaHa": 3965.0,
+      "addedHa": 1015.1,
+      "period": 2,
+      "center": {
+        "lon": -7.566477,
+        "lat": 37.215352
+      },
+      "bbox": [
+        -7.614536,
+        37.178885,
+        -7.538007,
+        37.307474
+      ]
+    },
+    {
+      "step": 13,
+      "time": "2021-08-16T23:00",
+      "hours": 22.0,
+      "areaHa": 4542.0,
+      "addedHa": 577.0,
+      "period": 3,
+      "center": {
+        "lon": -7.543982,
+        "lat": 37.221263
+      },
+      "bbox": [
+        -7.614536,
+        37.173794,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 14,
+      "time": "2021-08-17T00:00",
+      "hours": 23.0,
+      "areaHa": 4656.1,
+      "addedHa": 114.1,
+      "period": 4,
+      "center": {
+        "lon": -7.581015,
+        "lat": 37.2246
+      },
+      "bbox": [
+        -7.614536,
+        37.173794,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 15,
+      "time": "2021-08-17T01:00",
+      "hours": 24.0,
+      "areaHa": 4842.1,
+      "addedHa": 186.0,
+      "period": 4,
+      "center": {
+        "lon": -7.593967,
+        "lat": 37.208482
+      },
+      "bbox": [
+        -7.614536,
+        37.173794,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 16,
+      "time": "2021-08-17T02:30",
+      "hours": 25.5,
+      "areaHa": 5845.3,
+      "addedHa": 1003.2,
+      "period": 4,
+      "center": {
+        "lon": -7.59053,
+        "lat": 37.221528
+      },
+      "bbox": [
+        -7.614851,
+        37.173601,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 17,
+      "time": "2021-08-17T03:30",
+      "hours": 26.5,
+      "areaHa": 5846.4,
+      "addedHa": 1.1,
+      "period": null,
+      "center": {
+        "lon": -7.610814,
+        "lat": 37.203925
+      },
+      "bbox": [
+        -7.614851,
+        37.173601,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 18,
+      "time": "2021-08-17T06:00",
+      "hours": 29.0,
+      "areaHa": 5918.1,
+      "addedHa": 71.7,
+      "period": 5,
+      "center": {
+        "lon": -7.609983,
+        "lat": 37.195641
+      },
+      "bbox": [
+        -7.615023,
+        37.173601,
+        -7.524622,
+        37.307474
+      ]
+    },
+    {
+      "step": 19,
+      "time": "2021-08-17T12:00",
+      "hours": 35.0,
+      "areaHa": 5948.2,
+      "addedHa": 30.1,
+      "period": 6,
+      "center": {
+        "lon": -7.605697,
+        "lat": 37.18715
+      },
+      "bbox": [
+        -7.615023,
+        37.173601,
+        -7.524622,
+        37.307474
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "period": 1,
+      "start": "2021-08-16T01:00",
+      "end": "2021-08-16T08:30",
+      "durationH": 7.5,
+      "areaHa": 319.5,
+      "growthHaPerH": 42.6,
+      "rosMPerH": 616.0,
+      "maxRosMPerH": 1050.0,
+      "spreadTowardDeg": 125.0,
+      "intensityKWPerM": 6713.0
+    },
+    {
+      "period": 2,
+      "start": "2021-08-16T11:30",
+      "end": "2021-08-16T19:30",
+      "durationH": 8.0,
+      "areaHa": 3642.8,
+      "growthHaPerH": 455.3,
+      "rosMPerH": 1495.0,
+      "maxRosMPerH": 3712.0,
+      "spreadTowardDeg": 165.0,
+      "intensityKWPerM": 16874.0
+    },
+    {
+      "period": 3,
+      "start": "2021-08-16T19:30",
+      "end": "2021-08-16T23:00",
+      "durationH": 3.5,
+      "areaHa": 578.0,
+      "growthHaPerH": 165.1,
+      "rosMPerH": 458.0,
+      "maxRosMPerH": 406.0,
+      "spreadTowardDeg": 181.0,
+      "intensityKWPerM": 4339.0
+    },
+    {
+      "period": 4,
+      "start": "2021-08-16T17:30",
+      "end": "2021-08-17T02:30",
+      "durationH": 9.0,
+      "areaHa": 1305.2,
+      "growthHaPerH": 145.0,
+      "rosMPerH": 1752.0,
+      "maxRosMPerH": 1916.0,
+      "spreadTowardDeg": 165.0,
+      "intensityKWPerM": 19459.0
+    },
+    {
+      "period": 5,
+      "start": "2021-08-17T03:30",
+      "end": "2021-08-17T06:00",
+      "durationH": 2.5,
+      "areaHa": 73.0,
+      "growthHaPerH": 29.2,
+      "rosMPerH": 697.0,
+      "maxRosMPerH": 697.0,
+      "spreadTowardDeg": 177.0,
+      "intensityKWPerM": 8666.0
+    },
+    {
+      "period": 6,
+      "start": "2021-08-17T06:00",
+      "end": "2021-08-17T12:00",
+      "durationH": 6.0,
+      "areaHa": 31.0,
+      "growthHaPerH": 5.2,
+      "rosMPerH": 126.0,
+      "maxRosMPerH": 122.0,
+      "spreadTowardDeg": 148.0,
+      "intensityKWPerM": 1297.0
+    }
+  ],
+  "source": {
+    "dataset": "PT-FireSprd (Portuguese Large Wildfire Spread database)",
+    "cite": "Benali et al. 2023, Earth System Science Data, doi:10.5194/essd-15-3791-2023",
+    "data": "PT-FireSprd v2.0, Zenodo record 16279793, CC BY 4.0",
+    "times": "date_hour as published; the metadata does not state a time zone, local time (Europe/Lisbon) is assumed"
+  }
+}

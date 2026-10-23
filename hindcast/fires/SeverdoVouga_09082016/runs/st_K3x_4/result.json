@@ -1,0 +1,215 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "st_K3x_4",
+ "start": "2016-08-12T03:00",
+ "duration_min": 570.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "st_K3x_4",
+  "start_step": 4,
+  "duration_min": 570.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": true,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": true,
+  "spotting_dist_mult": 5.0,
+  "spotting_embers": 3,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 3.6,
+ "wall_s": 4.5,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "projeções: probabilidade de ignição 47 %",
+  "projeções: distância ×5, até 3 faúlhas"
+ ],
+ "stats": {
+  "burned_ha": 1610.1,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 0
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 0
+   },
+   {
+    "h": 15,
+    "observed_ha": 392,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 415,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 459,
+    "run_ha": 0
+   },
+   {
+    "h": 24,
+    "observed_ha": 581,
+    "run_ha": 0
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 817,
+    "run_ha": 0
+   },
+   {
+    "h": 27,
+    "observed_ha": 817,
+    "run_ha": 0
+   },
+   {
+    "h": 30,
+    "observed_ha": 827,
+    "run_ha": 0
+   },
+   {
+    "h": 33,
+    "observed_ha": 851,
+    "run_ha": 0
+   },
+   {
+    "h": 35.5,
+    "observed_ha": 875,
+    "run_ha": 0
+   },
+   {
+    "h": 36,
+    "observed_ha": 875,
+    "run_ha": 0
+   },
+   {
+    "h": 39,
+    "observed_ha": 893,
+    "run_ha": 0
+   },
+   {
+    "h": 42,
+    "observed_ha": 937,
+    "run_ha": 0
+   },
+   {
+    "h": 45,
+    "observed_ha": 992,
+    "run_ha": 0
+   },
+   {
+    "h": 48,
+    "observed_ha": 1086,
+    "run_ha": 0
+   },
+   {
+    "h": 50.0,
+    "observed_ha": 1156,
+    "run_ha": 1156
+   },
+   {
+    "h": 51,
+    "observed_ha": 1156,
+    "run_ha": 1250
+   },
+   {
+    "h": 54,
+    "observed_ha": 1160,
+    "run_ha": 1422
+   },
+   {
+    "h": 57,
+    "observed_ha": 1168,
+    "run_ha": 1545
+   },
+   {
+    "h": 59.5,
+    "observed_ha": 1176,
+    "run_ha": 1610
+   }
+  ],
+  "sorensen_last_step": 0.834,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 26.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 35.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 50.0,
+    "sorensen": 1.0
+   },
+   {
+    "step": 5,
+    "h": 59.5,
+    "sorensen": 0.834
+   }
+  ]
+ }
+}

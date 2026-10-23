@@ -1,0 +1,99 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "st_K5o_0",
+ "start": "2016-08-10T01:00",
+ "duration_min": 840.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "st_K5o_0",
+  "start_step": 0,
+  "duration_min": 840.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "oracle",
+  "active_window_h": 12.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 5.5,
+ "wall_s": 7.0,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "borda ativa: onde o fogo observado cresceu (oráculo); 0% da borda segura"
+ ],
+ "stats": {
+  "burned_ha": 313.6,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 1
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 120
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 211
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 245
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 282
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 314
+   }
+  ],
+  "sorensen_last_step": 0.639,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 0.639
+   }
+  ]
+ }
+}

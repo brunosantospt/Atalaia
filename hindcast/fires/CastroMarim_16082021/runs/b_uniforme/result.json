@@ -1,0 +1,316 @@
+{
+ "fire": "CastroMarim_16082021",
+ "name": "b_uniforme",
+ "start": "2021-08-16T01:00",
+ "duration_min": 2100.0,
+ "options": {
+  "fire": "CastroMarim_16082021"
+ },
+ "engine": "none: step 0 grown to the observed area of each step (hindcast/baseline.py)",
+ "barriers": 0,
+ "stretches": 0,
+ "runtime_s": 0.0,
+ "wall_s": 0.0,
+ "notes": [
+  "referência ingénua com a área observada de cada passo: a mesma distância em todas as direções"
+ ],
+ "stats": {
+  "burned_ha": 5938.3,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 0,
+    "run_ha": 0
+   },
+   {
+    "h": 2.0,
+    "observed_ha": 67,
+    "run_ha": 67
+   },
+   {
+    "h": 3.0,
+    "observed_ha": 108,
+    "run_ha": 108
+   },
+   {
+    "h": 4.0,
+    "observed_ha": 184,
+    "run_ha": 185
+   },
+   {
+    "h": 6,
+    "observed_ha": 230,
+    "run_ha": 245
+   },
+   {
+    "h": 6.5,
+    "observed_ha": 262,
+    "run_ha": 263
+   },
+   {
+    "h": 7.5,
+    "observed_ha": 321,
+    "run_ha": 321
+   },
+   {
+    "h": 9,
+    "observed_ha": 323,
+    "run_ha": 325
+   },
+   {
+    "h": 10.5,
+    "observed_ha": 330,
+    "run_ha": 330
+   },
+   {
+    "h": 12,
+    "observed_ha": 342,
+    "run_ha": 377
+   },
+   {
+    "h": 13.5,
+    "observed_ha": 429,
+    "run_ha": 430
+   },
+   {
+    "h": 15.0,
+    "observed_ha": 781,
+    "run_ha": 782
+   },
+   {
+    "h": 15.5,
+    "observed_ha": 1122,
+    "run_ha": 1123
+   },
+   {
+    "h": 16.5,
+    "observed_ha": 2356,
+    "run_ha": 2357
+   },
+   {
+    "h": 17.5,
+    "observed_ha": 2947,
+    "run_ha": 2948
+   },
+   {
+    "h": 18,
+    "observed_ha": 3048,
+    "run_ha": 3492
+   },
+   {
+    "h": 18.5,
+    "observed_ha": 3964,
+    "run_ha": 3964
+   },
+   {
+    "h": 21,
+    "observed_ha": 4094,
+    "run_ha": 4373
+   },
+   {
+    "h": 22.0,
+    "observed_ha": 4534,
+    "run_ha": 4534
+   },
+   {
+    "h": 23.0,
+    "observed_ha": 4649,
+    "run_ha": 4649
+   },
+   {
+    "h": 24.0,
+    "observed_ha": 4835,
+    "run_ha": 4835
+   },
+   {
+    "h": 25.5,
+    "observed_ha": 5835,
+    "run_ha": 5836
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 5836,
+    "run_ha": 5837
+   },
+   {
+    "h": 27,
+    "observed_ha": 5836,
+    "run_ha": 5852
+   },
+   {
+    "h": 29.0,
+    "observed_ha": 5909,
+    "run_ha": 5909
+   },
+   {
+    "h": 30,
+    "observed_ha": 5909,
+    "run_ha": 5914
+   },
+   {
+    "h": 33,
+    "observed_ha": 5911,
+    "run_ha": 5927
+   },
+   {
+    "h": 35.0,
+    "observed_ha": 5938,
+    "run_ha": 5938
+   }
+  ],
+  "sorensen_last_step": 0.173,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 2.0,
+    "sorensen": 0.238
+   },
+   {
+    "step": 2,
+    "h": 3.0,
+    "sorensen": 0.225
+   },
+   {
+    "step": 3,
+    "h": 4.0,
+    "sorensen": 0.207
+   },
+   {
+    "step": 4,
+    "h": 6.5,
+    "sorensen": 0.204
+   },
+   {
+    "step": 5,
+    "h": 7.5,
+    "sorensen": 0.193
+   },
+   {
+    "step": 6,
+    "h": 10.5,
+    "sorensen": 0.191
+   },
+   {
+    "step": 7,
+    "h": 13.5,
+    "sorensen": 0.174
+   },
+   {
+    "step": 8,
+    "h": 15.0,
+    "sorensen": 0.15
+   },
+   {
+    "step": 9,
+    "h": 15.5,
+    "sorensen": 0.13
+   },
+   {
+    "step": 10,
+    "h": 16.5,
+    "sorensen": 0.14
+   },
+   {
+    "step": 11,
+    "h": 17.5,
+    "sorensen": 0.134
+   },
+   {
+    "step": 12,
+    "h": 18.5,
+    "sorensen": 0.133
+   },
+   {
+    "step": 13,
+    "h": 22.0,
+    "sorensen": 0.139
+   },
+   {
+    "step": 14,
+    "h": 23.0,
+    "sorensen": 0.141
+   },
+   {
+    "step": 15,
+    "h": 24.0,
+    "sorensen": 0.142
+   },
+   {
+    "step": 16,
+    "h": 25.5,
+    "sorensen": 0.172
+   },
+   {
+    "step": 17,
+    "h": 26.5,
+    "sorensen": 0.172
+   },
+   {
+    "step": 18,
+    "h": 29.0,
+    "sorensen": 0.173
+   },
+   {
+    "step": 19,
+    "h": 35.0,
+    "sorensen": 0.173
+   }
+  ],
+  "official_ha": 6643.4,
+  "sorensen_official": 0.187,
+  "outside_official_ha": 4761.5,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2021-08-16T02:07:00+00:00",
+     "h": 2.11,
+     "n": 18,
+     "reached": 0.44
+    },
+    {
+     "time_utc": "2021-08-16T11:10:00+00:00",
+     "h": 11.16,
+     "n": 3,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T13:28:00+00:00",
+     "h": 13.46,
+     "n": 13,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2021-08-16T14:30:00+00:00",
+     "h": 14.5,
+     "n": 7,
+     "reached": 0.29
+    },
+    {
+     "time_utc": "2021-08-16T22:13:00+00:00",
+     "h": 22.21,
+     "n": 34,
+     "reached": 0.06
+    },
+    {
+     "time_utc": "2021-08-17T01:48:00+00:00",
+     "h": 25.8,
+     "n": 75,
+     "reached": 0.03
+    },
+    {
+     "time_utc": "2021-08-17T02:31:00+00:00",
+     "h": 26.51,
+     "n": 19,
+     "reached": 0.11
+    },
+    {
+     "time_utc": "2021-08-17T03:28:00+00:00",
+     "h": 27.46,
+     "n": 31,
+     "reached": 0.0
+    }
+   ],
+   "mean_reached": 0.12
+  }
+ }
+}

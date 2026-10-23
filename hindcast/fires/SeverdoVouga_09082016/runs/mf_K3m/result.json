@@ -1,0 +1,224 @@
+{
+ "fire": "SeverdoVouga_09082016",
+ "name": "mf_K3m",
+ "start": "2016-08-10T01:00",
+ "duration_min": 3900.0,
+ "options": {
+  "fire": "SeverdoVouga_09082016",
+  "name": "mf_K3m",
+  "start_step": 0,
+  "duration_min": null,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "engine": "engines/elmfire/run.sh",
+  "preview": true
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 11.0,
+ "wall_s": 29.0,
+ "notes": [
+  "cicatrizes: 0 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 729.2,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 1,
+    "run_ha": 1
+   },
+   {
+    "h": 3,
+    "observed_ha": 2,
+    "run_ha": 11
+   },
+   {
+    "h": 6,
+    "observed_ha": 8,
+    "run_ha": 21
+   },
+   {
+    "h": 9,
+    "observed_ha": 37,
+    "run_ha": 35
+   },
+   {
+    "h": 12,
+    "observed_ha": 118,
+    "run_ha": 49
+   },
+   {
+    "h": 14.0,
+    "observed_ha": 390,
+    "run_ha": 59
+   },
+   {
+    "h": 15,
+    "observed_ha": 392,
+    "run_ha": 66
+   },
+   {
+    "h": 18,
+    "observed_ha": 415,
+    "run_ha": 98
+   },
+   {
+    "h": 21,
+    "observed_ha": 459,
+    "run_ha": 144
+   },
+   {
+    "h": 24,
+    "observed_ha": 581,
+    "run_ha": 194
+   },
+   {
+    "h": 26.5,
+    "observed_ha": 817,
+    "run_ha": 224
+   },
+   {
+    "h": 27,
+    "observed_ha": 817,
+    "run_ha": 230
+   },
+   {
+    "h": 30,
+    "observed_ha": 827,
+    "run_ha": 259
+   },
+   {
+    "h": 33,
+    "observed_ha": 851,
+    "run_ha": 282
+   },
+   {
+    "h": 35.5,
+    "observed_ha": 875,
+    "run_ha": 294
+   },
+   {
+    "h": 36,
+    "observed_ha": 875,
+    "run_ha": 296
+   },
+   {
+    "h": 39,
+    "observed_ha": 893,
+    "run_ha": 316
+   },
+   {
+    "h": 42,
+    "observed_ha": 937,
+    "run_ha": 356
+   },
+   {
+    "h": 45,
+    "observed_ha": 992,
+    "run_ha": 398
+   },
+   {
+    "h": 48,
+    "observed_ha": 1086,
+    "run_ha": 422
+   },
+   {
+    "h": 50.0,
+    "observed_ha": 1156,
+    "run_ha": 438
+   },
+   {
+    "h": 51,
+    "observed_ha": 1156,
+    "run_ha": 449
+   },
+   {
+    "h": 54,
+    "observed_ha": 1160,
+    "run_ha": 489
+   },
+   {
+    "h": 57,
+    "observed_ha": 1168,
+    "run_ha": 529
+   },
+   {
+    "h": 59.5,
+    "observed_ha": 1176,
+    "run_ha": 558
+   },
+   {
+    "h": 60,
+    "observed_ha": 1177,
+    "run_ha": 563
+   },
+   {
+    "h": 63,
+    "observed_ha": 1253,
+    "run_ha": 643
+   },
+   {
+    "h": 65.0,
+    "observed_ha": 1746,
+    "run_ha": 729
+   }
+  ],
+  "sorensen_last_step": 0.505,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 14.0,
+    "sorensen": 0.263
+   },
+   {
+    "step": 2,
+    "h": 26.5,
+    "sorensen": 0.412
+   },
+   {
+    "step": 3,
+    "h": 35.5,
+    "sorensen": 0.471
+   },
+   {
+    "step": 4,
+    "h": 50.0,
+    "sorensen": 0.5
+   },
+   {
+    "step": 5,
+    "h": 59.5,
+    "sorensen": 0.559
+   },
+   {
+    "step": 6,
+    "h": 65.0,
+    "sorensen": 0.505
+   }
+  ]
+ }
+}

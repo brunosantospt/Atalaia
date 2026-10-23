@@ -1,0 +1,413 @@
+{
+ "source": {
+  "dataset": "COS2015 v2, Carta de Uso e Ocupação do Solo de 2015 (série 1), Direção-Geral do Território",
+  "licence": "CC BY 4.0",
+  "url": "https://geo2.dgterritorio.gov.pt/cos/S1/COS2015/COS2015v2-S1-gpkg.zip"
+ },
+ "cells": "fuel.u8: um byte por célula, linha a linha a partir da borda norte, índice na legenda",
+ "classes": [
+  "Não combustível",
+  "Herbáceo",
+  "Mato",
+  "Eucalipto e acácia",
+  "Pinhal e folhosas"
+ ],
+ "legend": [
+  {
+   "cos": "5.1.1.5",
+   "label": "Florestas de eucalipto",
+   "class": 3,
+   "scottBurgan": 165,
+   "scottBurganName": "TU5",
+   "ha": 11426.1,
+   "why": "eucaliptal: casca, ramos e sub-bosque de mato, carga muito alta"
+  },
+  {
+   "cos": "5.1.2.1",
+   "label": "Florestas de pinheiro bravo",
+   "class": 4,
+   "scottBurgan": 165,
+   "scottBurganName": "TU5",
+   "ha": 1456.0,
+   "why": "pinhal-bravo do Norte: sub-bosque de tojo e urze, que arde mais do que a folhada"
+  },
+  {
+   "cos": "2.1.1.1",
+   "label": "Culturas temporárias de sequeiro e regadio",
+   "class": 0,
+   "scottBurgan": 93,
+   "scottBurganName": "NB3",
+   "ha": 1271.2,
+   "why": "culturas temporárias: no Minho, no verão, é sobretudo milho e forragem regados"
+  },
+  {
+   "cos": "5.1.1.7",
+   "label": "Florestas de outras folhosas",
+   "class": 4,
+   "scottBurgan": 186,
+   "scottBurganName": "TL6",
+   "ha": 1119.4,
+   "why": "outras folhosas (bétula, amieiro, freixo), sobretudo em vales húmidos: folhada larga"
+  },
+  {
+   "cos": "6.1.1.1",
+   "label": "Matos",
+   "class": 2,
+   "scottBurgan": 145,
+   "scottBurganName": "SH5",
+   "ha": 615.5,
+   "why": "matos de tojo, urze e giesta, de 1 a 2 m; a COS não separa altura nem idade"
+  },
+  {
+   "cos": "2.3.2.1",
+   "label": "Mosaicos culturais e parcelares complexos",
+   "class": 1,
+   "scottBurgan": 101,
+   "scottBurganName": "GR1",
+   "ha": 420.1,
+   "why": "mosaico de parcelas pequenas, parte regada e parte em pousio: erva de carga baixa"
+  },
+  {
+   "cos": "1.1.2.1",
+   "label": "Tecido edificado descontínuo",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 419.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.1.2.2",
+   "label": "Tecido edificado descontínuo esparso",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 224.9,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.4.1.1",
+   "label": "Rede viária e espaços associados",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 213.5,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "2.3.3.1",
+   "label": "Agricultura com espaços naturais e seminaturais",
+   "class": 1,
+   "scottBurgan": 122,
+   "scottBurganName": "GS2",
+   "ha": 176.0,
+   "why": "parcelas agrícolas com manchas de mato e árvores: erva com arbustos"
+  },
+  {
+   "cos": "1.2.1.1",
+   "label": "Indústria",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 170.0,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.1.1.2",
+   "label": "Tecido edificado contínuo predominantemente horizontal",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 161.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "9.1.1.1",
+   "label": "Cursos de água naturais",
+   "class": 0,
+   "scottBurgan": 98,
+   "scottBurganName": "NB8",
+   "ha": 83.6,
+   "why": "água"
+  },
+  {
+   "cos": "5.1.1.3",
+   "label": "Florestas de outros carvalhos",
+   "class": 4,
+   "scottBurgan": 162,
+   "scottBurganName": "TU2",
+   "ha": 63.1,
+   "why": "carvalhal: folhada com sub-bosque de fetos, silvas e mato baixo"
+  },
+  {
+   "cos": "5.1.1.6",
+   "label": "Florestas de espécies invasoras",
+   "class": 3,
+   "scottBurgan": 165,
+   "scottBurganName": "TU5",
+   "ha": 59.6,
+   "why": "acacial: denso, com muitos ramos mortos, carga como a do eucaliptal"
+  },
+  {
+   "cos": "2.2.2.1",
+   "label": "Pomares",
+   "class": 1,
+   "scottBurgan": 102,
+   "scottBurganName": "GR2",
+   "ha": 41.1,
+   "why": "pomar: erva seca entre árvores espaçadas"
+  },
+  {
+   "cos": "1.5.1.2",
+   "label": "Pedreiras",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 34.5,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "2.3.1.1",
+   "label": "Culturas temporárias e/ou pastagens melhoradas associadas a vinha",
+   "class": 0,
+   "scottBurgan": 93,
+   "scottBurganName": "NB3",
+   "ha": 27.4,
+   "why": "culturas temporárias associadas à vinha: regadas"
+  },
+  {
+   "cos": "2.2.1.1",
+   "label": "Vinhas",
+   "class": 0,
+   "scottBurgan": 93,
+   "scottBurganName": "NB3",
+   "ha": 21.9,
+   "why": "vinha: verde no verão, com a entrelinha lavrada"
+  },
+  {
+   "cos": "1.6.5.1",
+   "label": "Outros equipamentos e instalações turísticas",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 21.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.1.1.1",
+   "label": "Tecido edificado contínuo predominantemente vertical",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 21.1,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "3.1.2.1",
+   "label": "Pastagens espontâneas",
+   "class": 1,
+   "scottBurgan": 102,
+   "scottBurganName": "GR2",
+   "ha": 18.7,
+   "why": "pastagem: erva contínua, seca no verão"
+  },
+  {
+   "cos": "1.5.3.1",
+   "label": "Áreas em construção",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 16.4,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.6.1.2",
+   "label": "Instalações desportivas",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 16.3,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "9.1.2.3",
+   "label": "Albufeiras de barragens",
+   "class": 0,
+   "scottBurgan": 98,
+   "scottBurganName": "NB8",
+   "ha": 14.9,
+   "why": "água"
+  },
+  {
+   "cos": "1.7.1.1",
+   "label": "Parques e jardins",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 12.3,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "2.3.1.2",
+   "label": "Culturas temporárias e/ou pastagens melhoradas associadas a pomar",
+   "class": 0,
+   "scottBurgan": 93,
+   "scottBurganName": "NB3",
+   "ha": 11.2,
+   "why": "culturas temporárias associadas à vinha: regadas"
+  },
+  {
+   "cos": "1.1.3.2",
+   "label": "Espaços vazios sem construção",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 9.7,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "7.1.3.1",
+   "label": "Vegetação esparsa",
+   "class": 1,
+   "scottBurgan": 101,
+   "scottBurganName": "GR1",
+   "ha": 9.3,
+   "why": "vegetação esparsa sobre rocha: erva e arbustos dispersos"
+  },
+  {
+   "cos": "8.1.1.1",
+   "label": "Pauis",
+   "class": 0,
+   "scottBurgan": 98,
+   "scottBurganName": "NB8",
+   "ha": 8.5,
+   "why": "zona húmida"
+  },
+  {
+   "cos": "1.2.2.1",
+   "label": "Comércio",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 7.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "2.3.1.3",
+   "label": "Culturas temporárias e/ou pastagens melhoradas associadas a olival",
+   "class": 0,
+   "scottBurgan": 93,
+   "scottBurganName": "NB3",
+   "ha": 5.9,
+   "why": "culturas temporárias associadas à vinha: regadas"
+  },
+  {
+   "cos": "1.2.3.1",
+   "label": "Instalações agrícolas",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 5.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "9.1.2.1",
+   "label": "Lagos e lagoas interiores artificiais",
+   "class": 0,
+   "scottBurgan": 98,
+   "scottBurganName": "NB8",
+   "ha": 4.7,
+   "why": "água"
+  },
+  {
+   "cos": "7.1.2.1",
+   "label": "Rocha nua",
+   "class": 0,
+   "scottBurgan": 99,
+   "scottBurganName": "NB9",
+   "ha": 4.6,
+   "why": "rocha nua"
+  },
+  {
+   "cos": "1.6.4.1",
+   "label": "Cemitérios",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 4.2,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "2.2.3.1",
+   "label": "Olivais",
+   "class": 1,
+   "scottBurgan": 121,
+   "scottBurganName": "GS1",
+   "ha": 3.0,
+   "why": "olival: erva e mato baixo entre oliveiras espaçadas"
+  },
+  {
+   "cos": "1.4.1.2",
+   "label": "Rede ferroviária e espaços associados",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 2.6,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.6.2.2",
+   "label": "Equipamentos de lazer",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 2.3,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "3.1.1.1",
+   "label": "Pastagens melhoradas",
+   "class": 1,
+   "scottBurgan": 102,
+   "scottBurganName": "GR2",
+   "ha": 2.2,
+   "why": "pastagem: erva contínua, seca no verão"
+  },
+  {
+   "cos": "1.6.3.1",
+   "label": "Equipamentos culturais",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 1.8,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.3.2.2",
+   "label": "Infraestruturas de tratamento de resíduos e águas residuais",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 1.7,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "1.3.1.1",
+   "label": "Infraestruturas de produção de energia renovável",
+   "class": 0,
+   "scottBurgan": 91,
+   "scottBurganName": "NB1",
+   "ha": 1.4,
+   "why": "artificializado: edifícios, estradas, indústria"
+  },
+  {
+   "cos": "5.1.2.2",
+   "label": "Florestas de pinheiro manso",
+   "class": 4,
+   "scottBurgan": 188,
+   "scottBurganName": "TL8",
+   "ha": 1.1,
+   "why": "resinosas: folhada de agulha longa"
+  }
+ ]
+}

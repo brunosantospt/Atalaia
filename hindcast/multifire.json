@@ -1,0 +1,1011 @@
+{
+ "free": {
+  "CabeceirasdeBasto_06092016": {
+   "b_uniforme": 0.423,
+   "b_vento": 0.469,
+   "K0": 0.626,
+   "K3": 0.732,
+   "K3g": 0.77,
+   "K3m": 0.737,
+   "K3s": 0.726,
+   "K3x": 0.613,
+   "K3xs2": 0.666,
+   "K3xs3": 0.557,
+   "K4": 0.672,
+   "K5": 0.629,
+   "K5b": 0.671,
+   "K5g": 0.526,
+   "K5m": 0.611,
+   "K5mm": 0.697,
+   "K6": 0.627,
+   "K6d": 0.628,
+   "K6m": 0.611,
+   "K6s2": 0.617,
+   "K6s3": 0.577,
+   "K6s4": 0.628,
+   "K6s5": 0.614,
+   "K6x": 0.322
+  },
+  "CastroMarim_16082021": {
+   "b_uniforme": 0.173,
+   "b_vento": 0.648,
+   "K0": 0.711,
+   "K3": 0.712,
+   "K3g": 0.742,
+   "K3m": 0.711,
+   "K3s": 0.712,
+   "K3x": 0.701,
+   "K3xs2": 0.719,
+   "K3xs3": 0.713,
+   "K4": 0.701,
+   "K5": 0.609,
+   "K5b": 0.661,
+   "K5g": 0.657,
+   "K5m": 0.609,
+   "K5mm": 0.659,
+   "K6": 0.608,
+   "K6d": 0.604,
+   "K6m": 0.605,
+   "K6s2": 0.609,
+   "K6s3": 0.608,
+   "K6s4": 0.607,
+   "K6s5": 0.607,
+   "K6x": 0.586
+  },
+  "Guarda_23082017": {
+   "b_uniforme": 0.358,
+   "b_vento": 0.735,
+   "K0": 0.73,
+   "K3": 0.734,
+   "K3g": 0.767,
+   "K3m": 0.728,
+   "K3s": 0.742,
+   "K3x": 0.771,
+   "K3xs2": 0.781,
+   "K3xs3": 0.755,
+   "K4": 0.804,
+   "K5": 0.727,
+   "K5b": 0.79,
+   "K5g": 0.705,
+   "K5m": 0.729,
+   "K5mm": 0.825,
+   "K6": 0.718,
+   "K6d": 0.727,
+   "K6m": 0.726,
+   "K6s2": 0.707,
+   "K6s3": 0.721,
+   "K6s4": 0.701,
+   "K6s5": 0.701,
+   "K6x": 0.663
+  },
+  "Monchique_03082018": {
+   "b_uniforme": 0.328,
+   "b_vento": 0.555,
+   "K0": 0.493,
+   "K3": 0.486,
+   "K3m": 0.504,
+   "K3s": 0.487,
+   "K4": 0.329,
+   "K5": 0.269,
+   "K5m": 0.285,
+   "K6": 0.263,
+   "K6d": 0.263,
+   "K6m": 0.273
+  },
+  "Oleiros_25072020": {
+   "b_uniforme": 0.306,
+   "b_vento": 0.686,
+   "K0": 0.586,
+   "K3": 0.389,
+   "K3g": 0.499,
+   "K3m": 0.31,
+   "K3s": 0.389,
+   "K3x": 0.454,
+   "K3xs2": 0.398,
+   "K3xs3": 0.378,
+   "K4": 0.662,
+   "K5": 0.677,
+   "K5b": 0.649,
+   "K5g": 0.582,
+   "K5m": 0.615,
+   "K5mm": 0.641,
+   "K6": 0.664,
+   "K6d": 0.676,
+   "K6m": 0.622,
+   "K6s2": 0.675,
+   "K6s3": 0.676,
+   "K6s4": 0.664,
+   "K6s5": 0.669,
+   "K6x": 0.615
+  },
+  "SeverdoVouga_09082016": {
+   "b_uniforme": 0.431,
+   "b_vento": 0.32,
+   "K0": 0.501,
+   "K3": 0.505,
+   "K3g": 0.5,
+   "K3m": 0.505,
+   "K3s": 0.505,
+   "K3x": 0.514,
+   "K3xs2": 0.506,
+   "K3xs3": 0.373,
+   "K4": 0.393,
+   "K5": 0.342,
+   "K5b": 0.349,
+   "K5g": 0.379,
+   "K5m": 0.361,
+   "K5mm": 0.347,
+   "K6": 0.342,
+   "K6d": 0.342,
+   "K6m": 0.313,
+   "K6s2": 0.341,
+   "K6s3": 0.336,
+   "K6s4": 0.285,
+   "K6s5": 0.341,
+   "K6x": 0.287
+  },
+  "VieiradoMinho_10082016": {
+   "b_uniforme": 0.342,
+   "b_vento": 0.693,
+   "K0": 0.728,
+   "K3": 0.743,
+   "K3g": 0.774,
+   "K3m": 0.765,
+   "K3s": 0.749,
+   "K3x": 0.795,
+   "K3xs2": 0.754,
+   "K3xs3": 0.759,
+   "K4": 0.779,
+   "K5": 0.757,
+   "K5b": 0.773,
+   "K5g": 0.808,
+   "K5m": 0.764,
+   "K5mm": 0.782,
+   "K6": 0.763,
+   "K6d": 0.763,
+   "K6m": 0.755,
+   "K6s2": 0.772,
+   "K6s3": 0.785,
+   "K6s4": 0.783,
+   "K6s5": 0.782,
+   "K6x": 0.679
+  },
+  "VilaNovadeCerveira_08082015": {
+   "b_uniforme": 0.31,
+   "b_vento": 0.611,
+   "K0": 0.506,
+   "K3": 0.599,
+   "K3g": 0.483,
+   "K3m": 0.692,
+   "K3s": 0.598,
+   "K3x": 0.454,
+   "K3xs2": 0.535,
+   "K3xs3": 0.516,
+   "K4": 0.444,
+   "K5": 0.372,
+   "K5b": 0.55,
+   "K5g": 0.347,
+   "K5m": 0.441,
+   "K5mm": 0.549,
+   "K6": 0.369,
+   "K6d": 0.371,
+   "K6m": 0.425,
+   "K6s2": 0.359,
+   "K6s3": 0.362,
+   "K6s4": 0.368,
+   "K6s5": 0.364,
+   "K6x": 0.323
+  },
+  "ViladeRei_20072019": {
+   "b_uniforme": 0.195,
+   "b_vento": 0.32,
+   "K0": 0.506,
+   "K3": 0.284,
+   "K3g": 0.309,
+   "K3m": 0.281,
+   "K3s": 0.284,
+   "K3x": 0.284,
+   "K3xs2": 0.23,
+   "K3xs3": 0.23,
+   "K4": 0.554,
+   "K5": 0.476,
+   "K5b": 0.544,
+   "K5g": 0.473,
+   "K5m": 0.55,
+   "K5mm": 0.574,
+   "K6": 0.469,
+   "K6d": 0.476,
+   "K6m": 0.54,
+   "K6s2": 0.47,
+   "K6s3": 0.476,
+   "K6s4": 0.472,
+   "K6s5": 0.468,
+   "K6x": 0.455
+  }
+ },
+ "steps": {
+  "K3": {
+   "windows": 87,
+   "median_ratio": 1.727,
+   "within2": 0.27586206896551724,
+   "median_sorensen_growth": 0.128,
+   "median_ros_ratio": 0.3939393939393939,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 87,
+    "model_win": 0.5632183908045977
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.625
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.5454545454545454
+   },
+   "shape": {
+    "n": 11,
+    "model": 0.291,
+    "ellipse": 0.306
+   }
+  },
+  "K3m": {
+   "windows": 87,
+   "median_ratio": 1.615,
+   "within2": 0.3103448275862069,
+   "median_sorensen_growth": 0.135,
+   "median_ros_ratio": 0.3888888888888889,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 87,
+    "model_win": 0.5747126436781609
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.625
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.6363636363636364
+   }
+  },
+  "K3m_w08": {
+   "windows": 75,
+   "median_ratio": 1.427,
+   "within2": 0.36,
+   "median_sorensen_growth": 0.124,
+   "median_ros_ratio": 0.26720647773279355,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K3m_w125": {
+   "windows": 75,
+   "median_ratio": 1.617,
+   "within2": 0.30666666666666664,
+   "median_sorensen_growth": 0.12,
+   "median_ros_ratio": 0.40476190476190477,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K3x": {
+   "windows": 75,
+   "median_ratio": 1.653,
+   "within2": 0.28,
+   "median_sorensen_growth": 0.121,
+   "median_ros_ratio": 0.4642857142857143,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.52
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.625
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.5454545454545454
+   }
+  },
+  "K5": {
+   "windows": 87,
+   "median_ratio": 3.894,
+   "within2": 0.27586206896551724,
+   "median_sorensen_growth": 0.187,
+   "median_ros_ratio": 0.7509727626459144,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 87,
+    "model_win": 0.6666666666666666
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.5
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.8181818181818182
+   },
+   "shape": {
+    "n": 11,
+    "model": 0.344,
+    "ellipse": 0.316
+   }
+  },
+  "K5a": {
+   "windows": 75,
+   "median_ratio": 1.654,
+   "within2": 0.4,
+   "median_sorensen_growth": 0.177,
+   "median_ros_ratio": 0.6029411764705882,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.6133333333333333
+   },
+   "vs_ref_persist": {
+    "n": 67,
+    "model_win": 0.6268656716417911
+   },
+   "vs_ref_area": {
+    "n": 75,
+    "model_win": 0.64
+   }
+  },
+  "K5as": {
+   "windows": 75,
+   "median_ratio": 2.128,
+   "within2": 0.3466666666666667,
+   "median_sorensen_growth": 0.172,
+   "median_ros_ratio": 0.40476190476190477,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.6
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.5
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.7272727272727273
+   }
+  },
+  "K5c": {
+   "windows": 75,
+   "median_ratio": 3.493,
+   "within2": 0.25333333333333335,
+   "median_sorensen_growth": 0.223,
+   "median_ros_ratio": 0.776,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.64
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.5
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.8181818181818182
+   }
+  },
+  "K5m": {
+   "windows": 87,
+   "median_ratio": 3.077,
+   "within2": 0.27586206896551724,
+   "median_sorensen_growth": 0.18,
+   "median_ros_ratio": 0.7423822714681441,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 87,
+    "model_win": 0.6666666666666666
+   },
+   "vs_ref_persist": {
+    "n": 8,
+    "model_win": 0.625
+   },
+   "vs_ref_area": {
+    "n": 11,
+    "model_win": 0.9090909090909091
+   }
+  },
+  "K5m_w08": {
+   "windows": 75,
+   "median_ratio": 2.582,
+   "within2": 0.3333333333333333,
+   "median_sorensen_growth": 0.174,
+   "median_ros_ratio": 0.5089605734767025,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K5m_w125": {
+   "windows": 75,
+   "median_ratio": 3.164,
+   "within2": 0.24,
+   "median_sorensen_growth": 0.188,
+   "median_ros_ratio": 0.7559523809523809,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "K5o": {
+   "windows": 75,
+   "median_ratio": 0.684,
+   "within2": 0.3466666666666667,
+   "median_sorensen_growth": 0.406,
+   "median_ros_ratio": 0.6544117647058824,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "vs_rule10": {
+    "n": 75,
+    "model_win": 0.64
+   },
+   "vs_ref_persist": {
+    "n": 67,
+    "model_win": 0.6119402985074627
+   },
+   "vs_ref_area": {
+    "n": 75,
+    "model_win": 0.21333333333333335
+   }
+  },
+  "ref_area": {
+   "windows": 11,
+   "median_ratio": 1.001,
+   "within2": 1.0,
+   "median_sorensen_growth": 0.316,
+   "median_ros_ratio": 0.2610294117647059,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "Guarda_23082017",
+    "VieiradoMinho_10082016"
+   ]
+  },
+  "ref_area_hotspots": {
+   "windows": 87,
+   "median_ratio": 1.002,
+   "within2": 0.9770114942528736,
+   "median_sorensen_growth": 0.159,
+   "median_ros_ratio": 0.2483974358974359,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "ref_area_oracle": {
+   "windows": 87,
+   "median_ratio": 1.0,
+   "within2": 1.0,
+   "median_sorensen_growth": 0.578,
+   "median_ros_ratio": 0.632636655948553,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "ref_persist": {
+   "windows": 8,
+   "median_ratio": 1.922,
+   "within2": 0.25,
+   "median_sorensen_growth": 0.21100000000000002,
+   "median_ros_ratio": 0.43380952380952376,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "Guarda_23082017",
+    "VieiradoMinho_10082016"
+   ]
+  },
+  "ref_persist_hotspots": {
+   "windows": 78,
+   "median_ratio": 1.0510000000000002,
+   "within2": 0.358974358974359,
+   "median_sorensen_growth": 0.08,
+   "median_ros_ratio": 0.2907965701825071,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  },
+  "ref_persist_oracle": {
+   "windows": 78,
+   "median_ratio": 1.0510000000000002,
+   "within2": 0.358974358974359,
+   "median_sorensen_growth": 0.3185,
+   "median_ros_ratio": 0.6328554360812425,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Monchique_03082018",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ]
+  }
+ },
+ "drivers": {
+  "K3": {
+   "vento médio (km/h)": {
+    "rho": -0.09834596167442348,
+    "p": 0.3676607933454567
+   },
+   "rajada (km/h)": {
+    "rho": -0.17188952050215278,
+    "p": 0.11353199366560983
+   },
+   "temperatura (°C)": {
+    "rho": -0.05116193506587237,
+    "p": 0.63991324095078
+   },
+   "humidade (%)": {
+    "rho": -0.20028032459563502,
+    "p": 0.06446847299017486
+   },
+   "dia (10-19 h)": {
+    "rho": -0.17537472531460174,
+    "p": 0.10628821577477521
+   },
+   "declive (°)": {
+    "rho": 0.34258456413938343,
+    "p": 0.001243078396554055
+   },
+   "fração de mato": {
+    "rho": 0.2832226254290469,
+    "p": 0.008231967025864454
+   },
+   "fração de eucalipto": {
+    "rho": -0.06278786154264947,
+    "p": 0.5657530256552222
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.4649737541256471,
+    "p": 6.470865461783511e-06
+   },
+   "fração herbácea": {
+    "rho": 0.0040774112155884355,
+    "p": 0.9702783417229744
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.7891208771878084,
+    "p": 1.813981358930661e-19
+   },
+   "duração da janela (h)": {
+    "rho": 0.5890133566316522,
+    "p": 2.4403836045117575e-09
+   }
+  },
+  "K3m": {
+   "vento médio (km/h)": {
+    "rho": -0.0872494308494858,
+    "p": 0.42440462931404416
+   },
+   "rajada (km/h)": {
+    "rho": -0.17487003861858477,
+    "p": 0.10731430937506091
+   },
+   "temperatura (°C)": {
+    "rho": -0.05461964868021183,
+    "p": 0.6174391950912284
+   },
+   "humidade (%)": {
+    "rho": -0.1923184148725354,
+    "p": 0.07606483289078894
+   },
+   "dia (10-19 h)": {
+    "rho": -0.17865629719542847,
+    "p": 0.09980153411147576
+   },
+   "declive (°)": {
+    "rho": 0.33384450196226856,
+    "p": 0.0016820705357114142
+   },
+   "fração de mato": {
+    "rho": 0.32097059608534945,
+    "p": 0.0025854500455425563
+   },
+   "fração de eucalipto": {
+    "rho": -0.10671509594521318,
+    "p": 0.3280991258605318
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.4620226406814161,
+    "p": 7.534066256765971e-06
+   },
+   "fração herbácea": {
+    "rho": 0.03616139973428917,
+    "p": 0.7409859158902585
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.7681958631285126,
+    "p": 6.0389312668489196e-18
+   },
+   "duração da janela (h)": {
+    "rho": 0.557528640819001,
+    "p": 2.4612979950723362e-08
+   }
+  },
+  "K5": {
+   "vento médio (km/h)": {
+    "rho": -0.08523968403744508,
+    "p": 0.43519378152941424
+   },
+   "rajada (km/h)": {
+    "rho": -0.15677450400458715,
+    "p": 0.1494370091108956
+   },
+   "temperatura (°C)": {
+    "rho": -0.14529071860884124,
+    "p": 0.18195845924036128
+   },
+   "humidade (%)": {
+    "rho": -0.06667957015627729,
+    "p": 0.5418672015324636
+   },
+   "dia (10-19 h)": {
+    "rho": -0.22929902710909322,
+    "p": 0.033695330481977176
+   },
+   "declive (°)": {
+    "rho": 0.419530345245119,
+    "p": 5.80031862124008e-05
+   },
+   "fração de mato": {
+    "rho": 0.10188583660665602,
+    "p": 0.35058435234433577
+   },
+   "fração de eucalipto": {
+    "rho": 0.12378799032590113,
+    "p": 0.2561498719722366
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.3173604180624722,
+    "p": 0.002907159599650633
+   },
+   "fração herbácea": {
+    "rho": -0.1671967494786293,
+    "p": 0.12388171915799114
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.8742788407271888,
+    "p": 4.260914630726675e-28
+   },
+   "duração da janela (h)": {
+    "rho": 0.6883827523498197,
+    "p": 2.4050152867876587e-13
+   }
+  },
+  "K5m": {
+   "vento médio (km/h)": {
+    "rho": -0.09457132533842286,
+    "p": 0.38641976122762356
+   },
+   "rajada (km/h)": {
+    "rho": -0.1637372279592953,
+    "p": 0.131963544877457
+   },
+   "temperatura (°C)": {
+    "rho": -0.1506687113101231,
+    "p": 0.16613897938526817
+   },
+   "humidade (%)": {
+    "rho": -0.08873620928652783,
+    "p": 0.41652278303247714
+   },
+   "dia (10-19 h)": {
+    "rho": -0.2461799370803148,
+    "p": 0.022321195381487618
+   },
+   "declive (°)": {
+    "rho": 0.3816417262164136,
+    "p": 0.0002882253124903923
+   },
+   "fração de mato": {
+    "rho": 0.12176830249746565,
+    "p": 0.2640495965276327
+   },
+   "fração de eucalipto": {
+    "rho": 0.10565992262881209,
+    "p": 0.3329318588886355
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.3476517249513705,
+    "p": 0.0010389820364830123
+   },
+   "fração herbácea": {
+    "rho": -0.14899292279206466,
+    "p": 0.17095536645679404
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.8803641769555013,
+    "p": 6.035683575427632e-29
+   },
+   "duração da janela (h)": {
+    "rho": 0.7010041689151009,
+    "p": 5.692029849227991e-14
+   }
+  },
+  "K5o": {
+   "vento médio (km/h)": {
+    "rho": -0.009923426762197,
+    "p": 0.9331253799574668
+   },
+   "rajada (km/h)": {
+    "rho": -0.10131362651246036,
+    "p": 0.3903911738948557
+   },
+   "temperatura (°C)": {
+    "rho": -0.18852331611210074,
+    "p": 0.10770616200586715
+   },
+   "humidade (%)": {
+    "rho": -0.12311637721865704,
+    "p": 0.2960051661225423
+   },
+   "dia (10-19 h)": {
+    "rho": -0.20561282615536447,
+    "p": 0.07883830015985288
+   },
+   "declive (°)": {
+    "rho": 0.3018708701411709,
+    "p": 0.008952447074876546
+   },
+   "fração de mato": {
+    "rho": 0.25365778302450315,
+    "p": 0.029205708461325534
+   },
+   "fração de eucalipto": {
+    "rho": -0.11277285549835503,
+    "p": 0.3387443516402985
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.4197007954287915,
+    "p": 0.0001973528638239343
+   },
+   "fração herbácea": {
+    "rho": -0.03088605496144689,
+    "p": 0.7939144696449331
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.794387056710947,
+    "p": 3.014134354458442e-17
+   },
+   "duração da janela (h)": {
+    "rho": 0.645492142499209,
+    "p": 5.335628133353865e-10
+   }
+  },
+  "K3x": {
+   "vento médio (km/h)": {
+    "rho": -0.05391234837969713,
+    "p": 0.648240407425848
+   },
+   "rajada (km/h)": {
+    "rho": -0.10682286040555132,
+    "p": 0.3650013678828561
+   },
+   "temperatura (°C)": {
+    "rho": -0.011478165605065448,
+    "p": 0.9226778852459597
+   },
+   "humidade (%)": {
+    "rho": -0.3287054654252844,
+    "p": 0.004244337980614647
+   },
+   "dia (10-19 h)": {
+    "rho": -0.07148999801709596,
+    "p": 0.5449892416202233
+   },
+   "declive (°)": {
+    "rho": 0.2819624129318018,
+    "p": 0.014939528415922122
+   },
+   "fração de mato": {
+    "rho": 0.3220677098979301,
+    "p": 0.0051365614535209825
+   },
+   "fração de eucalipto": {
+    "rho": -0.2255756361275309,
+    "p": 0.05330705855865195
+   },
+   "fração de pinhal e folhosas": {
+    "rho": -0.5031995384171483,
+    "p": 4.889780295009831e-06
+   },
+   "fração herbácea": {
+    "rho": 0.10252743364969233,
+    "p": 0.3847088753613104
+   },
+   "ROS observado (m/h)": {
+    "rho": -0.7061942320364808,
+    "p": 2.0908437886484112e-12
+   },
+   "duração da janela (h)": {
+    "rho": 0.5491810952562196,
+    "p": 4.0468731362325833e-07
+   }
+  }
+ },
+ "ensembles": {
+  "ensemble": {
+   "members": [
+    "K3m",
+    "K3m_w08",
+    "K3m_w125",
+    "K5m",
+    "K5m_w08",
+    "K5m_w125"
+   ],
+   "windows": 74,
+   "fires": [
+    "CabeceirasdeBasto_06092016",
+    "CastroMarim_16082021",
+    "Guarda_23082017",
+    "Oleiros_25072020",
+    "SeverdoVouga_09082016",
+    "VieiradoMinho_10082016",
+    "VilaNovadeCerveira_08082015",
+    "ViladeRei_20072019"
+   ],
+   "brier_ensemble_median": 0.5626,
+   "brier_member_medians": {
+    "K3m": 0.5274,
+    "K3m_w08": 0.5147,
+    "K3m_w125": 0.5561,
+    "K5m": 0.8366,
+    "K5m_w08": 0.8018,
+    "K5m_w125": 0.8818
+   },
+   "ensemble_beats_every_member_brier_share": 0.311,
+   "sorensen_p50_median": 0.173,
+   "sorensen_median_member_median": 0.141,
+   "sorensen_best_member_median (oracle)": 0.196,
+   "hit_p50_median": 0.402,
+   "hit_any_median": 0.484,
+   "bracket_share": 0.162,
+   "ratio_p50_median": 2.502,
+   "sorensen_rule10_median": 0.121,
+   "ensemble_beats_rule10_sorensen_share": 0.608
+  }
+ }
+}

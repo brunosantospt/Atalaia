@@ -1,0 +1,119 @@
+{
+ "fire": "Monchique_03082018",
+ "name": "st_K3_1",
+ "start": "2018-08-03T17:00",
+ "duration_min": 510.0,
+ "options": {
+  "fire": "Monchique_03082018",
+  "name": "st_K3_1",
+  "start_step": 1,
+  "duration_min": 510.0,
+  "fuels": "sb",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 60.0,
+  "live_woody": 90.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "lidar",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 7.8,
+ "wall_s": 12.1,
+ "notes": [
+  "cicatrizes: 0 ha"
+ ],
+ "stats": {
+  "burned_ha": 513.9,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 3,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 136,
+    "run_ha": 0
+   },
+   {
+    "h": 3.5,
+    "observed_ha": 209,
+    "run_ha": 209
+   },
+   {
+    "h": 6,
+    "observed_ha": 244,
+    "run_ha": 294
+   },
+   {
+    "h": 9,
+    "observed_ha": 337,
+    "run_ha": 418
+   },
+   {
+    "h": 12.0,
+    "observed_ha": 530,
+    "run_ha": 514
+   }
+  ],
+  "sorensen_last_step": 0.75,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 3.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 2,
+    "h": 12.0,
+    "sorensen": 0.75
+   }
+  ],
+  "official_ha": 26848.6,
+  "sorensen_official": 0.033,
+  "outside_official_ha": 66.4,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2018-08-03T13:21:00+00:00",
+     "h": 0.85,
+     "n": 25,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2018-08-03T22:00:00+00:00",
+     "h": 9.5,
+     "n": 5,
+     "reached": 0.4
+    }
+   ],
+   "mean_reached": 0.2
+  }
+ }
+}

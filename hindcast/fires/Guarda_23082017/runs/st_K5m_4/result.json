@@ -1,0 +1,230 @@
+{
+ "fire": "Guarda_23082017",
+ "name": "st_K5m_4",
+ "start": "2017-08-24T23:30",
+ "duration_min": 150.0,
+ "options": {
+  "fire": "Guarda_23082017",
+  "name": "st_K5m_4",
+  "start_step": 4,
+  "duration_min": 150.0,
+  "fuels": "pt",
+  "shrub": "V-MAa",
+  "scars": true,
+  "dead": "emc",
+  "live_herb": 30.0,
+  "live_woody": 70.0,
+  "canopy": true,
+  "canopy_fill": false,
+  "canopy_source": "meta",
+  "spotting": false,
+  "seed": 1,
+  "weather": "era5",
+  "topowind": false,
+  "adj": 1.0,
+  "adj_class": "",
+  "gust_frac": 0.0,
+  "wind_rotate": 0.0,
+  "spotting_dynamic": false,
+  "spotting_dist_mult": 1.0,
+  "spotting_embers": 1,
+  "active_edge": "all",
+  "active_window_h": 12.0,
+  "wind_mult": 1.0,
+  "barriers": null,
+  "wet_lines": null,
+  "wet_tau": 60.0,
+  "engine": "engines/elmfire/run.sh",
+  "preview": false
+ },
+ "engine": "ELMFIRE 2025.0717 (engines/elmfire)",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux 7.0.0-38-generic",
+  "image": "atalaia/elmfire:2025.0717",
+  "image_id": "sha256:80b412306f96",
+  "image_platform": "linux/amd64"
+ },
+ "barriers": 0,
+ "stretches": 1,
+ "runtime_s": 2.8,
+ "wall_s": 4.0,
+ "notes": [
+  "cicatrizes: 14 ha",
+  "copas do mapa global da Meta/WRI"
+ ],
+ "stats": {
+  "burned_ha": 3073.7,
+  "by_hour": [
+   {
+    "h": 0.0,
+    "observed_ha": 14,
+    "run_ha": 0
+   },
+   {
+    "h": 3,
+    "observed_ha": 18,
+    "run_ha": 0
+   },
+   {
+    "h": 6,
+    "observed_ha": 38,
+    "run_ha": 0
+   },
+   {
+    "h": 9,
+    "observed_ha": 74,
+    "run_ha": 0
+   },
+   {
+    "h": 12,
+    "observed_ha": 448,
+    "run_ha": 0
+   },
+   {
+    "h": 13.5,
+    "observed_ha": 989,
+    "run_ha": 0
+   },
+   {
+    "h": 15,
+    "observed_ha": 999,
+    "run_ha": 0
+   },
+   {
+    "h": 18,
+    "observed_ha": 1094,
+    "run_ha": 0
+   },
+   {
+    "h": 21,
+    "observed_ha": 1278,
+    "run_ha": 0
+   },
+   {
+    "h": 21.5,
+    "observed_ha": 1306,
+    "run_ha": 0
+   },
+   {
+    "h": 24,
+    "observed_ha": 1744,
+    "run_ha": 0
+   },
+   {
+    "h": 25.0,
+    "observed_ha": 2083,
+    "run_ha": 0
+   },
+   {
+    "h": 27,
+    "observed_ha": 2146,
+    "run_ha": 0
+   },
+   {
+    "h": 30,
+    "observed_ha": 2283,
+    "run_ha": 0
+   },
+   {
+    "h": 33,
+    "observed_ha": 2495,
+    "run_ha": 0
+   },
+   {
+    "h": 33.5,
+    "observed_ha": 2522,
+    "run_ha": 2522
+   },
+   {
+    "h": 36.0,
+    "observed_ha": 3145,
+    "run_ha": 3074
+   }
+  ],
+  "sorensen_last_step": 0.861,
+  "sorensen_by_step": [
+   {
+    "step": 1,
+    "h": 13.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 2,
+    "h": 21.5,
+    "sorensen": 0.0
+   },
+   {
+    "step": 3,
+    "h": 25.0,
+    "sorensen": 0.0
+   },
+   {
+    "step": 4,
+    "h": 33.5,
+    "sorensen": 1.0
+   },
+   {
+    "step": 5,
+    "h": 36.0,
+    "sorensen": 0.861
+   }
+  ],
+  "official_ha": 3118.5,
+  "sorensen_official": 0.836,
+  "outside_official_ha": 486.3,
+  "satellite": {
+   "passes": [
+    {
+     "time_utc": "2017-08-23T22:06:00+00:00",
+     "h": 9.1,
+     "n": 8,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T02:18:00+00:00",
+     "h": 13.3,
+     "n": 14,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T02:50:00+00:00",
+     "h": 13.83,
+     "n": 40,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T11:44:00+00:00",
+     "h": 22.73,
+     "n": 13,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T12:32:00+00:00",
+     "h": 23.53,
+     "n": 38,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T13:23:00+00:00",
+     "h": 24.38,
+     "n": 11,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T14:12:00+00:00",
+     "h": 25.2,
+     "n": 77,
+     "reached": 0.0
+    },
+    {
+     "time_utc": "2017-08-24T22:49:00+00:00",
+     "h": 33.81,
+     "n": 5,
+     "reached": 0.6
+    }
+   ],
+   "mean_reached": 0.07
+  }
+ }
+}
