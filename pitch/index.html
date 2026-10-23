@@ -175,11 +175,11 @@
     .challenge .tag { font-size: .48em; margin-bottom: 2em; }
     .challenge .sub { font-size: 1.7em; font-weight: 600; letter-spacing: -.02em; line-height: 1.22; max-width: 1550px; margin-bottom: 1.1em; }
     /* o que falha hoje: uma linha por ferramenta */
-    .tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5em 3em; margin-top: 2.6em; max-width: 1700px; }
+    .tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4em 3em; margin-top: 2.6em; max-width: 1700px; }
     .tool-card { display: flex; align-items: flex-start; gap: 1.3em; }
-    .tool-card svg { width: 2.8em; height: 2.8em; margin-top: .05em; flex-shrink: 0; fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .tool-card svg { width: 2.8em; height: 2.8em; margin-top: .05em; flex-shrink: 0; }
     .tool-card .t-name { display: block; font-family: var(--mono); font-size: .52em; letter-spacing: .03em; color: var(--ink-dim); margin-bottom: .25em; }
-    .tool-card .tc-verdict { display: block; font-size: 1.4em; font-weight: 800; color: var(--accent); margin-bottom: .2em; }
+    .tool-card .tc-verdict { display: block; font-size: 1.4em; font-weight: 800; color: #F76707; margin-bottom: .2em; }
     .tool-card p { font-size: .64em; color: var(--ink-dim); margin: 0; line-height: 1.3; }
     .ask { font-size: .78em; color: var(--ink-dim); margin: .9em 0; max-width: 1550px; }
     .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8em; }
@@ -200,6 +200,7 @@
     .roadmap.visible .track { animation: track-grow .35s ease forwards; }
     .roadmap .node { flex: 0 0 auto; width: 1.5em; height: 1.5em; border-radius: 50%; border: 2px solid var(--ink-faint); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: .6em; color: var(--ink-dim); background: var(--bg); }
     .roadmap .label { font-size: 1.45em; font-weight: 700; letter-spacing: -.01em; }
+    .roadmap .desc { display: block; font-size: 1em; font-weight: 400; color: var(--ink-dim); margin-top: .35em; line-height: 1.35; }
     .roadmap .stop.final .node { border-color: var(--amber); color: var(--bg); background: var(--amber); box-shadow: 0 0 14px rgba(240, 163, 58, .55); }
     .roadmap .stop.final .label { color: var(--amber); }
     @keyframes stop-in { to { opacity: 1; transform: none; } }
@@ -208,8 +209,10 @@
     .roadmap.horizontal { display: flex; align-items: flex-start; }
     .roadmap.horizontal .stop { flex: 1 1 0; flex-direction: column; align-items: flex-start; gap: .5em; transform: translateY(-10px); }
     .roadmap.horizontal .stop.final { flex: 0 1 auto; }
+    .roadmap.horizontal .stop.has-video { flex: 1.4 1 0; }
     .roadmap.horizontal .track { flex: 0 0 36px; width: auto; height: 0; margin: .55em -.2em 0; border: none; }
     .roadmap.horizontal .label { font-size: .85em; line-height: 1.3; max-width: 13em; }
+    .roadmap-video { width: 100%; max-width: 360px; max-height: 220px; object-fit: cover; border-radius: 6px; border: 1px solid var(--ink-faint); margin-top: .5em; display: block; }
     @keyframes stop-in-h { to { opacity: 1; transform: none; } }
     @keyframes track-grow-h { to { opacity: 1; transform: scaleX(1); } }
     .roadmap.horizontal.visible .stop { animation-name: stop-in-h; }
@@ -231,6 +234,18 @@
     .punch .data-list { margin-top: .7em; font-size: .62em; color: var(--ink); line-height: 1.7; }
     .punch .data-list span:not(:last-child)::after { content: ' · '; color: var(--ink-faint); }
     .punch .who { font-family: var(--mono); font-size: 0.5em; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); margin-top: 0.8em; }
+    .proof-mini { display: flex; align-items: center; justify-content: center; gap: 1.8em; }
+    .proof-mini .proof-img { flex: 0 0 auto; width: 520px; max-width: 42%; border: 1px solid var(--ink-faint); border-radius: 4px; display: block; }
+    .proof-mini .proof-info { flex: 0 1 auto; }
+    .proof-mini .proof-label { font-family: var(--mono); font-size: .42em; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+    .proof-mini .proof-seq { display: flex; align-items: baseline; gap: .45em; font-family: var(--display); font-weight: 800; font-size: 1.5em; margin-top: .35em; }
+    .proof-mini .proof-seq .pa { font-family: var(--mono); font-weight: 400; color: var(--amber); font-size: .55em; }
+    .proof-mini .proof-seq .pn.final { color: var(--amber); }
+    .proof-mini .proof-tech { font-size: .48em; color: var(--ink-dim); margin-top: .6em; line-height: 1.5; max-width: 46em; }
+    .model-row { display: grid; grid-template-columns: repeat(2, auto); column-gap: 3.2em; row-gap: .9em; justify-content: center; margin-top: 1.2em; }
+    .model-row .model-item { display: flex; align-items: center; gap: .55em; }
+    .model-row .model-item svg { width: 1.7em; height: 1.7em; flex: 0 0 auto; }
+    .model-row .model-item span { font-size: .8em; font-weight: 700; }
     .reveal .fragment.fade-in-quick { transition-duration: .35s; }
     /* 4 · um cenário: fogo → meios → efeito */
     /* (estilos antigos do A vs B, sem uso por agora) */
@@ -404,12 +419,12 @@
     <aside class="notes">
       5 s · Narrador
 
-      (silêncio) "Somos a Atalaia." (passar logo para o número)
+      (silêncio — não se diz nada, passar logo para o número)
     </aside>
   </section>
 
-  <!-- ============================== 2 · GANCHO · 0:05–0:25 ============================== -->
-  <section class="impact" data-timing="20" data-transition-speed="slow">
+  <!-- ============================== 2 · GANCHO · 0:05–0:21 ============================== -->
+  <section class="impact" data-timing="16" data-transition-speed="slow">
     <p class="lead">Só em 2025 arderam em espaço rural</p>
     <div class="row">
       <div>
@@ -428,23 +443,23 @@
     </div>
     <div class="src">AGIF · Relatório de Atividades SGIFR 2025</div>
     <aside class="notes">
-      20 s · Narrador
+      16 s · Narrador
 
       (os dois números sobem juntos, ~1 s, deixar acabar)
-      "No ano passado arderam em Portugal mais de 270 mil hectares. Mais de 8 250 ocorrências." (pausa)
-      [clique] "11 concelhos de Guimarães."
-      [clique] "E mais de 85 milhões de euros perdidos em floresta, agricultura e natureza — sem contar casas, estradas nem o combate."
+      "No ano passado arderam em Portugal mais de 200 mil hectares e houve mais de 8 mil ocorrências." (pausa)
+      [clique] "Isto são 11 concelhos de Guimarães."
+      [clique] "E mais de 85 milhões de euros em perdas."
 
       Passagem: "Mas o número que importa não é este."
     </aside>
   </section>
 
-  <!-- ============================== 3 · PROBLEMA · 0:25–0:45 ============================== -->
-  <section class="problem" data-timing="20">
+  <!-- ============================== 3 · PROBLEMA · 0:21–0:33 ============================== -->
+  <section class="problem" data-timing="12">
     <h2>O problema decide-se nos<br><span class="fire">primeiros minutos</span></h2>
     <p class="fragment decision-gap">Nesses minutos, quem decide precisa de <strong>uma visão comum</strong><br>e de antecipar o efeito de cada decisão.</p>
     <aside class="notes">
-      20 s · Narrador
+      12 s · Narrador
 
       "O problema decide-se nos primeiros minutos."
       [clique] "Nesses minutos, quem decide precisa de uma visão comum e de antecipar o efeito de cada decisão."
@@ -453,37 +468,37 @@
     </aside>
   </section>
 
-  <!-- ============================== 4 · FERRAMENTAS QUE FALHAM · 0:45–1:00 ============================== -->
-  <section data-timing="15" class="challenge tools-slide">
+  <!-- ============================== 4 · FERRAMENTAS QUE FALHAM · 0:33–0:44 ============================== -->
+  <section data-timing="11" class="challenge tools-slide">
     <span class="tag">O que já existe · e porque falha</span>
     <h2 class="sub">Já há ferramentas. Nenhuma decide com quem está no terreno.</h2>
     <div class="tools">
-      <div class="tool-card fragment" data-fragment-index="0" style="--accent: var(--red)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      <div class="tool-card fragment" data-fragment-index="0">
+        <svg viewBox="0 0 96 96" aria-hidden="true" fill="none" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M26 14 H70 M26 82 H70"/><path d="M31 14 C31 34 44 40 44 48 C44 56 31 62 31 82"/><path d="M65 14 C65 34 52 40 52 48 C52 56 65 62 65 82"/><path d="M35.5 30 H60.5 C58 37 51 41 48 45 C45 41 38 37 35.5 30 Z" fill="#F76707" stroke="none"/><path d="M48 52 V68" stroke-dasharray="0.1 5.5"/><path d="M38 82 Q48 73 58 82 Z" fill="#F76707" stroke="none"/></svg>
         <div class="tc-body">
           <span class="t-name">FARSITE, FlamMap</span>
           <strong class="tc-verdict">Lentos.</strong>
           <p>erram no vento, no combustível, na ignição</p>
         </div>
       </div>
-      <div class="tool-card fragment" data-fragment-index="0" style="--accent: var(--amber)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-7.6 7-12.2A7 7 0 005 8.8C5 13.4 12 21 12 21z"/><circle cx="12" cy="8.8" r="2.3"/></svg>
+      <div class="tool-card fragment" data-fragment-index="0">
+        <svg viewBox="0 0 96 96" aria-hidden="true" fill="none" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 48 C20 28 76 28 88 48 C76 68 20 68 8 48 Z"/><circle cx="48" cy="48" r="12"/><circle cx="48" cy="48" r="4.5" fill="#F76707" stroke="none"/></svg>
         <div class="tc-body">
           <span class="t-name">fogos.pt</span>
           <strong class="tc-verdict">Passivo.</strong>
           <p>mostra ocorrências e meios. não testa decisões</p>
         </div>
       </div>
-      <div class="tool-card fragment" data-fragment-index="0" style="--accent: var(--blue)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 01-.6-7.95A5 5 0 0116.2 8.6 3.5 3.5 0 0117 18H7z"/></svg>
+      <div class="tool-card fragment" data-fragment-index="0">
+        <svg viewBox="0 0 96 96" aria-hidden="true" fill="none" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.0 64.0 A34 34 0 0 1 28.0 36.5"/><path d="M32.0 34.0 A34 34 0 0 1 64.0 34.0"/><path d="M68.0 36.5 A34 34 0 0 1 82.0 64.0"/><path d="M48 64 L66.9 49.2"/><circle cx="48" cy="64" r="4.5" fill="#F76707" stroke="none"/></svg>
         <div class="tc-body">
           <span class="t-name">IPMA, EFFIS</span>
           <strong class="tc-verdict">Estático.</strong>
           <p>mostram o risco do dia. não simulam o incêndio</p>
         </div>
       </div>
-      <div class="tool-card fragment" data-fragment-index="0" style="--accent: var(--cool)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="2 3"/></svg>
+      <div class="tool-card fragment" data-fragment-index="0">
+        <svg viewBox="0 0 96 96" aria-hidden="true" fill="none" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="38.8" cy="57.2" rx="11" ry="7" transform="rotate(-45 38.8 57.2)"/><ellipse cx="43.1" cy="52.9" rx="23" ry="13" transform="rotate(-45 43.1 52.9)"/><path d="M76.2 42.6 A37 21 -45 1 1 71.2 19.7"/><circle cx="36.7" cy="59.3" r="3.5" fill="#F76707" stroke="none"/></svg>
         <div class="tc-body">
           <span class="t-name">incendiosportugal.pt</span>
           <strong class="tc-verdict">Incompleto.</strong>
@@ -493,17 +508,17 @@
     </div>
     <div class="src">FARSITE/FlamMap: Benali et al. (2016), Sci. Total Environ. · fogos.pt, IPMA/EFFIS, incendiosportugal.pt</div>
     <aside class="notes">
-      15 s · Narrador
+      11 s · Narrador
 
       "Já existem ferramentas. Mas nenhuma resolve isto."
-      [clique] "FARSITE e FlamMap: lentos demais, erram no vento e no combustível. fogos.pt: não testa decisões. IPMA e EFFIS: não simulam o incêndio. incendiosportugal.pt: não propõe ataques otimizados."
+      [clique] "Algumas são lentas e erram nos dados, outras não testam decisões ou não propõem ataques otimizados."
 
       Passagem: "Por isso, o desafio da Universidade do Minho é claro."
     </aside>
   </section>
 
-  <!-- ============================== 5 · O DESAFIO DA UMINHO · 1:00–1:10 ============================== -->
-  <section data-timing="10" class="challenge">
+  <!-- ============================== 5 · O DESAFIO DA UMINHO · 0:44–0:52 ============================== -->
+  <section data-timing="8" class="challenge">
     <span class="tag">O desafio · Universidade do Minho · Desafio 2</span>
     <h2 class="sub">Como simular alternativas de atuação, e melhorar a coordenação nos primeiros minutos?</h2>
     <div class="pills">
@@ -525,10 +540,10 @@
     </div>
     <div class="src">Hack4Guimarães 2035 · Desafio 2, "Resposta a emergências e incêndios rurais"</div>
     <aside class="notes">
-      10 s · Narrador
+      8 s · Narrador
 
-      "O desafio da Universidade do Minho: como simular alternativas de atuação, e melhorar a coordenação nos primeiros minutos?"
-      [clique] "Por isso: rápida."
+      "Como simular alternativas de atuação, e melhorar a coordenação nos primeiros minutos?"
+      [clique] "Precisamos de uma resposta rápida."
       [clique] "Precisa."
       [clique] "E prática."
 
@@ -536,44 +551,63 @@
     </aside>
   </section>
 
-  <!-- ============================== 5b · LOGÓTIPO · 1:10–1:13 ============================== -->
+  <!-- ============================== 5b · LOGÓTIPO · 0:52–0:55 ============================== -->
   <section data-timing="3" data-logo-center data-transition-speed="slow">
     <aside class="notes">3 s · "…Atalaia." O logótipo cresce e brilha. O drone verifica a chama no «i», a chama desaparece com um pouco de fumo que se dissipa, surge o ponto branco do «i» e o drone regressa à torre com o feixe desligado. Deixar a sequência terminar antes de avançar. A animação é simbólica da marca; a deteção por drones continua a ser um passo futuro.</aside>
   </section>
 
-  <!-- ============================== 6 · PROPOSTA · 1:13–1:31 ============================== -->
-  <section data-timing="18">
-    <span class="tag">A proposta · para quem decide o ataque</span>
+  <!-- ============================== 6 · PROPOSTA + VALIDAÇÃO + MÉTODOS · 0:55–1:23 ============================== -->
+  <section data-timing="28">
+    <span class="tag">A proposta · validada contra um incêndio real</span>
     <div class="roadmap horizontal fragment">
       <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Monitorizar o fogo em tempo real</span></div>
       <div class="track" style="animation-delay:.35s"></div>
-      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Alocar os recursos com eficácia</span></div>
+      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Alocar os recursos com inteligência</span></div>
       <div class="track" style="animation-delay:.9s"></div>
       <div class="stop" style="animation-delay:1.15s"><span class="node">03</span><span class="label">Prever o comportamento do incêndio</span></div>
       <div class="track" style="animation-delay:1.45s"></div>
       <div class="stop final" style="animation-delay:1.7s"><span class="node">04</span><span class="label">Comunicar o comando de ação</span></div>
     </div>
     <hr class="divider">
-    <div class="punch fragment">
-      <div class="line">Dados reais. Meios reais. <span class="fire">Um só mapa.</span></div>
-      <div class="data-list">
-        <span>Estradas a cortar</span><span>Tempo de chegada</span><span>Casas em risco</span>
+    <div class="proof-mini fragment">
+      <img class="proof-img" src="img/vieira_validation_scenarioB.png" alt="Três simulações do ELMFIRE para Vieira do Minho: modelo base, só com dados públicos, e com linhas de ataque inferidas">
+      <div class="proof-info">
+        <p class="proof-label">Sobreposição com um incêndio real · Vieira do Minho, 2016</p>
+        <div class="proof-seq"><span class="pn">0,76</span><span class="pa">→</span><span class="pn">0,83</span><span class="pa">→</span><span class="pn final">0,89</span></div>
       </div>
-      <div class="who">Bombeiros · Proteção Civil · Câmara · GNR/PSP · INEM</div>
     </div>
+    <hr class="divider">
+    <div class="model-row fragment">
+      <div class="model-item">
+        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M31.9 60.6 L30.8 60.6 L30.1 60.1 L29.8 59.1 L29.9 57.7 L30.3 55.8 L30.6 54.2 L30.7 53.0 L30.7 52.2 L30.5 51.7 L30.6 51.1 L31.0 50.4 L31.7 49.7 L32.7 48.8 L33.7 46.9 L34.8 43.9 L36.0 39.8 L37.3 34.6 L38.0 29.9 L38.4 25.7 L38.2 22.0 L37.6 18.7 L37.3 16.2 L37.4 14.2 L37.7 12.9 L38.4 12.2 L39.2 11.6 L40.1 11.1 L41.2 10.6 L42.4 10.2 L43.3 10.0 L43.9 10.0 L44.2 10.2 L44.3 10.5 L44.4 10.7 L44.5 10.9 L44.8 11.1 L45.0 11.1 L45.1 11.3 L45.1 11.6 L44.9 12.0 L44.5 12.5 L44.3 13.0 L44.2 13.4 L44.3 13.8 L44.6 14.2 L44.9 14.4 L45.3 14.3 L45.9 14.1 L46.5 13.7 L47.0 13.4 L47.3 13.4 L47.5 13.5 L47.6 13.8 L47.8 13.9 L48.1 14.0 L48.5 13.9 L49.0 13.6 L49.4 13.5 L49.8 13.4 L50.2 13.4 L50.5 13.5 L50.7 13.6 L50.8 13.8 L50.9 14.0 L50.8 14.2 L50.8 14.3 L51.0 14.3 L51.3 14.2 L51.8 14.1 L52.1 14.1 L52.4 14.1 L52.5 14.2 L52.6 14.4 L52.8 14.5 L53.2 14.5 L53.7 14.3 L54.3 14.1 L54.8 13.8 L55.2 13.4 L55.5 13.0 L55.6 12.6 L56.1 12.3 L57.0 12.2 L58.2 12.1 L59.7 12.2 L60.9 12.3 L61.8 12.5 L62.3 12.8 L62.5 13.2 L62.6 13.6 L62.7 14.1 L62.7 14.7 L62.6 15.4 L62.7 15.9 L63.0 16.3 L63.5 16.5 L64.2 16.6 L64.8 16.8 L65.3 17.0 L65.7 17.2 L66.0 17.5 L66.2 17.9 L66.2 18.4 L66.0 19.1 L65.7 19.8 L65.2 20.4 L64.5 21.0 L63.8 21.6 L62.9 22.1 L62.1 22.7 L61.4 23.4 L60.8 24.1 L60.4 24.9 L60.0 25.5 L59.6 25.9 L59.2 26.1 L58.9 26.2 L58.7 26.4 L58.7 26.7 L58.9 27.2 L59.3 27.8 L59.6 28.6 L59.7 29.7 L59.7 31.0 L59.6 32.5 L59.5 33.7 L59.6 34.6 L59.7 35.2 L59.9 35.6 L59.9 36.0 L59.6 36.5 L59.2 37.0 L58.5 37.7 L58.1 38.4 L58.0 39.0 L58.1 39.7 L58.6 40.3 L59.0 40.9 L59.1 41.5 L59.2 42.1 L59.1 42.6 L58.9 43.2 L58.7 43.8 L58.5 44.5 L58.2 45.2 L57.5 45.8 L56.6 46.2 L55.4 46.4 L53.9 46.5 L53.0 46.7 L52.6 47.1 L52.7 47.7 L53.5 48.4 L54.0 49.2 L54.5 50.1 L54.8 50.9 L54.9 51.8 L55.3 52.7 L55.8 53.5 L56.4 54.2 L57.3 54.9 L57.9 55.6 L58.1 56.2 L58.2 56.8 L57.9 57.4 L57.6 58.0 L57.1 58.5 L56.6 59.1 L56.0 59.6 L55.4 60.3 L55.0 61.1 L54.7 62.0 L54.5 63.1 L54.5 64.1 L54.8 65.1 L55.3 66.1 L56.0 67.1 L56.7 67.8 L57.3 68.2 L57.8 68.4 L58.3 68.2 L58.5 68.3 L58.7 68.5 L58.6 69.0 L58.4 69.7 L58.1 70.3 L57.6 70.7 L57.0 71.0 L56.2 71.2 L55.5 71.6 L54.8 72.4 L54.1 73.5 L53.4 74.9 L52.9 76.3 L52.7 77.9 L52.8 79.4 L53.2 81.0 L53.3 82.3 L53.2 83.1 L52.9 83.6 L52.3 83.7 L51.7 83.9 L51.0 84.3 L50.2 84.9 L49.2 85.5 L48.3 85.9 L47.4 86.0 L46.6 85.8 L45.7 85.3 L44.7 85.0 L43.6 84.7 L42.5 84.4 L41.2 84.3 L40.0 84.3 L38.8 84.4 L37.6 84.7 L36.4 85.0 L35.7 84.9 L35.4 84.3 L35.6 83.3 L36.2 81.7 L36.6 80.1 L36.9 78.5 L37.1 76.8 L37.1 75.1 L37.0 73.8 L36.9 72.8 L36.7 72.3 L36.4 72.1 L36.3 71.7 L36.3 70.9 L36.5 69.9 L36.9 68.6 L37.0 67.4 L37.0 66.4 L36.8 65.5 L36.4 64.7 L36.0 64.2 L35.6 63.9 L35.3 63.9 L35.0 64.2 L34.6 64.4 L34.1 64.5 L33.6 64.7 L33.1 64.8 L32.7 64.8 L32.4 64.6 L32.4 64.3 L32.5 63.9 L32.5 63.5 L32.5 63.0 L32.4 62.5 L32.1 62.0 L32.1 61.7 L32.2 61.4 L32.5 61.4 L33.0 61.4 L33.4 61.4 L33.9 61.2 L34.3 60.9 L34.7 60.5 L35.0 60.2 L35.2 60.0 L35.1 59.8 L35.0 59.8 L34.9 59.8 L34.9 59.7 L35.0 59.7 L35.1 59.6 L35.3 59.5 L35.3 59.4 L35.3 59.3 L35.3 59.1 L35.2 59.0 L35.2 59.0 L35.1 59.1 L35.0 59.2 L34.9 59.2 L34.9 59.2 L34.8 59.0 L34.7 58.8 L34.5 58.7 L34.4 58.9 L34.2 59.2 L33.9 59.8 L33.4 60.2 L32.8 60.5 Z"/></svg>
+        <span>ELMFIRE calibrado para Portugal</span>
+      </div>
+      <div class="model-item">
+        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M14 36 H58 A8 8 0 1 0 50 28"/><path d="M8 50 H76 A10 10 0 1 0 66 40"/><path d="M18 64 H60 A8 8 0 1 1 52 72"/></svg>
+        <span>Motor de vento próprio</span>
+      </div>
+      <div class="model-item">
+        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><g transform="translate(0 -4)"><path d="M8 44 C20 44 22 62 32 62 C42 62 42 42 50 42 C60 42 62 78 72 78 C82 78 84 50 90 50"/><circle cx="32" cy="56" r="4"/><path d="M34.5 48.5 Q51 2 69 64" stroke-dasharray="0.1 6"/><circle cx="72" cy="72.5" r="4.5" fill="#F76707" stroke="none"/></g></svg>
+        <span>Otimização da estratégia</span>
+      </div>
+      <div class="model-item">
+        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M21 60 C21 60 11 49 11 41 A10 10 0 0 1 31 41 C31 49 21 60 21 60 Z"/><circle cx="21" cy="41" r="3.5"/><path d="M39 46 H52 M47 41 L52 46 L47 51"/><path d="M66 28 H61 V64 H66 M82 28 H87 V64 H82"/><g fill="#F76707" stroke="none"><circle cx="67" cy="37" r="1.9"/><circle cx="74" cy="37" r="1.9"/><circle cx="81" cy="37" r="1.9"/><circle cx="67" cy="46" r="1.9"/><circle cx="74" cy="46" r="1.9"/><circle cx="81" cy="46" r="1.9"/><circle cx="67" cy="55" r="1.9"/><circle cx="74" cy="55" r="1.9"/><circle cx="81" cy="55" r="1.9"/></g></svg>
+        <span>Tradutor de estratégia</span>
+      </div>
+    </div>
+    <div class="src">PT-FireSprd v1 (Benali et al., 2023) · hindcast ELMFIRE, ramo hindcast-registos · ELMFIRE (Lautenberger, EPL 2.0) · LiDAR DGT · Mendes &amp; Alvelos (2023), EJOR 304(3)</div>
     <aside class="notes">
-      18 s · Condutor da demo
+      28 s · Condutor da demo
 
-      [clique] "Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca os meios, prevê o comportamento do incêndio e comunica o comando de ação."
-      "Nós trabalhamos com dados precisos, com os meios que estão disponíveis ao momento em cada quartel, e tudo isto num só mapa."
-      [clique] "Dados reais. Meios reais. Um só mapa."
-      "Que estradas cortar. Quanto tempo até ao fogo. Que casas estão em risco. Para todos os que combatem."
+      [clique] "Criada para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca os meios, prevê o comportamento do incêndio e comunica o comando de ação."
+      [clique] "Validada contra um incêndio real, Vieira do Minho 2016, chegamos a 0,89 de sobreposição."
+      [clique] "Para chegarmos a esses valores, calibrámos o motor ELMFIRE com os dados do LiDAR da DGT, desenvolvemos modelos próprios de previsão de vento, e usamos a otimização premiada de um dos nossos orientadores, Filipe Alvelos, para as estratégias."
 
-      Passagem: "Vamos ver ao vivo."
+      Passagem: "Vamos ver a Atalaia em prática."
     </aside>
   </section>
 
-  <!-- ============================== 7 · DEMO · 1:31–3:23 ============================== -->
+  <!-- ============================== 7 · DEMO · 1:23–3:15 ============================== -->
   <section data-background-color="#000" data-timing="112" class="demo-stage">
     <div class="demo">
       <div class="tag" style="margin:0;"><span class="rec"></span>Demo ao vivo · 1 min 52 s</div>
@@ -591,117 +625,41 @@
 
       PLACEHOLDER — guião da demo a fechar depois do feature freeze.
 
-      Passagem: "E podemos confiar nisto? Testámos contra um incêndio real."
-    </aside>
-  </section>
-
-  <!-- ============================== 8 · VALIDAÇÃO · 3:23–3:43 ============================== -->
-  <section class="val" data-timing="20">
-    <span class="tag">Confiança · reconstituímos um incêndio real</span>
-    <h2 style="font-size:1.2em;">Vieira do Minho, 11 ago 2016, 08:30</h2>
-    <img src="img/vieira_validation_scenarioB.png" alt="Três simulações do ELMFIRE para Vieira do Minho: modelo base, só com dados públicos, e com linhas de ataque inferidas">
-    <div class="legend">
-      <span class="sw grad"></span>área prevista pelo modelo
-      <span class="sw line" style="background:var(--blue)"></span>perímetro observado (PT-FireSprd)
-    </div>
-    <div class="accuracy-wrap">
-      <p class="accuracy-label">Sobreposição com o incêndio real · índice de Sørensen</p>
-      <div class="accuracy">
-        <div class="acc-step"><span class="acc-n">0,76</span></div>
-        <div class="acc-arrow"><span class="arr">→</span><strong class="acc-name">+ Dados públicos</strong><p>combustíveis PT, LiDAR, cicatrizes, projeções</p></div>
-        <div class="acc-step"><span class="acc-n">0,83</span></div>
-        <div class="acc-arrow"><span class="arr">→</span><strong class="acc-name">+ Linhas de ataque</strong><p>inferidas a partir do perímetro oficial</p></div>
-        <div class="acc-step final"><span class="acc-n">0,89</span></div>
-      </div>
-    </div>
-    <div class="src">PT-FireSprd v1 (Benali et al., 2023) · hindcast ELMFIRE, ramo hindcast-registos</div>
-    <aside class="notes">
-      20 s · Técnico
-
-      "Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no distrito de Braga. Motor ELMFIRE.
-      O modelo base está a 0,76 de sobreposição com o real. Só com dados públicos — combustíveis portugueses, LiDAR, cicatrizes, projeções — sobe para 0,83. Com as linhas de ataque inferidas, 0,89."
-
-      Passagem: "E esta precisão não caiu do céu. Deixem-me mostrar o que está por baixo."
-    </aside>
-  </section>
-
-  <!-- ============================== 8b · TECNOLOGIA · 3:43–4:03 ============================== -->
-  <section class="tech" data-timing="20">
-    <span class="tag">A tecnologia · o que construímos por baixo</span>
-    <h2 style="font-size:1.3em;">Não partimos do zero. Calibrámos e ligámos o que há de melhor.</h2>
-    <div class="tech-grid">
-      <div class="tech-item fragment">
-        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M31.9 60.6 L30.8 60.6 L30.1 60.1 L29.8 59.1 L29.9 57.7 L30.3 55.8 L30.6 54.2 L30.7 53.0 L30.7 52.2 L30.5 51.7 L30.6 51.1 L31.0 50.4 L31.7 49.7 L32.7 48.8 L33.7 46.9 L34.8 43.9 L36.0 39.8 L37.3 34.6 L38.0 29.9 L38.4 25.7 L38.2 22.0 L37.6 18.7 L37.3 16.2 L37.4 14.2 L37.7 12.9 L38.4 12.2 L39.2 11.6 L40.1 11.1 L41.2 10.6 L42.4 10.2 L43.3 10.0 L43.9 10.0 L44.2 10.2 L44.3 10.5 L44.4 10.7 L44.5 10.9 L44.8 11.1 L45.0 11.1 L45.1 11.3 L45.1 11.6 L44.9 12.0 L44.5 12.5 L44.3 13.0 L44.2 13.4 L44.3 13.8 L44.6 14.2 L44.9 14.4 L45.3 14.3 L45.9 14.1 L46.5 13.7 L47.0 13.4 L47.3 13.4 L47.5 13.5 L47.6 13.8 L47.8 13.9 L48.1 14.0 L48.5 13.9 L49.0 13.6 L49.4 13.5 L49.8 13.4 L50.2 13.4 L50.5 13.5 L50.7 13.6 L50.8 13.8 L50.9 14.0 L50.8 14.2 L50.8 14.3 L51.0 14.3 L51.3 14.2 L51.8 14.1 L52.1 14.1 L52.4 14.1 L52.5 14.2 L52.6 14.4 L52.8 14.5 L53.2 14.5 L53.7 14.3 L54.3 14.1 L54.8 13.8 L55.2 13.4 L55.5 13.0 L55.6 12.6 L56.1 12.3 L57.0 12.2 L58.2 12.1 L59.7 12.2 L60.9 12.3 L61.8 12.5 L62.3 12.8 L62.5 13.2 L62.6 13.6 L62.7 14.1 L62.7 14.7 L62.6 15.4 L62.7 15.9 L63.0 16.3 L63.5 16.5 L64.2 16.6 L64.8 16.8 L65.3 17.0 L65.7 17.2 L66.0 17.5 L66.2 17.9 L66.2 18.4 L66.0 19.1 L65.7 19.8 L65.2 20.4 L64.5 21.0 L63.8 21.6 L62.9 22.1 L62.1 22.7 L61.4 23.4 L60.8 24.1 L60.4 24.9 L60.0 25.5 L59.6 25.9 L59.2 26.1 L58.9 26.2 L58.7 26.4 L58.7 26.7 L58.9 27.2 L59.3 27.8 L59.6 28.6 L59.7 29.7 L59.7 31.0 L59.6 32.5 L59.5 33.7 L59.6 34.6 L59.7 35.2 L59.9 35.6 L59.9 36.0 L59.6 36.5 L59.2 37.0 L58.5 37.7 L58.1 38.4 L58.0 39.0 L58.1 39.7 L58.6 40.3 L59.0 40.9 L59.1 41.5 L59.2 42.1 L59.1 42.6 L58.9 43.2 L58.7 43.8 L58.5 44.5 L58.2 45.2 L57.5 45.8 L56.6 46.2 L55.4 46.4 L53.9 46.5 L53.0 46.7 L52.6 47.1 L52.7 47.7 L53.5 48.4 L54.0 49.2 L54.5 50.1 L54.8 50.9 L54.9 51.8 L55.3 52.7 L55.8 53.5 L56.4 54.2 L57.3 54.9 L57.9 55.6 L58.1 56.2 L58.2 56.8 L57.9 57.4 L57.6 58.0 L57.1 58.5 L56.6 59.1 L56.0 59.6 L55.4 60.3 L55.0 61.1 L54.7 62.0 L54.5 63.1 L54.5 64.1 L54.8 65.1 L55.3 66.1 L56.0 67.1 L56.7 67.8 L57.3 68.2 L57.8 68.4 L58.3 68.2 L58.5 68.3 L58.7 68.5 L58.6 69.0 L58.4 69.7 L58.1 70.3 L57.6 70.7 L57.0 71.0 L56.2 71.2 L55.5 71.6 L54.8 72.4 L54.1 73.5 L53.4 74.9 L52.9 76.3 L52.7 77.9 L52.8 79.4 L53.2 81.0 L53.3 82.3 L53.2 83.1 L52.9 83.6 L52.3 83.7 L51.7 83.9 L51.0 84.3 L50.2 84.9 L49.2 85.5 L48.3 85.9 L47.4 86.0 L46.6 85.8 L45.7 85.3 L44.7 85.0 L43.6 84.7 L42.5 84.4 L41.2 84.3 L40.0 84.3 L38.8 84.4 L37.6 84.7 L36.4 85.0 L35.7 84.9 L35.4 84.3 L35.6 83.3 L36.2 81.7 L36.6 80.1 L36.9 78.5 L37.1 76.8 L37.1 75.1 L37.0 73.8 L36.9 72.8 L36.7 72.3 L36.4 72.1 L36.3 71.7 L36.3 70.9 L36.5 69.9 L36.9 68.6 L37.0 67.4 L37.0 66.4 L36.8 65.5 L36.4 64.7 L36.0 64.2 L35.6 63.9 L35.3 63.9 L35.0 64.2 L34.6 64.4 L34.1 64.5 L33.6 64.7 L33.1 64.8 L32.7 64.8 L32.4 64.6 L32.4 64.3 L32.5 63.9 L32.5 63.5 L32.5 63.0 L32.4 62.5 L32.1 62.0 L32.1 61.7 L32.2 61.4 L32.5 61.4 L33.0 61.4 L33.4 61.4 L33.9 61.2 L34.3 60.9 L34.7 60.5 L35.0 60.2 L35.2 60.0 L35.1 59.8 L35.0 59.8 L34.9 59.8 L34.9 59.7 L35.0 59.7 L35.1 59.6 L35.3 59.5 L35.3 59.4 L35.3 59.3 L35.3 59.1 L35.2 59.0 L35.2 59.0 L35.1 59.1 L35.0 59.2 L34.9 59.2 L34.9 59.2 L34.8 59.0 L34.7 58.8 L34.5 58.7 L34.4 58.9 L34.2 59.2 L33.9 59.8 L33.4 60.2 L32.8 60.5 Z"/></svg>
-        <div class="tc-body">
-          <span class="t-name">ELMFIRE calibrado para Portugal</span>
-          <p>Fire Lab UC Berkeley · copas e declives do LiDAR da DGT</p>
-        </div>
-      </div>
-      <div class="tech-item fragment">
-        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M14 36 H58 A8 8 0 1 0 50 28"/><path d="M8 50 H76 A10 10 0 1 0 66 40"/><path d="M18 64 H60 A8 8 0 1 1 52 72"/></svg>
-        <div class="tc-body">
-          <span class="t-name">Motor de vento próprio</span>
-          <p>CERRA + relevo, o vento local que o ERA5 não vê</p>
-        </div>
-      </div>
-      <div class="tech-item fragment">
-        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><g transform="translate(0 -4)"><path d="M8 44 C20 44 22 62 32 62 C42 62 42 42 50 42 C60 42 62 78 72 78 C82 78 84 50 90 50"/><circle cx="32" cy="56" r="4"/><path d="M34.5 48.5 Q51 2 69 64" stroke-dasharray="0.1 6"/><circle cx="72" cy="72.5" r="4.5" fill="#F76707" stroke="none"/></g></svg>
-        <div class="tc-body">
-          <span class="t-name">Otimização da estratégia</span>
-          <p>ILS de Filipe Alvelos, um dos nossos orientadores</p>
-        </div>
-      </div>
-      <div class="tech-item fragment">
-        <svg viewBox="0 0 96 96" aria-hidden="true" stroke="#F76707" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M21 60 C21 60 11 49 11 41 A10 10 0 0 1 31 41 C31 49 21 60 21 60 Z"/><circle cx="21" cy="41" r="3.5"/><path d="M39 46 H52 M47 41 L52 46 L47 51"/><path d="M66 28 H61 V64 H66 M82 28 H87 V64 H82"/><g fill="#F76707" stroke="none"><circle cx="67" cy="37" r="1.9"/><circle cx="74" cy="37" r="1.9"/><circle cx="81" cy="37" r="1.9"/><circle cx="67" cy="46" r="1.9"/><circle cx="74" cy="46" r="1.9"/><circle cx="81" cy="46" r="1.9"/><circle cx="67" cy="55" r="1.9"/><circle cx="74" cy="55" r="1.9"/><circle cx="81" cy="55" r="1.9"/></g></svg>
-        <div class="tc-body">
-          <span class="t-name">Tradutor de estratégia</span>
-          <p>Decisões no terreno → inputs do motor de propagação</p>
-        </div>
-      </div>
-    </div>
-    <p class="tech-close fragment">Cada peça a fazer o que faz melhor. Uma só solução.</p>
-    <div class="src">ELMFIRE, Fire Lab UC Berkeley (Lautenberger, EPL 2.0) · LiDAR DGT · Mendes &amp; Alvelos (2023), EJOR 304(3)</div>
-    <aside class="notes">
-      20 s · Técnico
-
-      [clique] "O motor é o ELMFIRE, do Fire Lab da UC Berkeley, mas afinado para Portugal: as copas e os declives vêm do LiDAR da DGT, com grande precisão."
-      [clique] "Construímos também um motor de vento próprio, a combinar o CERRA com o relevo, para captar o vento local que os dados abertos não apanham."
-      [clique] "A otimização da estratégia usa a meta-heurística premiada de um dos nossos orientadores, Filipe Alvelos."
-      [clique] "E um tradutor próprio passa cada decisão a inputs que o motor de propagação entende."
-      [clique] "No fundo: integrámos e calibrámos vários modelos, cada um a fazer o que faz melhor."
-
       Passagem: "E isto não acaba hoje."
     </aside>
   </section>
 
-  <!-- ============================== 9 · A SEGUIR · 4:03–4:18 ============================== -->
-  <section data-timing="15">
+  <!-- ============================== 8 · A SEGUIR · 3:15–3:23 ============================== -->
+  <section data-timing="8">
     <span class="tag">A seguir · defender bem não basta, é preciso ver primeiro</span>
     <div class="roadmap horizontal fragment">
-      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Deteção por drones, mais rápida e económica</span></div>
+      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span><span class="desc">Testar e treinar decisões em incêndios passados, para tomar melhores decisões futuras</span></div>
       <div class="track" style="animation-delay:.35s"></div>
-      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span></div>
+      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">IA a afinar a estratégia mais otimizada</span><span class="desc">A estratégia a afinar-se sozinha, cenário a cenário</span></div>
       <div class="track" style="animation-delay:.9s"></div>
-      <div class="stop final" style="animation-delay:1.15s"><span class="node">03</span><span class="label">IA a afinar a estratégia mais otimizada</span></div>
+      <div class="stop final has-video" style="animation-delay:1.15s">
+        <span class="node">03</span><span class="label">Deteção por drones, mais rápida e económica</span><span class="desc">Patrulha e deteção mais cedo, sem esperar pelos meios aéreos</span>
+        <video class="roadmap-video" src="video/drone-deteccao.mp4" muted loop playsinline autoplay onloadedmetadata="this.playbackRate=2" onplay="this.playbackRate=2"></video>
+      </div>
     </div>
     <aside class="notes">
-      15 s · Continuidade
+      8 s · Continuidade
 
-      "A seguir: drones para detetar mais cedo, não só defender melhor; uma ferramenta de testes para potenciais cenários futuros; e, mais à frente, IA a afinar a própria estratégia."
+      "Como próximos passos, queremos tornar o modelo também numa ferramenta de testes para cenários futuros; usar IA para afinar a estratégia; e drones para detetar os incêndios mais cedo e com menos custos."
 
-      Passagem: "Em 2025 arderam 11 Guimarães."
+      Passagem: "11 Guimarães arderam em 2025."
     </aside>
   </section>
 
-  <!-- ============================== 10 · FECHO + OBRIGADO · 4:18–4:28 ============================== -->
+  <!-- ============================== 9 · FECHO + OBRIGADO · 3:23–3:33 ============================== -->
   <section data-timing="10">
-    <p class="closing fragment">Em 2025 arderam 11 Guimarães.<br><span class="dim">Com a Atalaia, quem decide vê o que vai arder, <span class="fire">para cada decisão</span>, antes de enviar os meios.</span></p>
+    <p class="closing fragment">11 Guimarães arderam em 2025.<br><span class="dim">Está na hora de <span class="fire">ver primeiro</span>, e <span class="fire">decidir melhor</span>.</span></p>
     <p class="thanks fragment">Obrigado.</p>
     <div class="src team">Equipa Atalaia · João Folhadela · Carlos Teixeira · Bruno Ramos · Mara Alves · Hugo Martins</div>
     <aside class="notes">
       10 s · Narrador
 
-      "Em 2025 arderam 11 Guimarães." (pausa) "Com a Atalaia, quem decide vê o que vai arder, para cada decisão, antes de enviar os meios."
+      "11 Guimarães arderam em 2025." (pausa) "Está na hora de ver primeiro, e decidir melhor."
       [clique] "Obrigado."
     </aside>
   </section>
