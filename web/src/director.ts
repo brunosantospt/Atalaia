@@ -116,8 +116,8 @@ export function incidentShots(input: IncidentInput): Shot[] {
   // Always show the aftermath; distinguish the forecast horizon from confirmed containment.
   if ((post || shift === undefined) && runs) {
     const finalPath = outcomePose(input)
-    shots.push({ ...shots.at(-1)!, kind: 'outcome', word: 'Área ardida', title: 'Sem decisão · Decisão A · Decisão B',
-      caption: `As três áreas sobrepõem-se da maior para a menor. ${end.minute === null ? 'Fim da previsão; contenção não confirmada.' : 'Contenção prevista pelo modelo.'}`,
+    shots.push({ ...shots.at(-1)!, kind: 'outcome', word: 'Área ardida', title: 'Rescaldo',
+      caption: 'Rescaldo do incêndio: o que arde sem decisão, com a decisão A e com a decisão B.',
       milestone: true, hours: stop / 60, hoursTo: stop / 60, moveS: 1.5, holdS: 4, gate: undefined,
       path: finalPath, spot: finalPath[0].range * Math.tan(fovy / 2) * 1.5, decision: undefined })
   } else if (post || shift === undefined) {

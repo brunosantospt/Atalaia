@@ -136,30 +136,28 @@ async function main() {
 
   const spotlight = new Spotlight(scene)
   const drone = new DroneClips()
-  // The end's A | B comparison: a button over the final scene; the split's handle then moves between them.
-  const compare = { on: false, button: document.createElement('button') }
-  compare.button.type = 'button'
-  compare.button.className = 'compare-ab'
-  compare.button.hidden = true
-  compare.button.innerHTML = 'Comparar <b>A</b> | <b>B</b>'
-  compare.button.title = 'Divide o ecrã: A à esquerda, B à direita. Arrastar a divisória para comparar.'
-  compare.button.addEventListener('click', () => { compare.on = !compare.on; scene.requestRender() })
-  document.body.append(compare.button)
-  // At the end of the film: one button clears the screen for the report (widgets off, the endings' footage
-  // to the left, the Relatórios panel open). Above the Atalaia logo, bottom right.
-  const final = { on: false, button: document.createElement('button') }
-  final.button.type = 'button'
-  final.button.className = 'final-report'
-  final.button.hidden = true
-  final.button.textContent = 'Ver relatório final'
-  final.button.addEventListener('click', () => {
+  // The end's view: Geral (the three footprints stacked) or decision A or B alone, fire and units; the one
+  // on screen is lit orange.
+  const compare = { mode: 'all' as 'all' | 'A' | 'B', bar: document.createElement('div') }
+  compare.bar.className = 'compare-ab'
+  compare.bar.hidden = true
+  compare.bar.innerHTML = '<button type="button" data-mode="all" class="on">Geral</button><button type="button" data-mode="A">Decisão A</button><button type="button" data-mode="B">Decisão B</button>'
+  compare.bar.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.addEventListener('click', () => {
+    compare.mode = b.dataset.mode as typeof compare.mode
+    compare.bar.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b))
+    scene.requestRender()
+  }))
+  document.body.append(compare.bar)
+  // When the film is over the screen clears for the report: widgets off, the endings' footage to the left,
+  // the Relatórios panel open. Once per ending; a new run brings the footage back to its place.
+  const final = { on: false }
+  const openFinal = () => {
     final.on = true
     hud.settings.hideAllWidgets()
     if (replay) showWidgets(replay)
     drone.dock(true)
     editor.toggleReports(true)
-  })
-  document.body.append(final.button)
+  }
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -800,15 +798,14 @@ async function main() {
     renderedHours = frame.hours
     // The split shows in the director's shots, or through every shot on key A.
     const finale = !editor.open && frame.shot.kind === 'outcome'
-    // At the end, "Comparar A | B" swaps the three footprints for A and B side by side, fire and units.
-    const comparing = finale && compare.on && !!split
-    compare.button.hidden = !finale || !split
-    final.button.hidden = !finale || final.on
+    // At the end, A or B alone replaces the three footprints (Geral): its fire and its units, full screen.
+    const comparing = finale && compare.mode !== 'all' && !!split
+    compare.bar.hidden = !finale || !split
     if (!finale && final.on) { final.on = false; drone.dock(false) }
-    compare.button.classList.toggle('on', comparing)
+    if (finale && frame.phase === 'done' && !final.on) openFinal()
     const splitOn = (!finale || comparing) && !!split
-    split?.presentation(!editor.open && (replay.showSplit || comparing))
-    if (split && !split.moved) split.moved = (at) => { if (compare.on) editor.setCompare(at) }
+    split?.presentation(!editor.open && replay.showSplit && !finale)
+    if (comparing && split!.position !== (compare.mode === 'A' ? 1 : 0)) split!.setPosition(compare.mode === 'A' ? 1 : 0)
     editor.setCompare(comparing ? split!.position : undefined)
     const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
     if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)

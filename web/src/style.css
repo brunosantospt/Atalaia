@@ -47,14 +47,11 @@ body[data-error]::after {
 .cesium-viewer-bottom .cesium-credit-expand-link { display: none !important; }
 .intro.thermal .intro-unit { opacity: 1; }
 
-/* The A | B comparison at the end of the director's cut. */
-.compare-ab { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 6; padding: 8px 18px; border: 1px solid #f76707; border-radius: 6px; background: rgba(12, 16, 22, .88); color: #fff; font: 600 14px system-ui, sans-serif; letter-spacing: .5px; cursor: pointer; transition: background .2s, box-shadow .2s; }
+/* The end's view selector: Geral · Decisão A · Decisão B, the one on screen in orange. */
+.compare-ab { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 6; display: flex; border: 1px solid #f76707; border-radius: 6px; overflow: hidden; background: rgba(12, 16, 22, .88); }
 .compare-ab[hidden] { display: none; }
-.compare-ab b { color: #ffa94d; }
-.compare-ab:hover, .compare-ab.on { background: #f76707; box-shadow: 0 0 16px rgba(247, 103, 7, .6); }
-.compare-ab:hover b, .compare-ab.on b { color: #fff; }
+.compare-ab button { padding: 7px 16px; border: 0; background: transparent; color: #fff; font: 600 13px system-ui, sans-serif; letter-spacing: .4px; cursor: pointer; transition: background .2s; }
+.compare-ab button + button { border-left: 1px solid rgba(247, 103, 7, .5); }
+.compare-ab button:hover { background: rgba(247, 103, 7, .25); }
+.compare-ab button.on { background: #f76707; }
 
-/* End of the film: clear the screen for the report. Bottom right, above the Atalaia logo. */
-.final-report { position: fixed; right: 14px; bottom: 76px; z-index: 6; padding: 8px 16px; border: 1px solid #f76707; border-radius: 6px; background: #f76707; color: #fff; font: 600 13px system-ui, sans-serif; letter-spacing: .4px; cursor: pointer; box-shadow: 0 0 14px rgba(247, 103, 7, .45); }
-.final-report[hidden] { display: none; }
-.final-report:hover { background: #ff8a2b; }
