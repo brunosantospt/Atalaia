@@ -873,6 +873,7 @@ async function main() {
 function showIntro(start: () => void) {
   const ALERT_S = 15
   const REC_S = 10
+  const THERMAL_S = 14 // the thermal camera's scale is on screen
   const warn = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="10.9" y="8.5" width="2.2" height="7" rx="1.1" fill="#a0140a"/><circle cx="12" cy="18" r="1.25" fill="#a0140a"/></svg>'
   const el = document.createElement('div')
   el.className = 'intro'
@@ -887,6 +888,7 @@ function showIntro(start: () => void) {
   const video = el.querySelector('video')!
   const reveal = () => {
     if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
+    if (video.currentTime >= THERMAL_S || video.ended) el.classList.add('thermal')
     if (video.currentTime >= ALERT_S || video.ended) el.classList.add('alerted')
   }
   video.addEventListener('timeupdate', reveal)
