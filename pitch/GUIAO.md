@@ -81,8 +81,8 @@ Ver sempre mais cedo. Decidir sempre melhor.
 
 ## 9 · Fecho + obrigado
 
-Em 2025 arderam 11 Guimarães. Com a Atalaia, quem decide vê o que vai
-arder, para cada decisão, antes de enviar os meios.
+11 Guimarães arderam em 2025. Está na hora de ver primeiro, e decidir
+melhor.
 
 Obrigado.
 

@@ -338,6 +338,12 @@ e o condutor continua a falar.
 - "11 Guimarães" em 2025: mesmo cálculo do slide 2 (270 695 ha ÷ 241,7 km² do
   concelho ≈ 11,2). O fecho repete esse número de propósito, agora com o valor
   de 2025. Segurar a pausa depois de "11 Guimarães".
+- FRASE TROCADA (23 out): "Em 2025 arderam 11 Guimarães. Com a Atalaia,
+  quem decide vê o que vai arder, para cada decisão, antes de enviar os
+  meios." → "11 Guimarães arderam em 2025. Está na hora de ver primeiro, e
+  decidir melhor." A nova frase ecoa o tagline da marca ("Ver primeiro.
+  Decidir melhor.", visível no logótipo ao longo da apresentação) em vez de
+  o parafrasear — fecha o pitch com a própria frase da marca.
 
 ---
 
