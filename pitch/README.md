@@ -27,6 +27,7 @@ O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Cope
 
 Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma (4:23) já passa dos 4:00. Por fazer: cronometrar a fala real de cada slide e cortar onde for preciso antes do pitch final.
 
+- Os números grandes (gancho, sequência de precisão) usam JetBrains Mono (Bold/ExtraBold), guardado em `vendor/fonts/` (SIL OFL) para correr sem rede, tal como o resto do `vendor/`.
 - A demo corre numa janela própria do browser, não dentro dos slides: a app e o reveal usam as mesmas teclas.
 - Os marcadores tracejados (`.tbd`) são o que falta preencher depois do feature freeze.
 - `media/` fica fora do git: é para o vídeo de reserva da demo (`media/demo.mp4`), gravado da app depois do freeze.

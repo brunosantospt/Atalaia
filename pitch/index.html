@@ -8,6 +8,20 @@
   <link rel="stylesheet" href="vendor/reveal.js-5.1.0/dist/reset.css">
   <link rel="stylesheet" href="vendor/reveal.js-5.1.0/dist/reveal.css">
   <style>
+    @font-face {
+      font-family: 'JetBrains Mono Display';
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+      src: url('vendor/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono Display';
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+      src: url('vendor/fonts/JetBrainsMono-ExtraBold.ttf') format('truetype');
+    }
     /* Mesma linguagem do HUD da app (web/src/hud.css): cinzas neutros, texto mono em maiúsculas,
        âmbar para o fogo e azul suave para a informação de apoio. */
     :root {
@@ -23,8 +37,13 @@
       --red: #e03131;
       --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace;
       --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --display: 'JetBrains Mono Display', var(--mono);
     }
-    html, body, .reveal-viewport { background: var(--bg); }
+    html, body, .reveal-viewport {
+      background: var(--bg);
+      background-image: radial-gradient(rgba(220, 224, 228, 0.07) 1px, transparent 1.5px);
+      background-size: 26px 26px;
+    }
     .reveal { font-family: var(--sans); color: var(--ink); font-size: 38px; }
     .reveal .slides { text-align: left; }
     .reveal .slides > section { height: 100%; display: flex !important; flex-direction: column; justify-content: center; }
@@ -98,7 +117,7 @@
     .title-line { font-family: var(--mono); font-size: 0.5em; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); }
 
     /* 2 · número grande */
-    .big { font-size: 4.2em; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
+    .big { font-family: var(--display); font-size: 4.2em; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--ink); }
     .big .unit { font-size: 0.35em; font-weight: 600; color: var(--ink-dim); letter-spacing: 0; }
     .row { display: flex; gap: 2.2em; align-items: flex-end; }
     .lead { font-size: 1.15em; font-weight: 600; color: var(--ink); margin: 0 0 0.3em; }
@@ -115,13 +134,15 @@
     .impact .comparison strong { color: var(--amber); }
     /* custo: em linha, por baixo da comparação, para não competir com a área */
     .impact .cost { margin-top: .5em; padding-top: .5em; border-top: 1px solid var(--ink-faint); display: flex; align-items: baseline; gap: .6em; }
-    .impact .cost .n { font-size: 1.5em; font-weight: 800; letter-spacing: -0.02em; color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .impact .cost .n { font-family: var(--display); font-size: 1.5em; font-weight: 800; letter-spacing: -0.01em; color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap; }
     .impact .cost .metric-label { margin-top: 0; }
     /* no PDF o slide tem a altura do conteúdo, por isso a fonte vai para baixo do custo */
     html.print-pdf .impact .src { position: static; margin-top: 1.2em; }
     .count.burn { transition: color 1.2s ease, text-shadow 1.2s ease; }
     .count.burn.counting { color: var(--amber); text-shadow: 0 0 28px rgba(240, 163, 58, 0.55), 0 0 64px rgba(224, 49, 49, 0.25); animation: flicker 0.18s infinite alternate; transition: none; }
     @keyframes flicker { from { opacity: 1; } to { opacity: 0.88; } }
+    .count.pop { display: inline-block; animation: countPop 0.26s ease-out; }
+    @keyframes countPop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
 
     /* 3 · 100 pontos, 1 em âmbar */
     .dots { display: grid; grid-template-columns: repeat(20, 22px); gap: 12px; margin: 0.4em 0 1em; }
@@ -229,7 +250,7 @@
     /* sequência de precisão, fora da imagem: 0,73 → 0,76–0,79 → 0,84–0,85, seta a dizer o que se somou */
     .accuracy { display: flex; align-items: flex-start; gap: .5em; margin-top: .8em; }
     .accuracy .acc-step { flex: 0 0 auto; }
-    .accuracy .acc-n { display: block; font-size: 1.6em; font-weight: 800; letter-spacing: -.02em; }
+    .accuracy .acc-n { display: block; font-family: var(--display); font-size: 1.6em; font-weight: 800; letter-spacing: -.01em; }
     .accuracy .acc-step.final .acc-n { color: var(--amber); }
     .accuracy .acc-arrow { flex: 0 0 7em; text-align: center; padding-top: .05em; }
     .accuracy .acc-arrow .arr { display: block; font-family: var(--mono); font-size: 1.1em; color: var(--amber); }
@@ -693,7 +714,11 @@
         const t = Math.min(1, Math.max(0, (now - t0) / ms));
         el.textContent = fmt(Math.round(to * ease(t)));
         if (t < 1) requestAnimationFrame(tick);
-        else el.classList.remove('counting');
+        else {
+          el.classList.remove('counting');
+          el.classList.add('pop');
+          setTimeout(() => el.classList.remove('pop'), 260);
+        }
       };
       requestAnimationFrame(tick);
     });
