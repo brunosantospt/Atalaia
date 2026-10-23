@@ -133,6 +133,15 @@ async function main() {
   new ResizeObserver(() =>
     document.documentElement.style.setProperty('--credits-h', `${credits.offsetHeight}px`),
   ).observe(credits)
+  // The Cesium ion logo (required by its terms) sits small just under the Definições button, by its left edge.
+  const placeCredits = () => {
+    const gear = document.querySelector<HTMLElement>('.open-settings')?.getBoundingClientRect()
+    if (!gear?.width) return
+    for (const [k, v] of [['left', `${Math.round(gear.left)}px`], ['top', `${Math.round(gear.bottom + 4)}px`], ['right', 'auto'], ['bottom', 'auto'], ['transform', 'scale(.65)'], ['transform-origin', 'top left']])
+      credits.style.setProperty(k, v, 'important')
+  }
+  window.addEventListener('resize', placeCredits)
+  setInterval(placeCredits, 1000) // the HUD reflows (fonts, hidden panels): keep it under the button
 
   const spotlight = new Spotlight(scene)
   const drone = new DroneClips()
