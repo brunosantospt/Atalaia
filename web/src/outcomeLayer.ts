@@ -19,7 +19,7 @@ export class OutcomeLayer {
   private count = -1
   constructor(private viewer: Viewer, parent: HTMLElement, grid: Grid, runs: Runs) {
     this.root.className = 'outcome-legend'
-    this.root.hidden = true
+    // The legend lives in the Relatórios panel and stays there; the map reveals the footprints one by one.
     const rectangle = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
     for (const { id, area } of outcomeOrder(grid, runs)) {
       const canvas = document.createElement('canvas')
@@ -56,11 +56,7 @@ export class OutcomeLayer {
     const count = on ? Math.min(3, 1 + Math.floor((performance.now() - this.shownAt) / 400)) : 0
     if (count === this.count) return
     this.count = count
-    this.root.hidden = !on
-    this.layers.forEach((layer, i) => {
-      layer.show = i < count
-      ;(this.root.children[i] as HTMLElement).classList.toggle('visible', i < count)
-    })
+    this.layers.forEach((layer, i) => (layer.show = i < count))
     this.viewer.scene.requestRender()
   }
   destroy() {

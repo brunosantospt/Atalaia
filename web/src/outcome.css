@@ -30,3 +30,7 @@
 @media (max-width: 700px) {
   .outcome-legend { top: auto; bottom: 220px; right: 12px; font-size: 12px; }
 }
+
+/* In the Relatórios panel, under the recommendation: a plain key of the final map. */
+.outcome-host .outcome-legend { position: static; margin: 8px 0 0; padding: 8px 12px; font: 500 12px/1.7 system-ui, sans-serif; background: transparent; }
+.outcome-host .outcome-legend > div { opacity: 1; }

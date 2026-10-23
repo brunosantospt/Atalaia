@@ -38,6 +38,9 @@ export class UnitMarkers {
     viewer.scene.postRender.addEventListener(() => this.update())
   }
 
+  /** A CSS clip-path for all of them (the A | B comparison keeps each decision on its side). */
+  clip(path: string) { if (this.root.style.clipPath !== path) this.root.style.clipPath = path }
+
   set(markers: UnitMarker[]) {
     const previous = new Map(this.items.map((i) => [i.marker.id, i.element]))
     this.items = markers.map((marker) => {

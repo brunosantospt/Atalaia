@@ -46,3 +46,10 @@ body[data-error]::after {
 .cesium-viewer-bottom { display: flex; align-items: center; opacity: 1 !important; }
 .cesium-viewer-bottom .cesium-credit-expand-link { display: none !important; }
 .intro.thermal .intro-unit { opacity: 1; }
+
+/* The A | B comparison at the end of the director's cut. */
+.compare-ab { position: fixed; left: 50%; top: 96px; transform: translateX(-50%); z-index: 6; padding: 8px 18px; border: 1px solid #f76707; border-radius: 6px; background: rgba(12, 16, 22, .88); color: #fff; font: 600 14px system-ui, sans-serif; letter-spacing: .5px; cursor: pointer; transition: background .2s, box-shadow .2s; }
+.compare-ab[hidden] { display: none; }
+.compare-ab b { color: #ffa94d; }
+.compare-ab:hover, .compare-ab.on { background: #f76707; box-shadow: 0 0 16px rgba(247, 103, 7, .6); }
+.compare-ab:hover b, .compare-ab.on b { color: #fff; }

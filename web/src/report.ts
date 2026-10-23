@@ -129,12 +129,6 @@ export interface Verdict {
   by: 'buildings' | 'area' | 'tie'
 }
 
-/** One line per decision: what it burns, the buildings it reaches and the roads it cuts. */
-export function describeDecision(id: 'A' | 'B', r: Report): string {
-  const km = r.roadKm.paved + r.roadKm.track
-  return `Decisão ${id}: ${fmtHa(r.burnedHa)} ardidos · ${r.buildings} ${r.buildings === 1 ? 'edifício atingido' : 'edifícios atingidos'} · ${km ? `${fmtNumber(km, 1)} km de estradas cortadas` : 'sem estradas cortadas'}.`
-}
-
 /** "Recomenda-se a decisão B." */
 export function describeVerdict(v: Verdict): string {
   return v.pick ? `Recomenda-se a decisão ${v.pick}.` : 'As duas decisões têm resultados equivalentes.'

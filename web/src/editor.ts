@@ -25,6 +25,7 @@ import {
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   VerticalOrigin,
+  type EntityCollection,
   type Viewer,
 } from 'cesium'
 import type { Fire, NearStation } from './data'
@@ -38,7 +39,7 @@ import { lateAt, SAFETY_MIN } from './deployment'
 import { computeFWISeries } from './fwi'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
-import { describeDecision, describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
+import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { deploymentBoundary, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
@@ -198,8 +199,8 @@ const TEMPLATE = `
   <section>
     <h3>Relatório <span data-ref="reportAt"></span></h3>
     <table class="report" data-ref="report"></table>
-    <p class="note verdict" data-ref="verdict"></p>
-    <p class="note" data-ref="detail"></p>
+    <p class="recommendation" data-ref="detail"></p>
+    <div class="outcome-host" data-ref="outcomeLegend"></div>
     <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(220,224,228,0.15);display:flex;flex-direction:column;gap:6px;">
       <button type="button" data-ref="openDispatch" class="primary-btn" style="background:#2563eb;border-color:#3b82f6;width:100%;" title="Gerar e enviar despachos às forças no terreno">${ICON_CLIPBOARD} Reportar às Entidades (PSP / INEM)</button>
     </div>
@@ -354,7 +355,7 @@ export class Editor {
   private readonly agency = new CustomDataSource('agency')
   // One ring per engine on the ground, kept across redraws: its radius follows the water left without a rebuild.
   private readonly dropZones = new Map<string, { entity: Entity; shape: string; wet: () => boolean }>()
-  private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean; outline?: LonLat[] } }>()
+  private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean; outline?: LonLat[]; live?: () => { radius: number; waiting: boolean } } }>()
   private dangerTimer?: number
   /** The assignments of a decision last shown late, so that only a new one warns. */
   private lateShown: { id: string; keys: Set<string> } = { id: '', keys: new Set() }
@@ -375,6 +376,7 @@ export class Editor {
   private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; decision?: Decision; plan?: string; value: MultiAgencyDispatch } | undefined
   private readonly tip: HTMLElement
   private readonly unitMarkers: UnitMarkers
+  private readonly compareMarkers: UnitMarkers // B's units in the A | B comparison
   private readonly handler: ScreenSpaceEventHandler
   private readonly refs: Record<string, HTMLElement>
   readonly reportPanel: HTMLElement
@@ -420,6 +422,7 @@ export class Editor {
     for (const source of [this.source, this.routes, this.agency]) stabilize(source.entities)
     viewer.scene.preRender.addEventListener(() => { for (const z of this.dropZones.values()) { const on = z.wet(); if (z.entity.show !== on) z.entity.show = on } })
     this.unitMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
+    this.compareMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
     mapHover(viewer.scene.canvas, viewer.camera, (position) => this.hover(position), () => {
@@ -1888,7 +1891,6 @@ export class Editor {
     if (!r) {
       table.innerHTML = `<tr><td class="none">${this.loaded?.context ? 'A e B ainda não simulados.' : 'Sem dados OSM para este incêndio.'}</td></tr>`
       this.refs.detail.textContent = ''
-      this.refs.verdict.textContent = ''
       return
     }
     const cols = ['free', 'A', 'B'] as const
@@ -1908,8 +1910,7 @@ export class Editor {
       table.append(tr)
     }
     const j = this.judged ?? r
-    // Each decision in one line, then the recommendation alone.
-    this.refs.verdict.textContent = `${describeDecision('A', at.A)}\n${describeDecision('B', at.B)}`
+    // The table says what each decision does; below it only the recommendation, then the final map's legend.
     this.refs.detail.textContent = describeVerdict(recommend(j.A, j.B))
   }
 
@@ -1977,65 +1978,25 @@ export class Editor {
       if(!p||!ordered(a)||state.exhausted||state.waterPct<=0)continue
       const waiting=now<p.arrivalMin
       const radius=waiting?(a.unit==='crew'?28:52.5)*Math.sqrt(a.count):state.radius
-      const coverage=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,radius,waiting))
+      // Size and dash are read again every frame: the editor redraws on whole minutes, and the clock can stop
+      // mid-minute (an arrival pause), which left an arrived unit dashed until a later redraw.
+      const list=combat.lists[slot],live=()=>{
+        const m=this.playbackMinute,q=placementAt(list,m),w=!!q&&m<q.arrivalMin
+        return {waiting:w,radius:w?(a.unit==='crew'?28:52.5)*Math.sqrt(a.count):resourceAt(combat,slot,m).radius}
+      }
+      const coverage=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,radius,waiting,undefined,live))
       ;(coverage as any)._unitInfo=unitInfo(a,p.point,[a])
     }
 
-    // Every physical means gets only its current source-letter + count ID.
-    const deployed: UnitMarker[] = []
-    const ids = fieldIds(d, stations ?? [])
-    const eta = scenario ? arrivals(scenario, d) : []
-    const ecinUsed = new Set<string>()
-    for (const [slot, a] of d.assignments.entries()) {
-      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
-      if (!at) continue
-      const spec = this.sup.units[a.unit]
-      const aerial = isAerial(spec)
-      const origin = aerial ? findAirBase(a.from) : stations?.find(s => s.id === a.from)
-      const first = !ecinUsed.has(a.from)
-      if (!aerial) ecinUsed.add(a.from)
-      const dispatch = a.dispatchMin ?? scenario?.dispatchMin ?? 0
-      const departure = dispatch + (spec.turnoutMin ?? (first ? this.sup.dispatch.ecinTurnoutMin : this.sup.dispatch.volunteerTurnoutMin))
-      const route = origin && context && scenario && isRoadVehicle(spec)
-        ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, dispatch, origin, at)?.path : undefined
-      const path = origin ? [origin, ...(route ?? []), at] : [at]
-      const journey = unitJourney(path, departure, eta[slot] ?? departure)
-      const history = scenario ? placements(scenario,d,slot) : []
-      const current = () => placementAt(history,this.playbackMinute)
-      const visible = () => ordered(a) // exhausted units stay, with their fatigue badge
-      for (let number = 0; number < a.count; number++) {
-        const color = originColor(a.from, stations ?? [])
-        const arrival = eta[slot] ?? departure
-        const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
-          color, offsetX: 0, offsetY: 0, label: spec.short,
-          visible, position: () => (aerial && origin ? this.airPhase(origin, history, spec.speedKmh)?.at : undefined)
-            ?? relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
-          status: () => {
-            if (!combat) return { dry: false, tired: false }
-            const f = resourceAt(combat, slot, this.playbackMinute), on = this.playbackMinute >= f.arrival
-            return { dry: on && a.unit !== 'hebl' && a.unit !== 'avbp' && f.waterPct <= 0, tired: on && f.exhausted }
-          } }
-        const destination: UnitMarker = { ...marker, id: `${marker.id}:destination`, pending: true,
-          position: () => current()?.point ?? at, visible: () => visible() && this.playbackMinute < (current()?.arrivalMin ?? arrival),
-          eta: () => (current()?.arrivalMin ?? arrival) - this.playbackMinute }
-        for (const item of [marker, destination]) {
-          deployed.push(item)
-          const entity = entities.add({
-            position: new CallbackPositionProperty(() => { const p = item.position!(); return Cartesian3.fromDegrees(p.lon, p.lat) }, false),
-            billboard: {
-              show: new CallbackProperty(() => item.visible!(), false),
-              // DOM supplies crisp visible icons; the near-transparent billboard is the hover target.
-              image: unitIconUrl(a.unit, color), color: Color.WHITE.withAlpha(.01), width: 36, height: 36,
-              pixelOffset: new CallbackProperty(() => new Cartesian2(item.offsetX, item.offsetY), false),
-              verticalOrigin: VerticalOrigin.CENTER, heightReference: HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Infinity,
-            },
-          })
-          ;(entity as any)._unitInfo = { ...unitInfo(a, at, [a]), displayId: marker.code }
-        }
-      }
+    // In the A | B comparison at the end, both decisions' units, each clipped to its side of the split.
+    if (this.compareAt !== undefined) {
+      this.unitMarkers.set(this.markersFor(this.decisions[0]))
+      this.compareMarkers.set(this.markersFor(this.decisions[1]))
+    } else {
+      this.unitMarkers.set(this.markersFor(d, entities, unitInfo))
+      this.compareMarkers.set([])
     }
-    this.unitMarkers.set(deployed)
+    this.clipMarkers()
 
     // 5. Line being drawn
     if (this.drawing.length) {
@@ -2219,6 +2180,90 @@ export class Editor {
     }
   }
 
+  /** The units of decision `d` on the map: the vehicle (or crew, or aircraft) and, while it travels, its
+   *  destination. With `entities`, each also gets its hover target on the globe. */
+  private markersFor(d: Decision, entities?: EntityCollection, unitInfo?: (a: Assignment, point: LonLat, all: Assignment[]) => object): UnitMarker[] {
+    const { context, scenario, stations } = this.loaded ?? {}
+    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+    const combat = scenario ? cachedCombatResources(scenario, d) : undefined
+    const ordered = (a: Assignment) => this.playbackMinute >= (a.orderedMin ?? a.dispatchMin ?? scenario?.dispatchMin ?? 0)
+    // Every physical means gets only its current source-letter + count ID.
+    const deployed: UnitMarker[] = []
+    const ids = fieldIds(d, stations ?? [])
+    const eta = scenario ? arrivals(scenario, d) : []
+    const ecinUsed = new Set<string>()
+    for (const [slot, a] of d.assignments.entries()) {
+      const at = d.points[a.target] ?? d.lines[a.target]?.[0]
+      if (!at) continue
+      const spec = this.sup.units[a.unit]
+      const aerial = isAerial(spec)
+      const origin = aerial ? findAirBase(a.from) : stations?.find(s => s.id === a.from)
+      const first = !ecinUsed.has(a.from)
+      if (!aerial) ecinUsed.add(a.from)
+      const dispatch = a.dispatchMin ?? scenario?.dispatchMin ?? 0
+      const departure = dispatch + (spec.turnoutMin ?? (first ? this.sup.dispatch.ecinTurnoutMin : this.sup.dispatch.volunteerTurnoutMin))
+      const route = origin && context && scenario && isRoadVehicle(spec)
+        ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, dispatch, origin, at)?.path : undefined
+      const path = origin ? [origin, ...(route ?? []), at] : [at]
+      const journey = unitJourney(path, departure, eta[slot] ?? departure)
+      const history = scenario ? placements(scenario,d,slot) : []
+      const current = () => placementAt(history,this.playbackMinute)
+      const visible = () => ordered(a) // exhausted units stay, with their fatigue badge
+      for (let number = 0; number < a.count; number++) {
+        const color = originColor(a.from, stations ?? [])
+        const arrival = eta[slot] ?? departure
+        const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
+          color, offsetX: 0, offsetY: 0, label: spec.short,
+          visible, position: () => (aerial && origin ? this.airPhase(origin, history, spec.speedKmh)?.at : undefined)
+            ?? relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
+          status: () => {
+            if (!combat) return { dry: false, tired: false }
+            const f = resourceAt(combat, slot, this.playbackMinute), on = this.playbackMinute >= f.arrival
+            return { dry: on && a.unit !== 'hebl' && a.unit !== 'avbp' && f.waterPct <= 0, tired: on && f.exhausted }
+          } }
+        const destination: UnitMarker = { ...marker, id: `${marker.id}:destination`, pending: true,
+          position: () => current()?.point ?? at, visible: () => visible() && this.playbackMinute < (current()?.arrivalMin ?? arrival),
+          eta: () => (current()?.arrivalMin ?? arrival) - this.playbackMinute }
+        for (const item of [marker, destination]) {
+          deployed.push(item)
+          if (!entities || !unitInfo) continue
+          const entity = entities.add({
+            position: new CallbackPositionProperty(() => { const p = item.position!(); return Cartesian3.fromDegrees(p.lon, p.lat) }, false),
+            billboard: {
+              show: new CallbackProperty(() => item.visible!(), false),
+              // DOM supplies crisp visible icons; the near-transparent billboard is the hover target.
+              image: unitIconUrl(a.unit, color), color: Color.WHITE.withAlpha(.01), width: 36, height: 36,
+              pixelOffset: new CallbackProperty(() => new Cartesian2(item.offsetX, item.offsetY), false),
+              verticalOrigin: VerticalOrigin.CENTER, heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+          })
+          ;(entity as any)._unitInfo = { ...unitInfo(a, at, [a]), displayId: marker.code }
+        }
+      }
+    }
+    return deployed
+  }
+
+  /** Comparing A and B at the end: the split's position (0 all B … 1 all A), or undefined when not comparing. */
+  private compareAt: number | undefined
+  /** Where the final map's legend goes: the Relatórios panel, under the recommendation. */
+  get outcomeLegendHost(): HTMLElement { return this.refs.outcomeLegend }
+
+  setCompare(at: number | undefined) {
+    const was = this.compareAt
+    this.compareAt = at
+    // Rings and routes belong to one decision: hidden while both are on screen.
+    this.source.show = this.routes.show = at === undefined
+    if ((was === undefined) !== (at === undefined)) this.draw()
+    else this.clipMarkers()
+  }
+  private clipMarkers() {
+    const at = this.compareAt
+    this.unitMarkers.clip(at === undefined ? '' : `inset(0 ${(100 - at * 100).toFixed(2)}% 0 0)`)
+    this.compareMarkers.clip(at === undefined ? '' : `inset(0 0 0 ${(at * 100).toFixed(2)}%)`)
+  }
+
   /** An aircraft at work flies base → drop → base again and again (refilling each time), from its arrival
    *  until its next order. `wet`: over the drop or just after, while the drop shows on the ground.
    *  Undefined before it first arrives, when the journey shows it on its way. */
@@ -2252,15 +2297,16 @@ export class Editor {
   }
 
   /** A ring whose positions follow its state: drawn at the ground height of the centre, seen through the relief. */
-  private coverageRing(key: string, at: LonLat, radius: number, waiting: boolean, outline?: LonLat[]) {
+  private coverageRing(key: string, at: LonLat, radius: number, waiting: boolean, outline?: LonLat[], live?: () => { radius: number; waiting: boolean }) {
     let ring = this.coverageRings.get(key)
     if (!ring) {
-      const state = { lon: NaN, lat: NaN, h: 0, radius, waiting, outline }
+      const state: { lon: number; lat: number; h: number; radius: number; waiting: boolean; outline?: LonLat[]; live?: () => { radius: number; waiting: boolean } } = { lon: NaN, lat: NaN, h: 0, radius, waiting, outline, live }
       // Each vertex sits on the ground under it (a dynamic line cannot be clamped or drawn through the
       // relief), recomputed only when the ring moves or changes size.
       const globe = this.viewer.scene.globe
       let memo = { key: '', positions: [] as Cartesian3[] }
       const circle = () => {
+        if (state.live) Object.assign(state, state.live())
         const key = `${state.lon},${state.lat},${state.radius.toFixed(1)},${state.outline?.map((q) => q.lon.toFixed(6) + q.lat.toFixed(6)).join()}`
         if (memo.key === key) return memo.positions
         let missing = false
@@ -2277,7 +2323,7 @@ export class Editor {
         return positions
       }
       const material = () => new PolylineDashMaterialProperty({ color: WET, dashLength: 12,
-        gapColor: new CallbackProperty(() => state.waiting ? Color.TRANSPARENT : WET, false) })
+        gapColor: new CallbackProperty(() => (state.live ? state.live().waiting : state.waiting) ? Color.TRANSPARENT : WET, false) })
       const entity = new Entity({ polyline: { positions: new CallbackProperty(circle, false), width: 2,
         material: material(), depthFailMaterial: material() } })
       ring = { entity, state }
@@ -2291,6 +2337,7 @@ export class Editor {
     state.radius = radius
     state.waiting = waiting
     state.outline = outline
+    state.live = live
     return ring.entity
   }
 

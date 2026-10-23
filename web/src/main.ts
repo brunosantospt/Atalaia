@@ -136,6 +136,15 @@ async function main() {
 
   const spotlight = new Spotlight(scene)
   const drone = new DroneClips()
+  // The end's A | B comparison: a button over the final scene; the split's handle then moves between them.
+  const compare = { on: false, button: document.createElement('button') }
+  compare.button.type = 'button'
+  compare.button.className = 'compare-ab'
+  compare.button.hidden = true
+  compare.button.innerHTML = 'Comparar <b>A</b> | <b>B</b>'
+  compare.button.title = 'Divide o ecrã: A à esquerda, B à direita. Arrastar a divisória para comparar.'
+  compare.button.addEventListener('click', () => { compare.on = !compare.on; scene.requestRender() })
+  document.body.append(compare.button)
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -590,7 +599,7 @@ async function main() {
     editor.setRuns(runs, reports, judged)
     alerts = prepareAlerts({ scenario, context, decisions: [a, b], runs })
     replay.outcome?.destroy()
-    replay.outcome = new OutcomeLayer(viewer, overlay, grid, runs)
+    replay.outcome = new OutcomeLayer(viewer, editor.outcomeLegendHost, grid, runs)
     void refreshDirector()
   }
 
@@ -773,11 +782,17 @@ async function main() {
     renderedHours = frame.hours
     // The split shows in the director's shots, or through every shot on key A.
     const finale = !editor.open && frame.shot.kind === 'outcome'
-    const splitOn = !finale && !!split
-    split?.presentation(!editor.open && replay.showSplit)
+    // At the end, "Comparar A | B" swaps the three footprints for A and B side by side, fire and units.
+    const comparing = finale && compare.on && !!split
+    compare.button.hidden = !finale || !split
+    compare.button.classList.toggle('on', comparing)
+    const splitOn = (!finale || comparing) && !!split
+    split?.presentation(!editor.open && (replay.showSplit || comparing))
+    if (split && !split.moved) split.moved = (at) => { if (compare.on) editor.setCompare(at) }
+    editor.setCompare(comparing ? split!.position : undefined)
     const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
     if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
-    replay.outcome?.show(finale)
+    replay.outcome?.show(finale && !comparing)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     // With the drawer open and nothing simulated yet, the free run is what the means are up against.
     const freeOn = !finale && !splitOn && (frame.shot.simulated || editor.open)

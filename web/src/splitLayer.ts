@@ -77,6 +77,8 @@ export class SplitLayer {
   private root: HTMLElement | undefined // the handle and labels, only with two sides
   /** Where the split stands, 0 (all B) to 1 (all A). */
   position = 0.5
+  /** Called on every move of the split (the units follow it in the comparison). */
+  moved?: (position: number) => void
 
   constructor(
     private readonly viewer: Viewer,
@@ -120,7 +122,7 @@ export class SplitLayer {
       handle.setPointerCapture(e.pointerId)
     })
     handle.addEventListener('pointermove', (e) => {
-      if (dragging) this.setPosition(Math.min(Math.max(e.clientX / window.innerWidth, 0.05), 0.95))
+      if (dragging) this.setPosition(Math.min(Math.max(e.clientX / window.innerWidth, 0), 1))
     })
     handle.addEventListener('pointerup', () => (dragging = false))
     this.setPosition(this.position)
@@ -136,6 +138,7 @@ export class SplitLayer {
     this.position = Math.min(Math.max(position, 0), 1)
     this.root.style.setProperty('--split', `${(this.position * 100).toFixed(2)}%`)
     this.viewer.scene.splitPosition = this.position
+    this.moved?.(this.position)
     this.viewer.scene.requestRender()
   }
 
