@@ -31,10 +31,10 @@ export class MeansGauge {
   constructor(parent: HTMLElement, private readonly input: MeansInput, home: () => { x: number; y: number }, moved?: () => void) {
     this.el.className = 'float-card means-card'
     this.el.setAttribute('aria-label', 'Meios')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Meios</div>
-      <button type="button" class="float-drag" aria-label="Mover meios. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover meios: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <div class="known-value"><strong>—</strong></div>
       <div class="means-bar" aria-hidden="true"><i></i></div>
       <div class="known-sub">&nbsp;</div>`

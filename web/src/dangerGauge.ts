@@ -39,10 +39,10 @@ export class DangerGauge {
     this.forecast = input.forecastWeather ? computeFWISeries(input.forecastWeather) : this.real
     this.el.className = 'float-card danger-card'
     this.el.setAttribute('aria-label', 'Perigo meteorológico')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Perigo</div>
-      <button type="button" class="float-drag" aria-label="Mover perigo. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover perigo: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <div class="danger-steps" aria-hidden="true">${LEVELS.map(() => '<i></i>').join('')}</div>
       <div class="known-value"><strong>—</strong> FWI</div>
       <div class="known-sub">&nbsp;</div>`

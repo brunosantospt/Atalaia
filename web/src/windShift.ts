@@ -157,7 +157,7 @@ export class WindShiftWatch {
       </div>`
     el.querySelector('.wind-line')!.textContent = windLine(w)
     el.querySelector('.wind-text')!.textContent = w.alert
-    el.querySelector('.wind-means')!.textContent = `${headLine(w)} Reveja os meios e carregue em Simular com o vento novo para atualizar o modelo rápido.`
+    el.querySelector('.wind-means')!.textContent = `${headLine(w)} Revisão dos meios e nova simulação com o vento atual.`
     el.querySelector('.wind-review')!.addEventListener('click', () => this.reallocate())
     document.body.append(el)
     this.modal = el

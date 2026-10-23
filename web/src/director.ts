@@ -67,7 +67,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
   const events: Event[] = [
     { minute: 0, kind: 'ignition', word: 'Ignição', caption: 'Início do incêndio. A previsão avança com o relógio.' },
     ...(selected && eta.length ? [] : [{ minute: detection.droneMin, kind: 'response' as const, word: 'Decidir resposta',
-      caption: 'Coloque os meios e carregue em Simular modelo rápido.', gate: runs ? undefined : 'decision' as const }]),
+      caption: 'Colocação dos meios e simulação com o modelo rápido.', gate: runs ? undefined : 'decision' as const }]),
     { minute: detection.satelliteMin, kind: 'checkpoint', word: 'Verificação satélite', caption: 'Verificação térmica no instante previsto para o satélite (hipótese do cenário).' },
   ]
   if (selected && eta.length) {
@@ -80,13 +80,13 @@ export function incidentShots(input: IncidentInput): Shot[] {
   if (runs) {
     const control = end.minute !== null ? Math.max(first, end.minute) : Math.min(stop, Math.max(first, detection.satelliteMin) + 5)
     events.push({ minute: control, kind: 'control', word: end.minute !== null && end.minute <= stop ? 'Fogo controlado' : 'Combate em curso',
-      caption: end.minute !== null && end.minute <= stop ? 'A previsão do modelo rápido deixa de atingir novas células; sem crescimento na última hora do cálculo.' : 'O modelo ainda não confirma contenção. Acompanhe a frente e ajuste a resposta.' })
+      caption: end.minute !== null && end.minute <= stop ? 'A previsão do modelo rápido deixa de atingir novas células; sem crescimento na última hora do cálculo.' : 'O modelo ainda não confirma contenção; a resposta pode ser ajustada.' })
   }
   if (shift !== undefined && shift <= stop)
-    events.push({ minute: shift, kind: 'incident', word: 'Mudança de vento', caption: 'Reveja as decisões e carregue em Simular com o vento novo.', gate: !post ? 'wind' : undefined })
+    events.push({ minute: shift, kind: 'incident', word: 'Mudança de vento', caption: 'Revisão das decisões e nova simulação com o vento atual.', gate: !post ? 'wind' : undefined })
   if (post && shift !== undefined && stop > shift + 5 && (end.minute === null || end.minute > shift + 5))
     events.push({ minute: shift + 5, kind: 'control', word: 'Resposta revista',
-      caption: `Nova previsão do modelo rápido com a decisão ${id}. Acompanhe a frente até confirmar contenção.` })
+      caption: `Nova previsão do modelo rápido com a decisão ${id}. Acompanhamento da frente até à contenção.` })
   // End points include real milestones, so none can be skipped by an accelerated clock.
   const times = new Set([0, stop, ...(firstTarget && first + 5 < stop ? [first + 5] : []), ...dep.filter(m => m <= stop), ...events.filter(e => e.minute <= stop).map(e => e.minute)])
   for (let m = 5; m < stop; m += MAX_STEP_MIN) times.add(m)
@@ -116,7 +116,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
   // Always show the aftermath; distinguish the forecast horizon from confirmed containment.
   if ((post || shift === undefined) && runs) {
     const finalPath = outcomePose(input)
-    shots.push({ ...shots.at(-1)!, kind: 'outcome', word: 'Área ardida', title: 'Sem decisão · decisão A · decisão B',
+    shots.push({ ...shots.at(-1)!, kind: 'outcome', word: 'Área ardida', title: 'Sem decisão · Decisão A · Decisão B',
       caption: `As três áreas sobrepõem-se da maior para a menor. ${end.minute === null ? 'Fim da previsão; contenção não confirmada.' : 'Contenção prevista pelo modelo.'}`,
       milestone: true, hours: stop / 60, hoursTo: stop / 60, moveS: 1.5, holdS: 4, gate: undefined,
       path: finalPath, spot: finalPath[0].range * Math.tan(fovy / 2) * 1.5, decision: undefined })

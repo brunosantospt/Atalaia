@@ -29,10 +29,10 @@ export class DetectionGauge {
     const at = (m: number) => `${(100 * m / this.spanMin).toFixed(1)}%`
     this.el.className = 'float-card detection-card'
     this.el.setAttribute('aria-label', 'Deteção')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Deteção</div>
-      <button type="button" class="float-drag" aria-label="Mover deteção. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover deteção: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <div class="detection-line" aria-hidden="true">
         <i class="detection-drone" style="left: ${at(droneMin)}"></i>
         <i class="detection-sat" style="left: ${at(satelliteMin)}"></i>

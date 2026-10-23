@@ -62,7 +62,7 @@ export class IntensityGauge {
     this.bands = bandsOf(sup)
     this.el.className = 'float-card intensity-card'
     this.el.setAttribute('aria-label', 'Intensidade da frente')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     // The bands of one level are one arc; a notch marks where hand tools stop holding.
     const arcs: { from: number; to: number; level: Level }[] = []
     this.bands.forEach((b, k) => {
@@ -74,7 +74,7 @@ export class IntensityGauge {
     const notch = frac(this.bands[0].upTo)
     this.el.innerHTML = `
       <div class="float-title">Intensidade</div>
-      <button type="button" class="float-drag" aria-label="Mover intensidade. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover intensidade: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <svg class="intensity-dial" viewBox="8 6 104 58" aria-hidden="true">
         ${arcs.map((a, k) => `<path class="intensity-band ${a.level}" d="M${at(k ? a.from + GAP / 2 : 0)}A${R} ${R} 0 0 1 ${at(k < arcs.length - 1 ? a.to - GAP / 2 : 1)}"/>`).join('')}
         <path class="intensity-notch" d="M${at(notch, R - 5)}L${at(notch, R + 5)}"/>

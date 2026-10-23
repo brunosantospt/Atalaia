@@ -488,6 +488,7 @@
   color: var(--amber);
 }
 .hud .editor .verdict {
+  white-space: pre-line;
   color: var(--ink);
 }
 
@@ -718,3 +719,4 @@
 .hud .editor li.assignment .move-unit:hover:not(:disabled) { background: #392c18; border-color: #f4ad42; }
 .hud .editor li.assignment .move-unit:disabled { opacity: .45; cursor: default; }
 .hud .editor li.assignment .move-why { margin: 0; font-size: 10.5px; color: #8fa3b5; }
+.hud .editor [data-ref="detail"] { color: var(--ink); font-weight: 600; }

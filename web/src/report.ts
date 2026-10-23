@@ -123,27 +123,25 @@ export function makeReport(grid: Grid, context: Context, run: Run, minutes = run
   }
 }
 
-/** Which of two decisions to recommend: the one that reaches fewer places, then the one that burns less. */
+/** Which of two decisions to recommend: the one that reaches fewer buildings, then the one that burns less. */
 export interface Verdict {
   pick: 'A' | 'B' | null // null: nothing tells them apart
-  by: 'places' | 'area' | 'tie'
+  by: 'buildings' | 'area' | 'tie'
 }
 
-/** "Recomendação: A · não atinge nenhuma aldeia em vez de 4 às 6,0 h" */
-export function describeVerdict(v: Verdict, a: Report, b: Report): string {
-  if (!v.pick) return `Recomendação: empate · ${a.places.length} aldeias e ${fmtHa(a.burnedHa)} em ambas`
-  const [mine, other] = v.pick === 'A' ? [a, b] : [b, a]
-  const why =
-    v.by === 'places'
-      ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
-      : `as mesmas aldeias, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
-  return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
+/** One line per decision: what it burns, the buildings it reaches and the roads it cuts. */
+export function describeDecision(id: 'A' | 'B', r: Report): string {
+  const km = r.roadKm.paved + r.roadKm.track
+  return `Decisão ${id}: ${fmtHa(r.burnedHa)} ardidos · ${r.buildings} ${r.buildings === 1 ? 'edifício atingido' : 'edifícios atingidos'} · ${km ? `${fmtNumber(km, 1)} km de estradas cortadas` : 'sem estradas cortadas'}.`
 }
 
-const placesText = (n: number) => (n === 0 ? 'não atinge nenhuma aldeia' : `atinge ${n} ${n === 1 ? 'aldeia' : 'aldeias'}`)
+/** "Recomenda-se a decisão B." */
+export function describeVerdict(v: Verdict): string {
+  return v.pick ? `Recomenda-se a decisão ${v.pick}.` : 'As duas decisões têm resultados equivalentes.'
+}
 
 export function recommend(a: Report, b: Report): Verdict {
-  if (a.places.length !== b.places.length) return { pick: a.places.length < b.places.length ? 'A' : 'B', by: 'places' }
+  if (a.buildings !== b.buildings) return { pick: a.buildings < b.buildings ? 'A' : 'B', by: 'buildings' }
   if (Math.abs(a.burnedHa - b.burnedHa) >= 1) return { pick: a.burnedHa < b.burnedHa ? 'A' : 'B', by: 'area' }
   return { pick: null, by: 'tie' }
 }

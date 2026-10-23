@@ -642,10 +642,10 @@ async function main() {
    *  or when the incident has happened and nothing has been run with the new wind. */
   function simulateState(): SimulateState {
     if (!replay) return { label: 'Simular', enabled: false, note: '' }
-    if (editor.searching) return { label: 'Simular', enabled: false, note: 'Termine a procura opcional de B antes de simular.' }
+    if (editor.searching) return { label: 'Simular', enabled: false, note: 'A procura de B tem de terminar antes de simular.' }
     const sim = replay.sims[replay.phase]
     if (replay.phase === 'post' && !sim)
-      return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
+      return { label: 'Simular', enabled: true, note: 'O vento mudou. Fogo em pausa: simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
       return { label: 'Simular', enabled: false, note: '' }
     return { label: 'Simular', enabled: true, quiet: true,

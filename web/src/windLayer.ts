@@ -85,10 +85,10 @@ export class WindLayer {
   constructor(private readonly viewer: Viewer, private readonly parent: HTMLElement, ignition: LonLat) {
     this.el.className = 'float-card wind-compass'
     this.el.setAttribute('aria-label', 'Bússola do vento')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Vento</div>
-      <button type="button" class="float-drag" aria-label="Mover bússola do vento. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover bússola do vento: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <svg class="wind-dial" viewBox="0 0 120 120" aria-hidden="true">
         <circle cx="60" cy="60" r="52" class="wind-bezel"/>
         <g class="wind-rose">

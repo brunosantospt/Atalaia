@@ -18,7 +18,7 @@ export function relocationPosition(list:Placement[],minute:number):LonLat|undefi
 }
 export function addPlacement(s:Scenario,d:Decision,slot:number,point:LonLat,minute:number,path?:LonLat[]) {
  const a=d.assignments[slot],list=placements(s,d,slot),last=list.at(-1)!
- if(minute<last.arrivalMin)throw new Error('Aguarde a chegada antes de criar outra colocação.')
+ if(minute<last.arrivalMin)throw new Error('Nova colocação só depois da chegada.')
  const speed=a.unit==='crew'?4:s.suppression.units[a.unit].speedKmh
  const route=path?.length?path:[last.point,point]
  const metres=route.slice(1).reduce((sum,p,i)=>sum+distanceM(route[i],p),0)
@@ -40,7 +40,7 @@ export function editPlacement(s:Scenario,d:Decision,slot:number,index:number,poi
  const speed=a.unit==='crew'?4:s.suppression.units[a.unit].speedKmh
  for(let i=Math.max(1,index);i<list.length;i++) {
   const previous=list[i-1],p=list[i]
-  if(p.orderedMin<previous.arrivalMin)throw new Error('Esta alteração sobrepõe viagens. Edite primeiro a ordem seguinte.')
+  if(p.orderedMin<previous.arrivalMin)throw new Error('Esta alteração sobrepõe viagens; a ordem seguinte tem de ser editada primeiro.')
   const route=routeFor?.(previous.point,p.point,p.orderedMin)??[previous.point,p.point]
   p.path=route
   p.arrivalMin=p.orderedMin+route.slice(1).reduce((sum,q,k)=>sum+distanceM(route[k],q),0)/1000/Math.max(1,speed)*60

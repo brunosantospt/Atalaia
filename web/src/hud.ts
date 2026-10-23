@@ -101,8 +101,8 @@ const TEMPLATE = `
     <div><label>Hdg</label><span data-ref="hdg"></span></div>
     <div><label>Pitch</label><span data-ref="pitch"></span></div>
     <div><label>Rng</label><span data-ref="rng"></span></div>
-    <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clica para copiar."></span></div>
-    <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clica para copiar."></span></div>
+    <div><label>Mira</label><span data-ref="coordDMS" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas DMS da mira, ao centro do ecrã. Clicar para copiar."></span></div>
+    <div><label>GPS</label><span data-ref="coordDec" style="font-size:8.5px;letter-spacing:0.02em;" title="Coordenadas GPS decimais da mira, ao centro do ecrã. Clicar para copiar."></span></div>
   </section>
   <button type="button" class="simulate-hud" data-ref="simulate" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
   <button type="button" class="editor-edge-toggle" data-ref="editorToggle" title="Abrir menu de edição (E)">
@@ -127,7 +127,7 @@ const TEMPLATE = `
       </span>
       <span class="nav-label">Ignição</span>
     </button>
-    <div class="bottom-compass" data-ref="bottomCompass" title="Rosa dos Ventos: Aponta para o Norte Geográfico em tempo real. Clica para reorientar a 0°">
+    <div class="bottom-compass" data-ref="bottomCompass" title="Rosa dos Ventos: Aponta para o Norte Geográfico em tempo real. Clicar para orientar a norte">
       <div class="compass-dial" data-ref="compassDial">
         <svg class="compass-svg" viewBox="0 0 56 56" width="52" height="52" fill="none">
           <circle cx="28" cy="28" r="25.5" stroke="rgba(241, 245, 249, 0.4)" stroke-width="1.3" fill="none"/>
@@ -150,7 +150,7 @@ const TEMPLATE = `
     </div>
   </div>
   <div class="hud-alert-container" data-ref="alertContainer" hidden>
-    <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta Tático: Clica para ver recomendação de Meios Aéreos">
+    <button type="button" class="hud-alert-badge" data-ref="alertBadge" title="Alerta tático: recomendação de meios aéreos">
       <span class="hazard-icon" data-ref="alertIcon">${ICON_HAZARD}</span>
     </button>
     <div class="hud-alert-popover" data-ref="alertPopover" hidden>
@@ -367,7 +367,7 @@ export class Hud {
             ⚠️ ${dispatch.inem.blockedRoads.length} vias interditas a ambulâncias
           </div>
         `
-        : '<div class="briefing-item">PMA não ativado. Clica em "+ Ponto Socorro" na Proteção Civil.</div>'
+        : '<div class="briefing-item">PMA não ativado. Ativação em "+ Ponto Socorro", na Proteção Civil.</div>'
     }
   }
 
@@ -411,8 +411,8 @@ export class Hud {
         this.refs.alertBadge.classList.toggle('emergency', emergency)
         this.refs.alertBadge.classList.add('pulsing')
         this.refs.alertBadge.title = emergency
-          ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · Clica para ver recomendação`
-          : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · Clica para ver recomendação`
+          ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · ver recomendação`
+          : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · ver recomendação`
 
         this.refs.popoverTitle.innerHTML = `<span class="title-svg">${ICON_HAZARD}</span> ${
           emergency ? 'ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO' : 'RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
@@ -667,7 +667,7 @@ class AlertStack {
     item.alert = alert
     if (item.title.textContent !== alert.title) item.title.textContent = alert.title
     if (item.detail.textContent !== alert.detail) item.detail.textContent = alert.detail
-    const tip = [alert.detail, alert.source, alert.at ? 'Clica para centrar a câmara.' : ''].filter(Boolean).join('\n\n')
+    const tip = [alert.detail, alert.source, alert.at ? 'Clicar para centrar a câmara.' : ''].filter(Boolean).join('\n\n')
     if (item.li.title !== tip) item.li.title = tip
     item.li.classList.toggle('located', !!alert.at)
   }

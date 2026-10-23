@@ -36,7 +36,7 @@ import { lateAt, SAFETY_MIN } from './deployment'
 import { computeFWISeries } from './fwi'
 import { diffDecisions, diffLines, groundOf, ILS_NAME, type Change, type LineChange, type Progress, type Result, type Score } from './optimize'
 import type { IlsReply, IlsRequest } from './optimize.worker'
-import { describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
+import { describeDecision, describeEnd, describeVerdict, fireEnd, makeReport, recommend, type Report } from './report'
 import { deploymentBoundary, type DeploymentSelection } from './stationRings'
 import { findSafeRoute } from './routing'
 import { mapHover } from './mapHover'
@@ -148,7 +148,7 @@ const TEMPLATE = `
   </section>
   <section class="ils top-ils">
     <h3>Proposta Decisão B</h3>
-    <button type="button" data-ref="ils" class="primary-btn ils-btn" title="Procura uma proposta B com os meios de A durante até 10 s. Substitui o plano B apenas ao carregar neste botão; depois carregue em Simular modelo rápido."></button>
+    <button type="button" data-ref="ils" class="primary-btn ils-btn" title="Procura, até 10 s, uma proposta B com os meios de A. Substitui B; segue-se a simulação com o modelo rápido."></button>
     <p class="note" data-ref="ilsNote"></p>
     <details class="ils-details" data-ref="ilsDetails" hidden>
       <summary data-ref="ilsSummary">Ver proposta</summary>
@@ -443,9 +443,9 @@ export class Editor {
       label.textContent = id === 'crew' ? 'Brigada' : spec.short
       button.append(icon, label)
       const hint = id === 'vttu' ? `Cisterna · ${spec.waterL?.toLocaleString('pt-PT')} L. Apoia VFCI num raio de 300 m e repõe água nas equipas próximas.`
-        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Proteção cresce de 53 até 300 m após a chegada; reforços alargam a cobertura. Coloque num acesso seguro; uma cisterna próxima prolonga o apoio.`
+        : id === 'vfci' ? `VFCI · ${spec.people} operacionais. Proteção cresce de 53 até 300 m após a chegada; reforços alargam a cobertura. Posição num acesso seguro; uma cisterna próxima prolonga o apoio.`
         : id === 'crew' ? `Brigada · ${spec.people} operacionais. Proteção cresce de 28 até 160 m após a chegada; reforços alargam a cobertura. Pode atuar fora das estradas.`
-        : `${spec.name} · apoio aéreo. Escolha a base e o ponto de intervenção; a chegada depende da distância e da mobilização.`
+        : `${spec.name} · apoio aéreo. Base e ponto de intervenção à escolha; a chegada depende da distância e da mobilização.`
       button.addEventListener('mouseenter', () => this.showTip(button, hint))
       button.addEventListener('focus', () => this.showTip(button, hint))
       button.addEventListener('mouseleave', () => this.hideTip())
@@ -658,7 +658,7 @@ export class Editor {
     this.setTool('drops')
     const baseObj = findAirBase(this.fromId)
     this.refs.hint.classList.remove('danger', 'late')
-    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto! Clica no mapa para os vértices da linha aérea de descargas (duplo clique ou Enter conclui).`
+    this.refs.hint.textContent = `✓ ${this.sup.units[chosenUnit].name} (${chosenUnit.toUpperCase()}) da base ${baseObj?.short ?? 'mais próxima'} pronto. Vértices da linha de descargas no mapa; duplo clique ou Enter conclui.`
   }
 
   /** The clock and the hour slider end at this minute (main.ts: the cut of the runs, or when they are out). */
@@ -750,7 +750,7 @@ export class Editor {
     const name = base?.short ?? station?.short ?? from
     this.setTool(null)
     this.refs.hint.classList.add('danger')
-    this.refs.hint.textContent = `${name} já não tem ${unit.short} disponíveis nesta decisão: retira um do terreno ou escolhe outr${base ? 'a base aérea' : 'o quartel'}.`
+    this.refs.hint.textContent = `${name} sem ${unit.short} disponíveis nesta decisão: retirar um do terreno ou usar outr${base ? 'a base aérea' : 'o quartel'}.`
     return 0
   }
 
@@ -800,10 +800,10 @@ export class Editor {
       this.refs.hint.textContent = ''
     } else if (tool === 'point') {
       this.refs.hint.textContent = isAerial(unit)
-        ? `Clica no mapa onde o ${unit.short} descarrega. Escolhe outra vez o meio para parar.`
+        ? `Ponto de descarga do ${unit.short}: clicar no mapa. Selecionar de novo o meio termina.`
         : isRoadVehicle(unit)
-          ? `Clica no mapa: o ${unit.short} fica no ponto de acesso mais próximo protege uma área circular. Escolhe outra vez o meio para parar.`
-          : `Clica em qualquer ponto do terreno para colocar a equipa apeada, sem alinhar à estrada. Escolhe outra vez o meio para parar.`
+          ? `Clicar no mapa: o ${unit.short} fica no acesso mais próximo e protege uma área circular. Selecionar de novo o meio termina.`
+          : `Um clique em qualquer ponto do terreno coloca a equipa apeada, fora da estrada. Selecionar de novo o meio termina.`
     }
     this.drawAccess()
     this.draw()
@@ -852,10 +852,10 @@ export class Editor {
       this.refs.hint.classList.remove('danger', 'late')
       this.refs.hint.textContent =
         len === 1
-          ? '📍 1º vértice colocado no mapa. Clica para colocar o próximo vértice da linha.'
+          ? '1.º vértice colocado. Clicar para o vértice seguinte.'
           : this.tool === 'line'
-            ? '📍 Primeiro clique: posição da equipa. Segundo clique: direção da sua linha de 100 m.'
-            : '📍 Clica no mapa para colocar os vértices da linha aérea de descargas.'
+            ? 'Primeiro clique: posição da equipa. Segundo clique: direção da linha de 100 m.'
+            : 'Clicar no mapa para os vértices da linha de descargas.'
     } else {
       const lenM = this.tool === 'line' ? demoLineLength({ unit: 'crew' }) : lineLengthM(this.drawing)
       finishBtn.disabled = false
@@ -863,7 +863,7 @@ export class Editor {
       finishBtn.title = 'Concluir traçado e registar linha nos meios no terreno'
 
       this.refs.hint.classList.remove('danger', 'late')
-      this.refs.hint.textContent = `📍 ${len} vértices · ${fmtNumber(lenM)} m por meio. Clica em "✓ Concluir Linha", duplo clique no mapa, ou Enter.`
+      this.refs.hint.textContent = `📍 ${len} vértices · ${fmtNumber(lenM)} m por meio. Conclui com "✓ Concluir Linha", duplo clique ou Enter.`
     }
   }
 
@@ -1064,7 +1064,7 @@ export class Editor {
     if (!meeting) return true
     const from = this.from(this.loaded.stations)
     const station = this.loaded.stations.find((s) => s.id === from)
-    const text = `O fogo interceta os meios de ${station?.short ?? from}: chega a este ponto às T+${Math.round(meeting.fireMin)} min e os meios só às T+${Math.round(meeting.meansMin)} min. Escolhe um ponto fora do tracejado.`
+    const text = `O fogo interceta os meios de ${station?.short ?? from}: chega a este ponto às T+${Math.round(meeting.fireMin)} min e os meios só às T+${Math.round(meeting.meansMin)} min. É preciso um ponto fora da zona cinzenta.`
     if (this.dangerTimer !== undefined) window.clearTimeout(this.dangerTimer)
     this.refs.hint.classList.add('danger')
     this.refs.hint.textContent = text
@@ -1099,7 +1099,7 @@ export class Editor {
     }
 
     this.refs.hint.classList.add('danger')
-    this.refs.hint.innerHTML = `<span class="danger-badge">ZONA ATIVA DE FOGO</span> Impossível posicionar meios! O fogo atingiu este ponto aos <b>T+${Math.round(arrivalMin)} min</b> (hora atual: T+${Math.round(this.minutes)} min). Risco de encurralamento!`
+    this.refs.hint.innerHTML = `<span class="danger-badge">ZONA ATIVA DE FOGO</span> Posicionamento impossível. O fogo atingiu este ponto aos <b>T+${Math.round(arrivalMin)} min</b> (hora atual: T+${Math.round(this.minutes)} min). Risco de encurralamento!`
 
     this.hazards.entities.removeAll()
     this.hazards.entities.add({
@@ -1213,7 +1213,7 @@ export class Editor {
       : access
         ? `Ponto no acesso mais próximo (${roadName(context!, access.road)}), a ${fmtNumber(distanceM(p, point))} m do clique.`
         : this.unit === 'crew' ? 'Equipa apeada no ponto escolhido, fora ou dentro da rede de acessos.'
-          : `Sem estrada a menos de ${SNAP_M} m: o ponto ficou onde clicaste.`
+          : `Sem estrada a menos de ${SNAP_M} m: o ponto fica no local do clique.`
     this.commit()
   }
 
@@ -1239,7 +1239,7 @@ export class Editor {
     this.drawing = []
     this.setTool(null)
     this.refs.hint.classList.remove('danger', 'late')
-    this.refs.hint.textContent = `✓ ${task === 'line' ? 'Linha apeada' : 'Linha aérea'} de ${fmtNumber(lenM)} m registada! Adicionada aos Meios no terreno.`
+    this.refs.hint.textContent = `✓ ${task === 'line' ? 'Linha apeada' : 'Linha aérea'} de ${fmtNumber(lenM)} m registada nos meios no terreno.`
     this.commit()
   }
 
@@ -1310,7 +1310,7 @@ export class Editor {
     }
     this.refs.hint.classList.remove('danger')
     this.refs.hint.classList.add('late')
-    this.refs.hint.innerHTML = `<span class="late-badge">chega tarde</span> O fogo livre chega ${where} aos <b>T+${Math.round(fireMin)} min</b> e o ${unit.short} ${when}. Fica no plano: é só um aviso.`
+    this.refs.hint.innerHTML = `<span class="late-badge">chega tarde</span> O fogo livre chega ${where} aos <b>T+${Math.round(fireMin)} min</b> e o ${unit.short} ${when}. Mantém-se no plano: apenas um aviso.`
   }
 
   /** B as the search starts it: A's own plan. */
@@ -1414,16 +1414,16 @@ export class Editor {
     if (!done) {
       note.textContent = !this.loaded?.context
         ? 'Sem dados OSM para procurar uma proposta.'
-        : !forecastReady ? 'Simule o modelo rápido antes de pedir uma proposta B.'
+        : !forecastReady ? 'Proposta B disponível depois de simular o modelo rápido.'
         : canMove ? 'Propõe novas colocações a partir da hora selecionada, mantendo o passado e os recursos. Substitui B.'
-        : 'Adicione meios a A para poder pedir uma proposta B.'
+        : 'Proposta B disponível depois de colocar meios em A.'
       return
     }
     const { result, changes } = done
     const hours = fmtNumber(Math.min(this.loaded?.scenario.durationMin ?? ILS_HORIZON_MIN, ILS_HORIZON_MIN) / 60)
     const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
     if (!result.improved) {
-      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos planos calculados batem a decisão A neste modelo.`
+      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos planos calculados bate a decisão A neste modelo.`
       return
     }
     const saved = [
@@ -1772,14 +1772,14 @@ export class Editor {
         edit.title=`Editar colocação ${index+1}`;edit.setAttribute('aria-label',edit.title)
         edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></svg>'
         edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
-        edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Escolha o destino corrigido no mapa. Esc para cancelar.'})
+        edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Destino corrigido: clicar no mapa. Esc cancela.'})
         item.append(text,edit);history.append(item)
       })
       const row=document.createElement('div');row.className='move-row'
       const move=document.createElement('button');move.type='button';move.className='move-unit'
       move.textContent=a.count>1?`+ Nova colocação (×${a.count})`:'+ Nova colocação'
       move.dataset.moveSlot=String(k)
-      move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})
+      move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Novo destino: clicar no mapa.'})
       const why=document.createElement('span');why.className='note move-why';why.dataset.moveWhy=String(k)
       row.append(move,why)
       li.append(history,row)
@@ -1892,11 +1892,8 @@ export class Editor {
     this.refs.reportAt.textContent = at === r ? `no fim (${fmtNumber(Math.max(r.free.minutes, r.A.minutes, r.B.minutes) / 60, 1)} h)` : `a ${fmtElapsed(this.minutes / 60)}`
     const rows: [string, (x: Report) => string][] = [
       ['Área ardida', (x) => fmtHa(x.burnedHa)],
-      ['Casas atingidas', (x) => String(x.homes)],
       ['Edifícios atingidos', (x) => String(x.buildings)],
-      ['Aldeias', (x) => String(x.places.length)],
       ['Estradas cortadas', (x) => fmtKm(x.roadKm.paved + x.roadKm.track)],
-      ['1.ª casa', (x) => (x.firstHomeMin === null ? '–' : `T+${Math.round(x.firstHomeMin)} min`)],
     ]
     table.innerHTML = `<tr><th></th>${cols.map((c) => `<th class="${c === this.decisions[this.active].id ? 'on' : ''}">${c === 'free' ? 'Livre' : c}</th>`).join('')}</tr>`
     for (const [label, text] of rows) {
@@ -1907,14 +1904,9 @@ export class Editor {
       table.append(tr)
     }
     const j = this.judged ?? r
-    this.refs.verdict.textContent = describeVerdict(recommend(j.A, j.B), j.A, j.B)
-    const mine = at[this.decisions[this.active].id as 'A' | 'B']
-    const places = mine.places.slice(0, 4).map((p) => `${p.name} T+${Math.round(p.minute)} min`)
-    const roads = mine.roadsCut.slice(0, 4).map((c) => `${c.label} ${fmtKm(c.km)}`)
-    this.refs.detail.textContent =
-      `${this.decisions[this.active].id}: ` +
-      [places.length ? `aldeias ${places.join(', ')}` : 'nenhuma aldeia atingida', roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada'].join(' · ') +
-      '.'
+    // Each decision in one line, then the recommendation alone.
+    this.refs.verdict.textContent = `${describeDecision('A', at.A)}\n${describeDecision('B', at.B)}`
+    this.refs.detail.textContent = describeVerdict(recommend(j.A, j.B))
   }
 
   /** The reports as they stand at a minute of the runs, or undefined at the end (the 6 h reports are given). */
@@ -1964,9 +1956,12 @@ export class Editor {
     const combat = scenario ? cachedCombatResources(scenario,d) : undefined
     if(scenario&&combat) for(const [slot,a] of d.assignments.entries()) {
       if(!['crew','vfci'].includes(a.unit))continue
-      const state=resourceAt(combat,slot,this.playbackMinute),p=placementAt(combat.lists[slot],this.playbackMinute)
+      // The clock paused at a gate can sit a hair before the minute an order is stamped with: snap it, so a unit
+      // moved there shows its new, reset ring at once instead of the old full one.
+      const now=Math.abs(this.playbackMinute-Math.round(this.playbackMinute))<.01?Math.round(this.playbackMinute):this.playbackMinute
+      const state=resourceAt(combat,slot,now),p=placementAt(combat.lists[slot],now)
       if(!p||!ordered(a)||state.exhausted||state.waterPct<=0)continue
-      const waiting=this.playbackMinute<p.arrivalMin
+      const waiting=now<p.arrivalMin
       const radius=waiting?(a.unit==='crew'?28:52.5)*Math.sqrt(a.count):state.radius
       const coverage=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,radius,waiting))
       ;(coverage as any)._unitInfo=unitInfo(a,p.point,[a])
@@ -2279,7 +2274,7 @@ export class Editor {
     } else {
       this.setTool('pma')
       this.refs.hint.classList.remove('danger', 'late')
-      this.refs.hint.textContent = 'Clica no mapa onde queres instalar o Posto Médico Avançado (PMA).'
+      this.refs.hint.textContent = 'Local do Posto Médico Avançado (PMA): clicar no mapa.'
       this.refs.addPma?.classList.add('active')
     }
   }
@@ -2320,7 +2315,7 @@ export class Editor {
 
     this.refs.addPma?.classList.remove('active')
     if (this.refs.pmaNote) {
-      this.refs.pmaNote.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
+      this.refs.pmaNote.textContent = `PMA estabelecido. Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`
     }
     this.refs.hint.classList.remove('danger', 'late')
     this.refs.hint.textContent = `PMA estabelecido com sucesso! Margem de segurança: ${safeBufferMin > 180 ? '> 3 horas' : `${safeBufferMin} min`}.`

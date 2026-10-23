@@ -108,7 +108,7 @@ export class SplitLayer {
     this.root.innerHTML = `
       <div class="side a"><b>A</b><span></span></div>
       <div class="side b"><b>B</b><span></span></div>
-      <div class="handle" title="Arrasta para comparar"></div>`
+      <div class="handle" title="Arrastar para comparar"></div>`
     this.root.querySelector('.a span')!.textContent = sides[0].name
     this.root.querySelector('.b span')!.textContent = sides[1].name
     parent.append(this.root)

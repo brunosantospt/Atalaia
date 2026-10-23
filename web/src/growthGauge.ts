@@ -30,10 +30,10 @@ export class GrowthGauge {
   constructor(parent: HTMLElement, private readonly input: GrowthInput, home: () => { x: number; y: number }, moved?: () => void) {
     this.el.className = 'float-card growth-card'
     this.el.setAttribute('aria-label', 'Crescimento')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Crescimento</div>
-      <button type="button" class="float-drag" aria-label="Mover crescimento. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover crescimento: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <div class="known-value"><i></i><strong>—</strong> ha/h</div>
       <div class="known-sub">&nbsp;</div>`
     this.value = this.el.querySelector('.known-value strong')!

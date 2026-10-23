@@ -81,11 +81,11 @@ export class StationRingsLayer {
     const station = this.rings.find(r => r.station.id === selection?.from)?.station
     this.selectionText.textContent = station && selection && sup
       ? `${station.short} · ${sup.units[selection.unit].short} · saída T+${Math.round(selection.dispatchMin)} min`
-      : 'Selecione um meio terrestre e o quartel para ver o contorno.'
+      : 'Contorno visível ao selecionar um meio terrestre e o quartel.'
     this.explanation.textContent = !station
-      ? 'Escolha um meio terrestre para comparar a sua chegada com a frente do fogo.'
+      ? 'Com um meio terrestre selecionado, compara-se a sua chegada com a frente do fogo.'
       : this.hasBoundary
-      ? 'Na zona cinzenta, o fogo chega antes desta resposta. Procure um ponto por fora, antes da frente prevista.'
+      ? 'Na zona cinzenta, o fogo chega antes desta resposta. Os pontos fora dela recebem a resposta antes da frente prevista.'
       : 'Sem zona onde o fogo chegue antes da resposta selecionada na previsão disponível.'
     for (const row of this.keyList.querySelectorAll<HTMLElement>('li')) {
       const selected = row.dataset.station === station?.id

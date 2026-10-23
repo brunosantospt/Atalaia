@@ -25,10 +25,10 @@ export class WaterGauge {
   constructor(parent: HTMLElement, home: () => { x: number; y: number }, moved?: () => void) {
     this.el.className = 'float-card water-card'
     this.el.setAttribute('aria-label', 'Água em campo')
-    this.el.title = 'Clique para ver o detalhe · arraste para mover só este card'
+    this.el.title = 'Clicar para ver o detalhe · arrastar para mover'
     this.el.innerHTML = `
       <div class="float-title">Água</div>
-      <button type="button" class="float-drag" aria-label="Mover água em campo. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
+      <button type="button" class="float-drag" aria-label="Mover água em campo: setas deslocam, Home repõe, Enter abre o detalhe." title="Arrastar para mover · duplo clique repõe"><span aria-hidden="true">⠿</span></button>
       <div class="water-total"><strong>—</strong> %</div>
       <div class="water-bar" style="--low: ${LOW * 100}%"><i></i></div>`
     this.total = this.el.querySelector('.water-total strong')!

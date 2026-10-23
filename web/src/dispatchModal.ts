@@ -146,7 +146,7 @@ export class DispatchModal {
               `,
                     )
                     .join('')
-                : '<div class="road-cut-card">Nenhum PMA fixado. Clica em "+ Ponto Socorro" no editor para adicionar.</div>'
+                : '<div class="road-cut-card">Nenhum PMA definido. Ativação com "+ Ponto Socorro" no editor.</div>'
             }
           </div>
           <div style="font-weight:600;font-size:10px;text-transform:uppercase;color:#8b9096;">Texto Formatado para o CODU / INEM:</div>
@@ -199,12 +199,12 @@ export class DispatchModal {
       if (this.currentTab === 'cmd') text = dispatch.cmd.message
 
       navigator.clipboard.writeText(text).then(() => {
-        showToast('Despacho copiado para a área de transferência!')
+        showToast('Despacho copiado.')
       })
     })
 
     emitBtn.addEventListener('click', () => {
-      showToast('Despacho transmitido com sucesso ao PCO / Forças no Terreno!')
+      showToast('Despacho transmitido ao PCO e às forças no terreno.')
       if (onEmit) onEmit()
       setTimeout(close, 700)
     })
