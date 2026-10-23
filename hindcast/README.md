@@ -68,7 +68,7 @@ Os detalhes estão em [`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md), os números em [
   | 6w, 6c | o vento do relevo (TopoWind) ou o CERRA em vez do ERA5 | 0,79, 0,76 |
   | 7, 8 | linhas de ataque inferidas (v1: hora do fogo observado; v2: hora do fogo do modelo) | 0,81, 0,84 |
 
-  Refaz-se com `ladder.sh` (as corridas) e `grid.py` (a imagem). A tabela completa, com 10 sementes, está em "Resultados" mais abaixo. É daqui que vêm os números do pitch, 0,76 → 0,83 → 0,89: são outra medida, contra o perímetro oficial e com outra corrida.
+  Refaz-se com `ladder.sh` (as corridas) e `grid.py` (a imagem). A tabela completa, com 10 sementes, está em "Resultados" mais abaixo. Os números do pitch (0,76 → 0,83 → 0,89) não vêm desta grelha. Vêm da figura de três painéis do cenário B (`pitch/img/vieira_validation_scenarioB.png`), que compara com o perímetro oficial do ICNF/GNR, na cadeia do FireRenderer.
 
 ### Como testar e correr
 
