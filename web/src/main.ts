@@ -757,10 +757,10 @@ async function main() {
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     if (editor.open && player.driving) player.pause()
-    // After the wind change the revised plan plays out 4× faster: the story there is the outcome, not each minute.
+    // After the wind change the revised plan plays out 6× faster: the story there is the outcome, not each minute.
     const shift = replay.data.windShift?.minutes
     const afterWind = replay.phase === 'post' && shift !== undefined && renderedHours * 60 >= shift
-    const frame = player.update(dt, replay.director ? (afterWind ? 16 : 4) : 1)
+    const frame = player.update(dt, replay.director ? (afterWind ? 24 : 4) : 1)
     if (frame.hours < renderedHours - 1e-6) for (const [key, minute] of replay.arrivalPauses)
       if (minute > frame.hours * 60 + 1e-6) replay.arrivalPauses.delete(key)
     const arrivalKey = `${replay.phase}:${frame.shot.decision}:${frame.shot.hours}`
