@@ -94,9 +94,12 @@ O Sørensen no último passo observado, mediana dos nove incêndios: a elipse qu
 
 A corrida livre não tem combate. Num incêndio que o combate segurou, queimar de mais não é necessariamente um erro do modelo. Por isso o teste que conta é o passo a passo.
 
-### Passo a passo *(a completar)*
+### Passo a passo
 
-Ver `MULTIFIRE.md`, secção 2.
+Recomeça em cada perímetro observado e só pontua o crescimento novo (secção 2 do `MULTIFIRE.md`):
+- **Área:** com a borda toda a arder, o modelo queima de mais (K3 1,7×, K5 3,1–3,9×), mas a cabeça é lenta (ROS ×0,4–0,75).
+- **Forma:** o Sørensen do crescimento fica baixo (K3 0,13, K5 0,19), mas ganha à regra dos 10 % na maioria das janelas (K5: 67 %).
+- **A borda ativa e as primeiras horas** são o que muda isto (secções seguintes).
 
 ### As primeiras horas
 
