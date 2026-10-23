@@ -59,13 +59,8 @@ Sem notas técnicas.
 
 ---
 
-## 4 · O desafio da UMinho
+## 4 · O que já existe, e porque falha
 
-- Pergunta do enunciado, tal como confirmada: "Como simular alternativas de
-  atuação antes de comprometer meios no terreno, e como melhorar a coordenação
-  nos primeiros minutos?" O enunciado fala também em "pouca ajuda de simulação" e
-  em mostrar o efeito das decisões "de forma compreensível para quem decide" —
-  usar se fizer falta no Q&A.
 - FARSITE e FlamMap (Rothermel/Finney, USDA Forest Service): simuladores físicos
   detalhados e amplamente citados, mas exigem muito cálculo e dados de alta
   resolução, o que limita o seu uso em tempo real durante um incidente. É um ponto
@@ -81,7 +76,7 @@ Sem notas técnicas.
   direção), no modelo de combustível e na localização/hora da ignição tem impacto
   grande na precisão da simulação. "FARSITE" é uma das palavras-chave do próprio
   artigo.
-- Repetir o nome FARSITE nos dois primeiros cartões é intencional: é o mesmo
+- Repetir o nome FARSITE nas duas primeiras linhas é intencional: é o mesmo
   simulador a falhar em dois pontos diferentes (lento e impreciso sem correção de
   inputs), o que reforça o argumento.
 - Para o Q&A, se perguntarem porque é que a Atalaia também usa o FARSITE/ELMFIRE:
@@ -94,11 +89,10 @@ Sem notas técnicas.
   efeito de os colocar de outra forma; o IPMA/EFFIS mostra o risco do dia.
   Tirámos o Copernicus EMS deste slide: o nome é parecido com o Copernicus DEM,
   que a Atalaia usa para o relevo, e isso confundia a audiência mesmo sendo dois
-  produtos diferentes do programa Copernicus. O incendiosportugal.pt também fica
-  de fora: precisa de uma ressalva à parte (prevê a propagação, mas assume que
-  não há combate) — se perguntarem no Q&A, a ressalva fica para aí.
-- "Todas as entidades envolvidas": bombeiros, proteção civil, câmara, GNR/PSP,
-  INEM, as mesmas do slide 2 e do slide 6. Liga este slide ao resto do pitch.
+  produtos diferentes do programa Copernicus.
+- incendiosportugal.pt: prevê a propagação, mas assume que não há combate — essa
+  é a ressalva a dar se perguntarem no Q&A; não dizer só "falha" sem a
+  explicar.
 - Fontes da síntese científica, por confirmar: acesso bloqueado ao texto completo
   no momento da pesquisa. "AI for Wildfire Management..." (MDPI, 2025) e "Forest
   Fire Prediction Models in Portugal: A Comprehensive Review". Não citar números
@@ -106,7 +100,19 @@ Sem notas técnicas.
 
 ---
 
-## 5 · Logótipo
+## 5 · O desafio da UMinho
+
+- Pergunta do enunciado, tal como confirmada: "Como simular alternativas de
+  atuação antes de comprometer meios no terreno, e como melhorar a coordenação
+  nos primeiros minutos?" O enunciado fala também em "pouca ajuda de simulação" e
+  em mostrar o efeito das decisões "de forma compreensível para quem decide" —
+  usar se fizer falta no Q&A.
+- "Todas as entidades envolvidas": bombeiros, proteção civil, câmara, GNR/PSP,
+  INEM, as mesmas do slide 2 e do slide 6. Liga este slide ao resto do pitch.
+
+---
+
+## 5b · Logótipo
 
 Sem notas técnicas; ver `index.html` para a descrição da animação.
 

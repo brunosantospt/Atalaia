@@ -12,19 +12,20 @@ Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e
 |---|---|---|
 | 1 | Título | 0:00–0:05 |
 | 2 | Gancho: 270 695 ha e > 85 M€ de perdas (2025) | 0:05–0:25 |
-| 3 | O problema decide-se nos primeiros minutos: < 1 % / 91 % (2025) | 0:25–0:45 |
-| 4 | O desafio da UMinho: rápida, precisa, prática | 0:45–1:00 |
-| 5 | Logótipo ao centro, drone e chama | 1:00–1:03 |
-| 6 | Proposta: dados → meios → efeito, "um só mapa" | 1:03–1:18 |
-| 7 | **Demo ao vivo (placeholder)** | 1:18–3:10 |
-| 8 | Validação: Vieira do Minho | 3:10–3:30 |
-| 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:30–3:50 |
-| 9 | A seguir + fecho | 3:50–4:05 |
+| 3 | O problema decide-se nos primeiros minutos | 0:25–0:45 |
+| 4 | O que já existe e porque falha: FARSITE, FlamMap, fogos.pt, IPMA/EFFIS, incendiosportugal.pt | 0:45–1:00 |
+| 5 | O desafio da UMinho: rápida, precisa, prática | 1:00–1:10 |
+| 5b | Logótipo ao centro, drone e chama | 1:10–1:13 |
+| 6 | Proposta: roadmap + "um só mapa" | 1:13–1:31 |
+| 7 | **Demo ao vivo (placeholder)** | 1:31–3:23 |
+| 8 | Validação: Vieira do Minho | 3:23–3:43 |
+| 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:43–4:03 |
+| 9 | A seguir + fecho | 4:03–4:23 |
 | 10 | Créditos (fora do tempo) | |
 
-O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Copernicus EMS, incendiosportugal.pt) foi cortado: repetia o argumento já feito no slide 4 (falhas das ferramentas existentes). A passagem do slide da tecnologia liga agora direto ao fecho.
+O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Copernicus EMS, incendiosportugal.pt) foi cortado por repetir o argumento do slide 4; esse argumento agora é o próprio slide 4, mais completo (ferramenta vs. o que falha), separado do desafio da UMinho (slide 5).
 
-Os tempos da coluna acima já não batem certo: o slide 4 e o novo slide 8b somam mais tempo do que havia. Cortar este slide ajudou (-15 s), mas o pitch ainda pode passar dos 4 min. Por fazer: cronometrar a fala real de cada slide antes do pitch final.
+Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma (4:23) já passa dos 4:00. Por fazer: cronometrar a fala real de cada slide e cortar onde for preciso antes do pitch final.
 
 - A demo corre numa janela própria do browser, não dentro dos slides: a app e o reveal usam as mesmas teclas.
 - Os marcadores tracejados (`.tbd`) são o que falta preencher depois do feature freeze.

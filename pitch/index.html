@@ -150,11 +150,11 @@
     .reveal .slides > section.challenge { justify-content: flex-start; padding-top: 170px; box-sizing: border-box; }
     .challenge .tag { font-size: .48em; margin-bottom: 2em; }
     .challenge .sub { font-size: 1.7em; font-weight: 600; letter-spacing: -.02em; line-height: 1.22; max-width: 1550px; margin-bottom: 1.1em; }
-    /* o que falha hoje: uma linha por limitação, ligada à pílula da mesma coluna por baixo */
-    .gaps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4em; margin-bottom: .6em; }
-    .gap { border-left: 2px solid var(--red); padding-left: .7em; }
-    .gap .g-name { display: block; font-family: var(--mono); font-size: .5em; letter-spacing: .04em; color: var(--red); margin-bottom: .3em; }
-    .gap p { font-size: .58em; color: var(--ink-dim); margin: 0; line-height: 1.3; }
+    /* o que falha hoje: uma linha por ferramenta */
+    .tools { display: flex; flex-direction: column; gap: .85em; margin-top: 1.3em; max-width: 1650px; }
+    .tool { display: flex; align-items: baseline; gap: 1.6em; border-left: 2px solid var(--red); padding-left: .8em; }
+    .tool .t-name { font-family: var(--mono); font-size: .55em; letter-spacing: .03em; color: var(--red); min-width: 290px; flex-shrink: 0; }
+    .tool p { font-size: .62em; color: var(--ink-dim); margin: 0; line-height: 1.3; }
     .ask { font-size: .78em; color: var(--ink-dim); margin: .9em 0; max-width: 1550px; }
     .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8em; }
     .pill { border: 1px solid var(--ink-faint); background: rgba(220, 224, 228, 0.03); padding: .65em; display: flex; flex-direction: column; align-items: flex-start; }
@@ -421,36 +421,59 @@
     </aside>
   </section>
 
-  <!-- ============================== 4 · O DESAFIO DA UMINHO · 0:45–1:00 ============================== -->
-  <section data-timing="22" class="challenge">
-    <span class="tag">O desafio · Universidade do Minho · Desafio 2</span>
-    <h2 class="sub">Como simular alternativas de atuação antes de comprometer meios no terreno, e como melhorar a coordenação nos primeiros minutos?</h2>
-    <div class="gaps">
-      <div class="gap fragment" data-fragment-index="0">
-        <span class="g-name">FARSITE, FlamMap</span>
-        <p>lentos demais</p>
+  <!-- ============================== 4 · FERRAMENTAS QUE FALHAM · 0:45–1:00 ============================== -->
+  <section data-timing="15" class="challenge tools-slide">
+    <span class="tag">O que já existe · e porque falha</span>
+    <h2 class="sub">Já há ferramentas. Nenhuma decide com quem está no terreno.</h2>
+    <div class="tools">
+      <div class="tool fragment" data-fragment-index="0">
+        <span class="t-name">FARSITE, FlamMap</span>
+        <p>lentos demais para decidir a tempo</p>
       </div>
-      <div class="gap fragment" data-fragment-index="0">
-        <span class="g-name">FARSITE</span>
-        <p>erram no vento, no combustível</p>
+      <div class="tool fragment" data-fragment-index="0">
+        <span class="t-name">FARSITE</span>
+        <p>erra no vento, no combustível, na ignição</p>
       </div>
-      <div class="gap fragment" data-fragment-index="0">
-        <span class="g-name">fogos.pt, IPMA / EFFIS</span>
-        <p>não testam. não comunicam.</p>
+      <div class="tool fragment" data-fragment-index="0">
+        <span class="t-name">fogos.pt</span>
+        <p>mostra ocorrências e meios. não testa decisões</p>
+      </div>
+      <div class="tool fragment" data-fragment-index="0">
+        <span class="t-name">IPMA, EFFIS</span>
+        <p>mostram o risco do dia. não simulam o incêndio</p>
+      </div>
+      <div class="tool fragment" data-fragment-index="0">
+        <span class="t-name">incendiosportugal.pt</span>
+        <p>prevê a propagação, assumindo que não há combate</p>
       </div>
     </div>
+    <div class="src">FARSITE/FlamMap: Benali et al. (2016), Sci. Total Environ. · fogos.pt, IPMA/EFFIS, incendiosportugal.pt</div>
+    <aside class="notes">
+      15 s · Narrador
+
+      "Já existem ferramentas. Mas nenhuma resolve isto."
+      [clique] "FARSITE e FlamMap: lentos demais. FARSITE: erra no vento e no combustível. fogos.pt: não testa decisões. IPMA e EFFIS: não simulam o incêndio. incendiosportugal.pt: assume que não há combate."
+
+      Passagem: "Por isso, o desafio da Universidade do Minho é claro."
+    </aside>
+  </section>
+
+  <!-- ============================== 5 · O DESAFIO DA UMINHO · 1:00–1:10 ============================== -->
+  <section data-timing="10" class="challenge">
+    <span class="tag">O desafio · Universidade do Minho · Desafio 2</span>
+    <h2 class="sub">Como simular alternativas de atuação antes de comprometer meios no terreno, e como melhorar a coordenação nos primeiros minutos?</h2>
     <div class="pills">
-      <div class="pill fragment" data-fragment-index="1">
+      <div class="pill fragment" data-fragment-index="0">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/></svg>
         <h3>Rápida.</h3>
         <span class="lbl">Em tempo real</span>
       </div>
-      <div class="pill fragment" data-fragment-index="1">
+      <div class="pill fragment" data-fragment-index="0">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>
         <h3>Precisa.</h3>
         <span class="lbl">Fiel ao incêndio real</span>
       </div>
-      <div class="pill fragment" data-fragment-index="1">
+      <div class="pill fragment" data-fragment-index="0">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
         <h3>Prática.</h3>
         <span class="lbl">Clara para quem decide</span>
@@ -458,23 +481,21 @@
     </div>
     <div class="src">Hack4Guimarães 2035 · Desafio 2, "Resposta a emergências e incêndios rurais"</div>
     <aside class="notes">
-      22 s · Narrador
+      10 s · Narrador
 
-      "O desafio: como simular alternativas de atuação antes de comprometer meios no terreno, e como melhorar a coordenação nos primeiros minutos?
-      Porquê? Porque os maiores que existem falham.
-      [clique] O FARSITE e o FlamMap são lentos demais. O mesmo FARSITE erra no vento e no combustível. E o fogos.pt, o IPMA, o EFFIS, não testam. Não comunicam.
+      "O desafio da Universidade do Minho: como simular alternativas de atuação antes de comprometer meios no terreno, e como melhorar a coordenação nos primeiros minutos?"
       [clique] "Por isso: rápida, precisa, prática."
 
       Passagem: "A nossa resposta chama-se…" (logótipo)
     </aside>
   </section>
 
-  <!-- ============================== 4b · LOGÓTIPO · 1:00–1:03 ============================== -->
+  <!-- ============================== 5b · LOGÓTIPO · 1:10–1:13 ============================== -->
   <section data-timing="3" data-logo-center data-transition-speed="slow">
     <aside class="notes">3 s · "…Atalaia." O logótipo cresce e brilha. O drone verifica a chama no «i», a chama desaparece com um pouco de fumo que se dissipa, surge o ponto branco do «i» e o drone regressa à torre com o feixe desligado. Deixar a sequência terminar antes de avançar. A animação é simbólica da marca; a deteção por drones continua a ser um passo futuro.</aside>
   </section>
 
-  <!-- ============================== 5 · PROPOSTA · 1:03–1:18 ============================== -->
+  <!-- ============================== 6 · PROPOSTA · 1:13–1:31 ============================== -->
   <section data-timing="18">
     <span class="tag">A proposta · para quem decide o ataque</span>
     <div class="roadmap horizontal fragment">
@@ -505,7 +526,7 @@
     </aside>
   </section>
 
-  <!-- ============================== 5 · DEMO · 1:00–3:10 ============================== -->
+  <!-- ============================== 7 · DEMO · 1:31–3:23 ============================== -->
   <section data-background-color="#000" data-timing="112">
     <div class="demo">
       <div class="tag" style="margin:0;"><span class="rec"></span>Demo ao vivo · 1 min 52 s</div>
@@ -527,7 +548,7 @@
     </aside>
   </section>
 
-  <!-- ============================== 6 · VALIDAÇÃO · 3:10–3:30 ============================== -->
+  <!-- ============================== 8 · VALIDAÇÃO · 3:23–3:43 ============================== -->
   <section class="val" data-timing="20">
     <span class="tag">Confiança · reconstituímos um incêndio real</span>
     <h2 style="font-size:1.2em;">Vieira do Minho, 11 ago 2016, 08:30</h2>
@@ -554,7 +575,7 @@
     </aside>
   </section>
 
-  <!-- ============================== 6b · TECNOLOGIA · 3:30–3:50 ============================== -->
+  <!-- ============================== 8b · TECNOLOGIA · 3:43–4:03 ============================== -->
   <section class="tech" data-timing="20">
     <span class="tag">A tecnologia · o que construímos por baixo</span>
     <h2 style="font-size:1.3em;">Não partimos do zero. Calibrámos e ligámos o que há de melhor.</h2>
@@ -591,7 +612,7 @@
     </aside>
   </section>
 
-  <!-- ============================== 8 · FECHO · 3:45–4:05 ============================== -->
+  <!-- ============================== 9 · FECHO · 4:03–4:23 ============================== -->
   <section data-timing="20">
     <span class="tag">A seguir · defender bem não basta, é preciso ver primeiro</span>
     <div class="roadmap horizontal fragment">

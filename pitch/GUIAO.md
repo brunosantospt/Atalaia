@@ -1,11 +1,12 @@
 # Guião · Pitch Atalaia (4 min)
 
-Texto para ensaiar, tirado das notas do orador de `index.html`. Fala corrida, sem as
-notas técnicas e fontes (essas ficam só na vista do orador, tecla **S**, para o Q&A).
+Texto para ensaiar, tirado das notas do orador de `index.html`. Fala corrida, sem
+sourcing nem ressalvas (isso fica em `FONTES.md`, para o Q&A).
 
-⚠️ **Tempo:** a soma dos slides já passa dos 4:00 (o slide 4 cresceu para 22 s e há um
-slide novo de 20 s, o da tecnologia, sem cortar nada a jusante). Cronometrar a fala real
-antes do dia e, se for preciso, encurtar a demo (está a 112 s) ou outro slide.
+⚠️ **Tempo:** a soma dos slides já passa dos 4:00 (263 s = 4:23). O slide 4 foi
+dividido em dois (ferramentas que falham + desafio da UMinho) e há um slide de
+tecnologia (8b) sem cortar nada a jusante. Cronometrar a fala real antes do dia e,
+se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 ---
 
@@ -52,28 +53,35 @@ antes do dia e, se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 ---
 
-## 4 · O desafio da UMinho — 0:45–1:00 (atual: ~1:07) — Narrador
+## 4 · O que já existe, e porque falha — 0:45–1:00 — Narrador
 
-> "O desafio: como simular alternativas de atuação antes de comprometer meios no
-> terreno, e como melhorar a coordenação nos primeiros minutos?
-> Porquê? Porque os maiores que existem falham."
+> "Já existem ferramentas. Mas nenhuma resolve isto."
 
-**[clique]**
+**[clique]** *(revela a lista)*
 
-> "O FARSITE e o FlamMap são lentos demais. O mesmo FARSITE erra no vento e no
-> combustível. E o fogos.pt, o IPMA, o EFFIS, não testam. Não comunicam."
+> "FARSITE e FlamMap: lentos demais. FARSITE: erra no vento e no combustível.
+> fogos.pt: não testa decisões. IPMA e EFFIS: não simulam o incêndio.
+> incendiosportugal.pt: assume que não há combate."
 
-**[clique]**
+*Passagem: "Por isso, o desafio da Universidade do Minho é claro."*
 
-> "Por isso: rápida, precisa, prática."
+---
+
+## 5 · O desafio da UMinho — 1:00–1:10 — Narrador
+
+> "O desafio da Universidade do Minho: como simular alternativas de atuação
+> antes de comprometer meios no terreno, e como melhorar a coordenação nos
+> primeiros minutos?"
 
 **[clique]** *(mostrar as três pílulas: Rápida, Precisa, Prática)*
+
+> "Por isso: rápida, precisa, prática."
 
 *Passagem: "A nossa resposta chama-se…" (logótipo)*
 
 ---
 
-## 5 · Logótipo — 1:00–1:03
+## 5b · Logótipo — 1:10–1:13
 
 *(o logótipo cresce e brilha; o drone verifica a chama no «i», a chama apaga-se com
 fumo, surge o ponto branco do «i», o drone regressa à torre; deixar a sequência
@@ -83,7 +91,7 @@ terminar, ~3 s, antes de avançar)*
 
 ---
 
-## 6 · A proposta — 1:03–1:18 (atual: ~1:21) — Condutor da demo
+## 6 · A proposta — 1:13–1:31 — Condutor da demo
 
 **[clique]**
 
@@ -100,7 +108,7 @@ terminar, ~3 s, antes de avançar)*
 
 ---
 
-## 7 · Demo ao vivo — 1:18–3:10 (~112 s) — Condutor da demo / Técnico em espera
+## 7 · Demo ao vivo — 1:31–3:23 (~112 s) — Condutor da demo / Técnico em espera
 
 *(a demo corre numa janela própria do browser, não dentro dos slides; Alt+Tab para a
 app, Alt+Tab de volta no fim e seta para a direita)*
@@ -117,7 +125,7 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 
 ---
 
-## 8 · Validação — 3:10–3:30 — Técnico
+## 8 · Validação — 3:23–3:43 — Técnico
 
 > "Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no distrito de
 > Braga. Motor ELMFIRE.
@@ -129,7 +137,7 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 
 ---
 
-## 8b · A tecnologia — 3:30–3:50 — Técnico
+## 8b · A tecnologia — 3:43–4:03 — Técnico
 
 **[clique]**
 
@@ -160,7 +168,7 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 
 ---
 
-## 9 · A seguir + fecho — 3:50–4:05 — Continuidade → Narrador
+## 9 · A seguir + fecho — 4:03–4:23 — Continuidade → Narrador
 
 **[clique]** *(o roadmap desenha-se sozinho, um clique só)*
 
@@ -183,8 +191,8 @@ Fica no fim, só para o júri e para o PDF da submissão — não se lê em voz 
 
 ## Notas de palco
 
-- **Quem fala cada slide:** Narrador (1, 2, 3, 4, 9-fecho) · Condutor da demo (5, 6) ·
-  Técnico (7, 8) · Continuidade (9-abertura).
+- **Quem fala cada slide:** Narrador (1, 2, 3, 4, 5, 9-fecho) · Condutor da demo
+  (6, 7) · Técnico (8, 8b) · Continuidade (9-abertura).
 - **Teclas da demo:** espaço, setas, R, H, D, L, S — as mesmas do reveal.js, por isso a
   app corre numa janela à parte, nunca dentro dos slides.
 - **Vista do orador:** tecla **S** no reveal, mostra este texto mais as notas técnicas e
