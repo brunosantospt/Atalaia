@@ -60,14 +60,12 @@ antes do dia e, se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 **[clique]**
 
-> "O FARSITE e o FlamMap são lentos demais para decidir a tempo. O mesmo FARSITE erra
-> com o vento, o combustível, o ponto de ignição. E o fogos.pt ou o IPMA e o EFFIS
-> nunca testam as decisões de quem combate o fogo."
+> "O FARSITE e o FlamMap são lentos demais. O mesmo FARSITE erra no vento e no
+> combustível. E o fogos.pt, o IPMA, o EFFIS, não testam. Não comunicam."
 
 **[clique]**
 
-> "Por isso a prioridade era uma ferramenta rápida, precisa e prática, para todas as
-> entidades envolvidas."
+> "Por isso: rápida, precisa, prática."
 
 **[clique]** *(mostrar as três pílulas: Rápida, Precisa, Prática)*
 
@@ -89,26 +87,14 @@ terminar, ~3 s, antes de avançar)*
 
 **[clique]**
 
-> "Para quem decide o ataque, a Atalaia serve para monitorizar o fogo em tempo real,
-> alocar os recursos com eficácia, prever o comportamento do incêndio e comunicar o
-> comando de ação."
+> "Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca os
+> meios, prevê o comportamento do incêndio e comunica o comando de ação."
 
 **[clique]**
 
-> "Partimos de dados reais do território."
-
-**[clique]**
-
-> "Os meios colocam-se à mão, ou recebem uma sugestão de otimização do sistema."
-
-**[clique]**
-
-> "E cada estratégia corre contra o incêndio, em tempo real."
-
-**[clique]**
-
-> "Um só mapa, para todos os corpos de ação: que estradas cortar, quanto tempo até ao
-> fogo, que aldeias estão em risco."
+> "Dados reais. Meios reais. Um só mapa."
+> "Que estradas cortar. Quanto tempo até ao fogo. Que casas estão em risco. Para
+> todos os que combatem."
 
 *Passagem: "Vamos ver ao vivo."*
 
