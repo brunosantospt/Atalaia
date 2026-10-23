@@ -1096,7 +1096,7 @@
 .hud .bottom-nav-cluster {
   position: absolute;
   right: 34px;
-  bottom: calc(var(--credits-h, 20px) + 14px);
+  bottom: 100px; /* above the Atalaia logo (style.css .map-logo) */
   display: flex;
   flex-direction: column;
   align-items: center;

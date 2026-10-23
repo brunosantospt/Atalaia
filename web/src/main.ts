@@ -900,7 +900,7 @@ async function main() {
 
   window.addEventListener('hashchange', () => open(fireFromHash(index.map((f) => f.id))))
   await open(fireFromHash(index.map((f) => f.id)))
-  mapLogo(viewer.bottomContainer as HTMLElement)
+  mapLogo(document.body)
   // After the intro the settings come first (map and widgets); closing them starts the director's cut.
   showIntro(() => {
     // Straight to the film, not through playback(): that opens the editor when the means are unsimulated.
@@ -957,13 +957,13 @@ function droneClip(shot: Shot, minute: number, post: boolean, shift: number | un
   return undefined
 }
 
-/** The Atalaia mark on the map, bottom right beside the Cesium logo. */
+/** The Atalaia mark on the map, bottom right, a little up and left of the Cesium logo in the corner. */
 function mapLogo(beside: HTMLElement) {
   const img = document.createElement('img')
   img.className = 'map-logo'
   img.src = `${import.meta.env.BASE_URL}drone/atalaia-logo.svg`
   img.alt = 'Atalaia'
-  beside.prepend(img)
+  beside.append(img)
 }
 
 /** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
