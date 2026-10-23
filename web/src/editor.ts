@@ -1271,6 +1271,7 @@ export class Editor {
 
   /** Editing cancels an outdated proposal but never starts model work or replaces the other plan. */
   private commit(byIls = false) {
+    if (!byIls && this.active === 1) this.bFollowsA = false // B edited by hand: it keeps its own plan
     if(this.loaded) {
       const d=this.decisions[this.active],eta=arrivals(this.loaded.scenario,d)
       d.assignments=d.assignments.flatMap((a,slot)=>a.count<=1?[a]:Array.from({length:a.count},(_,i)=>({...structuredClone(a),id:i===0?a.id:undefined,count:1,arrivalMin:eta[slot]})))
@@ -1324,6 +1325,20 @@ export class Editor {
   private setB(d: Decision) {
     this.decisions[1] = d
     this.ilsB = planKey(d)
+    this.bFollowsA = false
+  }
+
+  /** B untouched (empty, or only ever a copy of A): it is A again for this simulation, so both runs match.
+   *  Once B is edited by hand or proposed by the search, it keeps its own plan. */
+  private bFollowsA = true
+  prepareB(): boolean {
+    const b = this.decisions[1]
+    if (!this.bFollowsA && b.assignments.length) return false
+    this.decisions[1] = { ...named(this.decisions[0]), nextAssignmentId: b.nextAssignmentId }
+    this.ilsB = planKey(this.decisions[1])
+    this.bFollowsA = true
+    this.render()
+    return true
   }
 
   /** Search B with A's means (optimize.ts) in a worker: B follows its best plan, and shows what moved.

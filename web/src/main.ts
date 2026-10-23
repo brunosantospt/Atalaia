@@ -690,6 +690,7 @@ async function main() {
     if (!replay || busy.active || !simulateState().enabled) return false
     const current = replay
     const { scenario, phase } = current
+    editor.prepareB() // an untouched B runs as a copy of A
     const decisions = editor.decisions.map(d => structuredClone(d)) as [Decision, Decision]
     current.player.pause()
     busy.start('A simular o modelo rápido…', ['Livre', 'A', 'B'])
