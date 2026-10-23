@@ -79,8 +79,8 @@ para detetar os incêndios mais cedo e com menos custos.
 
 ## 9 · Fecho + obrigado
 
-11 Guimarães arderam em 2025. Está na hora de ver primeiro, e decidir
-melhor.
+11 Guimarães arderam em 2025. Quem combate merece estar um passo à frente
+do fogo e decidir com tempo.
 
 Obrigado.
 
