@@ -110,6 +110,11 @@ Sem notas técnicas.
 - Slide a 11 s (23 out: era 15 s). "lentos demais" → "lentos"; "não propõe
   ataques otimizados" → "sem ataques otimizados". Os cartões no ecrã não
   mudaram, só a fala.
+- ÍCONES TROCADOS (23 out): os 4 cartões passam a usar ícones novos
+  (ampulheta, olho, velocímetro, espiral) em vez dos antigos (relógio,
+  gota, nuvem, alvo), todos na mesma cor #F76707 — antes cada cartão tinha
+  uma cor diferente (vermelho, âmbar, azul, "cool"). A cor igual em todos
+  é a mesma usada nos ícones do slide 6 (modelos) e no logótipo.
 
 ---
 
