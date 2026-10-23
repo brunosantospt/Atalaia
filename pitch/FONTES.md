@@ -321,15 +321,19 @@ e o condutor continua a falar.
 - Este slide ficou só com o roadmap; o fecho ("Em 2025 arderam 11 Guimarães" +
   "Obrigado") passou para um slide à parte (9), para dar espaço às duas ideias.
 - O slide ficava muito vazio só com o roadmap (muito espaço em branco por
-  baixo): acrescentou-se uma frase curta por passo e uma frase de fecho ("Ver
-  sempre mais cedo. Decidir sempre melhor.") a seguir ao roadmap, no mesmo
-  estilo do "Dados reais..." do slide 6.
+  baixo): acrescentou-se uma frase curta por passo, que ainda lá está, e
+  uma frase de fecho ("Ver sempre mais cedo. Decidir sempre melhor.") a
+  seguir ao roadmap — essa frase saiu outra vez (ver abaixo).
 - Vídeo a 2× (23 out): sem ffmpeg disponível para reencodar, a velocidade é
   ajustada por JS (`video.playbackRate`) em vez de no ficheiro.
-- Slide a 11 s (23 out: era 15 s). A frase de introdução ficou mais curta
-  ("ferramenta de testes para cenários futuros" em vez de "uma ferramenta de
-  testes para potenciais cenários futuros"; "drones para detetar mais cedo"
-  em vez de "...não só defender melhor").
+- Slide a 8 s (23 out: era 15 s, depois 11 s). A frase de introdução ficou
+  mais curta ("ferramenta de testes para cenários futuros" em vez de "uma
+  ferramenta de testes para potenciais cenários futuros"; "drones para
+  detetar mais cedo" em vez de "...não só defender melhor"); mais tarde
+  (2.ª passagem) saiu a frase de fecho "Ver sempre mais cedo. Decidir
+  sempre melhor." — ficava redundante com a nova frase de fecho do slide 9
+  ("Está na hora de ver primeiro, e decidir melhor."), que diz
+  essencialmente o mesmo.
 
 ---
 

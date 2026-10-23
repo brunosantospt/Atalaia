@@ -77,8 +77,6 @@ E isto não acaba hoje.
 A seguir: ferramenta de testes para cenários futuros; IA a afinar a
 estratégia; e drones para detetar mais cedo.
 
-Ver sempre mais cedo. Decidir sempre melhor.
-
 ## 9 · Fecho + obrigado
 
 11 Guimarães arderam em 2025. Está na hora de ver primeiro, e decidir
