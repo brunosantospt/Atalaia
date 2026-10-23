@@ -181,11 +181,12 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 
 ## 9 · A seguir — 4:03–4:18 — Continuidade
 
-**[clique]** *(o roadmap desenha-se sozinho, um clique só)*
+**[clique]** *(o roadmap desenha-se sozinho, um clique só; o vídeo do drone
+arranca sozinho, em loop, por baixo do passo 3)*
 
-> "A seguir: drones para detetar mais cedo, não só defender melhor; uma
-> ferramenta de testes para potenciais cenários futuros; e, mais à frente, IA a
-> afinar a própria estratégia."
+> "A seguir: uma ferramenta de testes para potenciais cenários futuros; IA a
+> afinar a própria estratégia; e drones para detetar mais cedo, não só
+> defender melhor."
 
 **[clique]**
 

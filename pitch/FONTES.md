@@ -232,20 +232,31 @@ Regras (do README do hindcast, não negociáveis):
 
 ## 9 · A seguir
 
-- Passo 1 (deteção): a ideia-chave é que o potencial de melhoria não está só em
-  defender melhor, está em detetar mais cedo. Drones em patrulha reduzem o tempo
-  até à deteção e substituem parte do reconhecimento aéreo hoje feito por
-  helicóptero, mais caro. Fonte: um bombeiro, ex-comandante em Guimarães —
-  confirmar o nome exato e a citação antes de a atribuir em palco; por agora,
-  dizer "segundo um ex-comandante dos bombeiros de Guimarães com quem falámos",
-  sem apontar números de custo que não temos confirmados.
-- Passo 2 (ferramenta de testes): o modelo permite não só tomar decisões em
+- ORDEM TROCADA (23 out): passa a ser 1) ferramenta de testes, 2) IA,
+  3) drones — antes era drones, ferramenta, IA. O passo final (agora drones)
+  é que fica a âmbar e tem o vídeo por baixo; o âmbar deixou de marcar "a
+  visão mais distante" e passa a marcar só o último passo do roadmap, o que
+  fecha o slide com o vídeo.
+- Passo 1 (ferramenta de testes): o modelo permite não só tomar decisões em
   tempo real, como também ser uma ferramenta de testes para potenciais
   cenários antes de acontecerem — treino com incêndios passados como exercício
   para os bombeiros do distrito e a UMinho. Ainda é intenção, não trabalho
   feito: dizer "podemos integrar", não "já temos".
-- Passo 3 (IA): ainda é visão, não trabalho feito. Dizer "a afinar", não "já
-  afina". É o horizonte do roadmap, por isso fica a âmbar, como destino.
+- Passo 2 (IA): ainda é visão, não trabalho feito. Dizer "a afinar", não "já
+  afina".
+- Passo 3 (deteção por drones): a ideia-chave é que o potencial de melhoria
+  não está só em defender melhor, está em detetar mais cedo. Drones em
+  patrulha reduzem o tempo até à deteção e substituem parte do reconhecimento
+  aéreo hoje feito por helicóptero, mais caro. Fonte: um bombeiro,
+  ex-comandante em Guimarães — confirmar o nome exato e a citação antes de a
+  atribuir em palco; por agora, dizer "segundo um ex-comandante dos bombeiros
+  de Guimarães com quem falámos", sem apontar números de custo que não temos
+  confirmados.
+- Vídeo do drone (`pitch/video/drone-deteccao.mp4`, 11,8 MB): render 3D de
+  um drone numa estação de patrulha, em loop, mudo, sem controlos — arranca
+  sozinho ao entrar no slide. Confirmar se é material próprio (nosso render)
+  ou de terceiros antes do pitch final; se for de terceiros, falta o crédito
+  nos "Créditos" (slide 13).
 - O "piloto em Guimarães" saiu do roadmap a pedido; já não é preciso confirmar
   o apoio do Prof. Paulo Afonso para este slide.
 - Este slide ficou só com o roadmap; o fecho ("Em 2025 arderam 11 Guimarães" +

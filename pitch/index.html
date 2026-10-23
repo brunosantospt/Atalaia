@@ -209,8 +209,10 @@
     .roadmap.horizontal { display: flex; align-items: flex-start; }
     .roadmap.horizontal .stop { flex: 1 1 0; flex-direction: column; align-items: flex-start; gap: .5em; transform: translateY(-10px); }
     .roadmap.horizontal .stop.final { flex: 0 1 auto; }
+    .roadmap.horizontal .stop.has-video { flex: 1.4 1 0; }
     .roadmap.horizontal .track { flex: 0 0 36px; width: auto; height: 0; margin: .55em -.2em 0; border: none; }
     .roadmap.horizontal .label { font-size: .85em; line-height: 1.3; max-width: 13em; }
+    .roadmap-video { width: 100%; max-width: 360px; max-height: 220px; object-fit: cover; border-radius: 6px; border: 1px solid var(--ink-faint); margin-top: .5em; display: block; }
     @keyframes stop-in-h { to { opacity: 1; transform: none; } }
     @keyframes track-grow-h { to { opacity: 1; transform: scaleX(1); } }
     .roadmap.horizontal.visible .stop { animation-name: stop-in-h; }
@@ -679,11 +681,14 @@
   <section data-timing="15">
     <span class="tag">A seguir · defender bem não basta, é preciso ver primeiro</span>
     <div class="roadmap horizontal fragment">
-      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Deteção por drones, mais rápida e económica</span><span class="desc">Patrulha e deteção mais cedo, sem esperar pelos meios aéreos</span></div>
+      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span><span class="desc">Testar decisões em incêndios passados, antes de decidir a sério</span></div>
       <div class="track" style="animation-delay:.35s"></div>
-      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Ferramenta de testes para potenciais cenários futuros</span><span class="desc">Testar decisões em incêndios passados, antes de decidir a sério</span></div>
+      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">IA a afinar a estratégia mais otimizada</span><span class="desc">A estratégia a afinar-se sozinha, cenário a cenário</span></div>
       <div class="track" style="animation-delay:.9s"></div>
-      <div class="stop final" style="animation-delay:1.15s"><span class="node">03</span><span class="label">IA a afinar a estratégia mais otimizada</span><span class="desc">A estratégia a afinar-se sozinha, cenário a cenário</span></div>
+      <div class="stop final has-video" style="animation-delay:1.15s">
+        <span class="node">03</span><span class="label">Deteção por drones, mais rápida e económica</span><span class="desc">Patrulha e deteção mais cedo, sem esperar pelos meios aéreos</span>
+        <video class="roadmap-video" src="video/drone-deteccao.mp4" muted loop playsinline autoplay></video>
+      </div>
     </div>
     <hr class="divider">
     <div class="punch fragment">
