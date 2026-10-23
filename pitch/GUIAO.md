@@ -3,10 +3,11 @@
 Texto para ensaiar, tirado das notas do orador de `index.html`. Fala corrida, sem
 sourcing nem ressalvas (isso fica em `FONTES.md`, para o Q&A).
 
-⚠️ **Tempo:** a soma dos slides já passa dos 4:00 (263 s = 4:23). O slide 4 foi
-dividido em dois (ferramentas que falham + desafio da UMinho) e há um slide de
-tecnologia (8b) sem cortar nada a jusante. Cronometrar a fala real antes do dia e,
-se for preciso, encurtar a demo (está a 112 s) ou outro slide.
+⚠️ **Tempo:** a soma dos slides já passa dos 4:00 (268 s = 4:28). O slide 4 foi
+dividido em dois (ferramentas que falham + desafio da UMinho) e o fecho também
+(roadmap "a seguir" + fecho/obrigado), mais um slide de tecnologia (8b), sem
+cortar nada a jusante. Cronometrar a fala real antes do dia e, se for preciso,
+encurtar a demo (está a 112 s) ou outro slide.
 
 ---
 
@@ -72,9 +73,17 @@ se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 > "O desafio da Universidade do Minho: como simular alternativas de atuação,
 > e melhorar a coordenação nos primeiros minutos?"
 
-**[clique]** *(mostrar as três pílulas: Rápida, Precisa, Prática)*
+**[clique]**
 
-> "Por isso: rápida, precisa, prática."
+> "Por isso: rápida."
+
+**[clique]**
+
+> "Precisa."
+
+**[clique]**
+
+> "E prática."
 
 *Passagem: "A nossa resposta chama-se…" (logótipo)*
 
@@ -96,6 +105,9 @@ terminar, ~3 s, antes de avançar)*
 
 > "Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca os
 > meios, prevê o comportamento do incêndio e comunica o comando de ação."
+
+> "Nós trabalhamos com dados precisos, com os meios que estão disponíveis ao
+> momento em cada quartel, e tudo isto num só mapa."
 
 **[clique]**
 
@@ -167,22 +179,30 @@ apoio arranca o vídeo no mesmo ponto e o condutor continua a falar.*
 
 ---
 
-## 9 · A seguir + fecho — 4:03–4:23 — Continuidade → Narrador
+## 9 · A seguir — 4:03–4:18 — Continuidade
 
 **[clique]** *(o roadmap desenha-se sozinho, um clique só)*
 
-> "A seguir: drones para detetar mais cedo, não só defender melhor; treino com
-> incêndios passados, com um modelo de treino próprio para os bombeiros; e, mais à
-> frente, IA a afinar a própria estratégia."
+> "A seguir: drones para detetar mais cedo, não só defender melhor; uma
+> ferramenta de testes para potenciais cenários futuros; e, mais à frente, IA a
+> afinar a própria estratégia."
 
-**[clique]** — Narrador:
-
-> "Em 2025 arderam 11 Guimarães." *(pausa)* "Com a Atalaia, quem decide vê o que vai
-> arder, para cada decisão, antes de enviar os meios. Obrigado."
+*Passagem: "Em 2025 arderam 11 Guimarães."*
 
 ---
 
-## 10 · Créditos (fora do tempo)
+## 10 · Fecho + obrigado — 4:18–4:28 — Narrador
+
+> "Em 2025 arderam 11 Guimarães." *(pausa)* "Com a Atalaia, quem decide vê o que
+> vai arder, para cada decisão, antes de enviar os meios."
+
+**[clique]**
+
+> "Obrigado."
+
+---
+
+## 11 · Créditos (fora do tempo)
 
 Fica no fim, só para o júri e para o PDF da submissão — não se lê em voz alta.
 
@@ -190,8 +210,8 @@ Fica no fim, só para o júri e para o PDF da submissão — não se lê em voz 
 
 ## Notas de palco
 
-- **Quem fala cada slide:** Narrador (1, 2, 3, 4, 5, 9-fecho) · Condutor da demo
-  (6, 7) · Técnico (8, 8b) · Continuidade (9-abertura).
+- **Quem fala cada slide:** Narrador (1, 2, 3, 4, 5, 10) · Condutor da demo (6, 7)
+  · Técnico (8, 8b) · Continuidade (9).
 - **Teclas da demo:** espaço, setas, R, H, D, L, S — as mesmas do reveal.js, por isso a
   app corre numa janela à parte, nunca dentro dos slides.
 - **Vista do orador:** tecla **S** no reveal, mostra este texto mais as notas técnicas e

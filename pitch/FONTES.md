@@ -171,9 +171,18 @@ Regras (do README do hindcast, não negociáveis):
   é outra corrida/versão do hindcast. Confirmar com quem gerou a imagem que esta
   é a versão final antes do pitch; se não for, repor os números antigos e a
   imagem antiga (`img/vieira_validation_0830.png`, 4 painéis).
+- IMAGEM CORTADA (23 out): os títulos em inglês de cada painel ("Before: Atalaia
+  setup (S&B fuels)", etc.) vinham gravados nos pixéis da imagem; cortámos a
+  faixa do topo (os primeiros 58 px da imagem original, 3040×757) para tirá-los
+  do slide. Se a imagem for regenerada, repetir o corte ou gerar já sem o texto.
 - A imagem atual mostra dois pontos no tempo por painel (15:00 e 08:30), não só o
   08:30 único que está no título do slide; confirmar se o título deve passar a
   mencionar os dois horários.
+- As setas passam a nomear a medida acrescentada ("+ Dados públicos", "+ Linhas
+  de ataque") antes do detalhe, em vez de só o detalhe solto.
+- A sequência de números ganhou um rótulo ("Sobreposição com o incêndio real ·
+  índice de Sørensen") e ficou centrada, em vez de alinhada à esquerda por
+  baixo das imagens.
 - As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial parou
   ao longo das estradas: melhoram o Sørensen em parte por construção. Nunca dizer
   que vêm "dos registos".
@@ -221,7 +230,7 @@ Regras (do README do hindcast, não negociáveis):
 
 ---
 
-## 9 · A seguir + fecho
+## 9 · A seguir
 
 - Passo 1 (deteção): a ideia-chave é que o potencial de melhoria não está só em
   defender melhor, está em detetar mais cedo. Drones em patrulha reduzem o tempo
@@ -230,20 +239,31 @@ Regras (do README do hindcast, não negociáveis):
   confirmar o nome exato e a citação antes de a atribuir em palco; por agora,
   dizer "segundo um ex-comandante dos bombeiros de Guimarães com quem falámos",
   sem apontar números de custo que não temos confirmados.
-- Passo 2 (treino): incêndios passados como exercícios para os bombeiros do
-  distrito e a UMinho, com a possibilidade de construirmos um modelo de treino
-  próprio (simulação dedicada a formação, não só ao incidente real). Ainda é
-  intenção, não trabalho feito: dizer "podemos integrar", não "já temos".
+- Passo 2 (ferramenta de testes): o modelo permite não só tomar decisões em
+  tempo real, como também ser uma ferramenta de testes para potenciais
+  cenários antes de acontecerem — treino com incêndios passados como exercício
+  para os bombeiros do distrito e a UMinho. Ainda é intenção, não trabalho
+  feito: dizer "podemos integrar", não "já temos".
 - Passo 3 (IA): ainda é visão, não trabalho feito. Dizer "a afinar", não "já
   afina". É o horizonte do roadmap, por isso fica a âmbar, como destino.
 - O "piloto em Guimarães" saiu do roadmap a pedido; já não é preciso confirmar
   o apoio do Prof. Paulo Afonso para este slide.
+- Este slide ficou só com o roadmap; o fecho ("Em 2025 arderam 11 Guimarães" +
+  "Obrigado") passou para um slide à parte (10), para dar espaço às duas ideias.
+
+---
+
+## 10 · Fecho + obrigado
+
 - "11 Guimarães" em 2025: mesmo cálculo do slide 2 (270 695 ha ÷ 241,7 km² do
   concelho ≈ 11,2). O fecho repete esse número de propósito, agora com o valor
   de 2025. Segurar a pausa depois de "11 Guimarães".
 
 ---
 
-## 10 · Créditos
+## 11 · Créditos
 
-Fora do tempo. Fica no fim para o júri e para o PDF da submissão.
+Fora do tempo. Fica no fim para o júri e para o PDF da submissão. O marcador
+`.tbd` sobre o ILS saiu: `docs/ils.md` no main já documenta a funcionalidade
+como implementada (ver "Demo timeline replanning"), por isso o crédito da
+otimização deixou de ser condicional.

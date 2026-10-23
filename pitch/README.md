@@ -20,12 +20,15 @@ Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e
 | 7 | **Demo ao vivo (placeholder)** | 1:31–3:23 |
 | 8 | Validação: Vieira do Minho | 3:23–3:43 |
 | 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:43–4:03 |
-| 9 | A seguir + fecho | 4:03–4:23 |
-| 10 | Créditos (fora do tempo) | |
+| 9 | A seguir: deteção, testes de cenários, IA | 4:03–4:18 |
+| 10 | Fecho + obrigado | 4:18–4:28 |
+| 11 | Créditos (fora do tempo) | |
 
 O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Copernicus EMS, incendiosportugal.pt) foi cortado por repetir o argumento do slide 4; esse argumento agora é o próprio slide 4, mais completo (ferramenta vs. o que falha), separado do desafio da UMinho (slide 5).
 
-Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma (4:23) já passa dos 4:00. Por fazer: cronometrar a fala real de cada slide e cortar onde for preciso antes do pitch final.
+O antigo slide 9 ("a seguir" + fecho juntos) também foi dividido em dois: o roadmap "a seguir" fica sozinho, e "Em 2025 arderam 11 Guimarães" + "Obrigado" passam a ser o fecho, no seu próprio slide.
+
+Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma (4:28) já passa dos 4:00. Por fazer: cronometrar a fala real de cada slide e cortar onde for preciso antes do pitch final.
 
 - Os números grandes (gancho, sequência de precisão) usam JetBrains Mono (Bold/ExtraBold), guardado em `vendor/fonts/` (SIL OFL) para correr sem rede, tal como o resto do `vendor/`.
 - A demo corre numa janela própria do browser, não dentro dos slides: a app e o reveal usam as mesmas teclas.
