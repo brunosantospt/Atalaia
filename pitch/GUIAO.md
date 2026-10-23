@@ -41,12 +41,12 @@ antes do dia e, se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 ## 3 · Problema — 0:25–0:45 — Narrador
 
-> "O problema decide-se nos primeiros minutos. Menos de 1 % dos incêndios concentrou
-> 91 % da área ardida."
+> "O problema decide-se nos primeiros minutos."
 
 **[clique]**
 
-> "Quem decide precisa de uma visão comum e de antecipar o efeito de cada decisão."
+> "Nesses minutos, quem decide precisa de uma visão comum e de antecipar o efeito
+> de cada decisão."
 
 *Passagem: "E se pudéssemos ver o que vai arder antes de decidir?"*
 
