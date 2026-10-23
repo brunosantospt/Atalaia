@@ -17,3 +17,7 @@
 .drone-clip-close { position: absolute; top: 6px; left: 6px; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: rgba(0, 0, 0, .65); color: #fff; font: 700 12px/1 system-ui, sans-serif; cursor: pointer; opacity: 0; transition: opacity .2s, background .2s; }
 .drone-clip:hover .drone-clip-close { opacity: 1; }
 .drone-clip-close:hover { background: #f76707; border-color: #f76707; }
+/* Docked for the final report: both on the left, stacked, clear of the Relatórios panel. */
+.drone-side.docked { left: 34px; right: auto; width: min(380px, 28vw); transition: top .4s, left .4s, width .4s; }
+.drone-left.docked { top: 22%; }
+.drone-right.docked { top: calc(22% + min(380px, 28vw) * 10 / 16 + 14px); }

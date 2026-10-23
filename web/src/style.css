@@ -53,3 +53,8 @@ body[data-error]::after {
 .compare-ab b { color: #ffa94d; }
 .compare-ab:hover, .compare-ab.on { background: #f76707; box-shadow: 0 0 16px rgba(247, 103, 7, .6); }
 .compare-ab:hover b, .compare-ab.on b { color: #fff; }
+
+/* End of the film: clear the screen for the report. Bottom right, above the Atalaia logo. */
+.final-report { position: fixed; right: 14px; bottom: 76px; z-index: 6; padding: 8px 16px; border: 1px solid #f76707; border-radius: 6px; background: #f76707; color: #fff; font: 600 13px system-ui, sans-serif; letter-spacing: .4px; cursor: pointer; box-shadow: 0 0 14px rgba(247, 103, 7, .45); }
+.final-report[hidden] { display: none; }
+.final-report:hover { background: #ff8a2b; }

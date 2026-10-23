@@ -115,8 +115,18 @@ export class SettingsPanel {
     return this.el.classList.contains('open')
   }
 
+  /** Called once the panel is closed (main.ts: the director starts after the first visit). */
+  closed?: () => void
   toggle(open = !this.open) {
+    const was = this.el.classList.contains('open')
     this.el.classList.toggle('open', open)
+    if (was && !open) this.closed?.()
+  }
+
+  /** Every screen widget off, their toggles too (the final report clears the screen). */
+  hideAllWidgets() {
+    this.shown.clear()
+    this.el.querySelectorAll<HTMLInputElement>('input[name="widget"]').forEach((i) => (i.checked = false))
   }
 
   private input(group: string, value: string): HTMLInputElement {

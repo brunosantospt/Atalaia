@@ -145,6 +145,21 @@ async function main() {
   compare.button.title = 'Divide o ecrã: A à esquerda, B à direita. Arrastar a divisória para comparar.'
   compare.button.addEventListener('click', () => { compare.on = !compare.on; scene.requestRender() })
   document.body.append(compare.button)
+  // At the end of the film: one button clears the screen for the report (widgets off, the endings' footage
+  // to the left, the Relatórios panel open). Above the Atalaia logo, bottom right.
+  const final = { on: false, button: document.createElement('button') }
+  final.button.type = 'button'
+  final.button.className = 'final-report'
+  final.button.hidden = true
+  final.button.textContent = 'Ver relatório final'
+  final.button.addEventListener('click', () => {
+    final.on = true
+    hud.settings.hideAllWidgets()
+    if (replay) showWidgets(replay)
+    drone.dock(true)
+    editor.toggleReports(true)
+  })
+  document.body.append(final.button)
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -788,6 +803,8 @@ async function main() {
     // At the end, "Comparar A | B" swaps the three footprints for A and B side by side, fire and units.
     const comparing = finale && compare.on && !!split
     compare.button.hidden = !finale || !split
+    final.button.hidden = !finale || final.on
+    if (!finale && final.on) { final.on = false; drone.dock(false) }
     compare.button.classList.toggle('on', comparing)
     const splitOn = (!finale || comparing) && !!split
     split?.presentation(!editor.open && (replay.showSplit || comparing))
@@ -887,7 +904,11 @@ async function main() {
   window.addEventListener('hashchange', () => open(fireFromHash(index.map((f) => f.id))))
   await open(fireFromHash(index.map((f) => f.id)))
   mapLogo(viewer.bottomContainer as HTMLElement)
-  showIntro(() => replay && playback(() => replay!.player.restart()))
+  // After the intro the settings come first (map and widgets); closing them starts the director's cut.
+  showIntro(() => {
+    hud.settings.closed = () => { hud.settings.closed = undefined; if (replay) playback(() => replay!.player.restart()) }
+    hud.settings.toggle(true)
+  })
 }
 
 /** First load: the fleet's takeoff shot; at the thermal view the alert, then the director's cut starts on the button. */
@@ -907,8 +928,8 @@ function showIntro(start: () => void) {
     <button type="button">Começar planeamento de combate</button></div>
     <div class="intro-legend">Guimarães 3D Digital Twin · Atalaia IP · Drone de vigilância · Câmara térmica</div></div>`
   const video = el.querySelector('video')!
-  video.playbackRate = 1.32 // 20 % then 10 % faster; the cues below follow the video's own clock
-  video.defaultPlaybackRate = 1.32
+  video.playbackRate = 1.45 // 20 %, then 10 % twice, faster; the cues below follow the video's own clock
+  video.defaultPlaybackRate = 1.45
   const reveal = () => {
     if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
     if (video.currentTime >= THERMAL_S || video.ended) el.classList.add('thermal')

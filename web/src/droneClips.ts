@@ -51,6 +51,12 @@ export class DroneClips {
   private right = video('drone-side drone-right', 'Com meios')
   private shown: Clip
 
+  /** The endings' footage docked on the left, one above the other (the final report fills the right). */
+  dock(on: boolean) {
+    this.left.box.classList.toggle('docked', on)
+    this.right.box.classList.toggle('docked', on)
+  }
+
   set(clip: Clip) {
     if (clip === this.shown) return
     this.shown = clip
