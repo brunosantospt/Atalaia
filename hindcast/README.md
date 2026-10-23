@@ -56,6 +56,19 @@ Os detalhes estão em [`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md), os números em [
 - `multifire_plots.png`: o resumo;
 - `fires/<id>/backup_<h>h.png`: um mapa por incêndio, no estilo da validação de Vieira, para o pitch;
 - `fires/<id>/grid_multifire.png`: versões × horas.
+- **`fires/VieiradoMinho_10082016/grid.png`: a "escada" de Vieira do Minho (21/10).** Cada coluna junta uma entrada à anterior, e cada linha é uma hora. As cores são as mesmas: laranja ardeu nos dois, vermelho só no modelo, azul só no observado. Corrida livre a partir do passo 0, semente 1.
+
+  | Coluna | O que junta | Sørensen às 08:30 (+22,5 h) |
+  |---|---|---|
+  | 0 | a API antiga: combustíveis S&B, humidades fixas, sem copas | 0,73 |
+  | 1–3 | humidades mortas de hora a hora, copas do LiDAR, cicatrizes | 0,72–0,74 |
+  | 4 | combustíveis portugueses | 0,76 |
+  | 5 | vivas de seca (30/70 %) | 0,76 |
+  | 6 | projeções | 0,76 |
+  | 6w, 6c | o vento do relevo (TopoWind) ou o CERRA em vez do ERA5 | 0,79, 0,76 |
+  | 7, 8 | linhas de ataque inferidas (v1: hora do fogo observado; v2: hora do fogo do modelo) | 0,81, 0,84 |
+
+  Refaz-se com `ladder.sh` (as corridas) e `grid.py` (a imagem). A tabela completa, com 10 sementes, está em "Resultados" mais abaixo. É daqui que vêm os números do pitch, 0,76 → 0,83 → 0,89: são outra medida, contra o perímetro oficial e com outra corrida.
 
 ### Como testar e correr
 
