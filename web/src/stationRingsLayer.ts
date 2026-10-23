@@ -111,18 +111,30 @@ export class StationRingsLayer {
     const image = cells.getContext('2d')!.createImageData(grid.cols, grid.rows)
     blocked.forEach((b, i) => b && image.data.set([200, 205, 210, 255], i * 4))
     cells.getContext('2d')!.putImageData(image, 0, 0)
+    // Upscale with a blur, then cut at half: a smooth, crisp-edged shape (not a fog), flat translucent grey.
     const SCALE = 6
     const smooth = document.createElement('canvas')
     smooth.width = grid.cols * SCALE; smooth.height = grid.rows * SCALE
     const ctx = smooth.getContext('2d')!
     ctx.imageSmoothingEnabled = true
-    ctx.filter = `blur(${SCALE * 1.2}px)`
-    ctx.globalAlpha = 0.32
+    ctx.filter = `blur(${SCALE}px)`
     ctx.drawImage(cells, 0, 0, smooth.width, smooth.height)
+    ctx.filter = 'none'
+    const px = ctx.getImageData(0, 0, smooth.width, smooth.height)
+    for (let i = 3; i < px.data.length; i += 4) {
+      const inside = px.data[i] >= 128
+      px.data[i - 3] = 120; px.data[i - 2] = 126; px.data[i - 1] = 134
+      px.data[i] = inside ? 110 : 0
+    }
+    ctx.putImageData(px, 0, 0)
     const rectangle = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
     this.region = this.viewer.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
       url: smooth.toDataURL(), tileWidth: smooth.width, tileHeight: smooth.height, rectangle,
     }))
+    // Just above the base map, so the fire and its forecasts draw over it.
+    const layers = this.viewer.imageryLayers
+    layers.lowerToBottom(this.region)
+    layers.raise(this.region)
     return true
   }
 
