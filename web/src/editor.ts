@@ -1,4 +1,5 @@
 import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
 // button arms the map, then each click puts it on the nearest road (a point of attack, where it
@@ -15,6 +16,7 @@ import {
   Cartographic,
   Color,
   CustomDataSource,
+  Entity,
   HeightReference,
   Math as CesiumMath,
   PolylineDashMaterialProperty,
@@ -344,6 +346,8 @@ export class Editor {
   private readonly routes = new CustomDataSource('routes')
   private readonly hazards = new CustomDataSource('hazards')
   private readonly agency = new CustomDataSource('agency')
+  // One ring per engine on the ground, kept across redraws: its radius follows the water left without a rebuild.
+  private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean } }>()
   private dangerTimer?: number
   /** The assignments of a decision last shown late, so that only a new one warns. */
   private lateShown: { id: string; keys: Set<string> } = { id: '', keys: new Set() }
@@ -405,6 +409,8 @@ export class Editor {
     void viewer.dataSources.add(this.routes)
     void viewer.dataSources.add(this.hazards)
     void viewer.dataSources.add(this.agency)
+    // Redraws on every clock minute reuse unchanged lines and rings instead of rebuilding them (no flashing).
+    for (const source of [this.source, this.routes, this.agency]) stabilize(source.entities)
     this.unitMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
@@ -1934,8 +1940,7 @@ export class Editor {
       if(!p||!ordered(a)||state.exhausted||state.waterPct<=0)continue
       const waiting=this.playbackMinute<p.arrivalMin
       const radius=waiting?(a.unit==='crew'?28:52.5)*Math.sqrt(a.count):state.radius
-      const positions=Array.from({length:65},(_,i)=>destination(p.point,i*360/64,radius)).map(p=>Cartesian3.fromDegrees(p.lon,p.lat))
-      const coverage=entities.add({polyline:{positions,width:2,clampToGround:true,material:waiting?new PolylineDashMaterialProperty({color:WET,dashLength:12}):WET}})
+      const coverage=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,radius,waiting))
       ;(coverage as any)._unitInfo=unitInfo(a,p.point,[a])
     }
 
@@ -2167,6 +2172,30 @@ export class Editor {
         }
       }
     }
+  }
+
+  /** A ring whose positions follow its state: drawn at the ground height of the centre, seen through the relief. */
+  private coverageRing(key: string, at: LonLat, radius: number, waiting: boolean) {
+    let ring = this.coverageRings.get(key)
+    if (!ring) {
+      const state = { lon: NaN, lat: NaN, h: 0, radius, waiting }
+      const circle = () => Array.from({ length: 65 }, (_, i) => destination(state, i * 360 / 64, state.radius))
+        .map((q) => Cartesian3.fromDegrees(q.lon, q.lat, state.h))
+      const material = () => new PolylineDashMaterialProperty({ color: WET, dashLength: 12,
+        gapColor: new CallbackProperty(() => state.waiting ? Color.TRANSPARENT : WET, false) })
+      const entity = new Entity({ polyline: { positions: new CallbackProperty(circle, false), width: 2,
+        material: material(), depthFailMaterial: material() } })
+      ring = { entity, state }
+      this.coverageRings.set(key, ring)
+    }
+    const { state } = ring
+    if (state.lon !== at.lon || state.lat !== at.lat) {
+      state.lon = at.lon; state.lat = at.lat
+      state.h = (this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(at.lon, at.lat)) ?? 0) + 3
+    }
+    state.radius = radius
+    state.waiting = waiting
+    return ring.entity
   }
 
   private polyline(raw: LonLat[], color: Color, dashed: boolean, dashLength = 12) {

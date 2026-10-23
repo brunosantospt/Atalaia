@@ -956,12 +956,13 @@
 /* ---------- credits: the ion logo and a link under the card; the sources in a panel ---------- */
 
 .cesium-viewer-bottom {
-  left: 50% !important;
+  left: auto !important;
+  right: 12px !important;
   bottom: 8px !important;
-  transform: translateX(-50%);
-  width: min(680px, calc(100vw - 32px));
+  width: auto;
+  max-width: min(680px, calc(100vw - 32px));
   padding: 0;
-  text-align: center;
+  text-align: right;
   opacity: 0.6;
   z-index: 4;
 }

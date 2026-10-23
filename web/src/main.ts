@@ -27,6 +27,7 @@ import {
 import { demoDecision } from './decisions'
 import { loadDetection } from './detection'
 import { incidentShots } from './director'
+import { DroneClips, type Clip } from './droneClips'
 import { Busy } from './busy'
 import { Editor, type Reports, type Runs, type SimulateState } from './editor'
 import { runFast } from './fastClient'
@@ -133,6 +134,7 @@ async function main() {
   ).observe(credits)
 
   const spotlight = new Spotlight(scene)
+  const drone = new DroneClips()
   const busy = new Busy() // the loading screen: while a simulation is on, nothing can be changed
   const basemap = new Basemap(viewer)
   let replay: Replay | undefined
@@ -271,7 +273,7 @@ async function main() {
         replay.showSplit = false
         replay.outcome?.show(false)
         replay.reach.update(new Set())
-        replay.markers.update(new Set()) // persistent operational landmarks stay visible
+        replay.markers.update(new Set(['ignition:0'])) // the ignition and persistent operational landmarks stay visible
         scene.requestRender()
       } else {
         void refreshDirector()
@@ -644,7 +646,7 @@ async function main() {
     if (replay.phase === 'post' && !sim)
       return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
-      return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
+      return { label: 'Simular', enabled: false, note: '' }
     return { label: 'Simular', enabled: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
   }
@@ -742,7 +744,10 @@ async function main() {
     const { player, fire, free, split } = replay
     scene.screenSpaceCameraController.enableInputs = !player.driving && !busy.active
     if (editor.open && player.driving) player.pause()
-    const frame = player.update(dt, replay.director ? 4 : 1)
+    // After the wind change the revised plan plays out 4× faster: the story there is the outcome, not each minute.
+    const shift = replay.data.windShift?.minutes
+    const afterWind = replay.phase === 'post' && shift !== undefined && renderedHours * 60 >= shift
+    const frame = player.update(dt, replay.director ? (afterWind ? 16 : 4) : 1)
     if (frame.hours < renderedHours - 1e-6) for (const [key, minute] of replay.arrivalPauses)
       if (minute > frame.hours * 60 + 1e-6) replay.arrivalPauses.delete(key)
     const arrivalKey = `${replay.phase}:${frame.shot.decision}:${frame.shot.hours}`
@@ -792,6 +797,7 @@ async function main() {
       } else if (kind === 'versus') split?.setPosition(0.5)
     }
     revealed = editor.open ? new Set() : frame.revealed
+    drone.set(editor.open || !replay.director ? undefined : droneClip(frame.shot, frame.hours * 60, replay.phase === 'post', replay.data.windShift?.minutes))
     spotlight.enabled = !editor.open
 
     // The crosshair, its coordinates and the light are on the ground at the centre of the screen, picked every
@@ -825,7 +831,7 @@ async function main() {
   })
   // Tags are placed after the render, when the camera has its final pose for the frame.
   scene.postRender.addEventListener(() => {
-    replay?.markers.update(revealed)
+    replay?.markers.update(editor.open ? new Set(['ignition:0']) : revealed) // planning keeps the ignition
     replay?.reach.update(revealed)
   })
 
@@ -837,7 +843,7 @@ async function main() {
     // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.
     const { target } = e
     const field = target instanceof HTMLSelectElement || (target instanceof HTMLInputElement && (target.type !== 'range' || e.key.startsWith('Arrow')))
-    if (!replay || field) return
+    if (!replay || field || document.querySelector('.intro')) return // nothing runs behind the intro
     const { player } = replay
     const actions: Record<string, () => void> = {
       ' ': () => playback(() => player.toggle()),
@@ -859,6 +865,55 @@ async function main() {
 
   window.addEventListener('hashchange', () => open(fireFromHash(index.map((f) => f.id))))
   await open(fireFromHash(index.map((f) => f.id)))
+  mapLogo(viewer.bottomContainer as HTMLElement)
+  showIntro(() => replay && playback(() => replay!.player.restart()))
+}
+
+/** First load: the fleet's takeoff shot; at the thermal view the alert, then the director's cut starts on the button. */
+function showIntro(start: () => void) {
+  const ALERT_S = 15
+  const REC_S = 10
+  const warn = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="10.9" y="8.5" width="2.2" height="7" rx="1.1" fill="#a0140a"/><circle cx="12" cy="18" r="1.25" fill="#a0140a"/></svg>'
+  const el = document.createElement('div')
+  el.className = 'intro'
+  el.innerHTML = `<div class="intro-frame">
+    <video src="${import.meta.env.BASE_URL}drone/takeoff_detect.mp4" autoplay muted playsinline></video>
+    <img class="intro-logo" src="${import.meta.env.BASE_URL}drone/atalaia-logo.svg" alt="Atalaia">
+    <div class="intro-rec"><span></span>REC</div>
+    <div class="intro-unit">ºC</div>
+    <div class="intro-panel"><div class="intro-alert">${warn}Alerta: Incêndio detetado pela frota!${warn}</div>
+    <button type="button">Começar planeamento de combate</button></div>
+    <div class="intro-legend">Guimarães 3D Digital Twin · Atalaia IP · Drone de vigilância · Câmara térmica</div></div>`
+  const video = el.querySelector('video')!
+  const reveal = () => {
+    if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
+    if (video.currentTime >= ALERT_S || video.ended) el.classList.add('alerted')
+  }
+  video.addEventListener('timeupdate', reveal)
+  video.addEventListener('ended', reveal) // it holds on the last frame
+  const go = () => { el.remove(); document.removeEventListener('keydown', esc); start() }
+  const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); go() } } // Esc skips the video
+  el.querySelector('button')!.addEventListener('click', go)
+  document.addEventListener('keydown', esc)
+  document.body.append(el)
+}
+
+/** Which drone footage goes with the shot: units on the move, units fighting, the revised plan after the wind, the endings. */
+function droneClip(shot: Shot, minute: number, post: boolean, shift: number | undefined): Clip {
+  if (shot.kind === 'outcome') return 'finale'
+  if (post && shift !== undefined && minute >= shift) return 'first_look'
+  if (shot.word === 'Mobilização') return 'closeup1'
+  if (shot.word === 'Primeiros meios' || shot.kind === 'control') return 'closeup'
+  return undefined
+}
+
+/** The Atalaia mark on the map, bottom right beside the Cesium logo. */
+function mapLogo(beside: HTMLElement) {
+  const img = document.createElement('img')
+  img.className = 'map-logo'
+  img.src = `${import.meta.env.BASE_URL}drone/atalaia-logo.svg`
+  img.alt = 'Atalaia'
+  beside.prepend(img)
 }
 
 /** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
