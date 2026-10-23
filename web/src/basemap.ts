@@ -57,7 +57,7 @@ interface Look {
 // The satellite keeps most of its colour where the spotlight falls (spotlight.ts greys the rest).
 // Under the contours it steps back, so the lines read first.
 const SATELLITE: Record<'satellite' | 'contours', Look> = {
-  satellite: { brightness: 0.92, contrast: 1.15, saturation: 0.62, gamma: 1.05 },
+  satellite: { brightness: 1.12, contrast: 1.02, saturation: 1.08, gamma: 1.12 }, // natural daylight colours under the spotlight
   contours: { brightness: 0.55, contrast: 1.1, saturation: 0.25, gamma: 1.0 },
 }
 // The maps are drawn for daylight; a touch darker, the HUD and the fire's amber still read over them.

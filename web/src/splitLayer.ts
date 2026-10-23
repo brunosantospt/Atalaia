@@ -28,7 +28,6 @@ import {
   type Viewer,
 } from 'cesium'
 import type { Grid } from './grid'
-import { FrontFlames } from './frontFlames'
 import './split.css'
 
 // A cell is drawn (R, G, k) with k = 1 + ceil(level(minute)), 255 where the fire never comes. Cesium
@@ -61,9 +60,11 @@ interface Look {
 // Solved offline for the colours on the right by replaying those three steps of the shader. Over a dark
 // ground the stack comes out as FireLayer's: its FRONT (#f0a33a at 0.58) behind the line, its SCAR
 // (#7a3f1c at 0.62) under the scar.
-const LINE: Look = { alpha: 0.9, brightness: 0.791, hue: 0.46, saturation: 0.916 } // #f0a33a, FIRE_AMBER
-const FRONT: Look = { alpha: 0.4, brightness: 0.201, hue: 0.371, saturation: 0.446 } // #342c1d
-const SCAR: Look = { alpha: 0.7, brightness: 0.164, hue: 0.875, saturation: 1.108 } // #3c1a14
+// The active front: a thin, bright orange edge (the amber pushed brighter and more saturated).
+const LINE: Look = { alpha: 1, brightness: 1, hue: 0.46, saturation: 1.25 }
+// What has burned: a dark, see-through veil (no hue), a little darker once the front has passed long ago.
+const FRONT: Look = { alpha: 0.38, brightness: 0.05, hue: 0, saturation: 0 }
+const SCAR: Look = { alpha: 0.3, brightness: 0.05, hue: 0, saturation: 0 }
 
 export interface Side {
   name: string
@@ -75,7 +76,6 @@ export class SplitLayer {
   private glow: Entity | undefined // a spot for a fire too small to read on screen (one side only)
   private burned: { minute: Float32Array; lon: Float64Array; lat: Float64Array; cell: number } | undefined
   private on = true
-  private readonly flames: FrontFlames[] = [] // live flames on each side's front
   private root: HTMLElement | undefined // the handle and labels, only with two sides
   /** Where the split stands, 0 (all B) to 1 (all A). */
   position = 0.5
@@ -97,7 +97,6 @@ export class SplitLayer {
       const lineUrl = encode(grid, line, scale, durationMin)
       const insideUrl = encode(grid, inside, scale, durationMin)
       const direction = !split ? SplitDirection.NONE : s === 0 ? SplitDirection.LEFT : SplitDirection.RIGHT
-      this.flames.push(new FrontFlames(viewer, grid, side.arrival, durationMin, direction))
       this.layers.push(
         { layer: this.add(lineUrl, grid, rect, direction, LINE), lagMin: 0, scale },
         { layer: this.add(insideUrl, grid, rect, direction, FRONT), lagMin: 0, scale },
@@ -148,7 +147,6 @@ export class SplitLayer {
   show(on: boolean) {
     this.on = on
     for (const { layer } of this.layers) layer.show = on
-    for (const f of this.flames) f.show(on)
     if (this.root) this.root.hidden = !on
     if (!on && this.glow) this.glow.show = false
   }
@@ -156,7 +154,6 @@ export class SplitLayer {
   /** Show both fires as they stand `hours` after the ignition. */
   set(hours: number) {
     for (const { layer, lagMin, scale } of this.layers) layer.colorToAlphaThreshold = threshold(hours * 60 - lagMin, scale)
-    for (const f of this.flames) f.set(hours * 60)
     this.updateGlow(hours * 60)
   }
 
@@ -210,7 +207,6 @@ export class SplitLayer {
 
   destroy() {
     for (const { layer } of this.layers) this.viewer.imageryLayers.remove(layer, true)
-    for (const f of this.flames) f.destroy()
     if (this.glow) this.viewer.entities.remove(this.glow)
     if (!this.root) return
     this.root.remove()
