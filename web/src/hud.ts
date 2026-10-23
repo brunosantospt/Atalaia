@@ -5,7 +5,7 @@
 import { rank, type Alert } from './alerts'
 import type { MapId } from './basemap'
 import type { Fire, FireIndexEntry } from './data'
-import { fmtDate, fmtElapsed, fmtHa, fmtRange, fmtTime, wallClock } from './format'
+import { fmtDate, fmtElapsed, fmtHa, fmtNumber, fmtRange, fmtTime, wallClock } from './format'
 import { compass, formatDMS, type LonLat } from './geo'
 import type { SafeArea } from './markers'
 import type { Frame } from './player'
@@ -158,7 +158,7 @@ const TEMPLATE = `
         <span class="popover-title" data-ref="popoverTitle"><span class="title-svg">${ICON_HAZARD}</span> RECOMENDAÇÃO TÁTICA</span>
         <button type="button" class="btn-close-popover" data-ref="closeAlertPopover" title="Fechar">✕</button>
       </header>
-      <div class="popover-stat" data-ref="popoverStat">Chama: -- m · Intensidade: -- kW/m</div>
+      <div class="popover-stat" data-ref="popoverStat">Chama — m · Intensidade — kW/m</div>
       <p class="popover-desc" data-ref="popoverDesc">Chama estimada excede a capacidade de combate frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos.</p>
     </div>
   </div>
@@ -395,21 +395,21 @@ export class Hud {
         this.refs.alertBadge.classList.toggle('emergency', emergency)
         this.refs.alertBadge.classList.add('pulsing')
         this.refs.alertBadge.title = emergency
-          ? `Alerta Crítico: Chama estimada em ${flame.toFixed(1)}m (Extremo) · ver recomendação`
-          : `Apoio Aéreo Recomendado: Chama frontal de ${flame.toFixed(1)}m · ver recomendação`
+          ? `Fogo extremo · chama de ${fmtNumber(flame, 1)} m`
+          : `Apoio aéreo recomendado · chama de ${fmtNumber(flame, 1)} m`
 
         this.refs.popoverTitle.innerHTML = `<span class="title-svg">${ICON_HAZARD}</span> ${
-          emergency ? 'ALERTA DE EMERGÊNCIA · COMPORTAMENTO EXTREMO' : 'RECOMENDAÇÃO TÁTICA · MEIOS AÉREOS'
+          emergency ? 'EMERGÊNCIA · FOGO EXTREMO' : 'APOIO AÉREO RECOMENDADO'
         }`
         this.refs.popoverDesc.textContent = emergency
-          ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
-          : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
+          ? `Comportamento extremo: sem ataque frontal. Avião pesado (AVBP) e reforço dos flancos e das povoações.`
+          : `Chamas acima de 2,4 m: fora do alcance do ataque terrestre. Apoio aéreo (HEBL) e combate pelos flancos.`
         // It pops up by itself when it first appears or escalates and stays until its ✕ is pressed.
         this.isAlertPopoverOpen = true
         this.refs.alertPopover.hidden = false
       }
 
-      this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
+      this.refs.popoverStat.textContent = `Chama ${fmtNumber(flame, 1)} m · Intensidade ${fmtNumber(Math.round(currentIntensity))} kW/m`
     } else if (!this.isAlertPopoverOpen) { // an open warning stays until closed, even if the flames drop
       this.lastAlertEmergency = undefined
       this.refs.alertContainer.hidden = true
