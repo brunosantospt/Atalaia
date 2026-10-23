@@ -6,7 +6,7 @@ Slides em reveal.js 5.1.0, guardado em `vendor/` para correr sem rede.
 python3 -m http.server 8642 --directory pitch
 ```
 
-Abrir http://127.0.0.1:8642. **S** abre a vista do orador (notas em PT, tempos, cronómetro de 4 min); **F** põe em ecrã inteiro; `?print-pdf` exporta para PDF pelo Chrome.
+Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e os cliques, tempos, cronómetro de 4 min); **F** põe em ecrã inteiro; `?print-pdf` exporta para PDF pelo Chrome. O guião para ensaiar está em `GUIAO.md`; o sourcing, as ressalvas e as notas técnicas por slide (para o Q&A) estão em `FONTES.md`, fora da vista do orador.
 
 | # | Slide | Tempo |
 |---|---|---|
@@ -34,7 +34,7 @@ Os tempos da coluna acima já não batem certo: o slide 4 e o novo slide 8b soma
 Dados verificados em 21 out 2026:
 
 - Slide 2 é todo de 2025 (o último ano fechado), para não misturar anos: [Relatório de Atividades do SGIFR 2025 (AGIF)](https://www.agif.pt/app/uploads/2026/07/Relatorio_Atividades_SGIFR_2025_v20260715.pdf). Área e ocorrências: 270 695 ha, 8 252 incêndios (pp. 20, 965). Custo: "prejuízos estimados superiores a 85 milhões de euros" (madeira, biomassa para energia, frutos, carbono armazenado e serviços de ecossistema), pp. 14 e 43. É também um mínimo: não conta casas, infraestruturas, saúde nem o custo do combate. Para comparar: o SGIFR investiu 600 M€ em 2025 (p. 19), e o JRC estimou cerca de 1,5 mil M€ de danos em 2017.
-- 2026 não entra no slide 2 por não ter ainda um relatório fechado (só sai em 2027). A estimativa de perdas de 2026 (25–35 M€, extrapolada da área ardida até 21 out — 74 591 ha — vezes o €/ha de 2024–2025, 314–487 €/ha) fica só nas notas do orador, para o Q&A.
+- 2026 não entra no slide 2 por não ter ainda um relatório fechado (só sai em 2027). A estimativa de perdas de 2026 (25–35 M€, extrapolada da área ardida até 21 out — 74 591 ha — vezes o €/ha de 2024–2025, 314–487 €/ha) fica só em `FONTES.md`, para o Q&A.
 - Slide 3 é agora também 2025 (antes era o relatório provisório de 2026 do ICNF, limiar de 100 ha): [Relatório de Atividades do SGIFR 2025 (AGIF)](https://www.agif.pt/app/uploads/2026/07/Relatorio_Atividades_SGIFR_2025_v20260715.pdf), pp. 34–36. "Cerca de 91% da área ardida ocorreu em incêndios com dimensão igual ou superior a 500 hectares" — 44 incêndios, "cerca de 0,47% das ocorrências". O limiar mudou de 100 ha para 500 ha, porque é o que este relatório destaca; os 246 mil ha do detalhe são um cálculo nosso (91 % × 270 695 ha do slide 2), não um valor do relatório.
 
 O slide 5 reutiliza o drone e a chama do SVG original: o drone verifica a chama no «i», a chama desaparece com um pouco de fumo que se dissipa, surge o ponto branco do «i» e o drone regressa à torre com o feixe desligado. A sequência termina em cerca de 3 s e repete-se ao voltar a entrar no slide. Com redução de movimento, mostra o estado final sem animação. A versão para impressão usa logótipos estáticos. A animação representa a marca; a deteção por drones continua na secção «A seguir».
