@@ -44,7 +44,20 @@ export function routeIsSafe(s:Scenario,path:LonLat[],minute:number,speed:number,
   return true
 }
 
+/** Runs many plans at once (a pool of workers, optimize.worker.ts); the arrival field of each. */
+export type SimulateMany=(s:Scenario,plans:Decision[])=>Promise<Float32Array[]>
+
 export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,options:Options):Result {
+  return relocate(input,ground,a,options) as Result
+}
+
+/** The same search with its plans run in parallel: every single move (and engine + tanker pair) is scored
+ *  against A at once, then the ones that help are combined best first until they stop helping. */
+export function optimizeRelocationsParallel(input:Scenario,ground:Ground,a:Decision,options:Options,simulateMany:SimulateMany):Promise<Result> {
+  return Promise.resolve(relocate(input,ground,a,options,simulateMany))
+}
+
+function relocate(input:Scenario,ground:Ground,a:Decision,options:Options,simulateMany?:SimulateMany):Result|Promise<Result> {
   const started=performance.now(),minute=Math.max(0,options.replanMin??0)
   const durationMin=Math.min(DEMO_HORIZON_MIN,input.durationMin)
   // Recompute the free forecast exactly as Simular does, including the selected wind phase.
@@ -154,6 +167,15 @@ export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,opti
     for(const c of moves)changed.set(c.slot,c)
     report('search')
   }
+  const support=(slot:number,candidate:Candidate)=>{
+    if(!['crew','vfci'].includes(a.assignments[slot].unit))return undefined
+    const tank=a.assignments.findIndex((x,i)=>x.unit==='vttu'&&eligible[i])
+    if(tank<0)return undefined
+    const near=ground.access.filter(p=>distanceM(p,candidate.placement.point)<250)
+      .sort((p,q)=>distanceM(p,candidate.placement.point)-distanceM(q,candidate.placement.point))
+    return near.slice(0,4).map(p=>make(tank,p)).find(Boolean)
+  }
+  if(simulateMany)return parallel(simulateMany)
   // Round-robin candidates so a short budget is shared by all units; two passes allow coordination.
   for(let pass=0;pass<2&&!timeUp();pass++)for(let rank=0;rank<12&&!timeUp();rank++)
     for(let slot=0;slot<candidates.length&&!timeUp();slot++) {
@@ -161,17 +183,59 @@ export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,opti
       if(!candidate)continue
       evaluate([candidate])
       // A dry attack unit and its supplying tanker may only improve the result together.
-      if(['crew','vfci'].includes(a.assignments[slot].unit)) {
-        const tank=a.assignments.findIndex((x,i)=>x.unit==='vttu'&&eligible[i])
-        if(tank>=0&&!timeUp()) {
-          const near=ground.access.filter(p=>distanceM(p,candidate.placement.point)<250)
-            .sort((p,q)=>distanceM(p,candidate.placement.point)-distanceM(q,candidate.placement.point))
-          const support=near.slice(0,4).map(p=>make(tank,p)).find(Boolean)
-          if(support)evaluate([candidate,support])
-        }
-      }
+      const tank=timeUp()?undefined:support(slot,candidate)
+      if(tank)evaluate([candidate,tank])
     }
   return finish()
+
+  async function parallel(run:SimulateMany):Promise<Result> {
+    const safe=(moves:Candidate[],arrival:Float32Array)=>!moves.some(c=>!c.aerial&&!routeIsSafe(s,c.placement.path!,minute,c.speed,arrival))
+    // 1. Every single move, and a dry unit with its tanker, each against A: independent, so all at once.
+    const sets:Candidate[][]=[]
+    for(let rank=0;rank<12;rank++)for(let slot=0;slot<candidates.length;slot++) {
+      const c=candidates[slot][rank]
+      if(!c)continue
+      sets.push([c])
+      const tank=support(slot,c)
+      if(tank)sets.push([c,tank])
+    }
+    const helping:{moves:Candidate[];score:Score;plan:Decision}[]=[]
+    const CHUNK=32
+    for(let i=0;i<sets.length&&!timeUp();i+=CHUNK) {
+      const chunk=sets.slice(i,i+CHUNK).map(moves=>{const plan=structuredClone(best);for(const c of moves)apply(plan,c);return {moves,plan}})
+        .filter(({plan})=>{const key=JSON.stringify(plan.assignments);if(seen.has(key))return false;seen.add(key);return true})
+      const fields=await run(s,chunk.map(c=>c.plan))
+      plans+=chunk.length
+      chunk.forEach(({moves,plan},k)=>{
+        const next=score({arrival:fields[k]} as Run)
+        if(better(next,initial)&&safe(moves,fields[k]))helping.push({moves,score:next,plan})
+      })
+      report('search')
+    }
+    // 2. The best of them, then the others on top, best first, while they still help (6 misses in a row end it).
+    helping.sort((x,y)=>better(x.score,y.score)?-1:better(y.score,x.score)?1:0)
+    let misses=0
+    for(const h of helping) {
+      if(timeUp()||misses>=6)break
+      if(h.moves.some(c=>changed.has(c.slot)))continue
+      if(!changed.size) {
+        best=h.plan;bestScore=h.score
+        for(const c of h.moves)changed.set(c.slot,c)
+        report('search');continue
+      }
+      const plan=structuredClone(best)
+      for(const c of h.moves)apply(plan,c)
+      const [field]=await run(s,[plan]);plans++
+      const next=score({arrival:field} as Run)
+      if(better(next,bestScore)&&safe([...changed.values(),...h.moves],field)) {
+        best=plan;bestScore=next;misses=0
+        for(const c of h.moves)changed.set(c.slot,c)
+        report('search')
+      } else misses++
+    }
+    return finish()
+  }
+
   function finish():Result {
     report('done')
     return {decision:best,improved:better(bestScore,initial),best:bestScore,a:initial,plans,elapsedMs:performance.now()-started}
