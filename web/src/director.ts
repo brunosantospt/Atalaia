@@ -56,6 +56,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
   const outBox = bboxOf([...points, ...bases.map(st => ({ lon: st!.lon, lat: st!.lat }))])
   const mobilizePath = bases.length ? [{ ...bboxCenter(outBox), h: 0, heading: 0, pitch: -70, range: Math.max(1800, bboxRadiusM(outBox) * 1.25 / Math.tan(fovy / 2)) }] : path
   const dispatchMin = selected ? Math.min(...selected.assignments.map(a => a.dispatchMin ?? detection.droneMin)) : Infinity
+  const ignitionPath = [{ ...fire.ignition, h: 0, heading: 0, pitch: -58, range: 650 }]
   const arrivalPath = [{ ...(firstTarget ?? centre), h: 0, heading: 0, pitch: -60, range: 1100 }]
   const cache = new Map<number, number>()
   const area = (h: number) => {
@@ -100,7 +101,9 @@ export function incidentShots(input: IncidentInput): Shot[] {
     if (event) current = event
     const to = ordered[k + 1] ?? minute
     const close = !!firstTarget && minute >= first && minute < first + 5
-    const shotPath = close ? arrivalPath : minute >= dispatchMin && minute < first ? mobilizePath : path
+    // Before the drone's alert: close on the ignition and quick (about 1–2 s in all); the alert pulls back out.
+    const early = minute < detection.droneMin
+    const shotPath = early ? ignitionPath : close ? arrivalPath : minute >= dispatchMin && minute < first ? mobilizePath : path
     const previousPath = shots.at(-1)?.path
     const cameraChange = !previousPath || previousPath !== shotPath
     shots.push({
@@ -108,7 +111,7 @@ export function incidentShots(input: IncidentInput): Shot[] {
       caption: current.caption, place: centre, simulated: true, step: -1,
       hours: minute / 60, hoursTo: to / 60, areaHa: 0, untimed: false,
       path: shotPath, driftDeg: 0, spot: radius * 1.5,
-      moveS: cameraChange ? 1.5 : 0.001, holdS: Math.max(0.5, (to-minute)*0.8),
+      moveS: cameraChange ? (early ? 0.8 : 1.5) : 0.001, holdS: early ? 0.4 : Math.max(0.5, (to-minute)*0.8),
       reveal: ['ignition:0'], conceal: [], decision: runs ? decision : undefined,
       milestone: !!event, gate: event?.gate, area,
     })
