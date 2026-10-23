@@ -155,14 +155,14 @@ meio do slide (logo a seguir ao roadmap) e os 4 modelos resumidos para
 baixo (antes era o inverso). A fala segue a mesma ordem: proposta → prova
 de validação → modelos.
 
-ATUALIZADO (23 out, 4.ª passagem): cada secção (validação, modelos) ganhou
-um título próprio ("A validação", "Os modelos"), centrado; antes só a
-proposta tinha título (o `.tag` no topo do slide). As secções de
-validação e modelos passaram a ficar centradas (estavam encostadas à
-esquerda). Na validação, o rótulo "Sobreposição com um incêndio real ·
-Vieira do Minho, 2016" passou para cima da sequência 0,76→0,83→0,89 (antes
-estava por baixo, e incluía "· índice de Sørensen", que saiu do ecrã —
-o termo continua a usar-se na fala e no Q&A).
+ATUALIZADO (23 out, 4.ª passagem): as secções de validação e modelos
+passaram a ficar centradas (estavam encostadas à esquerda). Na validação,
+o rótulo "Sobreposição com um incêndio real · Vieira do Minho, 2016"
+passou para cima da sequência 0,76→0,83→0,89 (antes estava por baixo, e
+incluía "· índice de Sørensen", que saiu do ecrã — o termo continua a
+usar-se na fala e no Q&A). Chegaram a ter títulos próprios ("A
+validação", "Os modelos"), mas saíram logo a seguir (5.ª passagem) por
+pedido direto.
 
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
 - "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
