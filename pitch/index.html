@@ -224,7 +224,7 @@
 
     /* 6 · validação */
     .val img { width: 100%; display: block; border: 1px solid var(--ink-faint); }
-    .val .caps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-family: var(--mono); font-size: 0.38em; color: var(--ink-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.4em; }
+    .val .caps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-family: var(--mono); font-size: 0.38em; color: var(--ink-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.4em; }
     .legend { font-family: var(--mono); font-size: 0.38em; color: var(--ink-dim); margin-top: 0.5em; }
     /* sequência de precisão, fora da imagem: 0,73 → 0,76–0,79 → 0,84–0,85, seta a dizer o que se somou */
     .accuracy { display: flex; align-items: flex-start; gap: .5em; margin-top: .8em; }
@@ -236,6 +236,10 @@
     .accuracy .acc-arrow p { font-size: .4em; color: var(--ink-dim); margin: .25em 0 0; line-height: 1.3; }
     .legend b { display: inline-block; width: 12px; height: 12px; margin: 0 0.4em 0 1.2em; vertical-align: -1px; }
     .legend b:first-child { margin-left: 0; }
+    .legend .sw { display: inline-block; vertical-align: -1px; margin: 0 0.4em 0 1.2em; }
+    .legend .sw:first-child { margin-left: 0; }
+    .legend .sw.grad { width: 34px; height: 9px; border-radius: 2px; background: linear-gradient(90deg, #4b1d6e, #c23c6b 45%, #f0a33a 75%, #fde9a8); }
+    .legend .sw.line { width: 18px; height: 3px; }
     .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; margin-top: 0.9em; }
     .kpi .n { font-size: 1.5em; font-weight: 800; letter-spacing: -0.02em; }
     .kpi .l { font-size: 0.5em; color: var(--ink-dim); line-height: 1.3; }
@@ -612,37 +616,34 @@
   <section class="val" data-timing="20">
     <span class="tag">Confiança · reconstituímos um incêndio real</span>
     <h2 style="font-size:1.2em;">Vieira do Minho, 11 ago 2016, 08:30</h2>
-    <div class="caps">
-      <span>Observado · PT-FireSprd</span>
-      <span>Modelo base (como a API)</span>
-      <span>Só com dados</span>
-      <span>Com linhas de ataque inferidas</span>
+    <img src="img/vieira_validation_scenarioB.png" alt="Três simulações do ELMFIRE para Vieira do Minho: modelo base, só com dados públicos, e com linhas de ataque inferidas">
+    <div class="legend">
+      <span class="sw grad"></span>área prevista pelo modelo
+      <span class="sw line" style="background:var(--blue)"></span>perímetro observado (PT-FireSprd)
     </div>
-    <img src="img/vieira_validation_0830.png" alt="Perímetro observado e três simulações do ELMFIRE às 08:30 de 11 ago 2016">
-    <div class="legend"><b style="background:#f8a62a"></b>arderam os dois<b style="background:var(--red)"></b>só o modelo<b style="background:var(--blue)"></b>só o observado</div>
     <div class="accuracy">
-      <div class="acc-step"><span class="acc-n">0,73</span></div>
+      <div class="acc-step"><span class="acc-n">0,76</span></div>
       <div class="acc-arrow"><span class="arr">→</span><p>+ dados públicos: combustíveis PT, LiDAR, cicatrizes, projeções</p></div>
-      <div class="acc-step"><span class="acc-n">0,76–0,79</span></div>
+      <div class="acc-step"><span class="acc-n">0,83</span></div>
       <div class="acc-arrow"><span class="arr">→</span><p>+ linhas de ataque inferidas</p></div>
-      <div class="acc-step final"><span class="acc-n">0,84–0,85</span></div>
+      <div class="acc-step final"><span class="acc-n">0,89</span></div>
     </div>
     <div class="src">PT-FireSprd v1 (Benali et al., 2023) · hindcast ELMFIRE, ramo hindcast-registos</div>
     <aside class="notes">
       20 s · Técnico (25 %) + Impacto · Técnico
 
-      "Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no distrito de Braga, 22,5 h a partir do perímetro das 10:00. Motor ELMFIRE.
-      O modelo base está a 0,73 de sobreposição com o real. Só com dados públicos — combustíveis portugueses, LiDAR, cicatrizes, projeções — sobe para quase 0,8. Com as linhas de ataque inferidas, 0,85."
+      "Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no distrito de Braga. Motor ELMFIRE.
+      O modelo base está a 0,76 de sobreposição com o real. Só com dados públicos — combustíveis portugueses, LiDAR, cicatrizes, projeções — sobe para 0,83. Com as linhas de ataque inferidas, 0,89."
 
       Regras (do README do hindcast, não negociáveis):
-      - Mostrar SEMPRE os três números em sequência: 0,73 (modelo base) → 0,76–0,79 (só dados) → 0,84–0,85 (com linhas). Nunca o 0,85 sozinho, nem o 0,73 omitido.
-      - "22,5 h a partir do perímetro das 10:00" saiu do título (muito texto); fica só na fala, para dar o contexto sem poluir o slide.
+      - Mostrar SEMPRE os três números em sequência: 0,76 (modelo base) → 0,83 (só dados) → 0,89 (com linhas). Nunca o 0,89 sozinho, nem o 0,76 omitido.
+      - IMAGEM TROCADA (23 out): a nova imagem (img/vieira_validation_scenarioB.png) já só tem 3 painéis (sem o "Observado" sozinho) e os números no mosaico mudaram de 0,73→0,76–0,79→0,84–0,85 para 0,76→0,83→0,89 — é outra corrida/versão do hindcast. Confirmar com quem gerou a imagem que esta é a versão final a usar antes do pitch; se não for, repor os números antigos e a imagem antiga (img/vieira_validation_0830.png, 4 painéis).
+      - A imagem nova mostra dois pontos no tempo por painel (15:00 e 08:30), não só o 08:30 único que estava no título; o título do slide continua a dizer só "08:30" — confirmar se deve passar a mencionar os dois horários, já que a imagem agora os mostra.
       - As linhas de ataque são inferidas (attack.py) de onde o perímetro oficial parou ao longo das estradas: melhoram o Sørensen em parte por construção. Nunca dizer que vêm "dos registos".
-      - O satélite nunca se lê sozinho: o x1 (velocidade × 1,5) alcança 0,90 dos focos a queimar de mais. Por isso o KPI leva os ha fora do oficial.
-      - KPI do satélite tirado do slide (muito texto): 71-77 % dos focos de satélite (NASA FIRMS) alcançados, com 246-315 ha fora do perímetro oficial (com linhas). Fica só para o Q&amp;A, se perguntarem pela validação cruzada com satélite.
+      - O satélite nunca se lê sozinho: a imagem nova já traz "hotspots reached" por painel (0,21→0,54→0,54 de dia; 0,25→0,68→0,68 de noite), diferente do KPI antigo (71-77% dos focos, NASA FIRMS). Decidir qual dos dois citar no Q&amp;A, não os dois ao mesmo tempo.
       - Os valores S nos mosaicos usam ponto decimal (gerados pelo grid.py).
       - Intervalos = 3 sementes das projeções.
-      - Para o Q&amp;A: a corrida principal (10:00–15:00) fica 1,4 a 1,9× lenta de mais (380–490 ha contra 707 às 15:00). Dizer o que falha, não arredondar.
+      - Para o Q&amp;A: a corrida principal (10:00–15:00) fica 1,4 a 1,9× lenta de mais (380–490 ha contra 707 às 15:00) — confirmar se este número ainda se aplica à corrida da nova imagem.
       - Os resultados estão no ramo hindcast-registos, ainda não no main: integrar antes do lock de sexta.
       Passagem: "E esta precisão não caiu do céu. Deixem-me mostrar o que está por baixo."
     </aside>
@@ -697,28 +698,26 @@
   <section data-timing="20">
     <span class="tag">A seguir · defender bem não basta, é preciso ver primeiro</span>
     <div class="roadmap horizontal fragment">
-      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Piloto em Guimarães, com a proteção civil e o Laboratório da Paisagem</span></div>
+      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Deteção por drones, mais rápida e económica</span></div>
       <div class="track" style="animation-delay:.35s"></div>
-      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Deteção por drones, mais rápida e económica</span></div>
+      <div class="stop" style="animation-delay:.6s"><span class="node">02</span><span class="label">Treino com incêndios passados, com um modelo de treino próprio para os bombeiros</span></div>
       <div class="track" style="animation-delay:.9s"></div>
-      <div class="stop" style="animation-delay:1.15s"><span class="node">03</span><span class="label">Treino com incêndios passados para os bombeiros do distrito</span></div>
-      <div class="track" style="animation-delay:1.45s"></div>
-      <div class="stop final" style="animation-delay:1.7s"><span class="node">04</span><span class="label">IA a afinar a estratégia mais otimizada</span></div>
+      <div class="stop final" style="animation-delay:1.15s"><span class="node">03</span><span class="label">IA a afinar a estratégia mais otimizada</span></div>
     </div>
-    <p class="closing fragment">Este ano arderam três Guimarães.<br><span class="dim">Com a Atalaia, quem decide vê o que vai arder, <span class="fire">para cada decisão</span>, antes de enviar os meios.</span></p>
+    <p class="closing fragment">Em 2025 arderam 11 Guimarães.<br><span class="dim">Com a Atalaia, quem decide vê o que vai arder, <span class="fire">para cada decisão</span>, antes de enviar os meios.</span></p>
     <div class="src team">Equipa Atalaia · João Folhadela · Carlos Teixeira · Bruno Ramos · Mara Alves · Hugo Martins</div>
     <aside class="notes">
       20 s · Apresentação e continuidade (20 %) · Continuidade (roadmap) → Narrador (fecho)
 
-      Continuidade: "A seguir: um piloto em Guimarães; drones para detetar mais cedo, não só defender melhor; treino com incêndios passados; e, mais à frente, IA a afinar a própria estratégia."
-      [clique] Narrador: "Este ano arderam três Guimarães. (pausa) Com a Atalaia, quem decide vê o que vai arder, para cada decisão, antes de enviar os meios. Obrigado."
+      Continuidade: "A seguir: drones para detetar mais cedo, não só defender melhor; treino com incêndios passados, com um modelo de treino próprio para os bombeiros; e, mais à frente, IA a afinar a própria estratégia."
+      [clique] Narrador: "Em 2025 arderam 11 Guimarães. (pausa) Com a Atalaia, quem decide vê o que vai arder, para cada decisão, antes de enviar os meios. Obrigado."
 
       Notas:
-      - Confirmar com o Prof. Paulo Afonso que apoia o passo 1 (piloto) antes de o dizer em palco.
-      - Passo 2 (deteção): a ideia-chave é que o potencial de melhoria não está só em defender melhor, está em detetar mais cedo. Drones em patrulha reduzem o tempo até à deteção e substituem parte do reconhecimento aéreo hoje feito por helicóptero, mais caro. Fonte: um bombeiro, ex-comandante em Guimarães — confirmar o nome exato e a citação antes de a atribuir em palco; por agora, dizer "segundo um ex-comandante dos bombeiros de Guimarães com quem falámos", sem apontar números de custo que não temos confirmados.
-      - Passo 3 (treino): incêndios passados como exercícios para os bombeiros do distrito e a UMinho.
-      - Passo 4 (IA): ainda é visão, não trabalho feito. Dizer "a afinar", não "já afina". É o horizonte do roadmap, por isso fica a âmbar, como destino.
-      - O fecho repete o número do início de propósito. Segurar a pausa depois de "três Guimarães".
+      - Passo 1 (deteção): a ideia-chave é que o potencial de melhoria não está só em defender melhor, está em detetar mais cedo. Drones em patrulha reduzem o tempo até à deteção e substituem parte do reconhecimento aéreo hoje feito por helicóptero, mais caro. Fonte: um bombeiro, ex-comandante em Guimarães — confirmar o nome exato e a citação antes de a atribuir em palco; por agora, dizer "segundo um ex-comandante dos bombeiros de Guimarães com quem falámos", sem apontar números de custo que não temos confirmados.
+      - Passo 2 (treino): incêndios passados como exercícios para os bombeiros do distrito e a UMinho, com a possibilidade de construirmos um modelo de treino próprio (simulação dedicada a formação, não só ao incidente real). Ainda é intenção, não trabalho feito: dizer "podemos integrar", não "já temos".
+      - Passo 3 (IA): ainda é visão, não trabalho feito. Dizer "a afinar", não "já afina". É o horizonte do roadmap, por isso fica a âmbar, como destino.
+      - O "piloto em Guimarães" saiu do roadmap a pedido; já não é preciso confirmar o apoio do Prof. Paulo Afonso para este slide.
+      - "11 Guimarães" em 2025: mesmo cálculo do slide 2 (270 695 ha ÷ 241,7 km² do concelho ≈ 11,2). O fecho repete esse número de propósito, agora com o valor de 2025. Segurar a pausa depois de "11 Guimarães".
     </aside>
   </section>
 
