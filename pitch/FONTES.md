@@ -140,15 +140,20 @@ Sem notas técnicas; ver `index.html` para a descrição da animação.
 
 FUNDIDO (23 out): este slide era três slides separados — "A proposta",
 "Validação" e "A tecnologia" — juntados num só para caber a apresentação em
-menos tempo. Fica: roadmap da proposta → modelos resumidos (ícone + nome,
-4 badges numa linha) → prova de validação, tudo no mesmo slide, antes da
-demo.
+menos tempo. Fica: roadmap da proposta → prova de validação (meio) →
+modelos resumidos (ícone + nome, 4 badges numa linha, em baixo), tudo no
+mesmo slide, antes da demo.
 
 ATUALIZADO (23 out, 2.ª passagem): a linha "Dados reais. Meios reais. Um só
 mapa." no meio do slide deu lugar aos 4 modelos resumidos (ELMFIRE, Motor
 de vento, Otimização ILS, Tradutor de estratégia — os mesmos ícones do
 antigo grid de 4 cartões, agora só ícone + nome, sem descrição). A frase
 "Dados reais..." saiu do slide e da fala.
+
+ATUALIZADO (23 out, 3.ª passagem): a imagem de validação passou para o
+meio do slide (logo a seguir ao roadmap) e os 4 modelos resumidos para
+baixo (antes era o inverso). A fala segue a mesma ordem: proposta → prova
+de validação → modelos.
 
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
 - "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
