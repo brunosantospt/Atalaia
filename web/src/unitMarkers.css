@@ -27,3 +27,10 @@
 .unit-marker.pending > .unit-map-label { opacity: .65; }
 .unit-map-eta { position: absolute; bottom: 23px; left: 0; transform: translateX(-50%); white-space: nowrap; padding: 2px 5px; border-radius: 3px; background: rgba(6,12,20,.92); color: #f8fafc; font: 600 12px/1.4 system-ui,sans-serif; }
 .unit-map-eta[hidden] { display: none; }
+
+/* Out of water / autonomy: small badges over the unit's icon. */
+.unit-marker .unit-badges { position: absolute; left: 0; top: -42px; transform: translateX(-50%); display: flex; gap: 3px; }
+.unit-marker .unit-badge { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(10, 14, 20, .88); border: 1px solid #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, .6); animation: unit-badge-in .3s ease-out; }
+.unit-marker .unit-badge[hidden] { display: none; }
+.unit-marker .unit-badge svg { width: 16px; height: 16px; }
+@keyframes unit-badge-in { from { transform: scale(.4); opacity: 0; } }

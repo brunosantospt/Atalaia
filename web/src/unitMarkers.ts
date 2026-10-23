@@ -13,11 +13,17 @@ export interface UnitMarker extends LonLat {
   visible?: () => boolean
   pending?: boolean
   eta?: () => number
+  /** Out of water / out of autonomy now: a badge over the icon. */
+  status?: () => { dry: boolean; tired: boolean }
   label: string
   color: string
   offsetX: number
   offsetY: number
 }
+
+// A water drop struck through (no water) and an emptied battery (no autonomy left: the crew is spent).
+const DRY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11Z" fill="#38bdf8" stroke="#fff" stroke-width="1.4"/><path d="M4 4l16 16" stroke="#ef4444" stroke-width="2.6" stroke-linecap="round"/></svg>'
+const TIRED_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2" fill="#1f2937" stroke="#fff" stroke-width="1.4"/><rect x="19.5" y="10" width="2" height="4" rx=".6" fill="#fff"/><rect x="5" y="9" width="2.5" height="6" rx=".5" fill="#ef4444"/><path d="M11 11h4l-4 3h4" fill="none" stroke="#fbbf24" stroke-width="1.3" stroke-linejoin="round"/></svg>'
 
 export class UnitMarkers {
   private readonly root = document.createElement('div')
@@ -41,7 +47,8 @@ export class UnitMarkers {
       if (element.style.getPropertyValue('--origin-color') !== marker.color) element.style.setProperty('--origin-color', marker.color)
       if (!element.firstChild) {
         element.hidden = true
-        element.innerHTML = '<span class="unit-map-eta"></span><i class="unit-tether"></i><img alt=""/><span class="unit-map-label"><b></b></span>'
+        element.innerHTML = '<span class="unit-map-eta"></span><i class="unit-tether"></i><img alt=""/><span class="unit-map-label"><b></b></span>' +
+          `<span class="unit-badges"><i class="unit-badge dry" title="Sem água" hidden>${DRY_SVG}</i><i class="unit-badge tired" title="Autonomia esgotada" hidden>${TIRED_SVG}</i></span>`
       }
       element.classList.toggle('pending', !!marker.pending)
       const tether = element.querySelector<HTMLElement>('.unit-tether')!
@@ -73,6 +80,10 @@ export class UnitMarkers {
       eta.hidden = remaining <= 0
       const text = remaining > 0 ? `ETA ${Math.max(1, Math.ceil(remaining))} min` : ''
       if (eta.textContent !== text) eta.textContent = text
+      const state = m.status?.()
+      const dry = element.querySelector<HTMLElement>('.unit-badge.dry')!, tired = element.querySelector<HTMLElement>('.unit-badge.tired')!
+      if (dry.hidden === !!state?.dry) dry.hidden = !state?.dry
+      if (tired.hidden === !!state?.tired) tired.hidden = !state?.tired
       const at = positions[i]
       const group = groups.get(key(at))!
       const index = group.indexOf(i), row = Math.floor(index / 3)

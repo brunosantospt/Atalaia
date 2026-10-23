@@ -1999,7 +1999,12 @@ export class Editor {
         const arrival = eta[slot] ?? departure
         const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
           color, offsetX: 0, offsetY: 0, label: spec.short,
-          visible, position: () => relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute) }
+          visible, position: () => relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
+          status: () => {
+            if (!combat) return { dry: false, tired: false }
+            const f = resourceAt(combat, slot, this.playbackMinute), on = this.playbackMinute >= f.arrival
+            return { dry: on && a.unit !== 'hebl' && a.unit !== 'avbp' && f.waterPct <= 0, tired: on && f.exhausted }
+          } }
         const destination: UnitMarker = { ...marker, id: `${marker.id}:destination`, pending: true,
           position: () => current()?.point ?? at, visible: () => visible() && this.playbackMinute < (current()?.arrivalMin ?? arrival),
           eta: () => (current()?.arrivalMin ?? arrival) - this.playbackMinute }

@@ -29,7 +29,7 @@ export class WaterGauge {
     this.el.innerHTML = `
       <div class="float-title">Água</div>
       <button type="button" class="float-drag" aria-label="Mover água em campo. Use as setas para deslocar, Home para repor ou Enter para ver o detalhe." title="Arraste para mover o bloco · duplo clique para repor"><span aria-hidden="true">⠿</span></button>
-      <div class="water-total"><strong>—</strong> L</div>
+      <div class="water-total"><strong>—</strong> %</div>
       <div class="water-bar" style="--low: ${LOW * 100}%"><i></i></div>`
     this.total = this.el.querySelector('.water-total strong')!
     this.fill = this.el.querySelector('.water-bar i')!
@@ -67,12 +67,12 @@ export class WaterGauge {
     const firstEta = water.length > here.length ? Math.ceil(Math.min(...water.filter((w) => !w.onScene).map((w) => w.f.arrival)) - minute) : undefined
     const share = tankL ? litres / tankL : 0
     const low = !!here.length && share < LOW
-    const key = [here.length, Math.round(litres), Math.round(tankL), flowLPerMin, dryUnits, firstDry, firstEta, water.length].join('|')
+    const key = [here.length, Math.round(100 * share), Math.round(litres), Math.round(tankL), flowLPerMin, dryUnits, firstDry, firstEta, water.length].join('|')
     if (key === this.shown) return
     this.shown = key
 
     const count = (unit: string) => sum(here.filter((w) => w.a.unit === unit), (w) => w.a.count)
-    this.total.textContent = here.length ? fmtNumber(litres) : '—'
+    this.total.textContent = here.length ? String(Math.round(100 * share)) : '—' // all units on scene together
     this.fill.style.width = `${Math.round(100 * share)}%`
     this.el.classList.toggle('low', low)
     this.el.classList.toggle('dry', dryUnits > 0)
