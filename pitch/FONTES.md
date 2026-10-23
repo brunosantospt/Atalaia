@@ -155,6 +155,15 @@ meio do slide (logo a seguir ao roadmap) e os 4 modelos resumidos para
 baixo (antes era o inverso). A fala segue a mesma ordem: proposta → prova
 de validação → modelos.
 
+ATUALIZADO (23 out, 4.ª passagem): cada secção (validação, modelos) ganhou
+um título próprio ("A validação", "Os modelos"), centrado; antes só a
+proposta tinha título (o `.tag` no topo do slide). As secções de
+validação e modelos passaram a ficar centradas (estavam encostadas à
+esquerda). Na validação, o rótulo "Sobreposição com um incêndio real ·
+Vieira do Minho, 2016" passou para cima da sequência 0,76→0,83→0,89 (antes
+estava por baixo, e incluía "· índice de Sørensen", que saiu do ecrã —
+o termo continua a usar-se na fala e no Q&A).
+
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
 - "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
   fala — se o júri valorizar essa frase de marca, pode voltar a entrar,
@@ -181,8 +190,9 @@ de validação → modelos.
   quatro forças a vender: 1) prevê o incêndio (01, 03); 2) permite testar
   estratégias de ataque e ver a consequência; 3) sugere uma otimização da
   estratégia (ILS); 4) é um ponto de comunicação comum a todos os corpos de ação.
-- "Alocar com eficácia" cobre tanto a colocação manual como a sugestão
-  otimizada (ILS); não especificar no slide qual dos dois corre na demo.
+- "Alocar com inteligência" (23 out: era "com eficácia") cobre tanto a
+  colocação manual como a sugestão otimizada (ILS); não especificar no
+  slide qual dos dois corre na demo.
 - "Tempo real" = o modelo rápido no browser (milissegundos por corrida); o
   ELMFIRE confirma em 10–40 s.
 - Os dados úteis (estradas a cortar, tempo de chegada, casas em risco)
