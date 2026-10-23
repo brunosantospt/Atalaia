@@ -905,6 +905,8 @@ function showIntro(start: () => void) {
     <button type="button">Começar planeamento de combate</button></div>
     <div class="intro-legend">Guimarães 3D Digital Twin · Atalaia IP · Drone de vigilância · Câmara térmica</div></div>`
   const video = el.querySelector('video')!
+  video.playbackRate = 1.2 // 20 % faster; the cues below follow the video's own clock
+  video.defaultPlaybackRate = 1.2
   const reveal = () => {
     if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
     if (video.currentTime >= THERMAL_S || video.ended) el.classList.add('thermal')

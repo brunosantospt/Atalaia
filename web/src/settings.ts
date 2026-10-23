@@ -138,7 +138,7 @@ function mapChoice(map: { id: MapId; name: string; detail: string }, src: string
   const label = document.createElement('label')
   label.className = `map-choice map-${map.id}`
   label.title = map.detail
-  label.innerHTML = `<input type="radio" name="map"><span class="map-preview"><img alt="" loading="lazy" referrerpolicy="no-referrer">${map.id === 'contours' ? CONTOUR_LINES : ''}</span><b></b>`
+  label.innerHTML = `<input type="radio" name="map"><span class="map-preview"><img alt="" loading="lazy">${map.id === 'contours' ? CONTOUR_LINES : ''}</span><b></b>`
   const input = label.querySelector('input')!
   input.value = map.id
   input.addEventListener('change', onPick)
