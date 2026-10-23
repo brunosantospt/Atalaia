@@ -343,7 +343,14 @@
       [data-state="title"] .print-logo, [data-logo-center] .print-logo { width: 62%; left: 50%; top: 43%; transform: translate(-50%, -50%); }
       body.logo-flying .reveal .slides > section.present { opacity: 1 !important; }
       .count.burn.counting, .demo .rec { animation: none; }
+      .reveal video { display: none !important; }
+      .reveal .video-placeholder { display: flex !important; }
     }
+    .reveal .video-placeholder { display: none; flex-direction: column; justify-content: center; align-items: center; gap: .5em; border: 2px dashed var(--line); border-radius: 8px; padding: 1.2em; font-family: var(--mono); color: var(--ink-dim); text-align: center; box-sizing: border-box; }
+    .reveal .video-placeholder strong { color: var(--amber); font-size: 1.1em; letter-spacing: .04em; }
+    .reveal .video-placeholder code { color: var(--ink); font-size: .85em; }
+    .reveal .demo-stage .video-placeholder { width: 70%; height: 55%; margin: 0 auto; font-size: 32px; }
+    .reveal .roadmap .video-placeholder { font-size: 15px; margin-top: .6em; }
   </style>
 </head>
 <body>
@@ -611,6 +618,7 @@
   <!-- ============================== 7 · DEMO · 1:23–3:15 ============================== -->
   <section data-background-color="#000" data-timing="112" class="demo-stage">
     <video class="demo-video" src="video/DEMO.mp4" data-autoplay controls playsinline preload="auto"></video>
+    <div class="video-placeholder"><strong>▶ Vídeo — ver no GitHub</strong><span>github.com/brunosantospt/Atalaia</span><code>pitch/video/DEMO.mp4</code><span>Para correr a apresentação: <code>python3 -m http.server 8642 --directory pitch</code> → http://127.0.0.1:8642</span></div>
     <aside class="notes">
       ~112 s · Condutor da demo (Técnico em espera)
 
@@ -631,6 +639,7 @@
       <div class="stop final has-video" style="animation-delay:1.15s">
         <span class="node">03</span><span class="label">Deteção por drones, mais rápida e económica</span><span class="desc">Patrulha e deteção mais cedo, sem esperar pelos meios aéreos</span>
         <video class="roadmap-video" src="video/drone-deteccao.mp4" muted loop playsinline autoplay onloadedmetadata="this.playbackRate=2" onplay="this.playbackRate=2"></video>
+        <div class="video-placeholder"><strong>▶ Vídeo — ver no GitHub</strong><span>github.com/brunosantospt/Atalaia</span><code>pitch/video/drone-deteccao.mp4</code><span>Para correr a apresentação: <code>python3 -m http.server 8642 --directory pitch</code> → http://127.0.0.1:8642</span></div>
       </div>
     </div>
     <aside class="notes">
