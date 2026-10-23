@@ -271,7 +271,7 @@ async function main() {
         replay.showSplit = false
         replay.outcome?.show(false)
         replay.reach.update(new Set())
-        replay.markers.update(new Set()) // persistent operational landmarks stay visible
+        replay.markers.update(new Set(['ignition:0'])) // the ignition and persistent operational landmarks stay visible
         scene.requestRender()
       } else {
         void refreshDirector()
@@ -797,7 +797,7 @@ async function main() {
   })
   // Tags are placed after the render, when the camera has its final pose for the frame.
   scene.postRender.addEventListener(() => {
-    replay?.markers.update(revealed)
+    replay?.markers.update(editor.open ? new Set(['ignition:0']) : revealed) // planning keeps the ignition
     replay?.reach.update(revealed)
   })
 
@@ -809,7 +809,7 @@ async function main() {
     // Arrows and space belong to a focused radio in the settings, letters to the editor's fields; a slider keeps only its arrows.
     const { target } = e
     const field = target instanceof HTMLSelectElement || (target instanceof HTMLInputElement && (target.type !== 'range' || e.key.startsWith('Arrow')))
-    if (!replay || field) return
+    if (!replay || field || document.querySelector('.intro')) return // nothing runs behind the intro
     const { player } = replay
     const actions: Record<string, () => void> = {
       ' ': () => playback(() => player.toggle()),
@@ -831,6 +831,43 @@ async function main() {
 
   window.addEventListener('hashchange', () => open(fireFromHash(index.map((f) => f.id))))
   await open(fireFromHash(index.map((f) => f.id)))
+  mapLogo(viewer.bottomContainer as HTMLElement)
+  showIntro(() => replay && playback(() => replay!.player.restart()))
+}
+
+/** First load: the fleet's takeoff shot; at the thermal view the alert, then the director's cut starts on the button. */
+function showIntro(start: () => void) {
+  const ALERT_S = 15
+  const REC_S = 10
+  const warn = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 1.5 21h21L12 2.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="10.9" y="8.5" width="2.2" height="7" rx="1.1" fill="#a0140a"/><circle cx="12" cy="18" r="1.25" fill="#a0140a"/></svg>'
+  const el = document.createElement('div')
+  el.className = 'intro'
+  el.innerHTML = `<div class="intro-frame">
+    <video src="${import.meta.env.BASE_URL}drone/takeoff_detect.mp4" autoplay muted playsinline></video>
+    <img class="intro-logo" src="${import.meta.env.BASE_URL}drone/atalaia-logo.svg" alt="Atalaia">
+    <div class="intro-rec"><span></span>REC</div>
+    <div class="intro-unit">ºC</div>
+    <div class="intro-panel"><div class="intro-alert">${warn}Alerta: Incêndio detetado pela frota!${warn}</div>
+    <button type="button">Começar planeamento de combate</button></div>
+    <div class="intro-legend">Guimarães 3D Digital Twin · Atalaia IP · Drone de vigilância · Câmara térmica</div></div>`
+  const video = el.querySelector('video')!
+  const reveal = () => {
+    if (video.currentTime >= REC_S || video.ended) el.classList.add('recording')
+    if (video.currentTime >= ALERT_S || video.ended) el.classList.add('alerted')
+  }
+  video.addEventListener('timeupdate', reveal)
+  video.addEventListener('ended', reveal) // it holds on the last frame
+  el.querySelector('button')!.addEventListener('click', () => { el.remove(); start() })
+  document.body.append(el)
+}
+
+/** The Atalaia mark on the map, bottom right beside the Cesium logo. */
+function mapLogo(beside: HTMLElement) {
+  const img = document.createElement('img')
+  img.className = 'map-logo'
+  img.src = `${import.meta.env.BASE_URL}drone/atalaia-logo.svg`
+  img.alt = 'Atalaia'
+  beside.prepend(img)
 }
 
 /** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
