@@ -20,7 +20,8 @@ export function lateAt(scenario: Scenario, free: Float32Array, d: Decision): (nu
   return d.assignments.map((x, k) => {
     const aerial = isAerial(sup.units[x.unit])
     const p = d.points[x.target] ?? d.lines[x.target]?.[0]
-    if (!p) return undefined
+    // Aircraft drop on the fire itself: arriving after the front is their job, never "late".
+    if (!p || aerial) return undefined
     const cell = cellOf(grid, p)
     const fire = cell < 0 ? Infinity : free[cell]
     return arrivesInTime(fire, eta[k], 0, aerial) ? undefined : fire

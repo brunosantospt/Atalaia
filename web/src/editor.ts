@@ -1955,6 +1955,14 @@ export class Editor {
     })
     const combat = scenario ? cachedCombatResources(scenario,d) : undefined
     if(scenario&&combat) for(const [slot,a] of d.assignments.entries()) {
+      if(isAerial(this.sup.units[a.unit])) { // the drop zone, dashed while the aircraft is on its way
+        const now=this.playbackMinute,p=placementAt(combat.lists[slot],now)
+        if(!p||!ordered(a))continue
+        const r=this.sup.units[a.unit].radiusM*Math.sqrt(a.count)
+        const zone=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,r,now<p.arrivalMin))
+        ;(zone as any)._unitInfo=unitInfo(a,p.point,[a])
+        continue
+      }
       if(!['crew','vfci'].includes(a.unit))continue
       // The clock paused at a gate can sit a hair before the minute an order is stamped with: snap it, so a unit
       // moved there shows its new, reset ring at once instead of the old full one.
@@ -1988,7 +1996,7 @@ export class Editor {
       const journey = unitJourney(path, departure, eta[slot] ?? departure)
       const history = scenario ? placements(scenario,d,slot) : []
       const current = () => placementAt(history,this.playbackMinute)
-      const visible = () => ordered(a) && (!combat || !resourceAt(combat,slot,this.playbackMinute).exhausted)
+      const visible = () => ordered(a) // exhausted units stay, with their fatigue badge
       for (let number = 0; number < a.count; number++) {
         const color = originColor(a.from, stations ?? [])
         const arrival = eta[slot] ?? departure
