@@ -160,7 +160,6 @@ const TEMPLATE = `
       </header>
       <div class="popover-stat" data-ref="popoverStat">Chama: -- m · Intensidade: -- kW/m</div>
       <p class="popover-desc" data-ref="popoverDesc">Chama estimada excede a capacidade de combate frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos.</p>
-      <button type="button" class="popover-dispatch-btn" data-ref="alertDispatchBtn">Mobilizar Meios Aéreos</button>
     </div>
   </div>
   <section class="bottom">
@@ -187,7 +186,7 @@ type Refs = Record<
   | 'pspBriefing' | 'copyPspMini' | 'pspBriefingBody' | 'inemBriefing' | 'copyInemMini' | 'inemBriefingBody'
   | 'btnReports' | 'simulate' | 'editorToggle' | 'btnIgnition' | 'bottomCompass' | 'compassDial'
   | 'alertContainer' | 'alertBadge' | 'alertIcon' | 'alertPopover'
-  | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc' | 'alertDispatchBtn',
+  | 'popoverTitle' | 'closeAlertPopover' | 'popoverStat' | 'popoverDesc',
   HTMLElement
 >
 
@@ -206,7 +205,6 @@ export class Hud {
 
   currentRole: AgencyRole = 'cmd'
   private lastDispatch?: MultiAgencyDispatch
-  private currentFlameM = 0
   private isAlertPopoverOpen = false
   private lastAlertEmergency: boolean | undefined = undefined
   private lastCoordsDMS = ''
@@ -268,20 +266,6 @@ export class Hud {
       e.stopPropagation()
       this.isAlertPopoverOpen = false
       this.refs.alertPopover.hidden = true
-    })
-    this.refs.alertDispatchBtn?.addEventListener('click', () => {
-      this.isAlertPopoverOpen = false
-      this.refs.alertPopover.hidden = true
-      this.actions.mobilizeAerial?.(this.currentFlameM)
-    })
-
-    document.addEventListener('click', (e) => {
-      if (this.refs.alertPopover && !this.refs.alertPopover.hidden) {
-        if (!this.refs.alertContainer?.contains(e.target as Node)) {
-          this.isAlertPopoverOpen = false
-          this.refs.alertPopover.hidden = true
-        }
-      }
     })
 
     const copyText = (val: string) => {
@@ -389,6 +373,7 @@ export class Hud {
     this.setShots(shots)
 
     if (this.refs.alertPopover) this.refs.alertPopover.hidden = true
+    this.isAlertPopoverOpen = false // a new fire starts without a warning
     this.updateTacticalAlert(0)
   }
 
@@ -399,7 +384,6 @@ export class Hud {
     const scale = Math.min(1.0, 0.15 + 0.85 * Math.min(Math.max(hours, 0) / 1.5, 1.0))
     const currentIntensity = peakIntensity * scale
     const flame = 0.0775 * Math.pow(Math.max(currentIntensity, 0), 0.46)
-    this.currentFlameM = flame
 
     if (flame >= 2.4) {
       this.refs.alertContainer.hidden = false
@@ -420,20 +404,16 @@ export class Hud {
         this.refs.popoverDesc.textContent = emergency
           ? `Chama extrema (${flame.toFixed(1)} m) com alta intensidade (>3500 kW/m). Ataque direto frontal proibido por risco de projeções e overrun. Obrigatório empenhamento de Meios Aéreos Pesados (AVBP) e reforços massivos para proteção de aglomerados.`
           : `Chama frontal de ${flame.toFixed(1)} m excede a capacidade de ataque frontal terrestre (>2.4 m). Recomendado empenhamento imediato de Meios Aéreos (HEBL/AVBP) e consolidação nos flancos.`
-        this.refs.alertDispatchBtn.textContent = emergency
-          ? 'Mobilizar Avião Anfíbio Pesado (AVBP)'
-          : 'Mobilizar Helicóptero Bombardeiro (HEBL)'
-        // It pops up by itself when it first appears or escalates; ✕ (or a click elsewhere) folds it to the badge.
+        // It pops up by itself when it first appears or escalates and stays until its ✕ is pressed.
         this.isAlertPopoverOpen = true
         this.refs.alertPopover.hidden = false
       }
 
       this.refs.popoverStat.textContent = `Chama: ${flame.toFixed(1)} m · Intensidade: ${Math.round(currentIntensity)} kW/m`
-    } else {
+    } else if (!this.isAlertPopoverOpen) { // an open warning stays until closed, even if the flames drop
       this.lastAlertEmergency = undefined
       this.refs.alertContainer.hidden = true
       this.refs.alertPopover.hidden = true
-      this.isAlertPopoverOpen = false
     }
   }
 
