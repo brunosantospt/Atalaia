@@ -817,7 +817,7 @@ async function main() {
     if (comparing && split!.position !== (compare.mode === 'A' ? 1 : 0)) split!.setPosition(compare.mode === 'A' ? 1 : 0)
     editor.setCompare(comparing ? split!.position : undefined)
     const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
-    if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
+    if (splitOn && !comparing && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
     replay.outcome?.show(finale && !comparing)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     // With the drawer open and nothing simulated yet, the free run is what the means are up against.
