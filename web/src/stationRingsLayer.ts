@@ -1,6 +1,6 @@
 // Cesium timing boundaries, controlled from the decision editor.
-import { Cartesian3, Color, CustomDataSource, PolylineDashMaterialProperty, type Viewer } from 'cesium'
-import { cleanLonLat, type LonLat } from './geo'
+import { CustomDataSource, Rectangle, SingleTileImageryProvider, type ImageryLayer, type Viewer } from 'cesium'
+import type { LonLat } from './geo'
 import type { Grid } from './grid'
 import type { Suppression } from './suppression'
 import { deploymentBoundary, type DeploymentSelection, type StationRing } from './stationRings'
@@ -21,6 +21,7 @@ export class StationRingsLayer {
   private key = ''
   private arrival?: Float32Array
   private hasBoundary = false
+  private region?: ImageryLayer // the zone as one soft, translucent grey surface
 
   constructor(private readonly viewer: Viewer, _ignition: LonLat, host: HTMLElement) {
     viewer.dataSources.add(this.source)
@@ -60,6 +61,7 @@ export class StationRingsLayer {
     const stationIndex = this.rings.findIndex((r) => r.station.id === selection?.from)
     if (!selection || stationIndex < 0) {
       this.source.show = false
+      if (this.region) this.region.show = false
       this.hasBoundary = false
       if (this.key || !this.selectionText.textContent) this.describe()
       this.key = ''
@@ -69,19 +71,8 @@ export class StationRingsLayer {
     if (this.key === key && this.arrival === arrival) return
     this.key = key; this.arrival = arrival
     const station = this.rings[stationIndex].station
-    const color = Color.fromCssColorString(originColor(station.id, this.rings.map(r => r.station)))
-    const { paths } = deploymentBoundary(grid, arrival, station, sup, sup.units[selection.unit], selection.dispatchMin, selection.ecin)
-    this.source.entities.removeAll()
-    for (const path of paths) {
-      const clean = cleanLonLat(path, true)
-      if (clean.length < 3) continue
-      this.source.entities.add({ polyline: {
-        positions: Cartesian3.fromDegreesArray([...clean, clean[0]].flatMap((p) => [p.lon, p.lat])),
-        clampToGround: true, width: 2.5,
-        material: new PolylineDashMaterialProperty({ color, dashLength: 16 }),
-      } })
-    }
-    this.hasBoundary = this.source.entities.values.length > 0
+    const { blocked } = deploymentBoundary(grid, arrival, station, sup, sup.units[selection.unit], selection.dispatchMin, selection.ecin)
+    this.hasBoundary = this.drawRegion(grid, blocked)
     this.describe(selection, sup)
     this.apply()
   }
@@ -94,7 +85,7 @@ export class StationRingsLayer {
     this.explanation.textContent = !station
       ? 'Escolha um meio terrestre para comparar a sua chegada com a frente do fogo.'
       : this.hasBoundary
-      ? 'Dentro do tracejado, o fogo chega antes desta resposta. Procure um ponto por fora, antes da frente prevista.'
+      ? 'Na zona cinzenta, o fogo chega antes desta resposta. Procure um ponto por fora, antes da frente prevista.'
       : 'Sem zona onde o fogo chegue antes da resposta selecionada na previsão disponível.'
     for (const row of this.keyList.querySelectorAll<HTMLElement>('li')) {
       const selected = row.dataset.station === station?.id
@@ -110,11 +101,37 @@ export class StationRingsLayer {
     this.apply()
   }
 
+  /** The cells the fire reaches first, upscaled and blurred into one smooth grey shape draped on the terrain. */
+  private drawRegion(grid: Grid, blocked: Uint8Array): boolean {
+    if (this.region) this.viewer.imageryLayers.remove(this.region, true)
+    this.region = undefined
+    if (!blocked.some(Boolean)) return false
+    const cells = document.createElement('canvas')
+    cells.width = grid.cols; cells.height = grid.rows
+    const image = cells.getContext('2d')!.createImageData(grid.cols, grid.rows)
+    blocked.forEach((b, i) => b && image.data.set([200, 205, 210, 255], i * 4))
+    cells.getContext('2d')!.putImageData(image, 0, 0)
+    const SCALE = 6
+    const smooth = document.createElement('canvas')
+    smooth.width = grid.cols * SCALE; smooth.height = grid.rows * SCALE
+    const ctx = smooth.getContext('2d')!
+    ctx.imageSmoothingEnabled = true
+    ctx.filter = `blur(${SCALE * 1.2}px)`
+    ctx.globalAlpha = 0.32
+    ctx.drawImage(cells, 0, 0, smooth.width, smooth.height)
+    const rectangle = Rectangle.fromDegrees(grid.rect.west, grid.rect.south, grid.rect.east, grid.rect.north)
+    this.region = this.viewer.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+      url: smooth.toDataURL(), tileWidth: smooth.width, tileHeight: smooth.height, rectangle,
+    }))
+    return true
+  }
+
   private apply() {
     this.source.show = this.eligible && this.wanted && this.hasBoundary
+    if (this.region) this.region.show = this.source.show
     this.legend.hidden = !this.eligible
     this.viewer.scene.requestRender()
   }
 
-  destroy() { this.viewer.dataSources.remove(this.source, true); this.legend.remove() }
+  destroy() { if (this.region) this.viewer.imageryLayers.remove(this.region, true); this.viewer.dataSources.remove(this.source, true); this.legend.remove() }
 }

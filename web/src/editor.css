@@ -707,3 +707,14 @@
   border-color: #34d399;
   box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.4);
 }
+
+/* Unit card: the orders as a compact list, then one line for a new placement. */
+.hud .editor li.assignment .placement-history { list-style: decimal; margin: 4px 0 0; padding-left: 18px; font: 11px/1.5 ui-monospace, monospace; color: #b8cad8; }
+.hud .editor li.assignment .placement-history li { display: list-item; margin: 0; }
+.hud .editor li.assignment .placement-history li span { display: inline-block; min-width: 92px; }
+.hud .editor li.assignment .placement-history .unit-action { width: 18px; height: 18px; padding: 2px; margin-left: 4px; }
+.hud .editor li.assignment .move-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.hud .editor li.assignment .move-unit { padding: 2px 8px; font: 11px/1.4 system-ui, sans-serif; color: #f4ad42; background: transparent; border: 1px solid #796039; cursor: pointer; }
+.hud .editor li.assignment .move-unit:hover:not(:disabled) { background: #392c18; border-color: #f4ad42; }
+.hud .editor li.assignment .move-unit:disabled { opacity: .45; cursor: default; }
+.hud .editor li.assignment .move-why { margin: 0; font-size: 10.5px; color: #8fa3b5; }

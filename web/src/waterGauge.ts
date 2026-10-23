@@ -1,14 +1,14 @@
 // Water on the ground: the litres left in the tanks of the fire engines and tankers on scene against what they
 // brought on the card; a click opens how fast the lines draw it, when the first engine runs dry and what is
 // still on its way. The same display-only accounting
-// as the unit tooltips (tankerSupport); the spread model never reads it.
+// as the unit cards and rings (combatResources); the spread model never reads it.
 
 import { fmtMinutes, fmtNumber } from './format'
 import { Floating } from './floating'
 import type { Scenario } from './scenario'
 import type { Decision } from './suppression'
 import { Detail, type Row } from './widgetDetail'
-import { supplyStatuses } from './tankerSupport'
+import { cachedCombatResources, resourceAt } from './combatResources'
 import './waterWidget.css'
 
 const LOW = 0.25 // a quarter of the water brought, as the alerts' low tank
@@ -45,18 +45,26 @@ export class WaterGauge {
   /** The units of the decision on the screen at `minute`. Cheap: the screen changes only when the text does. */
   update(scenario: Scenario, decision: Decision | undefined, minute: number) {
     const sup = scenario.suppression
-    const statuses = decision ? supplyStatuses(scenario, decision, minute) : []
-    const water = (decision?.assignments ?? []).flatMap((a, k) => (a.unit === 'vfci' || a.unit === 'vttu' ? [{ a, s: statuses[k] }] : []))
-    const here = water.filter((w) => w.s.onScene)
+    // The same accounting as the unit cards and their rings (combatResources): contact draws water, a held
+    // front pauses it, tankers refill engines within reach, relocations carry what is left.
+    const combat = decision ? cachedCombatResources(scenario, decision) : undefined
+    const water = (decision?.assignments ?? []).flatMap((a, k) => {
+      if (!combat || !['vfci', 'vttu', 'crew'].includes(a.unit)) return []
+      const f = resourceAt(combat, k, minute), tank = combat.capacities[k] * a.count
+      return [{ a, k, f, tankL: tank, litres: Math.max(0, f.waterPct / 100 * tank), onScene: minute >= f.arrival }]
+    })
+    const here = water.filter((w) => w.onScene)
     const sum = (list: typeof water, f: (w: (typeof water)[number]) => number) => list.reduce((n, w) => n + f(w), 0)
-    const litres = sum(here, (w) => w.s.litres)
-    const tankL = sum(here, (w) => w.s.tankL)
+    const litres = sum(here, (w) => w.litres)
+    const tankL = sum(here, (w) => w.tankL)
     const engines = here.filter((w) => w.a.unit === 'vfci')
-    const wet = engines.filter((w) => w.s.remaining > 0)
-    const flowLPerMin = sum(wet, (w) => (sup.units.vfci.flowLPerMin ?? 200) * w.a.count)
-    const dryUnits = sum(engines, (w) => (w.s.remaining > 0 ? 0 : w.a.count))
-    const firstDry = wet.length ? Math.ceil(Math.min(...wet.map((w) => w.s.remaining))) : undefined
-    const firstEta = water.length > here.length ? Math.ceil(Math.min(...water.filter((w) => !w.s.onScene).map((w) => w.s.eta))) : undefined
+    const wet = engines.filter((w) => w.f.waterPct > 0)
+    const flowLPerMin = sum(wet.filter((w) => w.f.active && !w.f.contained), (w) => (sup.units.vfci.flowLPerMin ?? 200) / 2 * w.a.count)
+    const dryUnits = sum(engines, (w) => (w.f.waterPct > 0 ? 0 : w.a.count))
+    // Minutes until the first engine on scene runs dry, read ahead in the same frames.
+    const dryAt = wet.map((w) => combat!.frames[w.k].findIndex((f, m) => m > minute && f.waterPct <= 0)).filter((m) => m > 0)
+    const firstDry = dryAt.length ? Math.ceil(Math.min(...dryAt) - minute) : undefined
+    const firstEta = water.length > here.length ? Math.ceil(Math.min(...water.filter((w) => !w.onScene).map((w) => w.f.arrival)) - minute) : undefined
     const share = tankL ? litres / tankL : 0
     const low = !!here.length && share < LOW
     const key = [here.length, Math.round(litres), Math.round(tankL), flowLPerMin, dryUnits, firstDry, firstEta, water.length].join('|')
@@ -73,13 +81,14 @@ export class WaterGauge {
     const level = !here.length ? undefined : dryUnits ? 'critical' : low ? 'warning' : 'good'
     const rows: Row[] = here.length ? [
       ['Nos tanques', `${fmtNumber(litres)} de ${fmtNumber(tankL)} L (${Math.round(100 * share)} %)`, level],
-      ['Caudal', count('vfci') ? `${fmtNumber(flowLPerMin)} L/min nas linhas de 25 mm` : '—'],
+      ['Caudal', flowLPerMin ? `${fmtNumber(flowLPerMin)} L/min em combate` : 'em pausa (frente contida)'],
+      ['Brigadas no local', `${count('crew')}`],
       ['VFCI no local', `${count('vfci')}${dryUnits ? ` · ${dryUnits} sem água` : ''}`],
       ['VTTU no local', `${count('vttu')}${count('vttu') ? ` · abastecem até ${sup.units.vttu.reachM ?? 300} m` : ''}`],
       ...(firstDry !== undefined ? [['1.º vazio', `daqui a ${fmtMinutes(firstDry)}, já com as cisternas`, low ? 'warning' : undefined] as Row] : []),
     ] : [['Estado', state]]
     if (firstEta !== undefined && here.length) rows.push(['A caminho', `${water.length - here.length} grupo(s); o 1.º chega em ${fmtMinutes(firstEta)}`])
-    const tanks = `VFCI ${fmtNumber(sup.units.vfci.waterL ?? 3000)} L, VTTU ${fmtNumber(sup.units.vttu.waterL ?? 12000)} L`
+    const tanks = `VFCI ${fmtNumber(2 * (sup.units.vfci.waterL ?? 3000))} L, brigada 600 L, VTTU ${fmtNumber(sup.units.vttu.waterL ?? 12000)} L`
     this.detail.set([{ heading: 'Viaturas de água da decisão no ecrã', rows }], [
       `Tanques: ${tanks} (Despacho n.º 3974/2013). A barra marca ${LOW * 100} % do que trouxeram.`,
       `Estimativa visual da demo, a mesma dos detalhes dos meios${sup.unlimitedWater ? '; o modelo de propagação conta com água ilimitada' : ''}.`,

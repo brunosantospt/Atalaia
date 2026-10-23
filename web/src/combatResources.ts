@@ -48,7 +48,7 @@ export function combatResources(s:Scenario,d:Decision) {
   }
   d.assignments.forEach((a,i)=>{if(a.unit==='vttu')frames[i][m].waterPct=100*water[i]/capacities[i]})
  }
- return {frames,lists}
+ return {frames,lists,capacities} // capacities: litres per unit of each group
 }
 export function resourceAt(result:ReturnType<typeof combatResources>,slot:number,minute:number) { const f=result.frames[slot];return f[Math.max(0,Math.min(f.length-1,Math.floor(minute)))] }
 const cache=new WeakMap<Decision,{key:string;forecast:Float32Array|undefined;result:ReturnType<typeof combatResources>}>()

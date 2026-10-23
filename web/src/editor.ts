@@ -1,4 +1,4 @@
-import { placements, placementAt, relocationPosition, addPlacement, editPlacement, type Placement } from './placementTimeline'
+import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
 import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
@@ -1761,39 +1761,29 @@ export class Editor {
     if (lateBadge)
       lateBadge.title = `O fogo livre chega ${a.task === 'line' || a.task === 'drops' ? 'ao início da linha' : 'aqui'} aos T+${Math.round(lateMin!)} min: ${isGround ? `este meio não está lá ${SAFETY_MIN} min antes` : 'este meio não chega antes dele'}`
     if(this.loaded) {
-      // Compact card: the actions side by side in the header (new placement, edit the current one,
-      // remove), resources on one line, the current order on one line, earlier orders folded away.
-      const start=this.loaded.fire.start,list=placements(this.loaded.scenario,d,k),ctl=li.querySelector('.ctl')!
-      const order=(p:Placement)=>`Ordem ${fmtTime(wallClock(start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(start,p.arrivalMin/60))}`
-      const editButton=(index:number)=>{
+      // Every order listed, one compact line each with its edit; below, a new placement and why it may wait.
+      const start=this.loaded.fire.start,list=placements(this.loaded.scenario,d,k)
+      const clock=(m:number)=>fmtTime(wallClock(start,m/60))
+      const history=document.createElement('ol');history.className='placement-history'
+      list.forEach((p,index)=>{
+        const item=document.createElement('li'),text=document.createElement('span')
+        text.textContent=`${clock(p.orderedMin)} → ${clock(p.arrivalMin)}`
         const edit=document.createElement('button');edit.type='button';edit.className='unit-action edit-placement'
         edit.title=`Editar colocação ${index+1}`;edit.setAttribute('aria-label',edit.title)
         edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></svg>'
         edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
         edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Escolha o destino corrigido no mapa. Esc para cancelar.'})
-        return edit
-      }
-      const move=document.createElement('button');move.type='button';move.className='unit-action move-unit'
-      move.title=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação';move.setAttribute('aria-label',move.title)
-      move.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg>'
+        item.append(text,edit);history.append(item)
+      })
+      const row=document.createElement('div');row.className='move-row'
+      const move=document.createElement('button');move.type='button';move.className='move-unit'
+      move.textContent=a.count>1?`+ Nova colocação (×${a.count})`:'+ Nova colocação'
       move.dataset.moveSlot=String(k)
       move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})
-      ctl.prepend(move)
-      ctl.insertBefore(editButton(list.length-1),ctl.querySelector('.x'))
-      const resources=document.createElement('div');resources.className='card-resources';resources.dataset.resourceSlot=String(k)
-      const current=document.createElement('div');current.className='placement-now';current.textContent=order(list.at(-1)!)
-      li.append(resources,current)
-      if(list.length>1) {
-        const earlier=document.createElement('details'),summary=document.createElement('summary'),history=document.createElement('ol')
-        earlier.className='placement-earlier';history.className='placement-history'
-        summary.textContent=`Colocações anteriores (${list.length-1})`
-        list.slice(0,-1).forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. ${order(p)}`;item.append(editButton(index));history.append(item)})
-        earlier.append(summary,history);li.append(earlier)
-      }
-      const why=document.createElement('p');why.className='note move-why';why.dataset.moveWhy=String(k)
-      li.append(why)
+      const why=document.createElement('span');why.className='note move-why';why.dataset.moveWhy=String(k)
+      row.append(move,why)
+      li.append(history,row)
       this.showMoveBlock(move,why,d,k)
-      this.fillResources(resources,k)
     }
     li.querySelector('.x')!.addEventListener('click', () => this.remove(k))
     return li
@@ -1804,9 +1794,9 @@ export class Editor {
     if (!this.loaded) return
     const last = placements(this.loaded.scenario, d, slot).at(-1)!
     const reason = this.playbackMinute < last.arrivalMin
-      ? `A caminho · nova colocação após ${fmtTime(wallClock(this.loaded.fire.start, last.arrivalMin / 60))}`
+      ? `após ${fmtTime(wallClock(this.loaded.fire.start, last.arrivalMin / 60))}`
       : resourceAt(cachedCombatResources(this.loaded.scenario, d), slot, this.playbackMinute).exhausted
-        ? 'Autonomia esgotada · já não pode ser recolocado'
+        ? 'autonomia esgotada'
         : ''
     move.disabled = !!reason
     why.textContent = reason
@@ -1865,9 +1855,11 @@ export class Editor {
       const base = findAirBase(from)
       const km = base && this.loaded ? distanceM(base, this.loaded.scenario.ignition) / 1000 : this.sup.dispatch.airBaseKm
       const deployed = (stock ?? 0) - left
-      this.refs.stock.textContent = base
-        ? `${base.short}: ${left} de ${stock} ${unit.short} disponíveis${deployed > 0 ? ` (${deployed} em uso)` : ''} · ${base.operator} · ${base.aircraftModel}`
-        : `Base aérea a ${fmtKm(km)} · ${left} de ${stock ?? 1} disponíveis`
+      // Minimal on screen; the details (operator, aircraft, distance) in the tooltip.
+      this.refs.stock.textContent = left === 0 ? 'Esgotado' : `Disponíveis: ${left}/${stock ?? 1}`
+      this.refs.stock.title = base
+        ? `${base.short} · ${unit.short}${deployed > 0 ? ` · ${deployed} em uso` : ''} · ${base.operator} · ${base.aircraftModel}`
+        : `Base aérea a ${fmtKm(km)}`
       this.refs.stock.classList.toggle('out', left === 0)
     } else if (stock === undefined) {
       this.refs.stock.textContent = station ? `${station.short}: sem estimativa de meios` : 'sem quartel selecionado'
@@ -1876,11 +1868,9 @@ export class Editor {
       const deployed = stock - left
       const source = this.inventory?.[from] ? stockSource(this.inventory[from]) : ''
       const unitDesc = this.unit === 'crew' ? `equipas ECIN (${left * 5} operacionais)` : unit.short
-      this.refs.stock.textContent =
-        `${station?.short ?? from}: ${left} de ${stock} ${unitDesc} disponíveis` +
-        (deployed > 0 ? `, ${deployed} já nesta decisão` : '') +
-        (left === 0 ? ' · ESGOTADO' : '') +
-        ` · ${source}`
+      this.refs.stock.textContent = left === 0 ? 'Esgotado' : `Disponíveis: ${left}/${stock}`
+      this.refs.stock.title = `${station?.short ?? from}: ${left} de ${stock} ${unitDesc}` +
+        (deployed > 0 ? ` · ${deployed} nesta decisão` : '') + (source ? ` · ${source}` : '')
       this.refs.stock.classList.toggle('out', left === 0)
     }
     if (left === 0 && this.tool && this.tool !== 'pma') this.setTool(null)
