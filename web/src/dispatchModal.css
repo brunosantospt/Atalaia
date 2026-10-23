@@ -166,19 +166,27 @@
   color: #81c784;
 }
 
+/* The sections keep their height and the body scrolls: squeezed by the column, the lists and their
+   scrollbars collapsed to a few pixels. */
+.dispatch-body > * {
+  flex-shrink: 0;
+}
+
 .road-cut-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 180px;
+  max-height: 260px;
   overflow-y: auto;
   padding-right: 4px;
 }
 
 .road-cut-card {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 4px 12px;
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(220, 224, 228, 0.1);
@@ -200,8 +208,10 @@
   font-weight: 600;
   color: #fff;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  line-height: 1.5;
 }
 
 .road-badge {
@@ -225,7 +235,7 @@
   color: #c9d1d9;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 220px;
+  max-height: 130px;
   overflow-y: auto;
 }
 

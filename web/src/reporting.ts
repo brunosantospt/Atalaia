@@ -494,7 +494,8 @@ export function findNearestRoadIndex(context: Context, pt: LonLat, maxM = 500): 
 /**
  * Detects roads where firefighting vehicles are at work, each closed from the fire to the vehicle and
  * on past it the other way (empty `pts` when the fire does not reach that road, but the vehicle still
- * blocks it).
+ * blocks it). `where` gives a vehicle's working point now (its latest placement, after relocations),
+ * undefined while it has no order yet; without it, the decision's first point.
  */
 export function detectFirefighterRoads(
   context: Context,
@@ -502,17 +503,18 @@ export function detectFirefighterRoads(
   currentMin: number,
   grid: Grid,
   arrival: Float32Array,
+  where?: (slot: number) => LonLat | undefined,
 ): RoadCutItem[] {
   if (!decision || !context || !context.osm.roads) return []
   const result: RoadCutItem[] = []
   const seenRoads = new Set<string>()
 
-  for (const a of decision.assignments) {
+  for (const [slot, a] of decision.assignments.entries()) {
     // Only forest vehicles of combat (VFCI) and supply (VTTU) establish road blocks
     // Sapadores a pé / equipas apeadas (crew) do NOT establish road cuts or cut icons
     if (a.unit !== 'vfci' && a.unit !== 'vttu') continue
 
-    const pt = decision.points[a.target] ?? decision.lines[a.target]?.[0]
+    const pt = where ? where(slot) : decision.points[a.target] ?? decision.lines[a.target]?.[0]
     if (!pt) continue
 
     const access = snapToRoad(context, pt, 500)
@@ -547,6 +549,41 @@ export function detectFirefighterRoads(
   }
 
   return result
+}
+
+/** A point this close to a closure is on that stretch of road. */
+const SAME_ROAD_M = 30
+
+/**
+ * Where the block signs of the vehicles' closures go. Vehicles closing the same stretch of road share
+ * their signs: one at each of the two outermost vehicles, none at those in between, and a far barrier
+ * only where no other closure of the stretch carries on past it.
+ */
+export function roadBlockSigns(items: RoadCutItem[]): { at: LonLat; item: RoadCutItem }[] {
+  const on = (p: LonLat, item: RoadCutItem) => item.pts.length >= 2 && projectOnRoad(item.pts, p).distM <= SAME_ROAD_M
+  // One stretch: closures that reach each other's vehicle.
+  const parent = items.map((_, i) => i)
+  const root = (i: number): number => (parent[i] === i ? i : (parent[i] = root(parent[i])))
+  items.forEach((a, i) => items.forEach((b, j) => {
+    if (i < j && (on(a.coord, b) || on(b.coord, a))) parent[root(i)] = root(j)
+  }))
+  const stretches = new Map<number, RoadCutItem[]>()
+  items.forEach((item, i) => stretches.set(root(i), [...(stretches.get(root(i)) ?? []), item]))
+
+  const signs: { at: LonLat; item: RoadCutItem }[] = []
+  for (const members of stretches.values()) {
+    // The first and the last vehicle on the road are the two furthest apart.
+    let ends = [members[0], members[0]]
+    let far = -1
+    for (const a of members) for (const b of members) {
+      const d = distanceM(a.coord, b.coord)
+      if (d > far) [far, ends] = [d, [a, b]]
+    }
+    for (const item of new Set(ends)) signs.push({ at: item.coord, item })
+    for (const item of members)
+      if (item.barrier && !members.some((other) => other !== item && on(item.barrier!, other))) signs.push({ at: item.barrier, item })
+  }
+  return signs
 }
 
 /** Formats the copyable direct operational dispatch for PSP / GNR Traffic Division. */
@@ -658,12 +695,13 @@ export function buildMultiAgencyDispatch(
   run: Run,
   pmaList: MedicalPointItem[],
   decision?: Decision,
+  where?: (slot: number) => LonLat | undefined,
 ): MultiAgencyDispatch {
   const clock = fmtTime(wallClock(startTime, currentMin / 60))
   const fireRoads = context ? detectThreatenedRoads(grid, context, run, currentMin) : []
   for (const r of fireRoads) r.kind = 'fire'
 
-  const firefighterRoads = (context && decision) ? detectFirefighterRoads(context, decision, currentMin, grid, run.arrival) : []
+  const firefighterRoads = (context && decision) ? detectFirefighterRoads(context, decision, currentMin, grid, run.arrival, where) : []
   const allRoads = [...fireRoads, ...firefighterRoads]
   const blockedLabels = allRoads.map((r) => r.label)
 

@@ -46,8 +46,14 @@ export class OutcomeLayer {
     }
     parent.append(this.root)
   }
-  show(on: boolean, seconds = 0) {
-    const count = on ? Math.min(3, 1 + Math.floor(seconds / 0.4)) : 0
+  private shownAt = 0
+
+  /** Reveals the footprints one by one, 0.4 s apart, from when the finale comes on screen. Timed by the
+   *  wall clock, not the player's: at the end of the story the player is paused, and the finale comes back
+   *  (after the editor or a report closes) with all three footprints, not the largest alone. */
+  show(on: boolean) {
+    if (on && this.count <= 0) this.shownAt = performance.now()
+    const count = on ? Math.min(3, 1 + Math.floor((performance.now() - this.shownAt) / 400)) : 0
     if (count === this.count) return
     this.count = count
     this.root.hidden = !on

@@ -31,16 +31,47 @@ export interface Report {
   roadsCut: RoadCut[] // every road crossed, longest first; only named ones carry a name
 }
 
+/** A building is reached when the fire comes this close. Buildings are not fuel in the fire model, so the
+ *  cells under them never burn: the report counts them by the burning ground around them instead, the
+ *  same strip as the homes alert (alerts.ts, DL 124/2006). The spread itself is unchanged. */
+export const BUILDING_REACH_M = 50
+
+/** The cells of the grid that hold buildings, once per context. */
+const buildingCells = new WeakMap<Context, Int32Array>()
+function cellsWithBuildings(context: Context): Int32Array {
+  let cells = buildingCells.get(context)
+  if (!cells) {
+    const list: number[] = []
+    context.buildings.forEach((n, i) => n && list.push(i))
+    cells = Int32Array.from(list)
+    buildingCells.set(context, cells)
+  }
+  return cells
+}
+
+/** The first minute the fire comes within BUILDING_REACH_M of cell i (Infinity if never). */
+function reachedAt(grid: Grid, arrival: Float32Array, i: number): number {
+  const r = Math.ceil(BUILDING_REACH_M / grid.cellsize)
+  const col = i % grid.cols, row = (i - col) / grid.cols
+  let first = Infinity
+  for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+    const c = col + dx, w = row + dy
+    if (c < 0 || w < 0 || c >= grid.cols || w >= grid.rows || Math.hypot(dx, dy) * grid.cellsize > BUILDING_REACH_M) continue
+    first = Math.min(first, arrival[w * grid.cols + c])
+  }
+  return first
+}
+
 export function makeReport(grid: Grid, context: Context, run: Run, minutes = run.durationMin): Report {
   const { arrival } = run
   let cells = 0
+  for (let i = 0; i < arrival.length; i++) if (arrival[i] <= minutes) cells++
   let homes = 0
   let buildings = 0
   let firstHomeMin: number | null = null
-  for (let i = 0; i < arrival.length; i++) {
-    const t = arrival[i]
+  for (const i of cellsWithBuildings(context)) {
+    const t = reachedAt(grid, arrival, i)
     if (t > minutes) continue
-    cells++
     buildings += context.buildings[i]
     if (context.homes[i]) {
       homes += context.homes[i]
@@ -98,18 +129,18 @@ export interface Verdict {
   by: 'places' | 'area' | 'tie'
 }
 
-/** "Recomendação: A · não atinge nenhum lugar em vez de 4 às 6,0 h" */
+/** "Recomendação: A · não atinge nenhuma aldeia em vez de 4 às 6,0 h" */
 export function describeVerdict(v: Verdict, a: Report, b: Report): string {
-  if (!v.pick) return `Recomendação: empate · ${a.places.length} lugares e ${fmtHa(a.burnedHa)} em ambas`
+  if (!v.pick) return `Recomendação: empate · ${a.places.length} aldeias e ${fmtHa(a.burnedHa)} em ambas`
   const [mine, other] = v.pick === 'A' ? [a, b] : [b, a]
   const why =
     v.by === 'places'
       ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
-      : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
+      : `as mesmas aldeias, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
   return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
 }
 
-const placesText = (n: number) => (n === 0 ? 'não atinge nenhum lugar' : `atinge ${n} ${n === 1 ? 'lugar' : 'lugares'}`)
+const placesText = (n: number) => (n === 0 ? 'não atinge nenhuma aldeia' : `atinge ${n} ${n === 1 ? 'aldeia' : 'aldeias'}`)
 
 export function recommend(a: Report, b: Report): Verdict {
   if (a.places.length !== b.places.length) return { pick: a.places.length < b.places.length ? 'A' : 'B', by: 'places' }

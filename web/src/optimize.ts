@@ -77,7 +77,7 @@ export interface Options {
   onProgress?: (p: Progress) => void
 }
 
-export const ILS_NAME = 'Proposta ILS · meios do A'
+export const ILS_NAME = 'Proposta ILS · Meios do A'
 
 // The article's parameters for its largest grids (ils.md §2.4), scaled to a ~10 s budget at ~5 ms a plan.
 const NCH = 100 // random constructions, at most
