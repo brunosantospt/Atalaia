@@ -159,7 +159,8 @@ const TEMPLATE = `
     </details>
   </section>
   <section class="hour">
-    <h3>Hora <span data-ref="hourText"></span></h3>
+    <h3 class="hour-head">Hora <span data-ref="hourText"></span>
+      <button type="button" class="to-alert" data-ref="toAlert" title="Voltar à hora do alerta do drone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6 4 12l7 6zM20 6l-7 6 7 6z" fill="currentColor"/></svg>Voltar ao alerta</button></h3>
     <input type="range" data-ref="hour" min="0" max="360" step="5" value="0" autocomplete="off" title="Hora da simulação (o mapa e o relatório seguem-na)">
   </section>
   <section>
@@ -467,7 +468,23 @@ export class Editor {
       this.setCount(this.count)
     })
     const hour = this.refs.hour as HTMLInputElement
-    hour.addEventListener('input', () => this.setMinutes(Number(hour.value)))
+    // Dragging fires many inputs a frame: the hour text follows at once, the map redraws once per frame.
+    let pending: number | undefined
+    hour.addEventListener('input', () => {
+      const first = pending === undefined
+      pending = Number(hour.value)
+      this.showClock(pending)
+      if (first) requestAnimationFrame(() => {
+        const m = pending!
+        pending = undefined
+        this.setMinutes(m)
+        this.el.dispatchEvent(new Event('hourchange')) // main.ts moves the fire clock
+      })
+    })
+    this.refs.toAlert.addEventListener('click', () => {
+      this.setMinutes(this.loaded?.scenario.dispatchMin ?? 10)
+      this.el.dispatchEvent(new Event('hourchange'))
+    })
     const task = this.refs.task as HTMLSelectElement
     task.addEventListener('change', () => {
       this.task = task.value as Task
@@ -577,11 +594,15 @@ export class Editor {
     this.playbackMinute = minutes
     const hour = this.refs.hour as HTMLInputElement
     hour.value = String(minutes)
-    const start = this.loaded?.fire.start
-    this.refs.hourText.textContent = `${fmtElapsed(this.hours)}${start ? ` · ${fmtTime(wallClock(start, this.hours))}` : ''}`
+    this.showClock(minutes)
     this.updateEtas()
     this.renderReport()
     this.draw()
+  }
+
+  private showClock(minutes: number) {
+    const start = this.loaded?.fire.start, hours = minutes / 60
+    this.refs.hourText.textContent = `${fmtElapsed(hours)}${start ? ` · ${fmtTime(wallClock(start, hours))}` : ''}`
   }
 
   get reportsOpen() { return !this.reportPanel.hidden }
@@ -1955,7 +1976,7 @@ export class Editor {
       if(!p||this.playbackMinute>=p.arrivalMin)continue
       const index=history.indexOf(p),origin=index>0?history[index-1].point:stations.find(st=>st.id===a.from)
       if(!origin)continue
-      const path=p.path??findSafeRoute(scenario.grid,context.osm.roads,activeRun?.arrival,this.minutes,origin,p.point)?.path
+      const path=p.path??cachedRoute(scenario.grid,context.osm.roads,activeRun?.arrival,this.minutes,origin,p.point)?.path
       if(!path?.length)continue
       const positions=cleanLonLat(path).map(pt=>Cartesian3.fromDegrees(pt.lon,pt.lat))
       this.routes.entities.add({polyline:{positions,width:7,clampToGround:true,material:ROUTE_HALO}})
@@ -2216,7 +2237,7 @@ export class Editor {
       const dispatch = a.dispatchMin ?? scenario?.dispatchMin ?? 0
       const departure = dispatch + (spec.turnoutMin ?? (first ? this.sup.dispatch.ecinTurnoutMin : this.sup.dispatch.volunteerTurnoutMin))
       const route = origin && context && scenario && isRoadVehicle(spec)
-        ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, dispatch, origin, at)?.path : undefined
+        ? cachedRoute(scenario.grid, context.osm.roads, activeRun?.arrival, dispatch, origin, at)?.path : undefined
       const path = origin ? [origin, ...(route ?? []), at] : [at]
       const journey = unitJourney(path, departure, eta[slot] ?? departure)
       const history = scenario ? placements(scenario,d,slot) : []
@@ -2569,4 +2590,17 @@ function dropTexture(): HTMLCanvasElement {
   r.addColorStop(0, 'rgba(186, 230, 253, .7)'); r.addColorStop(.55, 'rgba(125, 211, 252, .4)'); r.addColorStop(1, 'rgba(125, 211, 252, 0)')
   g.fillStyle = r; g.fillRect(0, 0, 128, 128)
   return (dropCanvas = c)
+}
+
+/** findSafeRoute for the redraws, which ask the same routes again and again while the hour slider moves:
+ *  kept per fire forecast (and road network), by minute and end points. */
+const routeCache = new WeakMap<object, Map<string, ReturnType<typeof findSafeRoute>>>()
+function cachedRoute(...args: Parameters<typeof findSafeRoute>): ReturnType<typeof findSafeRoute> {
+  const [, roads, arrival, minute, from, to] = args
+  const holder = (arrival ?? roads) as object
+  let cache = routeCache.get(holder)
+  if (!cache) routeCache.set(holder, (cache = new Map()))
+  const key = `${minute}|${from.lon},${from.lat}|${to.lon},${to.lat}`
+  if (!cache.has(key)) { if (cache.size > 2000) cache.clear(); cache.set(key, findSafeRoute(...args)) }
+  return cache.get(key)!
 }

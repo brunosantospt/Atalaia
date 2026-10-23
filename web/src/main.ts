@@ -294,7 +294,7 @@ async function main() {
   })
 
   // The drawer's hour slider moves the fire clock (the editor has taken the new hour by now); the replay goes on from there.
-  editor.el.querySelector('[data-ref="hour"]')?.addEventListener('input', () => {
+  editor.el.addEventListener('hourchange', () => {
     if (!replay) return
     let hours = editor.hours
     setPhase(hours*60 >= (replay.data.windShift?.minutes ?? Infinity) ? 'post' : 'pre')

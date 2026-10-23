@@ -720,3 +720,9 @@
 .hud .editor li.assignment .move-unit:disabled { opacity: .45; cursor: default; }
 .hud .editor li.assignment .move-why { margin: 0; font-size: 10.5px; color: #8fa3b5; }
 .hud .editor .recommendation { margin: 10px 0 0; color: #f76707; font: 700 17px/1.3 system-ui, sans-serif; }
+
+/* The hour, with the way back to the drone's alert on the right of the same line. */
+.hud .editor h3.hour-head { display: flex; align-items: center; gap: 6px; }
+.hud .editor .to-alert { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font: 500 10.5px/1.4 system-ui, sans-serif; letter-spacing: .3px; text-transform: none; color: #f4ad42; background: transparent; border: 1px solid #796039; border-radius: 3px; cursor: pointer; }
+.hud .editor .to-alert svg { width: 13px; height: 13px; }
+.hud .editor .to-alert:hover { background: #392c18; border-color: #f4ad42; }
