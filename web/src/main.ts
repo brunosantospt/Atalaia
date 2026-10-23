@@ -628,7 +628,7 @@ async function main() {
     if (replay.phase === 'post' && !sim)
       return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
-      return { label: 'Simular', enabled: false, note: 'Modelo rápido atualizado para A e B.' }
+      return { label: 'Simular', enabled: false, note: '' }
     return { label: 'Simular', enabled: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
   }
