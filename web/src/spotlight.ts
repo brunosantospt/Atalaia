@@ -26,7 +26,11 @@ void main() {
   // Outside the light: nearly grey and much darker, so the colour inside the light stands out.
   float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
   vec3 outside = mix(vec3(luma), color.rgb, 0.12) * 0.3;
-  out_FragColor = vec4(mix(color.rgb, outside, k), color.a);
+  // Inside the light: brighter, natural daylight colours (the map's own look is muted for the rest).
+  vec3 lit = pow(max(color.rgb, 0.0), vec3(0.78));
+  lit = mix(vec3(dot(lit, vec3(0.299, 0.587, 0.114))), lit, 1.45) * 1.06;
+  vec3 inside = mix(color.rgb, clamp(lit, 0.0, 1.0), u_strength);
+  out_FragColor = vec4(mix(inside, outside, k), color.a);
 }
 `
 
