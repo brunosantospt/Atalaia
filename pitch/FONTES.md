@@ -76,9 +76,8 @@ Sem notas técnicas.
   direção), no modelo de combustível e na localização/hora da ignição tem impacto
   grande na precisão da simulação. "FARSITE" é uma das palavras-chave do próprio
   artigo.
-- Repetir o nome FARSITE nas duas primeiras linhas é intencional: é o mesmo
-  simulador a falhar em dois pontos diferentes (lento e impreciso sem correção de
-  inputs), o que reforça o argumento.
+- FARSITE e FlamMap ficam numa só linha (lento + impreciso sem correção de
+  inputs): já não há duas linhas de FARSITE repetidas.
 - Para o Q&A, se perguntarem porque é que a Atalaia também usa o FARSITE/ELMFIRE:
   usamos para validar e para o plano B (correm ao fundo, 10-40 s), não como o
   modelo em tempo real que a pessoa vê no mapa (esse é o modelo rápido do
@@ -90,9 +89,9 @@ Sem notas técnicas.
   Tirámos o Copernicus EMS deste slide: o nome é parecido com o Copernicus DEM,
   que a Atalaia usa para o relevo, e isso confundia a audiência mesmo sendo dois
   produtos diferentes do programa Copernicus.
-- incendiosportugal.pt: prevê a propagação, mas assume que não há combate — essa
-  é a ressalva a dar se perguntarem no Q&A; não dizer só "falha" sem a
-  explicar.
+- incendiosportugal.pt: prevê a propagação do fogo, mas não propõe nem avalia
+  ataques otimizados — é uma ferramenta de previsão, não de decisão. Se
+  perguntarem no Q&A: também assume que não há combate durante a simulação.
 - Fontes da síntese científica, por confirmar: acesso bloqueado ao texto completo
   no momento da pesquisa. "AI for Wildfire Management..." (MDPI, 2025) e "Forest
   Fire Prediction Models in Portugal: A Comprehensive Review". Não citar números

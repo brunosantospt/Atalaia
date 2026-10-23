@@ -59,9 +59,9 @@ se for preciso, encurtar a demo (está a 112 s) ou outro slide.
 
 **[clique]** *(revela a lista)*
 
-> "FARSITE e FlamMap: lentos demais. FARSITE: erra no vento e no combustível.
-> fogos.pt: não testa decisões. IPMA e EFFIS: não simulam o incêndio.
-> incendiosportugal.pt: assume que não há combate."
+> "FARSITE e FlamMap: lentos demais, erram no vento e no combustível. fogos.pt:
+> não testa decisões. IPMA e EFFIS: não simulam o incêndio. incendiosportugal.pt:
+> não propõe ataques otimizados."
 
 *Passagem: "Por isso, o desafio da Universidade do Minho é claro."*
 
