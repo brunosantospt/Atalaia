@@ -42,9 +42,30 @@ export function makeReport(grid: Grid, context: Context, run: Run, minutes = run
     if (t > minutes) continue
     cells++
     buildings += context.buildings[i]
-    if (context.homes[i]) {
-      homes += context.homes[i]
-      if (firstHomeMin === null || t < firstHomeMin) firstHomeMin = t
+  }
+
+  // Contabilização de habitações atingidas: faixa de gestão de combustível de 50 m (DL 124/2006).
+  // Como as células de tecido edificado (Scott & Burgan 91) são não combustíveis (ros = 0),
+  // uma habitação considera-se atingida / em perigo iminente logo que o fogo alcance a sua faixa de 50 m.
+  if (context.homeCells?.length) {
+    for (const cluster of context.homeCells) {
+      let t = Infinity
+      for (let k = 0; k < cluster.length; k++) {
+        const at = arrival[cluster[k]]
+        if (at < t) t = at
+      }
+      if (t <= minutes) {
+        homes++
+        if (firstHomeMin === null || t < firstHomeMin) firstHomeMin = t
+      }
+    }
+  } else {
+    for (let i = 0; i < arrival.length; i++) {
+      const t = arrival[i]
+      if (t <= minutes && context.homes[i]) {
+        homes += context.homes[i]
+        if (firstHomeMin === null || t < firstHomeMin) firstHomeMin = t
+      }
     }
   }
 
@@ -95,7 +116,7 @@ export function makeReport(grid: Grid, context: Context, run: Run, minutes = run
 /** Which of two decisions to recommend: the one that reaches fewer places, then the one that burns less. */
 export interface Verdict {
   pick: 'A' | 'B' | null // null: nothing tells them apart
-  by: 'places' | 'area' | 'tie'
+  by: 'places' | 'homes' | 'area' | 'tie'
 }
 
 /** "Recomendação: A · não atinge nenhum lugar em vez de 4 às 6,0 h" */
@@ -105,7 +126,9 @@ export function describeVerdict(v: Verdict, a: Report, b: Report): string {
   const why =
     v.by === 'places'
       ? `${placesText(mine.places.length)} em vez de ${other.places.length}`
-      : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
+      : v.by === 'homes'
+        ? `${mine.homes} casas atingidas em vez de ${other.homes}`
+        : `os mesmos lugares, ${fmtHa(mine.burnedHa)} em vez de ${fmtHa(other.burnedHa)}`
   return `Recomendação: ${v.pick} · ${why} às ${fmtNumber(mine.minutes / 60, 1)} h`
 }
 
@@ -113,6 +136,7 @@ const placesText = (n: number) => (n === 0 ? 'não atinge nenhum lugar' : `ating
 
 export function recommend(a: Report, b: Report): Verdict {
   if (a.places.length !== b.places.length) return { pick: a.places.length < b.places.length ? 'A' : 'B', by: 'places' }
+  if (a.homes !== b.homes) return { pick: a.homes < b.homes ? 'A' : 'B', by: 'homes' }
   if (Math.abs(a.burnedHa - b.burnedHa) >= 1) return { pick: a.burnedHa < b.burnedHa ? 'A' : 'B', by: 'area' }
   return { pick: null, by: 'tie' }
 }

@@ -578,7 +578,10 @@ export class Hud {
     this.set('cardHead', `Etapa ${pad2(this.chapters[frame.index] ?? 1)}/${pad2(this.chapterCount)} · ${shot.word}`)
     this.set('cardTitle', shot.title)
     this.set('cardBody', shot.caption)
-    this.set('play', frame.playing ? '❚❚' : '▶')
+    const playIcon = frame.phase === 'done' ? '↺' : frame.playing ? '❚❚' : '▶'
+    this.set('play', playIcon)
+    this.refs.play.title = frame.phase === 'done' ? 'Recomeçar (espaço)' : frame.playing ? 'Pausa (espaço)' : 'Play / pausa (espaço)'
+    this.refs.play.classList.toggle('restart', frame.phase === 'done')
     if (this.tickIndex !== frame.index) this.ticks.forEach((tick, i) => {
       tick.classList.toggle('past', this.chapters[i] < this.chapters[frame.index])
       tick.classList.toggle('now', this.chapters[i] === this.chapters[frame.index])

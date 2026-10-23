@@ -1,4 +1,4 @@
-import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { placements, placementAt, relocationPosition, addPlacement, editPlacement, resolveHaltedPlacement } from './placementTimeline'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
 // button arms the map, then each click puts it on the nearest road (a point of attack, where it
@@ -1000,6 +1000,7 @@ export class Editor {
         <li><span>Origem</span><b>${escapeText(origin)}</b></li>
         <li><span>Tarefa</span><b>${a.unit === 'vttu' ? 'abastecimento' : TASK_NAME[a.task]}</b></li>
         ${a.unit === 'vttu' ? `<li><span>Apoio · ${tankerReach(this.loaded.scenario)} m</span><b>Abastecimento próximo</b></li>` : ''}
+        ${(info as any).halted ? `<li style="grid-column:1/-1;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;border-radius:4px;padding:4px 6px;color:#fcd34d;font-size:10px;">⚠ Destino ardido: travagem tática na linha de aproximação</li>` : ''}
       </ul>
       <div class="hover-water hover-autonomy"><span>Autonomia</span><b>${timeMinutes(status.remaining)}</b>
         <meter min="0" max="100" value="${Number.isFinite(status.capacity) ? Math.round(status.remaining/status.capacity*100) : 100}" aria-label="Autonomia restante"></meter></div>
@@ -1957,18 +1958,24 @@ export class Editor {
       const route = origin && context && scenario && isRoadVehicle(spec)
         ? findSafeRoute(scenario.grid, context.osm.roads, activeRun?.arrival, dispatch, origin, at)?.path : undefined
       const path = origin ? [origin, ...(route ?? []), at] : [at]
-      const journey = unitJourney(path, departure, eta[slot] ?? departure)
       const history = scenario ? placements(scenario,d,slot) : []
+      const firstPlacement = history[0]
+      const effectiveAt = firstPlacement?.point ?? at
+      const effectiveArrival = firstPlacement?.arrivalMin ?? (eta[slot] ?? departure)
+      const effectivePath = firstPlacement?.halted && origin && scenario
+        ? resolveHaltedPlacement(scenario, d, slot, { point: at, orderedMin: departure, arrivalMin: eta[slot] ?? departure, path }, origin).path ?? path
+        : path
+      const journey = unitJourney(effectivePath, departure, effectiveArrival)
       const current = () => placementAt(history,this.playbackMinute)
       const visible = () => ordered(a) && (!combat || !resourceAt(combat,slot,this.playbackMinute).exhausted)
       for (let number = 0; number < a.count; number++) {
         const color = originColor(a.from, stations ?? [])
-        const arrival = eta[slot] ?? departure
-        const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
+        const arrival = effectiveArrival
+        const marker: UnitMarker = { ...effectiveAt, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
           color, offsetX: 0, offsetY: 0, label: spec.short,
           visible, position: () => relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute) }
         const destination: UnitMarker = { ...marker, id: `${marker.id}:destination`, pending: true,
-          position: () => current()?.point ?? at, visible: () => visible() && this.playbackMinute < (current()?.arrivalMin ?? arrival),
+          position: () => current()?.point ?? effectiveAt, visible: () => visible() && this.playbackMinute < (current()?.arrivalMin ?? arrival),
           eta: () => (current()?.arrivalMin ?? arrival) - this.playbackMinute }
         for (const item of [marker, destination]) {
           deployed.push(item)
@@ -1983,7 +1990,7 @@ export class Editor {
               disableDepthTestDistance: Infinity,
             },
           })
-          ;(entity as any)._unitInfo = { ...unitInfo(a, at, [a]), displayId: marker.code }
+          ;(entity as any)._unitInfo = { ...unitInfo(a, effectiveAt, [a]), displayId: marker.code, halted: firstPlacement?.halted }
         }
       }
     }

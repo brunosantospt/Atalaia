@@ -74,7 +74,7 @@ export function simulateFast(scenario: Scenario, decision: Decision | null): Run
   const cosUp = new Float32Array(360*K)
   for (let a = 0; a < 360; a++) for (let k = 0; k < K; k++) cosUp[a*K+k] = Math.cos((BEARING[k]-a-180)*Math.PI/180)
   const ros0 = new Float32Array(256)
-  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 1.4
+  for (const [code, [r]] of Object.entries(FUEL)) ros0[+code] = r * 2.8
   const protectedCells = new Map<number, Uint8Array>()
   const resources = decision ? combatResources(scenario,decision) : undefined
   if (decision && resources) for (const [slot,a] of decision.assignments.entries()) {

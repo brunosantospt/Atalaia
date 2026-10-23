@@ -611,6 +611,11 @@
   width: 27px;
   padding: 0;
 }
+.hud .transport > button[data-ref="play"].restart {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--amber, #f59e0b);
+}
 .hud button:hover {
   border-color: var(--line);
 }

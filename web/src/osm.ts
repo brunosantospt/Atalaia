@@ -52,6 +52,7 @@ export interface Context {
   osm: Osm
   homes: Uint16Array // homes per cell
   buildings: Uint16Array // all buildings per cell
+  homeCells?: Int32Array[] // cells within HOME_BUFFER_M (100 m buffer, DL 124/2006) of each home
   placeCells: Int32Array[] // cells within PLACE_RADIUS_M of each place
   roadCells: RoadCells[]
   access: Access[]
@@ -59,6 +60,7 @@ export interface Context {
 
 const ACCESS_STEP_M = 80
 const PLACE_RADIUS_M = 250
+export const HOME_BUFFER_M = 100 // 100 m buffer (gestão de combustível e raio de ameaça a edificado/aglomerados, DL 124/2006, art. 15.º)
 export const ROAD_CLASS_NAME: Record<RoadClass, string> = { paved: 'estrada', track: 'caminho de terra', path: 'trilho' }
 
 export async function loadOsm(id: string): Promise<Osm | null> {
@@ -78,6 +80,9 @@ export function buildContext(grid: Grid, osm: Osm): Context {
     if (home) homes[i]++
   }
   const placeCells = osm.places.map((p) => cellsWithin(grid, p, PLACE_RADIUS_M))
+  const homeCells = osm.buildings
+    .filter(([,, isHome]) => isHome)
+    .map(([lon, lat]) => cellsWithin(grid, { lon, lat }, HOME_BUFFER_M))
   const roadCells: RoadCells[] = []
   const access: Access[] = []
   osm.roads.forEach((road, r) => {
@@ -85,7 +90,7 @@ export function buildContext(grid: Grid, osm: Osm): Context {
     if (cells.length) roadCells.push({ road: r, cells: Int32Array.from(cells), metres: Float32Array.from(metres) })
     for (const p of sampleLine(road.pts, ACCESS_STEP_M)) if (cellIndex(grid, p) >= 0) access.push({ ...p, road: r })
   })
-  return { osm, homes, buildings, placeCells, roadCells, access }
+  return { osm, homes, buildings, homeCells, placeCells, roadCells, access }
 }
 
 /** The nearest access point on a road within `maxM` of `p`, if any. */
