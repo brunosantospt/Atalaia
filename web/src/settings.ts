@@ -60,7 +60,7 @@ const CONTOUR_LINES = `<svg viewBox="0 0 60 60" aria-hidden="true">${[8, 17, 26,
 export class SettingsPanel {
   readonly el: HTMLElement
   private stored = load()
-  private readonly shown = new Set<WidgetId>(WIDGETS.map((w) => w.id))
+  private readonly shown = new Set<WidgetId>() // every page starts with the widgets off
 
   constructor(parent: HTMLElement, at: LonLat, actions: SettingsActions) {
     this.el = document.createElement('aside')
@@ -99,7 +99,7 @@ export class SettingsPanel {
     return this.stored.map
   }
 
-  /** Whether a screen widget is on: all of them on a new page. */
+  /** Whether a screen widget is on: none of them on a new page. */
   showing(id: WidgetId): boolean {
     return this.shown.has(id)
   }
@@ -151,7 +151,7 @@ function mapChoice(map: { id: MapId; name: string; detail: string }, src: string
 function widgetChoice(widget: { id: WidgetId; name: string; detail: string }, onToggle: (on: boolean) => void) {
   const label = document.createElement('label')
   label.className = 'choice check'
-  label.innerHTML = '<input type="checkbox" checked><b></b><span class="state"></span><small></small>'
+  label.innerHTML = '<input type="checkbox" autocomplete="off"><b></b><span class="state"></span><small></small>'
   const input = label.querySelector('input')!
   input.name = 'widget'
   input.value = widget.id

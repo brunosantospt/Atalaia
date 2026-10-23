@@ -160,7 +160,7 @@ const TEMPLATE = `
   </section>
   <section class="hour">
     <h3>Hora <span data-ref="hourText"></span></h3>
-    <input type="range" data-ref="hour" min="0" max="360" step="5" value="360" title="Hora da simulação (o mapa e o relatório seguem-na)">
+    <input type="range" data-ref="hour" min="0" max="360" step="5" value="0" autocomplete="off" title="Hora da simulação (o mapa e o relatório seguem-na)">
   </section>
   <section>
     <h3>Meios no terreno</h3>
@@ -550,10 +550,12 @@ export class Editor {
   }
 
   /** Synchronizes simulation hour with active playback or timeline, updating road cuts and tactical perimeters dynamically. */
+  private clockShown = false // the slider is written at least once: a reload may have restored an old value
   syncTime(hours: number, force = false) {
     this.playbackMinute = hours * 60
     const targetMin = Math.round(Math.max(0, hours) * 60)
-    if (this.minutes !== targetMin || force) {
+    if (this.minutes !== targetMin || force || !this.clockShown) {
+      this.clockShown = true
       this.minutes = targetMin
       const hour = this.refs.hour as HTMLInputElement
       if (hour) hour.value = String(targetMin) // focused too: the clock follows a moved slider, nothing fights the drag
