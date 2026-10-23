@@ -42,6 +42,6 @@ body[data-error]::after {
 @keyframes intro-blink { to { visibility: hidden; } }
 .intro.recording .intro-rec { opacity: 1; }
 .map-logo { height: 52px; margin-right: 10px; vertical-align: middle; pointer-events: none; opacity: .9; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .7)); }
-.intro-unit { position: absolute; top: 12.5%; right: 1.8%; transform: translateY(-100%); color: #fff; font: 700 18px/1 ui-monospace, monospace; text-shadow: 0 1px 4px #000; }
+.intro-unit { position: absolute; top: 15.5%; right: 1.8%; transform: translateY(-100%); color: #fff; font: 700 18px/1 ui-monospace, monospace; text-shadow: 0 1px 4px #000; }
 .cesium-viewer-bottom { display: flex; align-items: center; opacity: 1 !important; }
 .cesium-viewer-bottom .cesium-credit-expand-link { display: none !important; }
