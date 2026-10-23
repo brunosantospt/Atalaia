@@ -2,7 +2,7 @@
 
 Os números são do `MULTIFIRE.md`, gerado pelo `multifire_report.py`. Este texto lê-os e diz o que fazer com eles.
 
-> **Estado em 22/10/2026, 13:40:** a meio. O que falta, e como continuar, está em [`HANDOFF.md`](HANDOFF.md). As secções marcadas *(a completar)* esperam por corridas que estavam na fila.
+> **Estado em 22/10/2026, 13:40:** a meio. As secções marcadas *(a completar)* esperam por corridas que estavam na fila.
 
 ## Em resumo
 

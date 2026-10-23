@@ -50,7 +50,7 @@ Experimenta-se aqui. Fora desta pasta só muda o que ajuda nos dois incêndios: 
    - a correção pelo erro da janela anterior (ganho pequeno);
    - um ensemble só de vento (o leque contém a área observada em 16 % das janelas).
 
-Os detalhes estão em [`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md), os números em [`MULTIFIRE.md`](MULTIFIRE.md) (gerado), e o estado e os próximos passos em [`HANDOFF.md`](HANDOFF.md).
+Os detalhes estão em [`NOVE_INCENDIOS.md`](NOVE_INCENDIOS.md), os números em [`MULTIFIRE.md`](MULTIFIRE.md) (gerado).
 
 **Figuras:**
 - `multifire_plots.png`: o resumo;
