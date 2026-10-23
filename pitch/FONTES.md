@@ -164,6 +164,14 @@ usar-se na fala e no Q&A). Chegaram a ter títulos próprios ("A
 validação", "Os modelos"), mas saíram logo a seguir (5.ª passagem) por
 pedido direto.
 
+ATUALIZADO (23 out, 6.ª passagem): os 4 modelos passam a usar o nome
+completo, igual ao do antigo grid de 4 cartões — "ELMFIRE calibrado para
+Portugal", "Motor de vento próprio", "Otimização da estratégia", "Tradutor
+de estratégia" (este já estava completo) — em vez de "ELMFIRE", "Motor de
+vento", "Otimização ILS". Como "Tradutor de estratégia" não cabia na
+mesma linha que os outros três, a fila passou de 4 em linha para grelha
+2×2.
+
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
 - "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
   fala — se o júri valorizar essa frase de marca, pode voltar a entrar,
