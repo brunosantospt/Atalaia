@@ -1,4 +1,5 @@
 import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
 // button arms the map, then each click puts it on the nearest road (a point of attack, where it
@@ -405,6 +406,8 @@ export class Editor {
     void viewer.dataSources.add(this.routes)
     void viewer.dataSources.add(this.hazards)
     void viewer.dataSources.add(this.agency)
+    // Redraws on every clock minute reuse unchanged lines and rings instead of rebuilding them (no flashing).
+    for (const source of [this.source, this.routes, this.agency]) stabilize(source.entities)
     this.unitMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
