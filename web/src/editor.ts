@@ -468,18 +468,12 @@ export class Editor {
       this.setCount(this.count)
     })
     const hour = this.refs.hour as HTMLInputElement
-    // Dragging fires many inputs a frame: the hour text follows at once, the map redraws once per frame.
-    let pending: number | undefined
-    hour.addEventListener('input', () => {
-      const first = pending === undefined
-      pending = Number(hour.value)
-      this.showClock(pending)
-      if (first) requestAnimationFrame(() => {
-        const m = pending!
-        pending = undefined
-        this.setMinutes(m)
-        this.el.dispatchEvent(new Event('hourchange')) // main.ts moves the fire clock
-      })
+    // While dragging only the hour text follows; the map, the fire and the report are worked out once,
+    // when the slider is released (or a key moves it), so the drag stays smooth.
+    hour.addEventListener('input', () => this.showClock(Number(hour.value)))
+    hour.addEventListener('change', () => {
+      this.setMinutes(Number(hour.value))
+      this.el.dispatchEvent(new Event('hourchange')) // main.ts moves the fire clock
     })
     this.refs.toAlert.addEventListener('click', () => {
       this.setMinutes(this.loaded?.scenario.dispatchMin ?? 10)
