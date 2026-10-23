@@ -1352,10 +1352,7 @@ export class Editor {
         const { result } = data
         this.ilsDone = { result, changes: diffDecisions(this.decisions[0], result.decision) }
         this.setB(result.decision)
-        if (ils.byHand) {
-          this.active = 1
-          this.cancel()
-        }
+        if (ils.byHand) this.cancel() // the drawer stays on decision A; B is one click away
         this.commit(true)
         return
       }
