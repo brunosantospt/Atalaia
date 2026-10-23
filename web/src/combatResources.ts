@@ -1,4 +1,5 @@
 // Deterministic demo estimates: active contact costs resources; quiet protection does not.
+import { DEMO_HORIZON_MIN } from './demoModel'
 import { distanceM, toPTTM06 } from './geo'
 import { cellOfXY, centerXY } from './grid'
 import type { Scenario } from './scenario'
@@ -6,7 +7,7 @@ import type { Decision } from './suppression'
 import { placements, placementAt } from './placementTimeline'
 export interface CombatFrame { waterPct:number; autonomyPct:number; active:boolean; contained:boolean; exhausted:boolean; radius:number; arrival:number }
 export function combatResources(s:Scenario,d:Decision) {
- const horizon=Math.min(180,s.durationMin),lists=d.assignments.map((_,i)=>placements(s,d,i))
+ const horizon=Math.min(DEMO_HORIZON_MIN,s.durationMin),lists=d.assignments.map((_,i)=>placements(s,d,i))
  const contact=lists.map((list,slot)=>list.map(p=>{
   const sectors=new Map<number,Set<number>>(), a=d.assignments[slot],radius=(a.unit==='crew'?160:300)*Math.sqrt(a.count)
   const xy=toPTTM06(p.point),rc=cellOfXY(s.grid,xy.x,xy.y),extent=Math.ceil(radius/s.grid.cellsize)

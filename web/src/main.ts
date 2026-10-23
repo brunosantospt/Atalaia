@@ -1,4 +1,5 @@
 import { configurePenhaDemo } from './demoSetup'
+import { DEMO_HORIZON_MIN } from './demoModel'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import './style.css'
 import {
@@ -339,7 +340,7 @@ async function main() {
     // The shared ELMFIRE inputs and deployment geometry.
     const startIndex = Math.max(0, weather.time.indexOf(fire0.start.slice(0, 16)))
     const fwiSeries = computeFWISeries(weather)
-    const durationMin = Math.min(180, horizonMin(fire0.start, weather))
+    const durationMin = Math.min(DEMO_HORIZON_MIN, horizonMin(fire0.start, weather))
     const scenario: Scenario = { demo: true, windShiftMin: fire0.windShift?.minutes, forecastWeather, grid, weather, startIndex, ignition: fire0.ignition, stations: regional, suppression, durationMin, dispatchMin: detection.droneMin }
     // Opening runs the empty-plan forecast once in a worker; subsequent edits stay button-run.
     const t0 = performance.now()

@@ -7,7 +7,7 @@
 
 import type { Run } from './scenario'
 import { fmtKm, fmtTime, wallClock } from './format'
-import { distanceM, toPTTM06, type LonLat } from './geo'
+import { destination, distanceM, toPTTM06, type LonLat } from './geo'
 import { cellOf, type Grid } from './grid'
 import { snapToRoad, type Context, type Place, type Road, type RoadClass } from './osm'
 import type { Decision } from './suppression'
@@ -579,11 +579,37 @@ export function roadBlockSigns(items: RoadCutItem[]): { at: LonLat; item: RoadCu
       const d = distanceM(a.coord, b.coord)
       if (d > far) [far, ends] = [d, [a, b]]
     }
-    for (const item of new Set(ends)) signs.push({ at: item.coord, item })
+    // Each end sign stands a little way along the road outwards, never on the vehicle's icon.
+    for (const item of new Set(ends)) {
+      const other = ends[0] === item ? ends[1] : ends[0]
+      signs.push({ at: besideVehicle(item, other !== item ? other.coord : item.barrier), item })
+    }
     for (const item of members)
       if (item.barrier && !members.some((other) => other !== item && on(item.barrier!, other))) signs.push({ at: item.barrier, item })
   }
   return signs
+}
+
+/** How far from its vehicle a block sign stands. */
+const SIGN_OFFSET_M = 35
+
+/** A point SIGN_OFFSET_M along the closed road from the vehicle, on the side away from `away` (else towards the fire). */
+function besideVehicle(item: RoadCutItem, away?: LonLat): LonLat {
+  const pts = item.pts
+  if (pts.length < 2) return destination(item.coord, 45, SIGN_OFFSET_M)
+  const { seg, at } = projectOnRoad(pts, item.coord)
+  const walk = (dir: 1 | -1) => {
+    let here = at, left = SIGN_OFFSET_M
+    for (let i = dir > 0 ? seg + 1 : seg; i >= 0 && i < pts.length; i += dir) {
+      const next = { lon: pts[i][0], lat: pts[i][1] }, d = distanceM(here, next)
+      if (d >= left) { const t = left / d; return { lon: here.lon + t * (next.lon - here.lon), lat: here.lat + t * (next.lat - here.lat) } }
+      left -= d; here = next
+    }
+    return here
+  }
+  const back = walk(-1), ahead = walk(1)
+  const pick = away ? (distanceM(back, away) >= distanceM(ahead, away) ? back : ahead) : back // pts start at the fire
+  return distanceM(pick, item.coord) >= SIGN_OFFSET_M / 2 ? pick : distanceM(back, item.coord) > distanceM(ahead, item.coord) ? back : ahead
 }
 
 /** Formats the copyable direct operational dispatch for PSP / GNR Traffic Division. */

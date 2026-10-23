@@ -9,6 +9,8 @@ import { isAerial, type Decision } from './suppression'
 import { combatResources } from './combatResources'
 import { placementAt } from './placementTimeline'
 import { placements } from './placementTimeline'
+/** The demo's story runs 3½ h: long enough after the wind change for the fire to reach houses. */
+export const DEMO_HORIZON_MIN = 210
 const FUEL: Record<number, [number, number]> = {
   101: [1.5, 0.1],
   102: [2.5, 0.25],
@@ -49,7 +51,7 @@ const fwiCache = new WeakMap<Scenario['weather'], ReturnType<typeof computeFWISe
 export function simulateFast(scenario: Scenario, decision: Decision | null): Run {
   const t0 = performance.now()
   const { grid } = scenario
-  const durationMin = Math.min(180, scenario.durationMin)
+  const durationMin = Math.min(DEMO_HORIZON_MIN, scenario.durationMin)
   const { cols, rows, cellsize, fuelCode, slope, aspect } = grid
   const n = cols * rows
   const minuteCount = Math.ceil(durationMin) + 1

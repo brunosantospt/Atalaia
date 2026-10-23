@@ -2,7 +2,7 @@
 // Keeping past placements in every candidate preserves both burned cells and resource use.
 import { findAirBase } from './airBases'
 import { combatResources, resourceAt } from './combatResources'
-import { simulateFast } from './demoModel'
+import { DEMO_HORIZON_MIN, simulateFast } from './demoModel'
 import { SAFETY_MIN } from './deployment'
 import { distanceM, lerpLonLat, type LonLat } from './geo'
 import { cellHa, cellOf, lonLatAt } from './grid'
@@ -46,7 +46,7 @@ export function routeIsSafe(s:Scenario,path:LonLat[],minute:number,speed:number,
 
 export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,options:Options):Result {
   const started=performance.now(),minute=Math.max(0,options.replanMin??0)
-  const durationMin=Math.min(180,input.durationMin)
+  const durationMin=Math.min(DEMO_HORIZON_MIN,input.durationMin)
   // Recompute the free forecast exactly as Simular does, including the selected wind phase.
   const free=simulateFast({...input,durationMin},null)
   const s={...input,durationMin,fireArrival:free.arrival}
@@ -70,39 +70,50 @@ export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,opti
     if(baseline.arrival[cell]>minute&&free.arrival[cell]<=durationMin)
       terrain.push(lonLatAt(s.grid,col+.5,row+.5))
   }
-  type Candidate={slot:number;placement:Placement;aerial:boolean;speed:number}
+  type Candidate={slot:number;placement:Placement;aerial:boolean;speed:number;retarget?:boolean}
   const candidates:Candidate[][]=a.assignments.map(()=>[])
-  const origins=a.assignments.map((_,slot)=>positionForReplan(s,ground,a,slot,minute,baseline.arrival))
+  // Units still at their base (not yet departed, no later orders) may instead get a different first destination.
+  const leaving=departures(s.suppression,a,s.dispatchMin)
+  const pending=a.assignments.map((x,slot)=>{
+    if(positionForReplan(s,ground,a,slot,minute,baseline.arrival)||x.placements?.length)return undefined
+    const spec=s.suppression.units[x.unit]
+    const base=isAerial(spec)?findAirBase(x.from):s.stations.find(p=>p.id===x.from)
+    const target=placements(s,a,slot)[0]
+    return base&&target?{base:{lon:base.lon,lat:base.lat},target:target.point,departure:Math.max(minute,leaving[slot])}:undefined
+  })
+  const origins=a.assignments.map((_,slot)=>positionForReplan(s,ground,a,slot,minute,baseline.arrival)??pending[slot]?.base)
   const eligible=a.assignments.map((x,slot)=>{
     const state=resourceAt(resources,slot,minute)
     return !!origins[slot]&&!state.exhausted&&(x.unit!=='vttu'||state.waterPct>0)
   })
   const make=(slot:number,point:LonLat):Candidate|undefined=>{
     const x=a.assignments[slot],spec=s.suppression.units[x.unit],origin=origins[slot]!
+    const retarget=pending[slot],start=retarget?retarget.departure:minute
     const aerial=isAerial(spec),speed=Math.max(1,x.unit==='crew'?4:spec.speedKmh)
     if(distanceM(origin,point)<30)return undefined
     let path=[origin,point]
     if(isRoadVehicle(spec)) {
       if(!ground.roads?.length)return undefined
-      const route=findSafeRoute(s.grid,ground.roads,baseline.arrival,minute,origin,point)
+      const route=findSafeRoute(s.grid,ground.roads,baseline.arrival,start,origin,point)
       if(!route)return undefined
       path=route.path
     }
     const length=path.slice(1).reduce((n,p,i)=>n+distanceM(path[i],p),0)
-    const arrivalMin=minute+length/1000/speed*60,cell=cellOf(s.grid,point)
+    const arrivalMin=start+length/1000/speed*60,cell=cellOf(s.grid,point)
     if(arrivalMin>=durationMin||cell<0)return undefined
-    if(!aerial&&(baseline.arrival[cell]<=arrivalMin+SAFETY_MIN||!routeIsSafe(s,path,minute,speed,baseline.arrival)))return undefined
-    return {slot,placement:{point,orderedMin:minute,arrivalMin,path},aerial,speed}
+    if(!aerial&&(baseline.arrival[cell]<=arrivalMin+SAFETY_MIN||!routeIsSafe(s,path,start,speed,baseline.arrival)))return undefined
+    return {slot,placement:{point,orderedMin:start,arrivalMin,path},aerial,speed,retarget:!!retarget}
   }
   // Rank nearby positions by future fire contact and distance; do not send units to old burned ground.
   for(let slot=0;slot<a.assignments.length&&!timeUp();slot++) {
     if(!eligible[slot])continue
-    const spec=s.suppression.units[a.assignments[slot].unit],origin=origins[slot]!
+    const spec=s.suppression.units[a.assignments[slot].unit],origin=pending[slot]?.target??origins[slot]!
     const spots=isRoadVehicle(spec)?ground.access:[...terrain,...ground.access]
     const ranked=spots.map(point=>{
       const cell=cellOf(s.grid,point),distance=distanceM(origin,point)
       const fire=cell<0?Infinity:Number.isFinite(baseline.arrival[cell])?baseline.arrival[cell]:free.arrival[cell]
-      const eta=minute+distance/1000/(a.assignments[slot].unit==='crew'?4:Math.max(1,spec.speedKmh))*60
+      const kmh=a.assignments[slot].unit==='crew'?4:Math.max(1,spec.speedKmh)
+      const eta=(pending[slot]?.departure??minute)+distanceM(origins[slot]!,point)/1000/kmh*60 // from where it actually sets off
       return {point,distance,fire,rank:Math.abs(fire-(eta+25))+distance/100}
     }).filter(p=>p.distance>=30&&p.distance<=2000&&p.fire>minute&&p.fire<=durationMin)
       .sort((p,q)=>p.rank-q.rank)
@@ -115,6 +126,11 @@ export function optimizeRelocations(input:Scenario,ground:Ground,a:Decision,opti
   }
   const changed=new Map<number,Candidate>()
   const apply=(d:Decision,c:Candidate)=>{
+    if(c.retarget) { // a new first destination: same unit, same dispatch, new target
+      const id=`ils-${c.slot}`,x=d.assignments[c.slot]
+      d.points[id]=structuredClone(c.placement.point);x.target=id;delete x.arrivalMin;x.placements=[]
+      return
+    }
     // Preserve issued orders, even an ongoing journey. The new saved route starts at its actual position.
     d.assignments[c.slot].placements=[
       ...structuredClone((a.assignments[c.slot].placements??[]).filter(p=>p.orderedMin<=minute)),

@@ -1423,7 +1423,7 @@ export class Editor {
     const hours = fmtNumber(Math.min(this.loaded?.scenario.durationMin ?? ILS_HORIZON_MIN, ILS_HORIZON_MIN) / 60)
     const tested = `${fmtNumber(result.plans)} planos em ${fmtNumber(result.elapsedMs / 1000, 1)} s`
     if (!result.improved) {
-      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos ${tested} bate o A neste modelo: B fica igual ao A.`
+      note.textContent = `${done.stopped ? 'Procura parada. ' : ''}Nenhum dos planos calculados batem a decisão A neste modelo.`
       return
     }
     const saved = [
@@ -2219,8 +2219,22 @@ export class Editor {
     let ring = this.coverageRings.get(key)
     if (!ring) {
       const state = { lon: NaN, lat: NaN, h: 0, radius, waiting }
-      const circle = () => Array.from({ length: 65 }, (_, i) => destination(state, i * 360 / 64, state.radius))
-        .map((q) => Cartesian3.fromDegrees(q.lon, q.lat, state.h))
+      // Each vertex sits on the ground under it (a dynamic line cannot be clamped or drawn through the
+      // relief), recomputed only when the ring moves or changes size.
+      const globe = this.viewer.scene.globe
+      let memo = { key: '', positions: [] as Cartesian3[] }
+      const circle = () => {
+        const key = `${state.lon},${state.lat},${state.radius.toFixed(1)}`
+        if (memo.key === key) return memo.positions
+        let missing = false
+        const positions = Array.from({ length: 65 }, (_, i) => destination(state, i * 360 / 64, state.radius)).map((q) => {
+          const ground = globe.getHeight(Cartographic.fromDegrees(q.lon, q.lat))
+          if (ground === undefined) missing = true
+          return Cartesian3.fromDegrees(q.lon, q.lat, (ground ?? state.h) + 4)
+        })
+        memo = { key: missing ? '' : key, positions } // tiles still loading: sample again next frame
+        return positions
+      }
       const material = () => new PolylineDashMaterialProperty({ color: WET, dashLength: 12,
         gapColor: new CallbackProperty(() => state.waiting ? Color.TRANSPARENT : WET, false) })
       const entity = new Entity({ polyline: { positions: new CallbackProperty(circle, false), width: 2,

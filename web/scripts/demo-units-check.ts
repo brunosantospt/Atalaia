@@ -2,7 +2,7 @@ import { combatResources, resourceAt } from '../src/combatResources'
 import { placements, editPlacement, addPlacement, placementAt, relocationPosition } from '../src/placementTimeline'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { simulateFast } from '../src/demoModel'
+import { DEMO_HORIZON_MIN, simulateFast } from '../src/demoModel'
 import { simulate as scoreForIls, decisionBarriers as optimizerBarriers } from '../src/fastModel'
 import { demoLines, demoAttackZones, demoAttackRadius, demoAttackHeldAt } from '../src/demoLines'
 import { fieldIds, ensureAssignmentIds } from '../src/unitIdentity'
@@ -114,9 +114,9 @@ assert.ok(distanceM(mid,p)<1,'deliberately rotated sections remain at their sele
 console.log('COOPERATIVE FRONT:',{free:pastFront(freeWall),one:pastFront(singleWall),six:pastFront(strongWall)})
 console.log('OK: physical-unit IDs, legacy geometry, journeys and circular resource-aware propagation')
 
-// The demo ends at three hours even when the caller requests a longer horizon.
-assert.equal(freeWall.durationMin,180)
-assert.ok(Array.from(freeWall.arrival).every(t => t <= 180 || t === Infinity))
+// The demo ends at its horizon (3½ h) even when the caller requests a longer horizon.
+assert.equal(freeWall.durationMin,DEMO_HORIZON_MIN)
+assert.ok(Array.from(freeWall.arrival).every(t => t <= DEMO_HORIZON_MIN || t === Infinity))
 // Turn the wind from west to north at T+30: the existing scar must remain,
 // while subsequent southward spread overtakes the unchanged-wind forecast.
 const west = {...scenario.weather, windKmh:[15,15,15], windFromDeg:[270,270,270]}
