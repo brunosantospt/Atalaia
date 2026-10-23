@@ -108,8 +108,8 @@ export class WindLayer {
     this.speed = this.el.querySelector('.wind-speed strong')!
     this.detail = new Detail(parent, 'Vento')
     this.detail.extra.innerHTML = `
-      <label class="wind-map-toggle"><input type="checkbox" data-ref="arrow">Seta do vento no mapa, junto à ignição</label>
-      <label class="wind-map-toggle"><input type="checkbox" data-ref="field">Mapa de vetores do vento sobre a zona do incêndio</label>`
+      <label class="wind-map-toggle"><input type="checkbox" data-ref="arrow" autocomplete="off">Seta do vento no mapa, junto à ignição</label>
+      <label class="wind-map-toggle"><input type="checkbox" data-ref="field" autocomplete="off">Mapa de vetores do vento sobre a zona do incêndio</label>`
     this.mapToggle = this.detail.extra.querySelector('[data-ref="arrow"]')!
     this.fieldToggle = this.detail.extra.querySelector('[data-ref="field"]')!
     for (let i = -FIELD_HALF; i <= FIELD_HALF; i++) for (let j = -FIELD_HALF; j <= FIELD_HALF; j++) {
@@ -130,17 +130,11 @@ export class WindLayer {
     this.mapNeedle = this.mapArrow.querySelector('.wind-needle')!
     parent.prepend(this.field) // under every panel of the HUD
     parent.append(this.mapArrow)
-    try {
-      this.mapToggle.checked = localStorage.getItem('atalaia.wind-map') === 'true'
-      this.fieldToggle.checked = localStorage.getItem('atalaia.wind-field') === 'true'
-    } catch { /* Optional preference. */ }
+    // Both off on every new page: not remembered, not restored by the browser.
+    this.mapToggle.checked = this.fieldToggle.checked = false
     const setMap = () => {
       this.projectArrow()
       this.projectField()
-      try {
-        localStorage.setItem('atalaia.wind-map', String(this.mapToggle.checked))
-        localStorage.setItem('atalaia.wind-field', String(this.fieldToggle.checked))
-      } catch { /* Optional preference. */ }
       this.viewer.scene.requestRender()
     }
     this.mapToggle.addEventListener('change', setMap)
