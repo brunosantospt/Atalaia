@@ -46,8 +46,13 @@
     }
     .reveal { font-family: var(--sans); color: var(--ink); font-size: 38px; }
     .reveal .slides { text-align: left; }
-    .reveal .slides > section { height: 100%; display: flex !important; flex-direction: column; justify-content: center; }
+    /* Por omissão as slides ficam ancoradas no topo, não centradas: espalha o conteúdo
+       em vez de o amontoar a meio do ecrã, com muito vazio por cima e por baixo. */
+    .reveal .slides > section { height: 100%; display: flex !important; flex-direction: column; justify-content: flex-start; padding-top: 170px; box-sizing: border-box; }
     .reveal .slides > section.stack, .reveal .slides > section[hidden] { display: none !important; }
+    .reveal .slides > section[data-state="title"],
+    .reveal .slides > section[data-logo-center],
+    .reveal .slides > section.demo-stage { justify-content: center; padding-top: 0; }
     .reveal h1, .reveal h2, .reveal h3 { font-family: var(--sans); color: var(--ink); font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 0.4em; text-transform: none; }
     .reveal h1 { font-size: 2.6em; }
     .reveal h2 { font-size: 1.6em; }
@@ -153,7 +158,6 @@
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; }
     .agencies { display: flex; gap: 0.5em; flex-wrap: wrap; margin-top: 0.6em; }
     .agencies span { font-family: var(--mono); font-size: 0.42em; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--line); padding: 0.5em 0.8em; color: var(--ink-dim); }
-    .reveal .slides > section.problem { justify-content: flex-start; padding-top: 175px; box-sizing: border-box; }
     .problem h2 { font-size: 2.55em; line-height: 1.08; letter-spacing: -.035em; margin-bottom: .65em; }
     .problem-evidence { display: grid; grid-template-columns: 1fr 1.25fr; gap: 2.4em; align-items: start; max-width: 1650px; }
     .problem-stat { display: flex; align-items: center; gap: .65em; }
@@ -167,8 +171,6 @@
     .problem .decision-gap { margin-top: 1em; max-width: 1580px; font-size: .86em; line-height: 1.4; }
     .problem .decision-gap strong { color: var(--cool); }
 
-    /* desafio, no estilo "DETECT. TRACK. AVOID." */
-    .reveal .slides > section.challenge { justify-content: flex-start; padding-top: 170px; box-sizing: border-box; }
     .challenge .tag { font-size: .48em; margin-bottom: 2em; }
     .challenge .sub { font-size: 1.7em; font-weight: 600; letter-spacing: -.02em; line-height: 1.22; max-width: 1550px; margin-bottom: 1.1em; }
     /* o que falha hoje: uma linha por ferramenta */
@@ -311,9 +313,10 @@
     }
     @media print {
       #logo { display: none; }
-      .reveal .slides .pdf-page > section { height: 1080px !important; display: flex !important; flex-direction: column; justify-content: center; box-sizing: border-box; }
-      .reveal .slides .pdf-page > section.problem { justify-content: flex-start; padding-top: 175px !important; }
-      .reveal .slides .pdf-page > section.challenge { justify-content: flex-start; padding-top: 170px !important; }
+      .reveal .slides .pdf-page > section { height: 1080px !important; display: flex !important; flex-direction: column; justify-content: flex-start; padding-top: 170px; box-sizing: border-box; }
+      .reveal .slides .pdf-page > section[data-state="title"],
+      .reveal .slides .pdf-page > section[data-logo-center],
+      .reveal .slides .pdf-page > section.demo-stage { justify-content: center; padding-top: 0; }
       .pdf-page [data-state="title"] > div { box-sizing: border-box; }
       .reveal .print-logo { display: block; position: absolute; top: 0; left: 0; width: 250px; height: auto; border: 0; }
       [data-state="title"] .print-logo, [data-logo-center] .print-logo { width: 62%; left: 50%; top: 43%; transform: translate(-50%, -50%); }
@@ -563,7 +566,7 @@
   </section>
 
   <!-- ============================== 7 · DEMO · 1:31–3:23 ============================== -->
-  <section data-background-color="#000" data-timing="112">
+  <section data-background-color="#000" data-timing="112" class="demo-stage">
     <div class="demo">
       <div class="tag" style="margin:0;"><span class="rec"></span>Demo ao vivo · 1 min 52 s</div>
       <h1 style="margin-top:0.4em;">Atalaia</h1>
