@@ -14,7 +14,9 @@ tira mais ~15 s e dois slides inteiros. Total sem demo agora: 1:44.
 
 ## 1 · Título
 
-Sem notas técnicas.
+Sem notas técnicas. NARRAÇÃO TIRADA (23 out): o slide passa a abrir em
+silêncio — já não se diz "Somos a Atalaia." (era o único texto do slide;
+deixar o número do slide 2 falar primeiro).
 
 ---
 
@@ -41,6 +43,16 @@ Sem notas técnicas.
 - Slide a 16 s (23 out: era 20 s). A frase das perdas ficou mais curta ("Mais
   de 85 milhões de euros em perdas — sem contar casas, estradas ou o
   combate."); os números em si não mudaram.
+- ⚠️ NÚMEROS ARREDONDADOS NA FALA (23 out, 2.ª passagem): a fala passa a
+  dizer "mais de 200 mil hectares" e "mais de 8 mil ocorrências", mais
+  redondo e fácil de dizer ao vivo do que "270 mil"/"8 250" — mas bem
+  abaixo dos valores reais (270 695 ha, 8 252 ocorrências) que continuam
+  no ecrã (os contadores animados ainda sobem até 270 695 e 8 252). Os
+  dois valores ditos continuam verdadeiros (270 695 > 200 000; 8 252 >
+  8 000), só menos precisos. Se preferires que a fala bata certo com o
+  ecrã, repor "mais de 270 mil hectares" e "mais de 8 250 ocorrências".
+  Também saiu "sem contar casas, estradas nem o combate" da frase das
+  perdas — ainda é verdade, só deixou de se dizer.
 
 ---
 
@@ -110,6 +122,13 @@ Sem notas técnicas.
 - Slide a 11 s (23 out: era 15 s). "lentos demais" → "lentos"; "não propõe
   ataques otimizados" → "sem ataques otimizados". Os cartões no ecrã não
   mudaram, só a fala.
+- FALA GENERALIZADA (23 out, 2.ª passagem): a fala deixa de nomear cada
+  ferramenta e passa a um resumo só: "Algumas são lentas e erram nos
+  dados, outras não testam decisões ou não propõem ataques otimizados."
+  Os 4 cartões no ecrã continuam a nomear FARSITE/FlamMap, fogos.pt,
+  IPMA/EFFIS e incendiosportugal.pt com o veredito de cada um — a
+  audiência lê o detalhe, o narrador só resume. As notas acima (uma por
+  ferramenta) continuam válidas para o Q&A.
 - ÍCONES TROCADOS (23 out): os 4 cartões passam a usar ícones novos
   (ampulheta, olho, velocímetro, espiral) em vez dos antigos (relógio,
   gota, nuvem, alvo), todos na mesma cor #F76707 — antes cada cartão tinha
@@ -132,6 +151,12 @@ Sem notas técnicas.
   INEM, as mesmas do slide 2 e do slide 6. Liga este slide ao resto do pitch.
 - Slide a 8 s (23 out: era 10 s). Texto igual, só menos tempo de pausa entre
   os três cliques (rápida/precisa/prática).
+- FALA AJUSTADA (23 out, 2.ª passagem): o lead-in "O desafio da
+  Universidade do Minho:" saiu da fala — fica só a pergunta ("Como simular
+  alternativas de atuação, e melhorar a coordenação nos primeiros
+  minutos?"), já que a etiqueta no ecrã ("O desafio · Universidade do
+  Minho · Desafio 2") já diz isso. "Por isso: rápida." → "Precisamos de
+  uma resposta rápida.", mantendo os 3 cliques (um por pílula).
 
 ---
 
@@ -176,6 +201,28 @@ de estratégia" (este já estava completo) — em vez de "ELMFIRE", "Motor de
 vento", "Otimização ILS". Como "Tradutor de estratégia" não cabia na
 mesma linha que os outros três, a fila passou de 4 em linha para grelha
 2×2.
+
+⚠️ ATUALIZADO (23 out, 7.ª passagem — guião reescrito): a fala deste
+slide foi reescrita de raiz.
+- "Para quem decide o ataque..." → "Criada para quem decide o ataque...".
+- A fala da validação deixa de dizer os três números em sequência e passa
+  a dizer só "Validada contra um incêndio real, Vieira do Minho 2016,
+  chegamos a 0,89 de sobreposição." — SEM o 0,76 nem o 0,83. Isto
+  contraria diretamente a regra "não negociável" do README do hindcast
+  ("Mostrar SEMPRE os três números em sequência... Nunca o 0,89
+  sozinho"). O ecrã continua a mostrar os três números (0,76→0,83→0,89),
+  por isso a audiência vê a sequência completa mesmo que não a oiça. Se
+  isto for mesmo para ficar assim, a regra do README do hindcast devia
+  ser atualizada para refletir que "nunca o 0,89 sozinho" se aplica ao
+  ecrã, não à fala; se não for intencional, repor "0,76 no modelo base,
+  0,83 só com dados públicos" antes do "0,89" na fala.
+- A fala dos modelos passa a explicar o "porquê" de cada um, em vez de só
+  os nomear: "calibrámos o motor ELMFIRE com os dados do LiDAR da DGT,
+  desenvolvemos modelos próprios de previsão de vento, e usamos a
+  otimização premiada de um dos nossos orientadores, Filipe Alvelos, para
+  as estratégias." Não nomeia o "tradutor de estratégia" (o 4.º modelo no
+  ecrã) — fica só visual, sem ser falado.
+- "Vamos ver ao vivo." → "Vamos ver a Atalaia em prática."
 
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
 - "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
@@ -334,6 +381,13 @@ e o condutor continua a falar.
   sempre melhor." — ficava redundante com a nova frase de fecho do slide 9
   ("Está na hora de ver primeiro, e decidir melhor."), que diz
   essencialmente o mesmo.
+- FALA REESCRITA (23 out, 3.ª passagem): "Como próximos passos, queremos
+  tornar o modelo também numa ferramenta de testes para cenários futuros;
+  usar IA para afinar a estratégia; e drones para detetar os incêndios
+  mais cedo e com menos custos." O "com menos custos" para os drones
+  continua a apoiar-se na nota acima (substituem parte do reconhecimento
+  aéreo por helicóptero, mais caro) — não há número de poupança
+  confirmado, por isso não dizer um valor se perguntarem no Q&A.
 
 ---
 

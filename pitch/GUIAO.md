@@ -7,17 +7,16 @@ sourcing ficam em `index.html` (notas do orador) e `FONTES.md`.
 
 ## 1 · Título
 
-Somos a Atalaia.
+*(não se diz nada)*
 
 ## 2 · Gancho
 
-No ano passado arderam em Portugal mais de 270 mil hectares. Mais de 8 250
-ocorrências.
+No ano passado arderam em Portugal mais de 200 mil hectares e houve mais
+de 8 mil ocorrências.
 
-11 concelhos de Guimarães.
+Isto são 11 concelhos de Guimarães.
 
-Mais de 85 milhões de euros em perdas — sem contar casas, estradas ou o
-combate.
+E mais de 85 milhões de euros em perdas.
 
 Mas o número que importa não é este.
 
@@ -32,18 +31,17 @@ E se pudéssemos ver o que vai arder antes de decidir?
 
 Já existem ferramentas. Mas nenhuma resolve isto.
 
-FARSITE e FlamMap: lentos, erram no vento e no combustível. fogos.pt: não
-testa decisões. IPMA e EFFIS: não simulam o incêndio. incendiosportugal.pt:
-sem ataques otimizados.
+Algumas são lentas e erram nos dados, outras não testam decisões ou não
+propõem ataques otimizados.
 
 Por isso, o desafio da Universidade do Minho é claro.
 
 ## 5 · O desafio da UMinho
 
-O desafio da Universidade do Minho: como simular alternativas de atuação, e
-melhorar a coordenação nos primeiros minutos?
+Como simular alternativas de atuação, e melhorar a coordenação nos
+primeiros minutos?
 
-Por isso: rápida. Precisa. E prática.
+Precisamos de uma resposta rápida. Precisa. E prática.
 
 A nossa resposta chama-se…
 
@@ -53,18 +51,19 @@ A nossa resposta chama-se…
 
 ## 6 · A proposta + validação + métodos
 
-Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca
-os meios, prevê o comportamento do incêndio e comunica o comando de ação.
+Criada para quem decide o ataque, a Atalaia monitoriza o fogo em tempo
+real, aloca os meios, prevê o comportamento do incêndio e comunica o
+comando de ação.
 
-E isto já foi testado: contra um incêndio real, Vieira do Minho 2016,
-chegamos a 0,89 de sobreposição — 0,76 no modelo base, 0,83 só com dados
-públicos.
+Validada contra um incêndio real, Vieira do Minho 2016, chegamos a 0,89
+de sobreposição.
 
-Não partimos do zero: calibrámos e ligámos o ELMFIRE, um motor de vento
-próprio, a otimização premiada de um dos nossos orientadores, Filipe
-Alvelos, e um tradutor de estratégia.
+Para chegarmos a esses valores, calibrámos o motor ELMFIRE com os dados
+do LiDAR da DGT, desenvolvemos modelos próprios de previsão de vento, e
+usamos a otimização premiada de um dos nossos orientadores, Filipe
+Alvelos, para as estratégias.
 
-Vamos ver ao vivo.
+Vamos ver a Atalaia em prática.
 
 ## 7 · Demo ao vivo
 
@@ -74,8 +73,9 @@ E isto não acaba hoje.
 
 ## 8 · A seguir
 
-A seguir: ferramenta de testes para cenários futuros; IA a afinar a
-estratégia; e drones para detetar mais cedo.
+Como próximos passos, queremos tornar o modelo também numa ferramenta de
+testes para cenários futuros; usar IA para afinar a estratégia; e drones
+para detetar os incêndios mais cedo e com menos custos.
 
 ## 9 · Fecho + obrigado
 
