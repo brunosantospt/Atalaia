@@ -55,12 +55,14 @@ A nossa resposta chama-se…
 
 Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca
 os meios, prevê o comportamento do incêndio e comunica o comando de ação.
-Dados reais. Meios reais. Um só mapa.
+
+Não partimos do zero: calibrámos e ligámos o ELMFIRE, um motor de vento
+próprio, a otimização premiada de um dos nossos orientadores, Filipe
+Alvelos, e um tradutor de estratégia.
 
 E isto já foi testado: contra um incêndio real, Vieira do Minho 2016,
 chegamos a 0,89 de sobreposição — 0,76 no modelo base, 0,83 só com dados
-públicos. Por baixo: o motor ELMFIRE, LiDAR da DGT, e a otimização
-premiada de um dos nossos orientadores, Filipe Alvelos.
+públicos.
 
 Vamos ver ao vivo.
 

@@ -140,11 +140,20 @@ Sem notas técnicas; ver `index.html` para a descrição da animação.
 
 FUNDIDO (23 out): este slide era três slides separados — "A proposta",
 "Validação" e "A tecnologia" — juntados num só para caber a apresentação em
-menos tempo. Fica: roadmap da proposta → "Dados reais. Meios reais. Um só
-mapa." → prova de validação + créditos técnicos, tudo no mesmo slide, antes
-da demo.
+menos tempo. Fica: roadmap da proposta → modelos resumidos (ícone + nome,
+4 badges numa linha) → prova de validação, tudo no mesmo slide, antes da
+demo.
+
+ATUALIZADO (23 out, 2.ª passagem): a linha "Dados reais. Meios reais. Um só
+mapa." no meio do slide deu lugar aos 4 modelos resumidos (ELMFIRE, Motor
+de vento, Otimização ILS, Tradutor de estratégia — os mesmos ícones do
+antigo grid de 4 cartões, agora só ícone + nome, sem descrição). A frase
+"Dados reais..." saiu do slide e da fala.
 
 **O que se perdeu na fusão** (para decidir se volta a entrar no Q&A):
+- "Dados reais. Meios reais. Um só mapa." já não aparece no slide nem na
+  fala — se o júri valorizar essa frase de marca, pode voltar a entrar,
+  mas não há espaço livre no slide atual sem tirar outra coisa.
 - A imagem de validação fica pequena (520px de largura, ~42% do slide, em
   vez do slide inteiro): já não se leem os pormenores das três áreas
   ardidas, só a forma geral e a cor. Os três números continuam bem
@@ -152,9 +161,10 @@ da demo.
 - As legendas por painel ("área prevista pelo modelo" / "perímetro
   observado") e os rótulos de cada seta ("+ Dados públicos" / "+ Linhas de
   ataque") saíram do slide — ficam só os números em sequência.
-- O grid de 4 cartões da tecnologia (com ícone e descrição por peça) virou
-  uma frase única; o "tradutor de estratégia" e a frase de fecho "cada peça
-  a fazer o que faz melhor" saíram por completo.
+- O grid de 4 cartões da tecnologia perdeu a descrição de cada peça (só
+  ícone + nome); a frase de fecho "cada peça a fazer o que faz melhor"
+  saiu por completo. O "tradutor de estratégia" voltou a aparecer (como
+  ícone + nome), mas sem a frase que explicava o que faz.
 - Se o júri pedir mais detalhe em algum destes pontos, está tudo neste
   ficheiro, mais abaixo nesta secção.
 
