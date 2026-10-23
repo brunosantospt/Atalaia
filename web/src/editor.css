@@ -663,6 +663,13 @@
 .hud .editor .ils-btn {
   width: 100%;
 }
+.hud .editor .ils-details summary { cursor: pointer; font-size: 12px; color: #d8e6f3; margin-top: 6px; }
+.hud .editor .ils-details summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 4px; }
+/* What B changed: long "where" texts wrap inside their card instead of running out of it. */
+.hud .editor .changes li { min-width: 0; }
+.hud .editor .changes .meta { flex-wrap: wrap; }
+.hud .editor .changes .meta em { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.hud .editor .move-why { margin: 4px 0 0; }
 
 /* Posto de Socorro (INEM) section */
 .hud .editor .pma-section {

@@ -647,7 +647,7 @@ async function main() {
       return { label: 'Simular', enabled: true, note: 'Vento mudou. Fogo pausado na mudança: carregue em Simular para prever a nova expansão com os meios.' }
     if (sim && layoutKey() === sim.hash)
       return { label: 'Simular', enabled: false, note: '' }
-    return { label: 'Simular', enabled: true,
+    return { label: 'Simular', enabled: true, quiet: true,
       note: 'Corre Livre, A e B ao carregar. ELMFIRE em pausa para a demo.' }
   }
 
@@ -774,7 +774,7 @@ async function main() {
     split?.presentation(!editor.open && replay.showSplit)
     const selectedPosition = editor.decisionIndex === 0 ? 1 : 0
     if (splitOn && (!replay.showSplit || editor.open) && split?.position !== selectedPosition) split?.setPosition(selectedPosition)
-    replay.outcome?.show(finale, frame.progress * frame.shot.holdS)
+    replay.outcome?.show(finale)
     // The observed fire gives way to the simulated one: the free run in its shots, A and B when split.
     // With the drawer open and nothing simulated yet, the free run is what the means are up against.
     const freeOn = !finale && !splitOn && (frame.shot.simulated || editor.open)

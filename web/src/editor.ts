@@ -53,6 +53,7 @@ import {
   OTHER_SIDE_M,
   detectFirefighterRoads,
   evaluateMedicalPointSafety,
+  roadBlockSigns,
   type AgencyRole,
   type MedicalPointItem,
   type MultiAgencyDispatch,
@@ -93,6 +94,7 @@ export interface SimulateState {
   label: string
   enabled: boolean
   note: string
+  quiet?: boolean // a routine note: the buttons' tooltip only, not written under the drawer's button
 }
 
 export interface EditorActions {
@@ -149,7 +151,10 @@ const TEMPLATE = `
     <h3>Proposta Decisão B</h3>
     <button type="button" data-ref="ils" class="primary-btn ils-btn" title="Procura uma proposta B com os meios de A durante até 10 s. Substitui o plano B apenas ao carregar neste botão; depois carregue em Simular modelo rápido."></button>
     <p class="note" data-ref="ilsNote"></p>
-    <ul class="assignments changes" data-ref="ilsChanges"></ul>
+    <details class="ils-details" data-ref="ilsDetails" hidden>
+      <summary data-ref="ilsSummary">Ver proposta</summary>
+      <ul class="assignments changes" data-ref="ilsChanges"></ul>
+    </details>
   </section>
   <section class="hour">
     <h3>Hora <span data-ref="hourText"></span></h3>
@@ -365,7 +370,7 @@ export class Editor {
   private hoverPosition = new Cartesian2()
   private hoveredItem: unknown
   private hoveredMinute = -1
-  private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; decision?: Decision; assignmentsLen?: number; value: MultiAgencyDispatch } | undefined
+  private dispatchCache: { loaded: Loaded; run: Run; minutes: number; pma: MedicalPointItem[]; decision?: Decision; plan?: string; value: MultiAgencyDispatch } | undefined
   private readonly tip: HTMLElement
   private readonly unitMarkers: UnitMarkers
   private readonly handler: ScreenSpaceEventHandler
@@ -677,11 +682,13 @@ export class Editor {
   }
 
   /** The state of the simulate button (main.ts compares the means with the last simulation's). */
-  setSimulate({ label, enabled, note }: SimulateState) {
+  setSimulate({ label, enabled, note, quiet }: SimulateState) {
     const button = this.refs.simulate as HTMLButtonElement
     button.textContent = label
     button.disabled = !enabled
-    this.refs.simulateNote.textContent = note
+    const shown = quiet ? '' : note
+    this.refs.simulateNote.textContent = shown
+    this.refs.simulateNote.hidden = !shown
   }
 
   /** The runs of Livre, A and B of the last ELMFIRE simulation, their reports when the fire has OSM context, and those the verdict compares. */
@@ -1402,6 +1409,9 @@ export class Editor {
     const note = this.refs.ilsNote
     const list = this.refs.ilsChanges
     list.replaceChildren()
+    // What B changed folds under "Ver proposta", so the drawer keeps its room; hidden when there is nothing.
+    const details = this.refs.ilsDetails as HTMLDetailsElement
+    details.hidden = true
     if (busy) {
       note.textContent = this.ils?.note ?? 'A procurar uma proposta B…'
       return
@@ -1434,6 +1444,9 @@ export class Editor {
       ` · ${tested}.`
     const lines = diffLines(this.decisions[0], result.decision)
     list.replaceChildren(...lines.map((c) => this.lineRow(c)), ...changes.map((c) => this.changeRow(c)))
+    const n = list.children.length
+    details.hidden = n === 0
+    this.refs.ilsSummary.textContent = `Ver proposta (${n} ${n === 1 ? 'alteração' : 'alterações'})`
   }
 
   /** What B did with one of A's lines: moved, cut, built from the other end, or left with no one on it. */
@@ -1761,18 +1774,33 @@ export class Editor {
         else item.append(edit)
         history.append(item)})
       const move=document.createElement('button');move.type='button';move.textContent=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação'
-      move.disabled=this.minutes<list.at(-1)!.arrivalMin || resourceAt(cachedCombatResources(this.loaded.scenario,d),k,this.playbackMinute).exhausted
+      const why=document.createElement('p');why.className='note move-why';why.dataset.moveWhy=String(k)
+      this.showMoveBlock(move,why,d,k)
       move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})
       const resources=document.createElement('div');resources.className='card-resources';resources.dataset.resourceSlot=String(k)
       move.dataset.moveSlot=String(k)
       const disclosure=document.createElement('details'),summary=document.createElement('summary')
       summary.textContent='Recursos · água e autonomia'
       disclosure.className='resource-disclosure';disclosure.append(summary,resources)
-      li.append(history,disclosure,move)
+      li.append(history,disclosure,move,why)
       this.fillResources(resources,k)
     }
     li.querySelector('.x')!.addEventListener('click', () => this.remove(k))
     return li
+  }
+
+  /** A unit takes a new placement once it has arrived and while it has autonomy; the card says which it lacks. */
+  private showMoveBlock(move: HTMLButtonElement, why: HTMLElement, d: Decision, slot: number) {
+    if (!this.loaded) return
+    const last = placements(this.loaded.scenario, d, slot).at(-1)!
+    const reason = this.playbackMinute < last.arrivalMin
+      ? `Ainda a caminho: pode ser recolocado depois de chegar, às ${fmtTime(wallClock(this.loaded.fire.start, last.arrivalMin / 60))}.`
+      : resourceAt(cachedCombatResources(this.loaded.scenario, d), slot, this.playbackMinute).exhausted
+        ? 'Autonomia esgotada: este meio já não pode ser recolocado.'
+        : ''
+    move.disabled = !!reason
+    why.textContent = reason
+    why.hidden = !reason
   }
 
   private etaText(eta: number): string {
@@ -1792,7 +1820,7 @@ export class Editor {
     const d = this.decisions[this.active]
     const future = d.assignments.filter(a => this.playbackMinute < (a.orderedMin ?? a.dispatchMin ?? this.loaded?.scenario.dispatchMin ?? 0)).map(a => a.id).join('|')
     if (this.refs.list.dataset.future !== future) this.renderList(d)
-    this.refs.list.querySelectorAll<HTMLButtonElement>('[data-move-slot]').forEach(el=>{const k=Number(el.dataset.moveSlot);if(this.loaded)el.disabled=this.playbackMinute<placements(this.loaded.scenario,d,k).at(-1)!.arrivalMin||resourceAt(cachedCombatResources(this.loaded.scenario,d),k,this.playbackMinute).exhausted})
+    this.refs.list.querySelectorAll<HTMLButtonElement>('[data-move-slot]').forEach(el=>{const k=Number(el.dataset.moveSlot),why=this.refs.list.querySelector<HTMLElement>(`[data-move-why="${k}"]`);if(why)this.showMoveBlock(el,why,d,k)})
     this.refs.list.querySelectorAll<HTMLElement>('[data-resource-slot]').forEach(el=>this.fillResources(el,Number(el.dataset.resourceSlot)))
     this.refs.list.querySelectorAll<HTMLElement>('[data-eta]').forEach((el) => {
       el.textContent = this.etaText(Number(el.dataset.eta))
@@ -2027,16 +2055,18 @@ export class Editor {
       }
     }
 
-    // 6. Draw multi-agency overlays (PSP road cuts and INEM Medical Point)
+    // 6. Draw multi-agency overlays (PSP road cuts and INEM Medical Point); before the first simulation,
+    // against the free forecast, so placed vehicles cut their roads straight away.
     this.agency.entities.removeAll()
-    if (context && scenario && activeRun) {
+    const agencyRun = activeRun ?? this.free
+    if (context && scenario && agencyRun) {
       // Draw cut roads strictly inside the fire perimeter as the fire advances
       if (this.role === 'psp' || this.role === 'cmd') {
         for (const { road, cells } of context.roadCells) {
           let hasBurned = false
           let minArrival = Infinity
           for (let k = 0; k < cells.length; k++) {
-            const t = activeRun.arrival[cells[k]]
+            const t = agencyRun.arrival[cells[k]]
             if (t <= this.minutes) {
               hasBurned = true
               if (t < minArrival) minArrival = t
@@ -2047,7 +2077,7 @@ export class Editor {
           const r = context.osm.roads[road]
           if (!r || !r.pts || r.pts.length < 2) continue
 
-          const burnedSegments = clipRoadToFire(r.pts, scenario.grid, activeRun.arrival, this.minutes)
+          const burnedSegments = clipRoadToFire(r.pts, scenario.grid, agencyRun.arrival, this.minutes)
           for (const raw of burnedSegments) {
             const seg = cleanPath(raw, (p) => p)
             if (!seg.length) continue
@@ -2093,9 +2123,10 @@ export class Editor {
         }
 
         // Roads where combat and supply vehicles (VFCI / VTTU) are at work: the GNR closes the road from the
-        // fire to the vehicle and on past it the other way (dashed red), with a softer red sign at the vehicle
-        // and at the far barrier. Crews on foot do not.
-        const roadItems = detectFirefighterRoads(context, this.decisions[this.active], this.minutes, scenario.grid, activeRun.arrival)
+        // fire to the vehicle and on past it the other way (dashed red), with softer red signs only at the
+        // ends of each closed stretch (roadBlockSigns). Crews on foot do not.
+        const working = this.decisions[this.active]
+        const roadItems = detectFirefighterRoads(context, working, this.minutes, scenario.grid, agencyRun.arrival, (slot) => this.workingPoint(working, slot))
         for (const roadItem of roadItems) {
           const seg = cleanPath(roadItem.pts, (p) => p)
           if (seg.length >= 2) {
@@ -2112,21 +2143,20 @@ export class Editor {
             })
             ;(lineEntity as any)._roadCut = roadItem
           }
-
-          for (const at of roadItem.barrier ? [roadItem.coord, roadItem.barrier] : [roadItem.coord]) {
-            const cutIconEntity = this.agency.entities.add({
-              position: Cartesian3.fromDegrees(at.lon, at.lat),
-              billboard: {
-                image: getNoEntrySignCanvas('veiculo'),
-                width: 18,
-                height: 18,
-                verticalOrigin: VerticalOrigin.CENTER,
-                heightReference: HeightReference.CLAMP_TO_GROUND,
-                disableDepthTestDistance: Infinity,
-              },
-            })
-            ;(cutIconEntity as any)._roadCut = roadItem
-          }
+        }
+        for (const { at, item } of roadBlockSigns(roadItems)) {
+          const cutIconEntity = this.agency.entities.add({
+            position: Cartesian3.fromDegrees(at.lon, at.lat),
+            billboard: {
+              image: getNoEntrySignCanvas('veiculo'),
+              width: 18,
+              height: 18,
+              verticalOrigin: VerticalOrigin.CENTER,
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Infinity,
+            },
+          })
+          ;(cutIconEntity as any)._roadCut = item
         }
       }
 
@@ -2279,10 +2309,19 @@ export class Editor {
     this.actions.changed()
   }
 
+  /** Where a unit of d works at the editor's hour: its latest placement, after relocations; none before its order. */
+  private workingPoint(d: Decision, slot: number): LonLat | undefined {
+    const scenario = this.loaded?.scenario
+    const a = d.assignments[slot]
+    if (!scenario || !a || this.minutes < (a.orderedMin ?? a.dispatchMin ?? scenario.dispatchMin ?? 0)) return undefined
+    return placementAt(placements(scenario, d, slot), this.minutes)?.point
+  }
+
   getMultiAgencyDispatch(): MultiAgencyDispatch | undefined {
     if (!this.loaded) return undefined
     const d = this.decisions[this.active]
-    const activeRun = this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined
+    // Before the first simulation, the free forecast: the dispatch matches the cuts on the map.
+    const activeRun = (this.runs ? (this.runs[d.id as 'A' | 'B'] ?? this.runs.free) : undefined) ?? this.free
     if (!activeRun) return undefined
     const cached = this.dispatchCache
     if (
@@ -2292,7 +2331,7 @@ export class Editor {
       cached.minutes === this.minutes &&
       cached.pma === this.pmaList &&
       cached.decision === d &&
-      cached.assignmentsLen === (d?.assignments?.length ?? 0)
+      cached.plan === dispatchPlan(d)
     ) {
       return cached.value
     }
@@ -2305,6 +2344,7 @@ export class Editor {
       activeRun,
       this.pmaList,
       d,
+      (slot) => this.workingPoint(d, slot),
     )
     this.dispatchCache = {
       loaded: this.loaded,
@@ -2312,7 +2352,7 @@ export class Editor {
       minutes: this.minutes,
       pma: this.pmaList,
       decision: d,
-      assignmentsLen: d?.assignments?.length ?? 0,
+      plan: dispatchPlan(d), // relocations change the plan in place
       value,
     }
     return value
@@ -2358,6 +2398,8 @@ const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decisi
 const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME })
 /** A plan without its name or its group IDs (unitIdentity.ts): what the search reads from A, and what it leaves in B. */
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments.map(({ id: _, ...a }) => a)])
+/** The dispatch's cache key: the whole plan, relocations included; a decision without assignments has none. */
+const dispatchPlan = (d: Decision | undefined) => (d?.assignments ? planKey(d) : '')
 const lateKey = (a: Assignment) => a.id ?? `${a.unit}|${a.from}|${a.target}|${a.task}`
 /** Whether the search has anything of A to move: units at a point. */
 const movable = (a: Decision) => a.assignments.some((x) => x.target in a.points || x.target in a.lines)
