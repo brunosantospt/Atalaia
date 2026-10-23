@@ -1,7 +1,7 @@
 .outcome-legend {
-  position: absolute;
+  position: fixed;
   /* Below the alerts, above the camera rail (which is centred on the right edge). */
-  top: calc(50% - 215px);
+  top: calc(50vh - 190px);
   right: 34px;
   padding: 14px 18px;
   border: 1px solid #ffffff38;

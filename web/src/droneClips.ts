@@ -9,9 +9,40 @@ function video(className: string, label?: string) {
   const box = document.createElement('div')
   box.className = `drone-clip ${className}`
   box.hidden = true
-  box.innerHTML = `<video muted loop playsinline></video><span class="drone-clip-rec"><i></i>DRONE</span>${label ? `<b>${label}</b>` : ''}`
+  box.innerHTML = `<video muted loop playsinline></video><span class="drone-clip-rec"><i></i>DRONE</span>${label ? `<b>${label}</b>` : ''}
+    <button type="button" class="drone-clip-close" title="Fechar">✕</button>`
   document.body.append(box)
-  return { box, el: box.querySelector('video')! }
+  const el = box.querySelector('video')!
+  // Closed stays closed until the next clip comes up.
+  box.querySelector('button')!.addEventListener('click', () => { box.hidden = true; el.pause() })
+  draggable(box)
+  return { box, el }
+}
+
+/** Dragged anywhere on screen; the place is kept for the following clips. */
+function draggable(box: HTMLElement) {
+  box.addEventListener('pointerdown', (e) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    e.preventDefault()
+    const r = box.getBoundingClientRect()
+    const dx = e.clientX - r.left, dy = e.clientY - r.top
+    box.setPointerCapture(e.pointerId)
+    box.classList.add('dragging')
+    const move = (m: PointerEvent) => {
+      const x = Math.min(Math.max(0, m.clientX - dx), innerWidth - r.width)
+      const y = Math.min(Math.max(0, m.clientY - dy), innerHeight - r.height)
+      Object.assign(box.style, { left: `${x}px`, top: `${y}px`, right: 'auto', bottom: 'auto' })
+    }
+    const up = () => {
+      box.classList.remove('dragging')
+      box.removeEventListener('pointermove', move)
+      box.removeEventListener('pointerup', up)
+      box.removeEventListener('pointercancel', up)
+    }
+    box.addEventListener('pointermove', move)
+    box.addEventListener('pointerup', up)
+    box.addEventListener('pointercancel', up)
+  })
 }
 
 export class DroneClips {
