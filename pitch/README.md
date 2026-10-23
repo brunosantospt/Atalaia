@@ -11,24 +11,24 @@ Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e
 | # | Slide | Tempo |
 |---|---|---|
 | 1 | Título | 0:00–0:05 |
-| 2 | Gancho: 270 695 ha e > 85 M€ de perdas (2025) | 0:05–0:25 |
-| 3 | O problema decide-se nos primeiros minutos | 0:25–0:45 |
-| 4 | O que já existe e porque falha: FARSITE, FlamMap, fogos.pt, IPMA/EFFIS, incendiosportugal.pt | 0:45–1:00 |
-| 5 | O desafio da UMinho: rápida, precisa, prática | 1:00–1:10 |
-| 5b | Logótipo ao centro, drone e chama | 1:10–1:13 |
-| 6 | Proposta: roadmap + "um só mapa" | 1:13–1:31 |
-| 7 | **Demo ao vivo (placeholder)** | 1:31–3:23 |
-| 8 | Validação: Vieira do Minho | 3:23–3:43 |
-| 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:43–4:03 |
-| 9 | A seguir: deteção, testes de cenários, IA | 4:03–4:18 |
-| 10 | Fecho + obrigado | 4:18–4:28 |
+| 2 | Gancho: 270 695 ha e > 85 M€ de perdas (2025) | 0:05–0:21 |
+| 3 | O problema decide-se nos primeiros minutos | 0:21–0:33 |
+| 4 | O que já existe e porque falha: FARSITE, FlamMap, fogos.pt, IPMA/EFFIS, incendiosportugal.pt | 0:33–0:44 |
+| 5 | O desafio da UMinho: rápida, precisa, prática | 0:44–0:52 |
+| 5b | Logótipo ao centro, drone e chama | 0:52–0:55 |
+| 6 | Proposta: roadmap + "um só mapa" | 0:55–1:08 |
+| 7 | **Demo ao vivo (placeholder)** | 1:08–3:00 |
+| 8 | Validação: Vieira do Minho | 3:00–3:15 |
+| 8b | A tecnologia por baixo: ELMFIRE, vento, ILS, tradutor | 3:15–3:30 |
+| 9 | A seguir: testes de cenários, IA, deteção por drones (+ vídeo) | 3:30–3:41 |
+| 10 | Fecho + obrigado | 3:41–3:51 |
 | 11 | Créditos (fora do tempo) | |
 
 O slide "O que é novo" (a tabela de comparação com fogos.pt, IPMA/EFFIS, Copernicus EMS, incendiosportugal.pt) foi cortado por repetir o argumento do slide 4; esse argumento agora é o próprio slide 4, mais completo (ferramenta vs. o que falha), separado do desafio da UMinho (slide 5).
 
 O antigo slide 9 ("a seguir" + fecho juntos) também foi dividido em dois: o roadmap "a seguir" fica sozinho, e "Em 2025 arderam 11 Guimarães" + "Obrigado" passam a ser o fecho, no seu próprio slide.
 
-Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma (4:28) já passa dos 4:00. Por fazer: cronometrar a fala real de cada slide e cortar onde for preciso antes do pitch final.
+Os tempos da coluna acima são estimativas por slide, não cronometragem real: a soma dá 3:51. Fora da demo (112 s), os restantes slides somam 1:59 — foram cortados ~37 s de texto em vários slides (gancho, problema, ferramentas, proposta, validação, tecnologia, a seguir) para caber em 2 minutos. Por fazer: cronometrar a fala real de cada slide antes do pitch final.
 
 - Os números grandes (gancho, sequência de precisão) usam JetBrains Mono (Bold/ExtraBold), guardado em `vendor/fonts/` (SIL OFL) para correr sem rede, tal como o resto do `vendor/`.
 - A demo corre numa janela própria do browser, não dentro dos slides: a app e o reveal usam as mesmas teclas.

@@ -4,6 +4,11 @@ Notas de verificação, sourcing e ressalvas por slide, retiradas das notas do o
 em `index.html` para as deixar limpas (só o texto a dizer + cliques). Usar isto para
 preparar o Q&A, não para ler em palco.
 
+⚠️ **Tempo (23 out):** tudo o que não é a demo (112 s) tinha de caber em
+2 min. Cortaram-se ~37 s de texto no gancho, problema, ferramentas,
+proposta, validação, tecnologia e "a seguir" — ver a nota de cada slide
+abaixo. Total sem demo agora: 1:59.
+
 ---
 
 ## 1 · Título
@@ -32,6 +37,9 @@ Sem notas técnicas.
   nossa estimativa, a partir dessa área e do €/ha de 2024-2025 (314-487 €/ha):
   25-35 M€, mesmo âmbito restrito. Dizer sempre que é uma extrapolação nossa, não um
   número da AGIF.
+- Slide a 16 s (23 out: era 20 s). A frase das perdas ficou mais curta ("Mais
+  de 85 milhões de euros em perdas — sem contar casas, estradas ou o
+  combate."); os números em si não mudaram.
 
 ---
 
@@ -56,6 +64,8 @@ Sem notas técnicas.
   ataque e a dimensão final.
 - "Pouca ajuda de simulação" é a frase do enunciado do desafio. Não dizer que as
   entidades não têm ferramentas.
+- Slide a 12 s (23 out: era 20 s). O texto não mudou; o tempo alocado é que
+  estava com folga a mais para um slide de duas frases curtas.
 
 ---
 
@@ -96,6 +106,9 @@ Sem notas técnicas.
   no momento da pesquisa. "AI for Wildfire Management..." (MDPI, 2025) e "Forest
   Fire Prediction Models in Portugal: A Comprehensive Review". Não citar números
   ou frases exatas destes artigos sem ler o texto integral primeiro.
+- Slide a 11 s (23 out: era 15 s). "lentos demais" → "lentos"; "não propõe
+  ataques otimizados" → "sem ataques otimizados". Os cartões no ecrã não
+  mudaram, só a fala.
 
 ---
 
@@ -111,6 +124,8 @@ Sem notas técnicas.
   usar se fizer falta no Q&A.
 - "Todas as entidades envolvidas": bombeiros, proteção civil, câmara, GNR/PSP,
   INEM, as mesmas do slide 2 e do slide 6. Liga este slide ao resto do pitch.
+- Slide a 8 s (23 out: era 10 s). Texto igual, só menos tempo de pausa entre
+  os três cliques (rápida/precisa/prática).
 
 ---
 
@@ -142,6 +157,10 @@ Sem notas técnicas; ver `index.html` para a descrição da animação.
   e corredor) e no relatório do editor (aldeias, área por hora, ETA dos meios);
   a lista no slide ficou reduzida a 3 para caber num só olhar, o resto fica
   para o Q&A.
+- Slide a 13 s (23 out: era 18 s). Tirou-se da fala a frase "Nós trabalhamos
+  com dados precisos, com os meios que estão disponíveis ao momento em cada
+  quartel, e tudo isto num só mapa.", que duplicava o "Dados reais. Meios
+  reais. Um só mapa." logo a seguir — redundante e caro em tempo.
 
 ---
 
@@ -197,6 +216,10 @@ Regras (do README do hindcast, não negociáveis):
   corrida da nova imagem.
 - Os resultados estão no ramo hindcast-registos, ainda não no main: integrar
   antes do lock de sexta.
+- Slide a 15 s (23 out: era 20 s). A fala tirou "aqui no distrito de Braga" e
+  o detalhe "combustíveis portugueses, LiDAR, cicatrizes, projeções" (já
+  visível no ecrã, na seta "+ Dados públicos"); os três números continuam
+  todos ditos, como a regra acima pede.
 
 ---
 
@@ -225,8 +248,9 @@ Regras (do README do hindcast, não negociáveis):
 - Tradutor de estratégia: corresponde ao código que passa as decisões do editor
   (meios, linhas de água) para o grafo do ELMFIRE/ILS (barreiras, retardantes,
   Δ).
-- Este é um slide novo: acrescenta ~20 s ao total de 4 min já apertado. Rever se
-  cabe, ou encurtar a demo, antes do pitch final.
+- Slide a 15 s (23 out: era 20 s, cortado na passagem para 2 min sem demo).
+  Falas mais curtas: tirou-se "mas afinado", "com grande precisão", "que os
+  dados abertos não apanham", "passa... a inputs que... entende".
 
 ---
 
@@ -265,6 +289,12 @@ Regras (do README do hindcast, não negociáveis):
   baixo): acrescentou-se uma frase curta por passo e uma frase de fecho ("Ver
   sempre mais cedo. Decidir sempre melhor.") a seguir ao roadmap, no mesmo
   estilo do "Dados reais..." do slide 7.
+- Vídeo a 2× (23 out): sem ffmpeg disponível para reencodar, a velocidade é
+  ajustada por JS (`video.playbackRate`) em vez de no ficheiro.
+- Slide a 11 s (23 out: era 15 s). A frase de introdução ficou mais curta
+  ("ferramenta de testes para cenários futuros" em vez de "uma ferramenta de
+  testes para potenciais cenários futuros"; "drones para detetar mais cedo"
+  em vez de "...não só defender melhor").
 
 ---
 

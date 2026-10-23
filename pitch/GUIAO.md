@@ -16,8 +16,8 @@ ocorrências.
 
 11 concelhos de Guimarães.
 
-E mais de 85 milhões de euros perdidos em floresta, agricultura e natureza,
-sem contar casas, estradas nem o combate.
+Mais de 85 milhões de euros em perdas — sem contar casas, estradas ou o
+combate.
 
 Mas o número que importa não é este.
 
@@ -32,9 +32,9 @@ E se pudéssemos ver o que vai arder antes de decidir?
 
 Já existem ferramentas. Mas nenhuma resolve isto.
 
-FARSITE e FlamMap: lentos demais, erram no vento e no combustível. fogos.pt:
-não testa decisões. IPMA e EFFIS: não simulam o incêndio.
-incendiosportugal.pt: não propõe ataques otimizados.
+FARSITE e FlamMap: lentos, erram no vento e no combustível. fogos.pt: não
+testa decisões. IPMA e EFFIS: não simulam o incêndio. incendiosportugal.pt:
+sem ataques otimizados.
 
 Por isso, o desafio da Universidade do Minho é claro.
 
@@ -56,9 +56,6 @@ A nossa resposta chama-se…
 Para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real, aloca
 os meios, prevê o comportamento do incêndio e comunica o comando de ação.
 
-Nós trabalhamos com dados precisos, com os meios que estão disponíveis ao
-momento em cada quartel, e tudo isto num só mapa.
-
 Dados reais. Meios reais. Um só mapa. Que estradas cortar. Quanto tempo até
 ao fogo. Que casas estão em risco. Para todos os que combatem.
 
@@ -72,28 +69,26 @@ E podemos confiar nisto? Testámos contra um incêndio real.
 
 ## 8 · Validação
 
-Primeiro reconstituímos um incêndio real: Vieira do Minho, 2016, aqui no
-distrito de Braga. Motor ELMFIRE.
+Reconstituímos um incêndio real: Vieira do Minho, 2016, com o motor
+ELMFIRE.
 
-O modelo base está a 0,76 de sobreposição com o real. Só com dados
-públicos — combustíveis portugueses, LiDAR, cicatrizes, projeções — sobe
-para 0,83. Com as linhas de ataque inferidas, 0,89.
+O modelo base está a 0,76 de sobreposição. Só com dados públicos sobe para
+0,83. Com as linhas de ataque inferidas, 0,89.
 
 E esta precisão não caiu do céu. Deixem-me mostrar o que está por baixo.
 
 ## 8b · A tecnologia
 
-O motor é o ELMFIRE, do Fire Lab da UC Berkeley, mas afinado para Portugal:
-as copas e os declives vêm do LiDAR da DGT, com grande precisão.
+O motor é o ELMFIRE, do Fire Lab da UC Berkeley, afinado para Portugal com
+LiDAR da DGT.
 
-Construímos também um motor de vento próprio, a combinar o CERRA com o
-relevo, para captar o vento local que os dados abertos não apanham.
+Motor de vento próprio, a combinar CERRA com o relevo, para captar o vento
+local.
 
-A otimização da estratégia usa a meta-heurística premiada de um dos nossos
-orientadores, Filipe Alvelos.
+A otimização usa a meta-heurística premiada de um dos nossos orientadores,
+Filipe Alvelos.
 
-E um tradutor próprio passa cada decisão a inputs que o motor de propagação
-entende.
+Um tradutor próprio liga cada decisão ao motor de propagação.
 
 No fundo: integrámos e calibrámos vários modelos, cada um a fazer o que faz
 melhor.
@@ -102,9 +97,8 @@ E isto não acaba hoje.
 
 ## 9 · A seguir
 
-A seguir: uma ferramenta de testes para potenciais cenários futuros; IA a
-afinar a própria estratégia; e drones para detetar mais cedo, não só
-defender melhor.
+A seguir: ferramenta de testes para cenários futuros; IA a afinar a
+estratégia; e drones para detetar mais cedo.
 
 Ver sempre mais cedo. Decidir sempre melhor.
 
