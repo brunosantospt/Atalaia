@@ -921,7 +921,7 @@ function mapLogo(beside: HTMLElement) {
 /** The fire's data and station sources, listed in Cesium's credits panel beside the imagery's. */
 function sourceCredits(fire: Fire): Credit[] {
   const { data, cite } = fire.source
-  return [data, cite, 'Quartéis, estradas, casas e lugares © contribuidores do OpenStreetMap (ODbL)'].map(
+  return [data, cite, 'Quartéis, estradas, casas e aldeias © contribuidores do OpenStreetMap (ODbL)'].map(
     (text) => new Credit(text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')),
   )
 }

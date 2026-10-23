@@ -1,4 +1,4 @@
-import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { placements, placementAt, relocationPosition, addPlacement, editPlacement, type Placement } from './placementTimeline'
 import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
@@ -142,7 +142,6 @@ const TEMPLATE = `
     <button type="button" data-tab="0"><b>A</b><span></span></button>
     <button type="button" data-tab="1"><b>B</b><span></span></button>
   </div>
-  <input class="name" data-ref="name" maxlength="40" spellcheck="false" title="Nome da decisão">
   <section class="simulate">
     <button type="button" data-ref="simulate" class="primary-btn simulate-btn" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
     <p class="note" data-ref="simulateNote"></p>
@@ -486,13 +485,8 @@ export class Editor {
     this.refs.reset.addEventListener('click', () => {
       if (!this.loaded) return
       const { id, nextAssignmentId } = this.decisions[this.active]
-      this.decisions[this.active] = { ...clone(this.loaded.example), id, name: `Decisão ${id}`, nextAssignmentId }
+      this.decisions[this.active] = { ...clone(this.loaded.example), id, name: PLAN_NAMES[this.active], nextAssignmentId }
       for (const a of this.decisions[this.active].assignments) { a.dispatchMin = this.dispatchMinute(); a.orderedMin = this.minutes }
-      this.commit()
-    })
-    const name = this.refs.name as HTMLInputElement
-    name.addEventListener('change', () => {
-      this.decisions[this.active].name = name.value.trim() || this.decisions[this.active].id
       this.commit()
     })
     this.refs.finishLine?.addEventListener('click', () => this.finishLine())
@@ -1433,7 +1427,7 @@ export class Editor {
       return
     }
     const saved = [
-      result.a.places > result.best.places ? `${result.a.places - result.best.places} ${result.a.places - result.best.places === 1 ? 'lugar' : 'lugares'}` : '',
+      result.a.places > result.best.places ? `${result.a.places - result.best.places} ${result.a.places - result.best.places === 1 ? 'aldeia' : 'aldeias'}` : '',
       result.a.ha - result.best.ha >= 0.5 ? fmtHa(result.a.ha - result.best.ha) : '',
     ].filter(Boolean)
     const home = result.a.units - result.best.units
@@ -1604,11 +1598,12 @@ export class Editor {
     this.updateStationDropdown()
     this.updateTaskDropdown()
     const d = this.decisions[this.active]
+    // The two plans keep fixed names: A is the commander's, B the search's proposal with A's means.
+    this.decisions.forEach((plan, i) => (plan.name = PLAN_NAMES[i]))
     this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]').forEach((tab, i) => {
       tab.classList.toggle('on', i === this.active)
-      tab.querySelector('span')!.textContent = this.decisions[i].name
+      tab.querySelector('span')!.textContent = PLAN_NAMES[i]
     })
-    ;(this.refs.name as HTMLInputElement).value = d.name
     this.renderList(d)
     this.setCount(this.count)
     this.renderIls()
@@ -1766,23 +1761,38 @@ export class Editor {
     if (lateBadge)
       lateBadge.title = `O fogo livre chega ${a.task === 'line' || a.task === 'drops' ? 'ao início da linha' : 'aqui'} aos T+${Math.round(lateMin!)} min: ${isGround ? `este meio não está lá ${SAFETY_MIN} min antes` : 'este meio não chega antes dele'}`
     if(this.loaded) {
-      const list=placements(this.loaded.scenario,d,k),history=document.createElement('ol')
-      history.className='placement-history'
-      list.forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. Ordem ${fmtTime(wallClock(this.loaded!.fire.start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(this.loaded!.fire.start,p.arrivalMin/60))}`;const edit=document.createElement('button');edit.type='button';edit.className='unit-action edit-placement';edit.title=`Editar colocação ${index+1}`;edit.setAttribute('aria-label',edit.title);edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></svg>';edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
+      // Compact card: the actions side by side in the header (new placement, edit the current one,
+      // remove), resources on one line, the current order on one line, earlier orders folded away.
+      const start=this.loaded.fire.start,list=placements(this.loaded.scenario,d,k),ctl=li.querySelector('.ctl')!
+      const order=(p:Placement)=>`Ordem ${fmtTime(wallClock(start,p.orderedMin/60))} → chegada ${fmtTime(wallClock(start,p.arrivalMin/60))}`
+      const editButton=(index:number)=>{
+        const edit=document.createElement('button');edit.type='button';edit.className='unit-action edit-placement'
+        edit.title=`Editar colocação ${index+1}`;edit.setAttribute('aria-label',edit.title)
+        edit.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14z"/></svg>'
+        edit.dataset.editPlacement=String(index);edit.dataset.editSlot=String(k)
         edit.addEventListener('click',()=>{this.setTool(null);this.unit=a.unit;this.editingPlacement={slot:k,index};this.setTool('point');this.refs.hint.textContent='Escolha o destino corrigido no mapa. Esc para cancelar.'})
-        if(index===list.length-1) li.querySelector('.ctl')!.append(edit)
-        else item.append(edit)
-        history.append(item)})
-      const move=document.createElement('button');move.type='button';move.textContent=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação'
-      const why=document.createElement('p');why.className='note move-why';why.dataset.moveWhy=String(k)
-      this.showMoveBlock(move,why,d,k)
-      move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})
-      const resources=document.createElement('div');resources.className='card-resources';resources.dataset.resourceSlot=String(k)
+        return edit
+      }
+      const move=document.createElement('button');move.type='button';move.className='unit-action move-unit'
+      move.title=a.count>1?`Nova colocação (×${a.count})`:'Nova colocação';move.setAttribute('aria-label',move.title)
+      move.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg>'
       move.dataset.moveSlot=String(k)
-      const disclosure=document.createElement('details'),summary=document.createElement('summary')
-      summary.textContent='Recursos · água e autonomia'
-      disclosure.className='resource-disclosure';disclosure.append(summary,resources)
-      li.append(history,disclosure,move,why)
+      move.addEventListener('click',()=>{this.unit=a.unit;this.relocating=k;this.setTool('point');this.refs.hint.textContent='Escolha no mapa o novo destino deste meio.'})
+      ctl.prepend(move)
+      ctl.insertBefore(editButton(list.length-1),ctl.querySelector('.x'))
+      const resources=document.createElement('div');resources.className='card-resources';resources.dataset.resourceSlot=String(k)
+      const current=document.createElement('div');current.className='placement-now';current.textContent=order(list.at(-1)!)
+      li.append(resources,current)
+      if(list.length>1) {
+        const earlier=document.createElement('details'),summary=document.createElement('summary'),history=document.createElement('ol')
+        earlier.className='placement-earlier';history.className='placement-history'
+        summary.textContent=`Colocações anteriores (${list.length-1})`
+        list.slice(0,-1).forEach((p,index)=>{const item=document.createElement('li');item.textContent=`${index+1}. ${order(p)}`;item.append(editButton(index));history.append(item)})
+        earlier.append(summary,history);li.append(earlier)
+      }
+      const why=document.createElement('p');why.className='note move-why';why.dataset.moveWhy=String(k)
+      li.append(why)
+      this.showMoveBlock(move,why,d,k)
       this.fillResources(resources,k)
     }
     li.querySelector('.x')!.addEventListener('click', () => this.remove(k))
@@ -1794,9 +1804,9 @@ export class Editor {
     if (!this.loaded) return
     const last = placements(this.loaded.scenario, d, slot).at(-1)!
     const reason = this.playbackMinute < last.arrivalMin
-      ? `Ainda a caminho: pode ser recolocado depois de chegar, às ${fmtTime(wallClock(this.loaded.fire.start, last.arrivalMin / 60))}.`
+      ? `A caminho · nova colocação após ${fmtTime(wallClock(this.loaded.fire.start, last.arrivalMin / 60))}`
       : resourceAt(cachedCombatResources(this.loaded.scenario, d), slot, this.playbackMinute).exhausted
-        ? 'Autonomia esgotada: este meio já não pode ser recolocado.'
+        ? 'Autonomia esgotada · já não pode ser recolocado'
         : ''
     move.disabled = !!reason
     why.textContent = reason
@@ -1813,7 +1823,7 @@ export class Editor {
     if(!this.loaded)return
     const state=resourceAt(cachedCombatResources(this.loaded.scenario,this.decisions[this.active]),slot,this.playbackMinute)
     const label=state.exhausted?'Autonomia esgotada':state.waterPct<=0?'Sem água · adicionar cisterna':state.contained?'Contido · consumo em pausa':state.active?'Em combate':'Em deslocação'
-    el.innerHTML=`<span>${label}</span><label>Água <meter min="0" max="100" value="${state.waterPct}"></meter> ${Math.round(state.waterPct)}%</label><label>Autonomia <meter min="0" max="100" value="${state.autonomyPct}"></meter> ${Math.round(state.autonomyPct)}%</label>`
+    el.innerHTML=`<span class="state">${label}</span><label title="Água">Água <meter min="0" max="100" value="${state.waterPct}"></meter> ${Math.round(state.waterPct)}%</label><label title="Autonomia">Aut. <meter min="0" max="100" value="${state.autonomyPct}"></meter> ${Math.round(state.autonomyPct)}%</label>`
   }
 
   private updateEtas() {
@@ -1893,8 +1903,8 @@ export class Editor {
     const rows: [string, (x: Report) => string][] = [
       ['Área ardida', (x) => fmtHa(x.burnedHa)],
       ['Casas atingidas', (x) => String(x.homes)],
-      ['Edifícios', (x) => String(x.buildings)],
-      ['Lugares', (x) => String(x.places.length)],
+      ['Edifícios atingidos', (x) => String(x.buildings)],
+      ['Aldeias', (x) => String(x.places.length)],
       ['Estradas cortadas', (x) => fmtKm(x.roadKm.paved + x.roadKm.track)],
       ['1.ª casa', (x) => (x.firstHomeMin === null ? '–' : `T+${Math.round(x.firstHomeMin)} min`)],
     ]
@@ -1913,8 +1923,8 @@ export class Editor {
     const roads = mine.roadsCut.slice(0, 4).map((c) => `${c.label} ${fmtKm(c.km)}`)
     this.refs.detail.textContent =
       `${this.decisions[this.active].id}: ` +
-      [places.length ? `lugares ${places.join(', ')}` : 'nenhum lugar atingido', roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada'].join(' · ') +
-      '. Casas do OSM rural: um mínimo.'
+      [places.length ? `aldeias ${places.join(', ')}` : 'nenhuma aldeia atingida', roads.length ? `estradas ${roads.join(', ')}` : 'nenhuma estrada cortada'].join(' · ') +
+      '.'
   }
 
   /** The reports as they stand at a minute of the runs, or undefined at the end (the 6 h reports are given). */
@@ -2396,6 +2406,7 @@ const empty = (id: string): Decision => ({ id, name: id === 'A' ? 'Decisão A' :
 const clone = (d: Decision): Decision => JSON.parse(JSON.stringify(d)) as Decision
 /** B before the search has moved anything: A's own plan. */
 const named = (a: Decision): Decision => ({ ...clone(a), id: 'B', name: ILS_NAME })
+const PLAN_NAMES = ['Decisão A', ILS_NAME] as const
 /** A plan without its name or its group IDs (unitIdentity.ts): what the search reads from A, and what it leaves in B. */
 const planKey = (d: Decision) => JSON.stringify([d.points, d.lines, d.assignments.map(({ id: _, ...a }) => a)])
 /** The dispatch's cache key: the whole plan, relocations included; a decision without assignments has none. */
@@ -2411,7 +2422,7 @@ function nextId(existing: Record<string, unknown>, prefix: string): string {
 }
 
 /** A plan's score in the search's note: places reached, then hectares. */
-const scoreText = (s: Score) => `${s.places} ${s.places === 1 ? 'lugar' : 'lugares'}, ${fmtHa(s.ha)}`
+const scoreText = (s: Score) => `${s.places} ${s.places === 1 ? 'aldeia' : 'aldeias'}, ${fmtHa(s.ha)}`
 
 function roadName(context: Context, road: number): string {
   const r = context.osm.roads[road]

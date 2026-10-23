@@ -58,7 +58,7 @@ const WATER_SOURCE =
   'meios revezam-se no reabastecimento; um VTTU em abastecimento poupa-lhes a viagem ao ponto de água e, com o ' +
   'tanque gasto nessas recargas, vai reabastecer (contabilidade aproximada, que o modelo não usa).'
 
-const PLACES_SOURCE = 'Lugares do OpenStreetMap (aldeias, lugarejos), atingidos quando o fogo entra no círculo de 250 m à sua volta, como no relatório das 6 h.'
+const PLACES_SOURCE = 'Aldeias do OpenStreetMap (aldeias, lugarejos e localidades com nome), atingidas quando o fogo entra no círculo de 250 m à sua volta, como no relatório das 6 h.'
 
 const HOMES_SOURCE =
   'Habitações do OpenStreetMap. Em risco quando o fogo chega a menos de 50 m: a faixa de gestão de combustível ' +
@@ -293,7 +293,7 @@ function placesAlert(run: RunAlerts, m: number, name: string): Alert | undefined
     id: 'places',
     kind: 'homes',
     level: inMin < RULES.homesCriticalMin ? 'critical' : 'warning',
-    title: n === 1 ? `${place.name}: fogo a < 250 m em ~${inMin} min` : `${n} lugares com fogo a < 250 m na próxima hora`,
+    title: n === 1 ? `${place.name}: fogo a < 250 m em ~${inMin} min` : `${n} aldeias com fogo a < 250 m na próxima hora`,
     detail: [n === 1 ? '' : `${place.name} em ~${inMin} min`, others.length ? `depois ${others.join(', ')}` : '', name]
       .filter(Boolean)
       .join(' · '),

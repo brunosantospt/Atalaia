@@ -113,13 +113,6 @@
   background: rgba(220, 224, 228, 0.07);
   border-left-color: var(--ink);
 }
-.hud .editor .name {
-  box-sizing: border-box;
-  width: 100%;
-  margin-top: 6px;
-  padding: 6px 10px;
-  cursor: text;
-}
 .hud .editor section {
   margin-top: 18px;
 }
@@ -644,9 +637,22 @@
 .placement-history button { margin-left: 8px; padding: 3px 7px; font: inherit; color: #f4ad42; border: 1px solid #796039; background: transparent; cursor: pointer; }
 .placement-history button:hover, .placement-history button:focus-visible { background: #392c18; border-color: #f4ad42; }
 
-.assignment .ctl { display: flex; flex-direction: column; gap: 4px; align-self: flex-start; }
-.assignment .unit-action, .placement-history .unit-action { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 4px; margin: 0; background: transparent; border: 1px solid #796039; color: #f4ad42; cursor: pointer; }
-.assignment .unit-action svg { width: 16px; height: 16px; }
+.assignment .ctl { display: flex; flex-direction: row; gap: 4px; align-self: flex-start; }
+.assignment .unit-action, .placement-history .unit-action { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 3px; margin: 0; background: transparent; border: 1px solid #796039; color: #f4ad42; cursor: pointer; }
+.assignment .unit-action svg { width: 15px; height: 15px; }
+.assignment .unit-action:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Compact unit cards: state and resources on one line, the current order on one line, earlier ones folded. */
+.hud .editor li.assignment { gap: 2px; padding: 6px 8px; }
+.hud .editor li.assignment .card-resources { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 2px 0 0; font: 11px/1.4 system-ui, sans-serif; color: #b8cad8; }
+.hud .editor li.assignment .card-resources .state { color: #d8e6f3; }
+.hud .editor li.assignment .card-resources label { gap: 4px; }
+.hud .editor li.assignment .card-resources meter { flex: none; width: 34px; min-width: 0; height: 8px; }
+.hud .editor li.assignment .placement-now { font: 11px/1.4 system-ui, sans-serif; color: #8fa3b5; }
+.hud .editor li.assignment .placement-earlier summary { cursor: pointer; font: 11px/1.4 system-ui, sans-serif; color: #8fa3b5; }
+.hud .editor li.assignment .placement-history { margin: 2px 0 0; font-size: 11px; }
+.hud .editor li.assignment .placement-history li { margin-bottom: 2px; }
+.hud .editor li.assignment .move-why { margin: 0; font-size: 10.5px; }
 .assignment .unit-action:hover, .assignment .unit-action:focus-visible { background: #392c18; border-color: #f4ad42; }
 .placement-history .unit-action { margin-left: 6px; vertical-align: middle; }
 
