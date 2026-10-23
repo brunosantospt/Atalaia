@@ -1,4 +1,4 @@
-import { placements, placementAt, relocationPosition, addPlacement, editPlacement } from './placementTimeline'
+import { placements, placementAt, relocationPosition, addPlacement, editPlacement, type Placement } from './placementTimeline'
 import { dropStrip } from './dropStrip'
 import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
@@ -2003,7 +2003,8 @@ export class Editor {
         const arrival = eta[slot] ?? departure
         const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
           color, offsetX: 0, offsetY: 0, label: spec.short,
-          visible, position: () => relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
+          visible, position: () => (aerial && origin ? this.airShuttle(origin, history, spec.speedKmh) : undefined)
+            ?? relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
           status: () => {
             if (!combat) return { dry: false, tired: false }
             const f = resourceAt(combat, slot, this.playbackMinute), on = this.playbackMinute >= f.arrival
@@ -2211,6 +2212,19 @@ export class Editor {
         }
       }
     }
+  }
+
+  /** An aircraft at work flies base → drop → base again and again (refilling each time), from its arrival
+   *  until its next order; undefined before it first arrives, when the journey shows it on its way. */
+  private airShuttle(base: LonLat, history: Placement[], speedKmh: number): LonLat | undefined {
+    const now = this.playbackMinute, p = placementAt(history, now)
+    if (!p || now < p.arrivalMin) return undefined
+    const legMin = distanceM(base, p.point) / 1000 / Math.max(1, speedKmh) * 60
+    const dropMin = 2, cycle = 2 * legMin + dropMin
+    const t = (now - p.arrivalMin) % cycle
+    if (t < dropMin) return p.point // over the strip, dropping
+    const back = t - dropMin
+    return back < legMin ? lerpLonLat(p.point, base, back / legMin) : lerpLonLat(base, p.point, (back - legMin) / legMin)
   }
 
   /** A ring whose positions follow its state: drawn at the ground height of the centre, seen through the relief. */

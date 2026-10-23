@@ -236,6 +236,8 @@ async function main() {
     showWidget: () => replay && showWidgets(replay),
     roleChanged: (role) => {
       editor.setRole(role)
+      // PSP / GNR and INEM open their own panel, like the decisions editor: the director stops there.
+      if (role !== 'cmd' && replay) { replay.player.pause(); scene.requestRender() }
       const dispatch = editor.getMultiAgencyDispatch()
       if (dispatch) hud.updateBriefings(dispatch)
     },
