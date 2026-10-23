@@ -142,8 +142,8 @@ const TEMPLATE = `
     <button type="button" data-ref="close" title="Fechar (E)">×</button>
   </header>
   <div class="tabs" data-ref="tabs">
-    <button type="button" data-tab="0"><b>A</b><span></span></button>
-    <button type="button" data-tab="1"><b>B</b><span></span></button>
+    <button type="button" data-tab="0"><span>Decisão</span> <b>A</b></button>
+    <button type="button" data-tab="1"><span>Decisão</span> <b>B</b></button>
   </div>
   <section class="simulate">
     <button type="button" data-ref="simulate" class="primary-btn simulate-btn" title="Corre o modelo rápido para Livre, A e B. ELMFIRE em pausa para a demo."></button>
@@ -1621,7 +1621,6 @@ export class Editor {
     this.decisions.forEach((plan, i) => (plan.name = PLAN_NAMES[i]))
     this.refs.tabs.querySelectorAll<HTMLElement>('[data-tab]').forEach((tab, i) => {
       tab.classList.toggle('on', i === this.active)
-      tab.querySelector('span')!.textContent = PLAN_NAMES[i]
     })
     this.renderList(d)
     this.setCount(this.count)
