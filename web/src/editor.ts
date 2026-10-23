@@ -1,5 +1,5 @@
 import { placements, placementAt, relocationPosition, addPlacement, editPlacement, type Placement } from './placementTimeline'
-import { dropStrip } from './dropStrip'
+import { dropStrip, type DropStrip } from './dropStrip'
 import { stabilize } from './stableEntities'
 import { cachedCombatResources, resourceAt } from './combatResources'
 // The decision editor: a drawer on the left where A and B are composed on the map. A unit's
@@ -17,6 +17,7 @@ import {
   Cartographic,
   Color,
   CustomDataSource,
+  ImageMaterialProperty,
   Entity,
   HeightReference,
   Math as CesiumMath,
@@ -352,6 +353,7 @@ export class Editor {
   private readonly hazards = new CustomDataSource('hazards')
   private readonly agency = new CustomDataSource('agency')
   // One ring per engine on the ground, kept across redraws: its radius follows the water left without a rebuild.
+  private readonly dropZones = new Map<string, { entity: Entity; shape: string; wet: () => boolean }>()
   private readonly coverageRings = new Map<string, { entity: Entity; state: { lon: number; lat: number; h: number; radius: number; waiting: boolean; outline?: LonLat[] } }>()
   private dangerTimer?: number
   /** The assignments of a decision last shown late, so that only a new one warns. */
@@ -416,6 +418,7 @@ export class Editor {
     void viewer.dataSources.add(this.agency)
     // Redraws on every clock minute reuse unchanged lines and rings instead of rebuilding them (no flashing).
     for (const source of [this.source, this.routes, this.agency]) stabilize(source.entities)
+    viewer.scene.preRender.addEventListener(() => { for (const z of this.dropZones.values()) { const on = z.wet(); if (z.entity.show !== on) z.entity.show = on } })
     this.unitMarkers = new UnitMarkers(viewer, document.getElementById('overlay') ?? root)
     this.handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
     this.handler.setInputAction((e: { position: Cartesian2 }) => this.click(e.position), ScreenSpaceEventType.LEFT_CLICK)
@@ -1959,8 +1962,10 @@ export class Editor {
       if(isAerial(this.sup.units[a.unit])) { // the drop zone, dashed while the aircraft is on its way
         const now=this.playbackMinute,p=placementAt(combat.lists[slot],now)
         if(!p||!ordered(a))continue
-        const strip=dropStrip(scenario,a,p.point,this.sup.units[a.unit].radiusM*Math.sqrt(a.count))
-        const zone=entities.add(this.coverageRing(`${d.id}:${a.id}`,p.point,0,now<p.arrivalMin,strip.corners))
+        // A soft ellipse, shown only while the aircraft is over it dropping (and a moment after).
+        const spec=this.sup.units[a.unit],strip=dropStrip(scenario,a,p.point,spec.radiusM*Math.sqrt(a.count))
+        const base=findAirBase(a.from),history=combat.lists[slot]
+        const zone=entities.add(this.dropZone(`${d.id}:${a.id}`,p.point,strip,()=>!!base&&this.airPhase(base,history,spec.speedKmh)?.wet===true))
         ;(zone as any)._unitInfo=unitInfo(a,p.point,[a])
         continue
       }
@@ -2003,7 +2008,7 @@ export class Editor {
         const arrival = eta[slot] ?? departure
         const marker: UnitMarker = { ...at, id: `${a.id}:${number}`, code: ids[slot][number], unit: a.unit,
           color, offsetX: 0, offsetY: 0, label: spec.short,
-          visible, position: () => (aerial && origin ? this.airShuttle(origin, history, spec.speedKmh) : undefined)
+          visible, position: () => (aerial && origin ? this.airPhase(origin, history, spec.speedKmh)?.at : undefined)
             ?? relocationPosition(history,this.playbackMinute) ?? journey(this.playbackMinute),
           status: () => {
             if (!combat) return { dry: false, tired: false }
@@ -2215,16 +2220,35 @@ export class Editor {
   }
 
   /** An aircraft at work flies base → drop → base again and again (refilling each time), from its arrival
-   *  until its next order; undefined before it first arrives, when the journey shows it on its way. */
-  private airShuttle(base: LonLat, history: Placement[], speedKmh: number): LonLat | undefined {
+   *  until its next order. `wet`: over the drop or just after, while the drop shows on the ground.
+   *  Undefined before it first arrives, when the journey shows it on its way. */
+  private airPhase(base: LonLat, history: Placement[], speedKmh: number): { at: LonLat; wet: boolean } | undefined {
     const now = this.playbackMinute, p = placementAt(history, now)
     if (!p || now < p.arrivalMin) return undefined
     const legMin = distanceM(base, p.point) / 1000 / Math.max(1, speedKmh) * 60
-    const dropMin = 2, cycle = 2 * legMin + dropMin
+    const dropMin = 2, wetMin = 5, cycle = 2 * legMin + dropMin
     const t = (now - p.arrivalMin) % cycle
-    if (t < dropMin) return p.point // over the strip, dropping
+    if (t < dropMin) return { at: p.point, wet: true } // over the drop
     const back = t - dropMin
-    return back < legMin ? lerpLonLat(p.point, base, back / legMin) : lerpLonLat(base, p.point, (back - legMin) / legMin)
+    const at = back < legMin ? lerpLonLat(p.point, base, back / legMin) : lerpLonLat(base, p.point, (back - legMin) / legMin)
+    return { at, wet: t < wetMin }
+  }
+
+  /** The drop's ellipse, kept across redraws (built again only if it moves); its visibility is read every frame. */
+  private dropZone(key: string, at: LonLat, strip: DropStrip, wet: () => boolean): Entity {
+    const shape = `${at.lon},${at.lat},${strip.axisDeg.toFixed(1)},${strip.lengthM.toFixed(0)}`
+    let zone = this.dropZones.get(key)
+    if (!zone || zone.shape !== shape) {
+      const entity = new Entity({ position: Cartesian3.fromDegrees(at.lon, at.lat), ellipse: {
+        semiMajorAxis: strip.lengthM / 2, semiMinorAxis: strip.widthM / 2,
+        rotation: -strip.axisDeg * Math.PI / 180, // counter-clockwise from north
+        material: new ImageMaterialProperty({ image: dropTexture(), transparent: true }),
+      } })
+      zone = { entity, shape, wet }
+      this.dropZones.set(key, zone)
+    }
+    zone.wet = wet
+    return zone.entity
   }
 
   /** A ring whose positions follow its state: drawn at the ground height of the centre, seen through the relief. */
@@ -2474,4 +2498,15 @@ const timeMinutes = (m: number) => {
   if (!Number.isFinite(m)) return 'Em espera'
   const whole = Math.max(0, Math.round(m))
   return whole < 60 ? `${whole} min` : `${Math.floor(whole / 60)} h ${whole % 60} min`
+}
+
+/** A soft white-blue blot, opaque at the centre and fading to nothing: stretched over the drop's ellipse. */
+let dropCanvas: HTMLCanvasElement | undefined
+function dropTexture(): HTMLCanvasElement {
+  if (dropCanvas) return dropCanvas
+  const c = document.createElement('canvas'); c.width = c.height = 128
+  const g = c.getContext('2d')!, r = g.createRadialGradient(64, 64, 0, 64, 64, 64)
+  r.addColorStop(0, 'rgba(186, 230, 253, .7)'); r.addColorStop(.55, 'rgba(125, 211, 252, .4)'); r.addColorStop(1, 'rgba(125, 211, 252, 0)')
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128)
+  return (dropCanvas = c)
 }
