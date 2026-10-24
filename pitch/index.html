@@ -334,10 +334,10 @@
     }
     @media print {
       #logo { display: none; }
-      .reveal .slides .pdf-page > section { height: 1080px !important; display: flex !important; flex-direction: column; justify-content: flex-start; padding-top: 170px; box-sizing: border-box; }
+      .reveal .slides .pdf-page > section { height: 1080px !important; display: flex !important; flex-direction: column; justify-content: flex-start; padding-top: 170px !important; box-sizing: border-box; }
       .reveal .slides .pdf-page > section[data-state="title"],
       .reveal .slides .pdf-page > section[data-logo-center],
-      .reveal .slides .pdf-page > section.demo-stage { justify-content: center; padding-top: 0; }
+      .reveal .slides .pdf-page > section.demo-stage { justify-content: center; padding-top: 0 !important; }
       .pdf-page [data-state="title"] > div { box-sizing: border-box; }
       .reveal .print-logo { display: block; position: absolute; top: 0; left: 0; width: 250px; height: auto; border: 0; }
       [data-state="title"] .print-logo, [data-logo-center] .print-logo { width: 62%; left: 50%; top: 43%; transform: translate(-50%, -50%); }
@@ -754,6 +754,18 @@
     document.body.classList.toggle('logo-intro', intro && !print);
   };
   Reveal.on('ready', syncLogo);
+  // Em modo print-pdf, o @media print não dá para confiar a reserva de espaço
+  // para o print-logo (a cascata não se comporta como esperado neste build do
+  // Chrome): aplica-se o padding-top diretamente por JS, que funciona sempre.
+  const fixPrintPadding = () => {
+    if (!Reveal.isPrintView?.()) return;
+    document.querySelectorAll('.pdf-page > section').forEach((section) => {
+      const flush = section.matches('[data-state="title"], [data-logo-center], .demo-stage');
+      section.style.setProperty('padding-top', flush ? '0px' : '170px', 'important');
+    });
+  };
+  Reveal.on('ready', fixPrintPadding);
+  Reveal.on('pdf-ready', fixPrintPadding);
   Reveal.on('slidechanged', syncLogo);
   if (Reveal.isReady()) syncLogo();
   Reveal.on('ready', () => requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('no-anim'))));

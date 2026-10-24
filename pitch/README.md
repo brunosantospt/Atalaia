@@ -8,6 +8,8 @@ python3 -m http.server 8642 --directory pitch
 
 Abrir http://127.0.0.1:8642. **S** abre a vista do orador (só o texto a dizer e os cliques, tempos, cronómetro de 4 min); **F** põe em ecrã inteiro; `?print-pdf` exporta para PDF pelo Chrome. O guião para ensaiar está em `GUIAO.md`; o sourcing, as ressalvas e as notas técnicas por slide (para o Q&A) estão em `FONTES.md`, fora da vista do orador.
 
+`Atalaia-pitch.pdf` é a exportação já pronta (11 páginas). Para gerar de novo: abrir `index.html?print-pdf` e imprimir pelo Chrome com "Guardar como PDF", **"Gráficos de fundo" ativo**. Pelo CLI, `chrome --print-to-pdf` não respeita o `@page` que o reveal.js injeta (sai 1 página só, mal cortada) — é preciso usar o protocolo DevTools com `preferCSSPageSize: true` (`Page.printToPDF`), não a flag simples.
+
 | # | Slide | Tempo |
 |---|---|---|
 | 1 | Título | 0:00–0:05 |

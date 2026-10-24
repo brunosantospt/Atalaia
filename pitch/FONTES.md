@@ -10,6 +10,18 @@ proposta, validação, tecnologia e "a seguir" (total sem demo: 1:59); depois
 fundiram-se os slides "proposta", "validação" e "tecnologia" num só, o que
 tira mais ~15 s e dois slides inteiros. Total sem demo agora: 1:44.
 
+🐛 **Bug do PDF corrigido (24 out):** no export `?print-pdf`, o `@media
+print` que reserva 170px no topo de cada slide para o print-logo deixava de
+se aplicar nalguns builds do Chrome — o logo ficava a sobrepor-se ao título
+do slide (ex.: "O problema..." virava "...blema..."), em quase todos os
+slides exceto o de título e o do logótipo. Especificidade, `!important` e
+ordem das regras estavam todos corretos; nunca se percebeu a causa raiz. A
+correção foi aplicar o `padding-top` via JS (`fixPrintPadding()` em
+`index.html`, chamado nos eventos `ready` e `pdf-ready` do reveal.js) em vez
+de depender só do CSS — isso funciona sempre. Se voltar a aparecer o
+sintoma (texto cortado pelo logo num PDF novo), confirmar que esta função
+ainda corre antes de mexer no CSS.
+
 ---
 
 ## 1 · Título
