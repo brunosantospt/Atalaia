@@ -517,7 +517,7 @@
     <div class="row">
       <div class="occurrences">
         <div class="big"><span class="count" data-to="8252" data-ms="1200">8 252</span></div>
-        <div class="metric-label">Ocorrências</div>
+        <div class="metric-label">Incêndios</div>
       </div>
       <div class="burned">
         <div class="big"><span class="count burn" data-to="270695" data-ms="1200">270 695</span><span class="unit"> ha</span></div>
@@ -631,13 +631,13 @@
   <section data-timing="28">
     <span class="tag">A proposta</span>
     <div class="roadmap horizontal auto inline-num">
-      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Monitorizar o fogo em tempo real.</span></div>
+      <div class="stop" style="animation-delay:.05s"><span class="node">01</span><span class="label">Monitorizar o fogo e os meios em tempo real</span></div>
       <div class="track fragment" data-fragment-index="0"></div>
-      <div class="stop fragment" data-fragment-index="0"><span class="node">02</span><span class="label">Alocar os recursos com inteligência.</span></div>
+      <div class="stop fragment" data-fragment-index="0"><span class="node">02</span><span class="label">Distribuir os meios com inteligência</span></div>
       <div class="track fragment" data-fragment-index="1"></div>
-      <div class="stop fragment" data-fragment-index="1"><span class="node">03</span><span class="label">Prever o comportamento do incêndio.</span></div>
+      <div class="stop fragment" data-fragment-index="1"><span class="node">03</span><span class="label">Prever o comportamento do incêndio</span></div>
       <div class="track fragment" data-fragment-index="2"></div>
-      <div class="stop final fragment" data-fragment-index="2"><span class="node">04</span><span class="label">Comunicar o comando de ação.</span></div>
+      <div class="stop final fragment" data-fragment-index="2"><span class="node">04</span><span class="label">Comunicar o comando de ação</span></div>
     </div>
     <hr class="divider" style="margin:.8em 0">
     <div class="proof-split">
@@ -679,10 +679,10 @@
       <span class="fragment" data-fragment-index="1"><b>**</b> C. Lautenberger (2013). Wildland fire modeling with an Eulerian level set method and automated calibration. <i>Fire Saf. J.</i> 62, 289–298 · Reax Eng., Berkeley</span>
     </div>
     <aside class="notes">
-      Criada com a ajuda de um comandante dos bombeiros de Guimarães para quem decide o ataque, a Atalaia monitoriza o fogo em tempo real,
-      [clique] Aloca os meios com inteligência com uma heurística de despacho desenvolvida pelos nossos mentores,
+      Criada com a ajuda de um comandante dos bombeiros de Guimarães para quem decide o ataque, a Atalaia monitoriza o fogo e os meios em tempo real,
+      [clique] Distribui os meios com inteligência, com uma heurística de despacho desenvolvida pelos nossos mentores,
       [clique] E prevê o comportamento do incêndio
-      O que nos distingue e a precisão dessa previsão: calibramos para Portugal o elmfire, criado pela universidade de Berkeley e validamo-lo contra incêndios reais passados
+      O que nos distingue é a precisão dessa previsão: calibramos para Portugal o ELMFIRE, criado em Berkeley, e validamo-lo contra incêndios reais passados
       [clique] No fim, comunica o comando de ação a todos os órgãos envolventes.
 
       Vamos ver a Atalaia em prática.
@@ -694,7 +694,26 @@
     <video class="demo-video" src="video/DEMO.mp4" data-autoplay controls playsinline preload="auto"></video>
     <div class="video-placeholder"><strong>▶ Vídeo — ver no GitHub</strong><span>github.com/brunosantospt/Atalaia</span><code>pitch/video/DEMO.mp4</code><span>Para correr a apresentação: <code>python3 -m http.server 8642 --directory pitch</code> → http://127.0.0.1:8642</span></div>
     <aside class="notes">
-      (guião da demo ainda por fechar)
+      O que vemos é um Digital Twin 3D de Guimarães, que desenvolvemos para este projeto e pretendemos expandir no futuro: um drone sobrevoa a cidade em patrulha e, logo abaixo do Santuário da Penha, deteta um incêndio com a sua câmara térmica. Vamos planear o combate com a Atalaia.
+
+      Podemos escolher entre vários tipos de mapas e juntar dados em tempo real, como a intensidade do fogo ou a água disponível no terreno. Podemos ver mais detalhes e, no caso do vento, mostrá-lo diretamente no mapa.
+
+      Acertadas as definições, passamos a simular o fogo. Avançamos uma hora e meia no futuro e vemos a sua propagação. São detetadas condições extremas e recomenda-se o uso de meios aéreos.
+
+      Colocamos os meios aéreos e os terrestres, conforme a disponibilidade do quartel de Guimarães. Aqui a colocação falha: a ferramenta prevê que este meio não chega a tempo de um combate eficaz.
+
+      Com o plano fechado, vejamos em tempo real como o fogo responde. Chega a primeira resposta, começa o combate indireto. Com a chegada de reforços, o incêndio parece contido, mas a água começa a escassear.
+
+      E, em má altura, chega informação de uma mudança brusca de vento. Como sugerido, reposicionamos os meios e, como o combate já vai longo, pedimos uma cisterna, que tem de vir de Vizela, pois Guimarães não tem nenhuma. Pedimos também um posto médico avançado, numa zona segura, para quem desce da Penha.
+
+      Agora pedimos à heurística uma proposta otimizada, esperamos o seu resultado e comparamos: A, a nossa decisão; B, a otimizada.
+
+      Com a decisão A, o fogo descontrola-se e chega à cidade; recebemos vários alertas de risco iminente para habitações.
+
+      Ao fim de três horas, comparamos sem combate, com A e com B. O relatório final mostra 11 hectares ardidos com B, enquanto com A ardem 61, chegando até a atingir edifícios.
+
+      Por fim, podemos enviar as ordens e os relatórios às entidades competentes.
+
       E isto não acaba hoje.
     </aside>
   </section>
@@ -939,6 +958,16 @@
   };
   Reveal.on('slidechanged', syncDemo);
   Reveal.on('ready', syncDemo);
+  // Vista do orador: o Reveal não faz autoplay nas janelas de notas, e o browser bloquearia o som;
+  // por isso o painel "slide atual" toca a demo sem som (o som sai só da apresentação principal).
+  if (/receiver/.test(location.search) && /postMessageEvents=true/.test(location.search)) {
+    const playMuted = (e) => {
+      const v = e.currentSlide?.querySelector('.demo-video');
+      if (v) { v.muted = true; v.play().catch(() => {}); }
+    };
+    Reveal.on('slidechanged', playMuted);
+    Reveal.on('ready', playMuted);
+  }
 
   // Fecho: ao aparecer o "Obrigado!", o logótipo do canto voa para o lado dele (e volta ao recuar/sair).
   const placeLogoEnd = () => {
