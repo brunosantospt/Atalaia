@@ -144,6 +144,9 @@
     .impact .cost .metric-label { margin-top: 0; }
     /* no PDF o slide tem a altura do conteúdo, por isso a fonte vai para baixo do custo */
     html.print-pdf .impact .src { position: static; margin-top: 1.2em; }
+    /* PDF: sem animações nem logo flutuante — mostrar os passos do roadmap e o logo do fecho no próprio slide */
+    html.print-pdf .roadmap .stop, html.print-pdf .roadmap .track, html.reveal-print .roadmap .stop, html.reveal-print .roadmap .track { opacity: 1 !important; animation: none !important; transform: none !important; }
+    html.print-pdf .thanks-logo, html.reveal-print .thanks-logo { visibility: visible; }
     .count.burn { transition: color 1.2s ease, text-shadow 1.2s ease; }
     .count.burn.counting { color: var(--amber); text-shadow: 0 0 28px rgba(240, 163, 58, 0.55), 0 0 64px rgba(224, 49, 49, 0.25); animation: flicker 0.18s infinite alternate; transition: none; }
     @keyframes flicker { from { opacity: 1; } to { opacity: 0.88; } }
