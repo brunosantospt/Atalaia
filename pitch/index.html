@@ -958,6 +958,8 @@
     const on = !!e.currentSlide?.classList.contains('demo-stage') && !Reveal.isPrintView?.();
     document.body.classList.toggle('demo-on', on);
     fitDemo();
+    // ao entrar no slide, a demo recomeça sempre do início (o Reveal retomaria onde parou)
+    if (on && e.type === 'slidechanged') e.currentSlide.querySelectorAll('.demo-video').forEach((v) => { v.currentTime = 0; });
   };
   Reveal.on('slidechanged', syncDemo);
   Reveal.on('ready', syncDemo);
@@ -965,6 +967,8 @@
   // por isso o painel "slide atual" toca a demo sem som (o som sai só da apresentação principal).
   if (/receiver/.test(location.search) && /postMessageEvents=true/.test(location.search)) {
     const playMuted = (e) => {
+      // ao sair do slide para e volta ao início, para recomeçar com a apresentação principal
+      document.querySelectorAll('.demo-video').forEach((d) => { d.pause(); d.currentTime = 0; });
       const v = e.currentSlide?.querySelector('.demo-video');
       if (v) { v.muted = true; v.play().catch(() => {}); }
     };
