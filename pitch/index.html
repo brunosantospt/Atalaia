@@ -786,6 +786,24 @@
     <p class="bk-take">Terreno e árvores do <strong>LiDAR</strong>, edifícios e estradas do OpenStreetMap; chamas, brasas e fumo seguem o tempo de chegada simulado pelo <strong>ELMFIRE</strong>.</p>
   </section>
 
+  <section data-timing="0" class="backup">
+    <span class="tag">Backup · Vieira do Minho: satélite e linhas de ataque inferidas</span>
+    <div class="bk-row col">
+      <div class="bk-figs bk-pair">
+        <figure><img src="img/backup_vieira_firms.png" alt="Focos de calor NASA FIRMS sobre o incêndio de Vieira do Minho"><figcaption>Focos de calor da NASA FIRMS (VIIRS 375 m e MODIS 1 km), 24 passagens de satélite</figcaption></figure>
+        <figure><img src="img/backup_vieira_linhas.png" alt="Linhas de ataque inferidas ao longo de estradas"><figcaption>33 linhas de ataque inferidas, 13,6 km de estradas, com a hora a que começam a segurar</figcaption></figure>
+      </div>
+      <div class="bk-read">
+        <h4>Como ler</h4>
+        <p><b>Círculos</b> (esquerda): cada um é um foco de calor visto por satélite, do tamanho do píxel. <span style="color:#3f3">Verde</span> antes do alerta, <span style="color:#0ff">ciano</span> nas primeiras 6 h, <span style="color:#f0f">magenta</span> até às 20 h, branco depois.</p>
+        <p><b>Cor do fogo</b>: hora de chegada, amarelo cedo, roxo tarde. <b>Ciano</b>: perímetro oficial ICNF/GNR. <b>Vermelho escuro</b>: áreas ardidas antes.</p>
+        <p><b>Linhas de ataque inferidas</b> (direita): não temos os registos reais do combate. Deduzimo-las de onde o perímetro oficial parou ao longo de estradas, com a hora a que o fogo lá chegou. Entram no modelo como barreiras.</p>
+        <p>Os focos de satélite servem para validar de forma independente: que parte deles o fogo simulado já tinha alcançado em cada passagem.</p>
+      </div>
+    </div>
+    <p class="bk-take">O satélite confirma a corrida principal e mostra um foco na noite anterior que não estava nos registos. As linhas de ataque inferidas levam a concordância de <strong>83 %</strong> para <strong>89 %</strong>.</p>
+  </section>
+
   <!-- ============================== BACKUP (fora do tempo): teste em nove incêndios ============================== -->
   <section data-timing="0" class="backup">
     <span class="tag">Backup · o modelo testado em 9 incêndios reais (2015–2021)</span>
@@ -849,23 +867,6 @@
     <p class="bk-take">Concordância às 08:30: <strong>73 %</strong> (modelo base) → <strong>84 %</strong> (com linhas de ataque). O 76 % → 89 % do slide de validação compara com o perímetro oficial.</p>
   </section>
 
-  <section data-timing="0" class="backup">
-    <span class="tag">Backup · Vieira do Minho: satélite e linhas de ataque inferidas</span>
-    <div class="bk-row col">
-      <div class="bk-figs bk-pair">
-        <figure><img src="img/backup_vieira_firms.png" alt="Focos de calor NASA FIRMS sobre o incêndio de Vieira do Minho"><figcaption>Focos de calor da NASA FIRMS (VIIRS 375 m e MODIS 1 km), 24 passagens de satélite</figcaption></figure>
-        <figure><img src="img/backup_vieira_linhas.png" alt="Linhas de ataque inferidas ao longo de estradas"><figcaption>33 linhas de ataque inferidas, 13,6 km de estradas, com a hora a que começam a segurar</figcaption></figure>
-      </div>
-      <div class="bk-read">
-        <h4>Como ler</h4>
-        <p><b>Círculos</b> (esquerda): cada um é um foco de calor visto por satélite, do tamanho do píxel. <span style="color:#3f3">Verde</span> antes do alerta, <span style="color:#0ff">ciano</span> nas primeiras 6 h, <span style="color:#f0f">magenta</span> até às 20 h, branco depois.</p>
-        <p><b>Cor do fogo</b>: hora de chegada, amarelo cedo, roxo tarde. <b>Ciano</b>: perímetro oficial ICNF/GNR. <b>Vermelho escuro</b>: áreas ardidas antes.</p>
-        <p><b>Linhas de ataque inferidas</b> (direita): não temos os registos reais do combate. Deduzimo-las de onde o perímetro oficial parou ao longo de estradas, com a hora a que o fogo lá chegou. Entram no modelo como barreiras.</p>
-        <p>Os focos de satélite servem para validar de forma independente: que parte deles o fogo simulado já tinha alcançado em cada passagem.</p>
-      </div>
-    </div>
-    <p class="bk-take">O satélite confirma a corrida principal e mostra um foco na noite anterior que não estava nos registos. As linhas de ataque inferidas levam a concordância de <strong>83 %</strong> para <strong>89 %</strong>.</p>
-  </section>
 
 
 </div>
