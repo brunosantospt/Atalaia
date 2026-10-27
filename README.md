@@ -21,6 +21,14 @@ O mapa CesiumJS é a ferramenta de decisão. O produto final que imaginamos é u
 
 
 
+https://github.com/user-attachments/assets/d33dffd9-8e60-4a05-ad13-b43f6a2fabe8
+
+
+
+https://github.com/user-attachments/assets/05ec0606-eefd-47bb-b364-1670b04e0c04
+
+
+
 
 **Área ardida em Guimarães.** A área ardida simulada no cenário da Serra da Penha, sobre o terreno LiDAR.
 
