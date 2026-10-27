@@ -12,11 +12,23 @@ https://github.com/user-attachments/assets/318261f4-02c7-4dfc-bca3-335db928f75d
 
 ## Renders em Unreal Engine
 
-Além do mapa, os incêndios foram renderizados em Unreal Engine 5 (projeto `FireRenderer`, fora deste repositório). O terreno é reconstruído a partir do levantamento LiDAR nacional da DGT (MDT/MDS a 2 m e 50 cm), no mesmo referencial dos cenários, para que a propagação simulada caia nas encostas certas. O mapa CesiumJS é a ferramenta de decisão; estes renders mostram o que essa decisão significa no terreno.
+O mapa CesiumJS é a ferramenta de decisão. O produto final que imaginamos é um gémeo fotorrealista em Unreal Engine 5 (projeto `FireRenderer`, fora deste repositório), onde a propagação calculada pelos motores do Atalaia é posta no terreno real:
+
+- **Terreno:** o levantamento LiDAR nacional da DGT (2024–25), com o modelo do terreno (MDT) a 2 m para os 10 × 10 km do cenário e a 50 cm numa zona de pormenor à volta da ignição. A diferença entre o modelo de superfície e o do terreno (MDS − MDT) dá a altura da vegetação, célula a célula.
+- **Fogo:** os tempos de chegada da simulação (`arrival`) estão no mesmo referencial do terreno, por isso a frente e a área ardida caem nas encostas certas. O chão muda para material queimado por onde o fogo já passou.
+- **Sem rede:** o mundo é construído a partir dos dados abertos, sem depender das tiles do Google.
+
+**Área ardida em Guimarães.** A área ardida simulada no cenário da Serra da Penha, sobre o terreno LiDAR.
 
 https://github.com/user-attachments/assets/b89d6086-ded5-4cf2-9c50-b59ee7a63d07
 
+**Vieira do Minho, ELMFIRE.** A propagação do incêndio real de Vieira do Minho (10 de agosto de 2016), simulada pelo ELMFIRE a partir do perímetro observado, a mesma corrida que usamos para validar o motor contra o perímetro oficial.
+
 https://github.com/user-attachments/assets/edee5154-9092-4cb5-a75e-e4f42c4cc2f2
+
+### Drones e aprendizagem por reforço
+
+O mesmo mundo serve para treinar drones. Com terreno, vegetação e fogo realistas, e uma propagação que segue a física dos motores, o Unreal pode ser um simulador onde agentes aprendem por reforço (RL) a patrulhar, detetar focos cedo, seguir a frente do incêndio e, mais tarde, apoiar o controlo do fogo. Treinar em simulação permite repetir milhares de incêndios diferentes, que nunca se poderiam provocar no terreno. A deteção por drone já aparece no pitch; o treino por RL é o passo seguinte.
 
 [Deteção por drone](pitch/video/drone-deteccao.mp4) · [Pitch (PDF)](pitch/Atalaia-pitch.pdf)
 
