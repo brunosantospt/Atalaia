@@ -4,6 +4,8 @@ Gêmeo digital de decisão para incêndios rurais. Hack4Guimarães 2035, desafio
 
 O Atalaia simula o mesmo incêndio sob duas decisões, A e B, com os mesmos dados, o mesmo perímetro inicial e o mesmo motor de propagação, e compara área ardida, casas e pessoas ameaçadas, tempos de chegada e estradas cortadas. Tudo num só mapa CesiumJS, com vistas por papel (Câmara, GNR, INEM) e um resumo para o comandante. A pesquisa ILS pode propor a decisão B.
 
+[📄 Pitch (PDF)](pitch/Atalaia-pitch.pdf)
+
 ## Demo
 
 A demo da Penha (Guimarães) de ponta a ponta: o alerta, as decisões A e B desenhadas no mapa, a simulação e a comparação dos resultados para cada agência. Também no [YouTube](https://www.youtube.com/watch?v=O3tZOxCxVdI).
@@ -37,8 +39,6 @@ https://github.com/user-attachments/assets/edee5154-9092-4cb5-a75e-e4f42c4cc2f2
 https://github.com/user-attachments/assets/d33dffd9-8e60-4a05-ad13-b43f6a2fabe8
 
 O mesmo mundo serve para treinar drones. Com terreno, vegetação e fogo realistas, e uma propagação que segue a física dos motores, o Unreal pode ser um simulador onde agentes aprendem por reforço (RL) a patrulhar, detetar focos cedo, seguir a frente do incêndio e, mais tarde, apoiar o controlo do fogo. Treinar em simulação permite repetir milhares de incêndios diferentes, que nunca se poderiam provocar no terreno. A deteção por drone já aparece no pitch; o treino por RL é o passo seguinte.
-
-[Pitch (PDF)](pitch/Atalaia-pitch.pdf)
 
 ## Arrancar
 
