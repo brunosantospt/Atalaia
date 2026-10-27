@@ -18,17 +18,9 @@ O mapa CesiumJS é a ferramenta de decisão. O produto final que imaginamos é u
 - **Fogo:** os tempos de chegada da simulação (`arrival`) estão no mesmo referencial do terreno, por isso a frente e a área ardida caem nas encostas certas. O chão muda para material queimado por onde o fogo já passou.
 - **Sem rede:** o mundo é construído a partir dos dados abertos, sem depender das tiles do Google.
 
-
-
-
-https://github.com/user-attachments/assets/d33dffd9-8e60-4a05-ad13-b43f6a2fabe8
-
-
+**A frente de fogo vista do ar.** Um voo ao longo de uma frente simulada: a linha de chamas avança pela encosta, a coluna de fumo cresce e deixa o terreno queimado para trás, entre manchas de pinhal, mato e campos agrícolas.
 
 https://github.com/user-attachments/assets/05ec0606-eefd-47bb-b364-1670b04e0c04
-
-
-
 
 **Área ardida em Guimarães.** A área ardida simulada no cenário da Serra da Penha, sobre o terreno LiDAR.
 
@@ -40,9 +32,13 @@ https://github.com/user-attachments/assets/edee5154-9092-4cb5-a75e-e4f42c4cc2f2
 
 ### Drones e aprendizagem por reforço
 
+**Deteção por drone.** O drone sai da sua base, por baixo do santuário da Penha, sobrevoa a igreja, inclina-se para a encosta e a câmara térmica encontra o foco. É o incêndio simulado do cenário `penha_custom` (ELMFIRE, 3 h, vento de leste a 14 km/h que roda para norte a 20 km/h).
+
+https://github.com/user-attachments/assets/d33dffd9-8e60-4a05-ad13-b43f6a2fabe8
+
 O mesmo mundo serve para treinar drones. Com terreno, vegetação e fogo realistas, e uma propagação que segue a física dos motores, o Unreal pode ser um simulador onde agentes aprendem por reforço (RL) a patrulhar, detetar focos cedo, seguir a frente do incêndio e, mais tarde, apoiar o controlo do fogo. Treinar em simulação permite repetir milhares de incêndios diferentes, que nunca se poderiam provocar no terreno. A deteção por drone já aparece no pitch; o treino por RL é o passo seguinte.
 
-[Deteção por drone](pitch/video/drone-deteccao.mp4) · [Pitch (PDF)](pitch/Atalaia-pitch.pdf)
+[Pitch (PDF)](pitch/Atalaia-pitch.pdf)
 
 ## Arrancar
 
