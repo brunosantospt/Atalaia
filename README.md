@@ -18,6 +18,10 @@ O mapa CesiumJS é a ferramenta de decisão. O produto final que imaginamos é u
 - **Fogo:** os tempos de chegada da simulação (`arrival`) estão no mesmo referencial do terreno, por isso a frente e a área ardida caem nas encostas certas. O chão muda para material queimado por onde o fogo já passou.
 - **Sem rede:** o mundo é construído a partir dos dados abertos, sem depender das tiles do Google.
 
+
+
+
+
 **Área ardida em Guimarães.** A área ardida simulada no cenário da Serra da Penha, sobre o terreno LiDAR.
 
 https://github.com/user-attachments/assets/b89d6086-ded5-4cf2-9c50-b59ee7a63d07
