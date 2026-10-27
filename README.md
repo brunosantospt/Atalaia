@@ -4,7 +4,7 @@ Gêmeo digital de decisão para incêndios rurais. Hack4Guimarães 2035, desafio
 
 O Atalaia simula o mesmo incêndio sob duas decisões, A e B, com os mesmos dados, o mesmo perímetro inicial e o mesmo motor de propagação, e compara área ardida, casas e pessoas ameaçadas, tempos de chegada e estradas cortadas. Tudo num só mapa CesiumJS, com vistas por papel (Câmara, GNR, INEM) e um resumo para o comandante. A pesquisa ILS pode propor a decisão B.
 
-[▶ Vídeo da demo](pitch/video/DEMO.mp4) · [Deteção por drone](pitch/video/drone-deteccao.mp4) · [Pitch (PDF)](pitch/Atalaia-pitch.pdf)
+[▶ Vídeo da demo (YouTube)](https://www.youtube.com/watch?v=O3tZOxCxVdI) · [Deteção por drone](pitch/video/drone-deteccao.mp4) · [Pitch (PDF)](pitch/Atalaia-pitch.pdf)
 
 ## Arrancar
 
