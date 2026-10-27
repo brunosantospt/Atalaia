@@ -47,7 +47,6 @@ A demo de Penha (incêndio hipotético) corre no browser com o modelo rápido, n
 - [docs/multi-agency-reporting.md](docs/multi-agency-reporting.md): reporte e despacho multi-agência por papel.
 - [docs/resumo-tese-uminho-matos-2025.md](docs/resumo-tese-uminho-matos-2025.md): pressupostos operacionais da tese de Matos (UMinho, 2025).
 - [docs/RELATORIO_TECNICO_ATALAIA.md](docs/RELATORIO_TECNICO_ATALAIA.md): relatório dos refinamentos táticos.
-- [docs/plan.md](docs/plan.md): o plano de construção original (histórico).
 
 ## Testes
 

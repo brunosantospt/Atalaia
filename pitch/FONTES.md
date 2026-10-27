@@ -301,11 +301,11 @@ slide foi reescrita de raiz.
   construiu de raiz como projeto institucional.
 - Copas: vêm do LiDAR da DGT (MDS − MDT a 2 m, hindcast/canopy.py). Cobertura
   e altura são medidas; altura da base e densidade são estimadas por
-  espécie. São de 2024-25 (docs/plan.md).
+  espécie. São de 2024-25 (docs/plan.md, removido; ver o histórico do git).
 - Motor de vento (CERRA + relevo, ramo feature/cerra-wind-engine): ainda não
   é uma vitória clara. No hindcast, em Vieira do Minho fica dentro do ruído
   das sementes (relevo) e em Cabeceiras de Basto piora com CERRA
-  (docs/plan.md, linha do Sørensen por passo). Dizer "a tentar captar" e
+  (docs/plan.md, removido; ver o histórico do git, linha do Sørensen por passo). Dizer "a tentar captar" e
   não prometer que já funciona melhor; é trabalho em curso, não um
   resultado fechado.
 - ILS: Mendes, A.B. & Alvelos, F.P. (2023), "Iterated local search for the
