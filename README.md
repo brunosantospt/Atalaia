@@ -4,25 +4,19 @@ Gêmeo digital de decisão para incêndios rurais. Hack4Guimarães 2035, desafio
 
 O Atalaia simula o mesmo incêndio sob duas decisões, A e B, com os mesmos dados, o mesmo perímetro inicial e o mesmo motor de propagação, e compara área ardida, casas e pessoas ameaçadas, tempos de chegada e estradas cortadas. Tudo num só mapa CesiumJS, com vistas por papel (Câmara, GNR, INEM) e um resumo para o comandante. A pesquisa ILS pode propor a decisão B.
 
+## Demo
 
-
-
-
-
-
-Demo:
-
+A demo da Penha (Guimarães) de ponta a ponta: o alerta, as decisões A e B desenhadas no mapa, a simulação e a comparação dos resultados para cada agência. Também no [YouTube](https://www.youtube.com/watch?v=O3tZOxCxVdI).
 
 https://github.com/user-attachments/assets/318261f4-02c7-4dfc-bca3-335db928f75d
 
+## Renders em Unreal Engine
+
+Além do mapa, os incêndios foram renderizados em Unreal Engine 5 (projeto `FireRenderer`, fora deste repositório). O terreno é reconstruído a partir do levantamento LiDAR nacional da DGT (MDT/MDS a 2 m e 50 cm), no mesmo referencial dos cenários, para que a propagação simulada caia nas encostas certas. O mapa CesiumJS é a ferramenta de decisão; estes renders mostram o que essa decisão significa no terreno.
 
 https://github.com/user-attachments/assets/b89d6086-ded5-4cf2-9c50-b59ee7a63d07
 
-
 https://github.com/user-attachments/assets/edee5154-9092-4cb5-a75e-e4f42c4cc2f2
-
-
-
 
 [Deteção por drone](pitch/video/drone-deteccao.mp4) · [Pitch (PDF)](pitch/Atalaia-pitch.pdf)
 
